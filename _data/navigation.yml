@@ -22,6 +22,9 @@ main:
         
   - title: "Blog Posts"
     url: /year-archive/
+
+  - title: "Work Time"
+    url: /weekly-work-time/
     
   - title: "CV"
     url: /cv/

@@ -1,0 +1,128 @@
+---
+layout: archive
+permalink: /weekly-work-time/
+title: "Weekly Work Time"
+author_profile: true
+---
+
+{% assign stats = site.data.time_stats %}
+{% assign weeks = stats.weeks %}
+{% assign latest = weeks | first %}
+
+<style>
+  .work-time-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0 1.25rem;
+  }
+  .work-time-card {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 0.75rem;
+    background: #fff;
+  }
+  .work-time-card strong {
+    display: block;
+    font-size: 1.45rem;
+    line-height: 1.2;
+  }
+  .work-time-card span {
+    color: #57606a;
+    font-size: 0.88rem;
+  }
+  .work-time-row {
+    margin: 0 0 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid #d8dee4;
+  }
+  .work-time-row header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: baseline;
+    margin-bottom: 0.35rem;
+  }
+  .work-time-row h2 {
+    margin: 0;
+    font-size: 1rem;
+  }
+  .work-time-hours {
+    color: #0969da;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .work-time-bar {
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #eaeef2;
+  }
+  .work-time-bar span {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+    border-radius: inherit;
+    background: #0969da;
+  }
+  .work-time-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+    color: #57606a;
+    font-size: 0.86rem;
+  }
+  .work-time-days span {
+    border: 1px solid #d0d7de;
+    border-radius: 999px;
+    padding: 0.12rem 0.45rem;
+    background: #f6f8fa;
+  }
+</style>
+
+{% if weeks and weeks.size > 0 %}
+  <p>
+    This page is generated from local LLK planning data and summarizes weekly work time recorded by the VS Code time manager.
+  </p>
+
+  <div class="work-time-summary">
+    <div class="work-time-card">
+      <strong>{{ stats.summary.work_hours }}h</strong>
+      <span>Total recorded work</span>
+    </div>
+    <div class="work-time-card">
+      <strong>{{ latest.work_hours }}h</strong>
+      <span>Latest week · {{ latest.key }}</span>
+    </div>
+    <div class="work-time-card">
+      <strong>{{ stats.summary.weeks_count }}</strong>
+      <span>Weeks with records</span>
+    </div>
+  </div>
+
+  {% for week in weeks %}
+    <article class="work-time-row">
+      <header>
+        <h2>{{ week.key }} · {{ week.start }} ~ {{ week.end }}</h2>
+        <span class="work-time-hours">{{ week.work_hours }}h</span>
+      </header>
+      <div class="work-time-bar" aria-label="{{ week.work_hours }} hours">
+        <span style="width: {{ week.work_percent }}%;"></span>
+      </div>
+      {% if week.days and week.days.size > 0 %}
+        <div class="work-time-days">
+          {% for day in week.days %}
+            {% if day.work_minutes > 0 %}
+              <span>{{ day.day }} · {{ day.work_hours }}h</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </article>
+  {% endfor %}
+
+  <p><small>Generated at {{ stats.generated_at }} from {{ stats.source_root }}.</small></p>
+{% else %}
+  <p>No work time records found yet.</p>
+{% endif %}
