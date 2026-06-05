@@ -100,26 +100,26 @@
     </div>
   </div>
 
-  {% for week in weeks %}
-    <article class="work-time-row">
-      <header>
-        <h2>{{ week.key }} · {{ week.start }} ~ {{ week.end }}</h2>
-        <span class="work-time-hours">{{ week.work_hours }}h</span>
-      </header>
-      <div class="work-time-bar" aria-label="{{ week.work_hours }} hours">
-        <span style="width: {{ week.work_percent }}%;"></span>
-      </div>
-      {% if week.days and week.days.size > 0 %}
-        <div class="work-time-days">
-          {% for day in week.days %}
-            {% if day.work_minutes > 0 %}
-              <span>{{ day.day }} · {{ day.work_hours }}h</span>
-            {% endif %}
-          {% endfor %}
-        </div>
-      {% endif %}
-    </article>
-  {% endfor %}
+{% for week in weeks %}
+<article class="work-time-row">
+<header>
+<h2>{{ week.key }} · {{ week.start }} ~ {{ week.end }}</h2>
+<span class="work-time-hours">{{ week.work_hours }}h</span>
+</header>
+<div class="work-time-bar" aria-label="{{ week.work_hours }} hours">
+<span style="width: {{ week.work_percent }}%;"></span>
+</div>
+{% if week.days and week.days.size > 0 %}
+<div class="work-time-days">
+{% for day in week.days %}
+{% if day.work_minutes > 0 %}
+<span>{{ day.day }} · {{ day.work_hours }}h</span>
+{% endif %}
+{% endfor %}
+</div>
+{% endif %}
+</article>
+{% endfor %}
 
   <p><small>Generated at {{ stats.generated_at }} from {{ stats.source_root }}.</small></p>
 {% else %}
