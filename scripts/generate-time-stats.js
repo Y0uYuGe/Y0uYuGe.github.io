@@ -166,8 +166,9 @@ function buildStats() {
     acc.meal_minutes += week.meal_minutes;
     acc.relax_minutes += week.relax_minutes;
     acc.sleep_minutes += week.sleep_minutes;
+    acc.work_days_count += week.days.filter(day => day.work_minutes > 0).length;
     return acc;
-  }, { work_minutes: 0, meal_minutes: 0, relax_minutes: 0, sleep_minutes: 0 });
+  }, { work_minutes: 0, meal_minutes: 0, relax_minutes: 0, sleep_minutes: 0, work_days_count: 0 });
 
   return {
     generated_at: new Date().toISOString(),
@@ -175,8 +176,12 @@ function buildStats() {
     sources,
     summary: {
       weeks_count: sortedWeeks.length,
+      work_days_count: summary.work_days_count,
       work_minutes: summary.work_minutes,
       work_hours: hours(summary.work_minutes),
+      daily_average_work_hours: summary.work_days_count > 0
+        ? hours(summary.work_minutes / summary.work_days_count)
+        : 0,
       meal_hours: hours(summary.meal_minutes),
       relax_hours: hours(summary.relax_minutes),
       sleep_hours: hours(summary.sleep_minutes)
