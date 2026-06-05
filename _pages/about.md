@@ -35,3 +35,5 @@ I am currently learning and building across AI and security: vulnerability analy
 - Blog: [CSDN / llovewuzhengzi](https://blog.csdn.net/llovewuzhengzi)
 - Security community: [Butian profile](https://forum.butian.net/people/33851/community)
 - Email: [llk1010@foxmail.com](mailto:llk1010@foxmail.com)
+
+{% include work-time-summary.html %}

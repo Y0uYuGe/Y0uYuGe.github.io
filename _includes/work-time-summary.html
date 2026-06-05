@@ -1,10 +1,3 @@
----
-layout: archive
-permalink: /weekly-work-time/
-title: "Weekly Work Time"
-author_profile: true
----
-
 {% assign stats = site.data.time_stats %}
 {% assign weeks = stats.weeks %}
 {% assign latest = weeks | first %}
@@ -81,9 +74,11 @@ author_profile: true
   }
 </style>
 
+## Work Time
+
 {% if weeks and weeks.size > 0 %}
   <p>
-    This page is generated from local LLK planning data and summarizes weekly work time recorded by the VS Code time manager.
+    This section is generated from local LLK planning data and summarizes weekly work time recorded by the VS Code time manager.
   </p>
 
   <div class="work-time-summary">

@@ -46,8 +46,8 @@ fi
 
 "$GIT_BIN" add -- \
   _data/time_stats.json \
-  _data/navigation.yml \
-  _pages/weekly-work-time.html \
+  _includes/work-time-summary.html \
+  _pages/about.md \
   scripts/generate-time-stats.js \
   scripts/sync-time-stats.sh
 

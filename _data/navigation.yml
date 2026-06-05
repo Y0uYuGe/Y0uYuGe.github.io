@@ -8,9 +8,6 @@
 #      Markdown formatted page while the second is generated using JSON.
 
 main:
-  - title: "Work Time"
-    url: /weekly-work-time/
-
   - title: "Publications"
     url: /publications/
 
