@@ -1,20 +1,44 @@
 {
-  "generated_at": "2026-06-08T15:51:36.029Z",
+  "generated_at": "2026-06-09T15:50:15.135Z",
   "source_root": "../plan",
   "sources": [
     "../plan/2026/2026-06.md"
   ],
   "summary": {
-    "weeks_count": 1,
-    "work_days_count": 0,
-    "work_minutes": 0,
-    "work_hours": 0,
-    "daily_average_work_hours": 0,
-    "meal_hours": 0.32,
-    "relax_hours": 0,
+    "weeks_count": 2,
+    "work_days_count": 1,
+    "work_minutes": 108,
+    "work_hours": 1.8,
+    "daily_average_work_hours": 1.8,
+    "meal_hours": 0.33,
+    "relax_hours": 0.33,
     "sleep_hours": 0.02
   },
   "weeks": [
+    {
+      "key": "2026-W24",
+      "start": "2026-06-08",
+      "end": "2026-06-14",
+      "work_minutes": 108,
+      "work_hours": 1.8,
+      "meal_minutes": 1,
+      "meal_hours": 0.02,
+      "relax_minutes": 20,
+      "relax_hours": 0.33,
+      "sleep_minutes": 0,
+      "sleep_hours": 0,
+      "days": [
+        {
+          "day": "2026-06-09",
+          "work_minutes": 108,
+          "work_hours": 1.8,
+          "meal_minutes": 1,
+          "relax_minutes": 20,
+          "sleep_minutes": 0
+        }
+      ],
+      "work_percent": 100
+    },
     {
       "key": "2026-W23",
       "start": "2026-06-01",
