@@ -30,24 +30,19 @@
             {% endif %}
             {% if lang_toggle_url == '' %}{% assign lang_toggle_url = '/' %}{% endif %}
             <li class="masthead__menu-item persist tail">
-              <a href="{{ base_path }}{{ lang_toggle_url }}">中文</a>
+              <a href="{{ base_path }}{{ lang_toggle_url }}" style="border:1px solid currentColor;border-radius:999px;padding:0.1rem 0.6rem;"><i class="fas fa-globe" aria-hidden="true"></i> 中文</a>
             </li>
           {% else %}
-            {% assign lang_toggle_url = nil %}
             {% if page.url == '/year-archive/' %}
               {% assign lang_toggle_url = '/en/posts/' %}
-            {% elsif page.url == '/' %}
+            {% elsif page.url == '/cv/' or page.url == '/publications/' or page.url == '/talks/' or page.url == '/teaching/' or page.url contains '/portfolio/' %}
+              {% assign lang_toggle_url = page.url | prepend: '/en' %}
+            {% else %}
               {% assign lang_toggle_url = '/en/' %}
-            {% elsif page.url == '/cv/' or page.url == '/publications/' or page.url == '/talks/' or page.url == '/teaching/' or page.url == '/portfolio/' %}
-              {% assign lang_toggle_url = page.url | prepend: '/en' %}
-            {% elsif page.url contains '/portfolio/' %}
-              {% assign lang_toggle_url = page.url | prepend: '/en' %}
             {% endif %}
-            {% if lang_toggle_url %}
-              <li class="masthead__menu-item persist tail">
-                <a href="{{ base_path }}{{ lang_toggle_url }}">EN</a>
-              </li>
-            {% endif %}
+            <li class="masthead__menu-item persist tail">
+              <a href="{{ base_path }}{{ lang_toggle_url }}" style="border:1px solid currentColor;border-radius:999px;padding:0.1rem 0.6rem;"><i class="fas fa-globe" aria-hidden="true"></i> EN</a>
+            </li>
           {% endif %}
           <li id="theme-toggle" class="masthead__menu-item persist tail">
             <a role="button" aria-labelledby="theme-icon"><i id="theme-icon" class="fa-solid fa-sun" aria-hidden="true" title="toggle theme"></i></a>
