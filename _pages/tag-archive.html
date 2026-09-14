@@ -6,7 +6,8 @@ author_profile: true
 ---
 
 {% include base_path %}
-{% include group-by-array collection=site.posts field="tags" %}
+{% assign zh_posts = site.posts | where_exp: 'post', "post.lang != 'en'" %}
+{% include group-by-array collection=zh_posts field="tags" %}
 
 {% for tag in group_names %}
   {% assign posts = group_items[forloop.index0] %}
