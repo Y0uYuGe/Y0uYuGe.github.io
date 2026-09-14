@@ -1,6 +1,6 @@
 ---
 layout: archive
-title: "Talks and presentations"
+title: "演讲与报告"
 permalink: /talks/
 author_profile: true
 ---
@@ -9,6 +9,10 @@ author_profile: true
 
 <p style="text-decoration:underline;"><a href="/talkmap.html">See a map of all the places I've given a talk!</a></p>
 
+{% endif %}
+
+{% if site.talks.size == 0 %}
+<p>暂无内容，敬请期待。</p>
 {% endif %}
 
 {% for post in site.talks reversed %}

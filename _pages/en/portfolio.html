@@ -1,14 +1,15 @@
 ---
 layout: archive
-title: "项目作品"
-permalink: /portfolio/
+title: "Portfolio"
+permalink: /en/portfolio/
 author_profile: true
+lang: en
 ---
 
 {% include base_path %}
 
 
 {% for post in site.portfolio %}
-  {% if post.lang == 'en' %}{% continue %}{% endif %}
+  {% if post.lang != 'en' %}{% continue %}{% endif %}
   {% include archive-single.html %}
 {% endfor %}

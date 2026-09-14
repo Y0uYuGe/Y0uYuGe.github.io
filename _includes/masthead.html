@@ -5,10 +5,14 @@
       <nav id="site-nav" class="greedy-nav">
         <button><span class="navicon"></span></button>
         <ul class="visible-links">
-          <li class="masthead__menu-item masthead__menu-item--lg persist {% if page.url == '/' or page.url == '/index.html' %}selected{% endif %}">
-            <a href="{{ base_path }}/">{{ site.title }}</a>
+          <li class="masthead__menu-item masthead__menu-item--lg persist {% if page.url == '/' or page.url == '/index.html' or page.url == '/en/' %}selected{% endif %}">
+            <a href="{% if page.lang == 'en' %}{{ base_path }}/en/{% else %}{{ base_path }}/{% endif %}">{{ site.title }}</a>
           </li>
-          {% for link in site.data.navigation.main %}
+          {% assign nav_links = site.data.navigation.main %}
+          {% if page.lang == 'en' and site.data.navigation['main-en'] %}
+            {% assign nav_links = site.data.navigation['main-en'] %}
+          {% endif %}
+          {% for link in nav_links %}
             {% if link.url contains 'http' %}
               {% assign domain = '' %}
             {% else %}

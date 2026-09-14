@@ -7,33 +7,33 @@ redirect_from:
   - /about.html
 ---
 
-I am **Liu Like (LLK / Y0uYuGe)**, an undergraduate student. My work focuses on **AI**, **pwn**, **systems security**, and practical engineering projects that connect research ideas with working code.
+我是 **Liu Like（LLK / Y0uYuGe）**，一名本科生。我的方向是 **AI**、**Pwn**、**系统安全**，以及把研究想法落成可用代码的工程实践。
 
-I am currently learning and building across AI and security: vulnerability analysis, intrusion detection, knowledge-augmented NLP systems, operating-system/container practice, and reverse-engineering-oriented security tooling.
+目前我在 AI 与安全的交叉地带学习和构建：漏洞分析、入侵检测、知识增强 NLP 系统、操作系统/容器实践，以及面向逆向工程的安全工具。
 
-## Focus Areas
+## 关注方向
 
-- **AI + Security**: intrusion detection, vulnerability analysis, AI-assisted security workflows, and security-oriented automation.
-- **Pwn / Binary Security**: glibc heap experiments, kernel structure exploitation notes, and reverse-engineering practice.
-- **NLP / Knowledge Systems**: KBQA, GraphRAG experiments, address segmentation, and AI study notes.
-- **Systems Engineering**: RISC-V OS practice, container implementation, chatroom/file-transfer systems, and browser automation tools.
+- **AI + 安全**：入侵检测、漏洞分析、AI 辅助安全工作流与面向安全的自动化。
+- **Pwn / 二进制安全**：glibc 堆实验、内核结构体利用笔记与逆向工程实践。
+- **NLP / 知识系统**：KBQA、GraphRAG 实验、地址分词与 AI 学习笔记。
+- **系统工程**：RISC-V OS 实践、容器实现、聊天室/文件传输系统与浏览器自动化工具。
 
-## Selected Projects
+## 代表项目
 
-- [nmap_ids](https://github.com/Y0uYuGe/nmap_ids): a Node-RED/Nmap intrusion behavior detection system based on random forest and grid search.
-- [Graphrag_LLama3.2-class-project](https://github.com/Y0uYuGe/Graphrag_LLama3.2-class-project): a GraphRAG and Llama 3.2 class project.
-- [NLP_KBQA_Advanced](https://github.com/Y0uYuGe/NLP_KBQA_Advanced): improvements and experiments around NLP KBQA.
-- [glibc-chunk-poc-basic](https://github.com/Y0uYuGe/glibc-chunk-poc-basic): basic glibc chunk exploitation PoCs.
-- [kernel-struct-exploit](https://github.com/Y0uYuGe/kernel-struct-exploit): notes and experiments for kernel structure exploitation and pwn.
-- [llkdocker](https://github.com/Y0uYuGe/llkdocker): a small Docker-like implementation for learning Linux container internals.
-- [risllkos-base](https://github.com/Y0uYuGe/risllkos-base) / [risllkos-advanced](https://github.com/Y0uYuGe/risllkos-advanced): RISC-V OS learning and implementation practice.
-- [Based-on-Tongyi automatic delivery resume browser plug-in](https://github.com/Y0uYuGe/Based-on-Tongyi-automatic-delivery-resume-browser-plug-in): a browser plug-in for AI-assisted resume greeting generation and delivery automation.
+- [nmap_ids](https://github.com/Y0uYuGe/nmap_ids)：基于随机森林与网格搜索的 Node-RED/Nmap 入侵行为检测系统。
+- [Graphrag_LLama3.2-class-project](https://github.com/Y0uYuGe/Graphrag_LLama3.2-class-project)：GraphRAG 与 Llama 3.2 课程项目。
+- [NLP_KBQA_Advanced](https://github.com/Y0uYuGe/NLP_KBQA_Advanced)：NLP KBQA 的改进与实验。
+- [glibc-chunk-poc-basic](https://github.com/Y0uYuGe/glibc-chunk-poc-basic)：glibc chunk 利用基础 POC。
+- [kernel-struct-exploit](https://github.com/Y0uYuGe/kernel-struct-exploit)：内核结构体利用与 pwn 的笔记和实验。
+- [llkdocker](https://github.com/Y0uYuGe/llkdocker)：用于学习 Linux 容器内部原理的小型类 Docker 实现。
+- [risllkos-base](https://github.com/Y0uYuGe/risllkos-base) / [risllkos-advanced](https://github.com/Y0uYuGe/risllkos-advanced)：RISC-V OS 学习与实现实践。
+- [Based-on-Tongyi automatic delivery resume browser plug-in](https://github.com/Y0uYuGe/Based-on-Tongyi-automatic-delivery-resume-browser-plug-in)：AI 生成招呼语并自动投递简历的浏览器插件。
 
-## Links
+## 链接
 
-- GitHub: [github.com/Y0uYuGe](https://github.com/Y0uYuGe)
-- Blog: [CSDN / llovewuzhengzi](https://blog.csdn.net/llovewuzhengzi)
-- Security community: [Butian profile](https://forum.butian.net/people/33851/community)
-- Email: [llk1010@foxmail.com](mailto:llk1010@foxmail.com)
+- GitHub：[github.com/Y0uYuGe](https://github.com/Y0uYuGe)
+- 博客：[CSDN / llovewuzhengzi](https://blog.csdn.net/llovewuzhengzi)
+- 安全社区：[补天主页](https://forum.butian.net/people/33851/community)
+- 邮箱：[llk1010@foxmail.com](mailto:llk1010@foxmail.com)
 
 {% include work-time-summary.html %}

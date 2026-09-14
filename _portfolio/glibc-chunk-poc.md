@@ -1,11 +1,11 @@
 ---
 title: "glibc-chunk-poc-basic"
-excerpt: "Basic glibc chunk exploitation proof-of-concept code."
+excerpt: "glibc chunk 利用基础 POC 代码。"
 collection: portfolio
 permalink: /portfolio/glibc-chunk-poc/
+lang: zh
 ---
 
-[GitHub repository](https://github.com/Y0uYuGe/glibc-chunk-poc-basic)
+[GitHub 仓库](https://github.com/Y0uYuGe/glibc-chunk-poc-basic)
 
-Basic proof-of-concept code for learning glibc heap chunk behavior and pwn fundamentals.
-
+用于学习 glibc 堆 chunk 行为与 pwn 基础的基础 POC 代码。
