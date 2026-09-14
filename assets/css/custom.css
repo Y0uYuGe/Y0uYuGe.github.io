@@ -142,34 +142,31 @@ html {
   backdrop-filter: blur(12px) saturate(1.5);
 }
 
-.masthead__menu-item--lg > a::before {
+.greedy-nav .visible-links > li.masthead__menu-item--lg > a::before {
   content: "~/";
+  position: static;
+  width: auto;
+  height: auto;
   margin-right: 0.3em;
+  background: none;
+  transform: none;
   font-family: var(--yyg-mono);
   font-weight: 600;
   color: var(--global-base-color);
 }
 
-.greedy-nav .visible-links > li:not(.tail) > a {
-  position: relative;
+.greedy-nav .visible-links > li.masthead__menu-item--lg > a:hover::before {
+  transform: none;
 }
 
-.greedy-nav .visible-links > li:not(.tail) > a::after {
-  content: "";
-  position: absolute;
-  left: 0.5rem;
-  right: 0.5rem;
-  bottom: 0.3rem;
+/* recolor the theme's own :before hover underline with the accent */
+.greedy-nav .visible-links > li:not(.masthead__menu-item--lg):not(.tail) > a::before {
+  background: var(--global-base-color);
   height: 2px;
   border-radius: 2px;
-  background: var(--global-base-color);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.25s ease;
 }
 
-.greedy-nav .visible-links > li:not(.tail) > a:hover::after,
-.greedy-nav .visible-links > li.selected:not(.tail) > a::after {
+.greedy-nav .visible-links > li.selected:not(.tail) > a::before {
   transform: scaleX(1);
 }
 
