@@ -7,7 +7,7 @@ redirect_from:
   - /about.html
 ---
 
-I am **Liu Like (LLK / Y0uYuGe)**, an undergraduate student at **Yunnan University (YNU)**. My work focuses on **AI**, **pwn**, **systems security**, and practical engineering projects that connect research ideas with working code.
+I am **Liu Like (LLK / Y0uYuGe)**, an undergraduate student. My work focuses on **AI**, **pwn**, **systems security**, and practical engineering projects that connect research ideas with working code.
 
 I am currently learning and building across AI and security: vulnerability analysis, intrusion detection, knowledge-augmented NLP systems, operating-system/container practice, and reverse-engineering-oriented security tooling.
 

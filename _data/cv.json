@@ -4,7 +4,7 @@
     "email": "llk1010@foxmail.com",
     "phone": "",
     "website": "https://y0uyuge.github.io",
-    "summary": "Undergraduate at Yunnan University. Interested in AI, pwn, systems security, and practical engineering projects.",
+    "summary": "Undergraduate student interested in AI, pwn, systems security, and practical engineering projects.",
     "location": {
       "address": "",
       "postalCode": "",
@@ -41,17 +41,7 @@
       "highlights": []
     }
   ],
-  "education": [
-    {
-      "institution": "Yunnan University",
-      "area": "Undergraduate student",
-      "studyType": "",
-      "startDate": "",
-      "endDate": "",
-      "gpa": null,
-      "courses": []
-    }
-  ],
+  "education": [],
   "skills": [
     {
       "name": "AI and NLP",

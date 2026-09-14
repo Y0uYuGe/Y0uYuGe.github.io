@@ -26,9 +26,9 @@ author:
   avatar           : "profile.png"
   name             : "Liu Like"
   pronouns         : # example: "she/her"  
-  bio              : "Undergraduate at YNU. AI, pwn, systems security, and builder mindset."
+  bio              : "AI, pwn, systems security, and builder mindset."
   location         : "China"
-  employer         : "Yunnan University"
+  employer         : 
   uri              : "https://y0uyuge.github.io"
   email            : "llk1010@foxmail.com" 
 

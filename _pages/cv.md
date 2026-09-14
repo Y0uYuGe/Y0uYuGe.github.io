@@ -12,7 +12,7 @@ redirect_from:
 Education
 ======
 
-- **Yunnan University (YNU)**, Undergraduate student.
+- Undergraduate student.
 
 Experience
 ======
