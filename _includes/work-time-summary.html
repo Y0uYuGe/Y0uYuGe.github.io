@@ -10,24 +10,26 @@
     margin: 1rem 0 1.25rem;
   }
   .work-time-card {
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
+    border: 1px solid var(--global-border-color);
+    border-radius: 10px;
     padding: 0.75rem;
-    background: #fff;
+    background: var(--global-bg-color);
   }
   .work-time-card strong {
     display: block;
+    font-family: var(--yyg-mono, monospace);
     font-size: 1.45rem;
     line-height: 1.2;
+    color: var(--global-base-color);
   }
   .work-time-card span {
-    color: #57606a;
+    color: var(--global-text-color-light);
     font-size: 0.88rem;
   }
   .work-time-row {
     margin: 0 0 1rem;
     padding-bottom: 0.85rem;
-    border-bottom: 1px solid #d8dee4;
+    border-bottom: 1px solid var(--global-border-color);
   }
   .work-time-row header {
     display: flex;
@@ -41,7 +43,8 @@
     font-size: 1rem;
   }
   .work-time-hours {
-    color: #0969da;
+    color: var(--global-base-color);
+    font-family: var(--yyg-mono, monospace);
     font-weight: 700;
     white-space: nowrap;
   }
@@ -49,28 +52,28 @@
     height: 10px;
     overflow: hidden;
     border-radius: 999px;
-    background: #eaeef2;
+    background: var(--global-border-color);
   }
   .work-time-bar span {
     display: block;
     height: 100%;
     min-width: 2px;
     border-radius: inherit;
-    background: #0969da;
+    background: var(--global-base-color);
   }
   .work-time-days {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
     margin-top: 0.45rem;
-    color: #57606a;
+    color: var(--global-text-color-light);
     font-size: 0.86rem;
   }
   .work-time-days span {
-    border: 1px solid #d0d7de;
+    border: 1px solid var(--global-border-color);
     border-radius: 999px;
     padding: 0.12rem 0.45rem;
-    background: #f6f8fa;
+    background: var(--global-bg-color);
   }
 </style>
 

@@ -7,6 +7,13 @@ redirect_from:
   - /about.html
 ---
 
+<div class="hero">
+  <p class="hero__eyebrow">~$ whoami</p>
+  <h2 class="hero__title">Liu Like<span class="hero__alias">Y0uYuGe · LLK</span></h2>
+  <p class="hero__roles"><span id="hero-typer" data-words='["AI × 安全：智能攻防实验","Pwn 与二进制利用","内核 / 系统 / 容器","知识增强的 NLP 系统"]'>AI × 安全：智能攻防实验</span><span class="hero__caret" aria-hidden="true"></span></p>
+  <p class="hero__motto">保持好奇，认真建造，公开分享 —— 这里记录我的学习、研究与工程实践。</p>
+</div>
+
 我是 **Liu Like（LLK / Y0uYuGe）**，一名本科生。我的方向是 **AI**、**Pwn**、**系统安全**，以及把研究想法落成可用代码的工程实践。
 
 目前我在 AI 与安全的交叉地带学习和构建：漏洞分析、入侵检测、知识增强 NLP 系统、操作系统/容器实践，以及面向逆向工程的安全工具。
