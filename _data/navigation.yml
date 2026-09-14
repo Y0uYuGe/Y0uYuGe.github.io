@@ -22,9 +22,6 @@ main:
   - title: "简历"
     url: /cv/
 
-  - title: "EN"
-    url: /en/
-
 main-en:
   - title: "Publications"
     url: /en/publications/
@@ -43,6 +40,3 @@ main-en:
 
   - title: "CV"
     url: /en/cv/
-
-  - title: "中文"
-    url: /
