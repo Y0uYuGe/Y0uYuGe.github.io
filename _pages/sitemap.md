@@ -1,20 +1,20 @@
 ---
 layout: archive
-title: "网站地图"
+title: "Sitemap"
 permalink: /sitemap/
 author_profile: true
 ---
 
 {% include base_path %}
 
-本站所有页面与文章的列表。另有供爬虫抓取的 [XML 版本]({{ base_path }}/sitemap.xml)。
+A list of all pages and posts on this site. An [XML version]({{ base_path }}/sitemap.xml) is also available for crawlers.
 
-<h2>页面</h2>
+<h2>Pages</h2>
 {% for post in site.pages %}
   {% include archive-single.html %}
 {% endfor %}
 
-<h2>文章</h2>
+<h2>Posts</h2>
 {% for post in site.posts %}
   {% include archive-single.html %}
 {% endfor %}

@@ -77,39 +77,29 @@
   }
 </style>
 
-{% if page.lang == 'en' %}
 ## Work Time
-{% else %}
-## 工作时间
-{% endif %}
 
 {% if weeks and weeks.size > 0 %}
-  {% if page.lang == 'en' %}
   <p>
     This section is generated from local LLK planning data and summarizes weekly work time recorded by the VS Code time manager.
   </p>
-  {% else %}
-  <p>
-    本板块由本地 LLK 规划数据生成，汇总 VS Code 时间管理器记录的每周工作时长。
-  </p>
-  {% endif %}
 
   <div class="work-time-summary">
     <div class="work-time-card">
       <strong>{{ stats.summary.work_hours }}h</strong>
-      <span>{% if page.lang == 'en' %}Total recorded work{% else %}累计记录工时{% endif %}</span>
+      <span>Total recorded work</span>
     </div>
     <div class="work-time-card">
       <strong>{{ stats.summary.daily_average_work_hours }}h</strong>
-      <span>{% if page.lang == 'en' %}Average per work day{% else %}平均每工作日{% endif %}</span>
+      <span>Average per work day</span>
     </div>
     <div class="work-time-card">
       <strong>{{ latest.work_hours }}h</strong>
-      <span>{% if page.lang == 'en' %}Latest week{% else %}最近一周{% endif %} · {{ latest.key }}</span>
+      <span>Latest week · {{ latest.key }}</span>
     </div>
     <div class="work-time-card">
       <strong>{{ stats.summary.weeks_count }}</strong>
-      <span>{% if page.lang == 'en' %}Weeks with records{% else %}有记录周数{% endif %}</span>
+      <span>Weeks with records</span>
     </div>
   </div>
 
@@ -134,11 +124,7 @@
 </article>
 {% endfor %}
 
-  {% if page.lang == 'en' %}
   <p><small>Generated at {{ stats.generated_at }} from {{ stats.source_root }}.</small></p>
 {% else %}
-  <p><small>生成于 {{ stats.generated_at }}，数据来源 {{ stats.source_root }}。</small></p>
-{% endif %}
-{% else %}
-  <p>{% if page.lang == 'en' %}No work time records found yet.{% else %}暂无工时记录。{% endif %}</p>
+  <p>No work time records found yet.</p>
 {% endif %}

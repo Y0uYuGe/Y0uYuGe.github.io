@@ -3,7 +3,7 @@ layout: default
 ---
 
 {% include base_path %}
-{% assign ui_locale = site.locale %}{% if page.lang == 'en' %}{% assign ui_locale = 'en' %}{% endif %}
+{% assign ui_locale = site.locale %}
 
 {% if page.header.overlay_color or page.header.overlay_image or page.header.image %}
   {% include page__hero.html %}
