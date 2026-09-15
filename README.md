@@ -15,6 +15,27 @@
 
 See more info at https://academicpages.github.io/
 
+## English-first blog workflow
+
+English posts are the source of truth for new blog content. Add or edit a file
+named `_posts/YYYY-MM-DD-slug-en.md`, keep `lang: en` in its front matter, and
+push it to `master`. The `Translate English posts to Chinese` GitHub Actions
+workflow generates `_posts/YYYY-MM-DD-slug.md` and opens a pull request for
+review. Generated Chinese posts should not be edited directly because the next
+English update will replace them.
+
+Before using the workflow, add an Actions repository secret named
+`OPENAI_API_KEY`. The key is passed only through the workflow environment and
+is never committed. Translation uses `gpt-5.6-luna` by default. To select a
+different model, add an Actions repository variable named
+`OPENAI_TRANSLATION_MODEL`.
+
+The workflow protects fenced and inline code, URLs, Liquid tags, HTML tags, and
+math expressions from translation. It processes only English posts changed by
+the triggering push; existing post pairs are not regenerated. You can also run
+the workflow manually and provide one `_posts/*-en.md` path, or leave the path
+blank to generate only missing Chinese siblings.
+
 ## Running locally
 
 When you are initially working on your website, it is very useful to be able to preview the changes locally before pushing them to GitHub. To work locally you will need to:
