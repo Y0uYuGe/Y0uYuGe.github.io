@@ -1,12 +1,13 @@
 ---
 title: "risllkos-base / risllkos-advanced"
-excerpt: "RISC-V 操作系统学习与实现实践。"
+excerpt: "RISC-V OS learning and implementation practice."
 collection: portfolio
 permalink: /portfolio/risllkos/
-lang: zh
+redirect_from:
+  - "/en/portfolio/risllkos/"
 ---
 
 - [risllkos-base](https://github.com/Y0uYuGe/risllkos-base)
 - [risllkos-advanced](https://github.com/Y0uYuGe/risllkos-advanced)
 
-基于课程资料、RISC-V 手册与实现实践的 RISC-V 操作系统学习项目。
+RISC-V operating-system learning projects based on course materials, RISC-V manuals, and implementation practice.

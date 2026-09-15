@@ -7,12 +7,12 @@
 # server process.
 
 # Basic Site Settings
-locale                   : "zh-CN"
+locale                   : "en-US"
 site_theme               : "default" # The available themes options are "default", "air", "sunrise", "mint", "dirt" and "contrast"
 title                    : "Liu Like / Y0uYuGe"
 title_separator          : "-"
 name                     : &name "Liu Like"
-description              : &description "Liu Like（Y0uYuGe）的个人主页：AI、Pwn、系统安全与工程实践项目。"
+description              : &description "Liu Like (Y0uYuGe): AI, pwn, systems security, and hands-on engineering projects."
 url                      : https://y0uyuge.github.io # The base hostname & protocol for your site e.g. "https://[your GitHub username].github.io",
                                                            # or if you already have some other page hosted on Github then use "https://[your GitHub username].github.io/[Your Repo Name]"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
@@ -26,8 +26,7 @@ author:
   avatar           : "profile.png"
   name             : "Liu Like"
   pronouns         : # example: "she/her"  
-  bio              : "AI、Pwn、系统安全，热衷动手构建。"
-  bio_en           : "AI, pwn, systems security, and builder mindset."
+  bio              : "AI, pwn, systems security, and builder mindset."
   location         : "China"
   employer         : 
   uri              : "https://y0uyuge.github.io"

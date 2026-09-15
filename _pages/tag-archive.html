@@ -1,13 +1,14 @@
 ---
 layout: archive
 permalink: /tags/
-title: "按标签归档"
+redirect_from:
+  - "/en/tags/"
+title: "Posts by Tag"
 author_profile: true
 ---
 
 {% include base_path %}
-{% assign zh_posts = site.posts | where_exp: 'post', "post.lang != 'en'" %}
-{% include group-by-array collection=zh_posts field="tags" %}
+{% include group-by-array collection=site.posts field="tags" %}
 
 {% for tag in group_names %}
   {% assign posts = group_items[forloop.index0] %}

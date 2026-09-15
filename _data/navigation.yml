@@ -1,42 +1,20 @@
 # The following is the order of the links in the header of the website.
-#
-# main     : Chinese navigation (site root)
-# main-en  : English navigation (pages under /en/, selected when page.lang == "en")
 
 main:
-  - title: "论文发表"
+  - title: "Publications"
     url: /publications/
 
-  - title: "演讲"
+  - title: "Talks"
     url: /talks/
 
-  - title: "教学"
+  - title: "Teaching"
     url: /teaching/
 
-  - title: "项目作品"
+  - title: "Portfolio"
     url: /portfolio/
 
-  - title: "博客文章"
-    url: /year-archive/
-
-  - title: "简历"
-    url: /cv/
-
-main-en:
-  - title: "Publications"
-    url: /en/publications/
-
-  - title: "Talks"
-    url: /en/talks/
-
-  - title: "Teaching"
-    url: /en/teaching/
-
-  - title: "Portfolio"
-    url: /en/portfolio/
-
   - title: "Blog Posts"
-    url: /en/posts/
+    url: /posts/
 
   - title: "CV"
-    url: /en/cv/
+    url: /cv/

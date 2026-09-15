@@ -1,4 +1,4 @@
-{% assign ui_locale = site.locale %}{% if post.lang == 'en' or page.lang == 'en' %}{% assign ui_locale = 'en' %}{% endif %}
+{% assign ui_locale = site.locale %}
 {% if post.read_time %}
   {% assign words = post.content | strip_html | number_of_words %}
 {% elsif page.read_time %}

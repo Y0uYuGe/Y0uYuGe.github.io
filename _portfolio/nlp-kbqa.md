@@ -1,11 +1,12 @@
 ---
 title: "NLP_KBQA_Advanced"
-excerpt: "围绕 NLP 知识库问答（KBQA）的实验与改进。"
+excerpt: "Experiments and improvements around NLP-based KBQA."
 collection: portfolio
 permalink: /portfolio/nlp-kbqa/
-lang: zh
+redirect_from:
+  - "/en/portfolio/nlp-kbqa/"
 ---
 
-[GitHub 仓库](https://github.com/Y0uYuGe/NLP_KBQA_Advanced)
+[GitHub repository](https://github.com/Y0uYuGe/NLP_KBQA_Advanced)
 
-一个 NLP 知识库问答项目，专注于 KBQA 方法的改进与扩展。
+An NLP knowledge-base question answering project focused on improving and extending KBQA methods.

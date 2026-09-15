@@ -1,5 +1,5 @@
 {% include base_path %}
-{% assign item_locale = site.locale %}{% if post.lang == 'en' %}{% assign item_locale = 'en' %}{% endif %}
+{% assign item_locale = site.locale %}
 
 {% if post.header.teaser %}
   {% capture teaser %}{{ post.header.teaser }}{% endcapture %}

@@ -1,13 +1,14 @@
 ---
 layout: archive
 permalink: /categories/
-title: "按分类归档"
+redirect_from:
+  - "/en/categories/"
+title: "Posts by Category"
 author_profile: true
 ---
 
 {% include base_path %}
-{% assign zh_posts = site.posts | where_exp: 'post', "post.lang != 'en'" %}
-{% include group-by-array collection=zh_posts field="categories" %}
+{% include group-by-array collection=site.posts field="categories" %}
 
 {% for category in group_names %}
   {% assign posts = group_items[forloop.index0] %}

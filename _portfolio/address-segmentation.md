@@ -1,11 +1,12 @@
 ---
 title: "Address Segmentation Learning and Practice"
-excerpt: "学习、对比并实现地址分词方案的 Python 项目。"
+excerpt: "A Python project for reading, comparing, and implementing address segmentation ideas."
 collection: portfolio
 permalink: /portfolio/address-segmentation/
-lang: zh
+redirect_from:
+  - "/en/portfolio/address-segmentation/"
 ---
 
-[GitHub 仓库](https://github.com/Y0uYuGe/Address-segmentation-learning-and-practice)
+[GitHub repository](https://github.com/Y0uYuGe/Address-segmentation-learning-and-practice)
 
-一个调研现有地址分词实现、并集各家所长构建综合实现的项目。
+A project for studying existing address segmentation implementations and building a combined implementation from their strengths.
