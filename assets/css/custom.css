@@ -330,6 +330,94 @@ html[data-theme="dark"] .grid__item .archive__item:hover {
 
 /* ---------- sidebar / author card ---------- */
 
+/* Place navigation in the theme's existing right gutter; retain the original layout. */
+.page-outline-rail {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  #main.has-page-outline {
+    position: relative;
+  }
+
+  /* Archive layouts do not reserve the two-column gutter that single pages do. */
+  #main.has-page-outline > .archive {
+    padding-right: 16.9491525424%;
+  }
+
+  .page-outline-rail {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 1em;
+    width: calc(100% / 6 - 28px);
+  }
+
+  .page-outline {
+    display: block;
+    position: sticky;
+    top: 94px;
+    max-height: calc(100vh - 110px);
+    max-height: calc(100dvh - 110px);
+    padding: 4px;
+    overflow-y: auto;
+  }
+
+  .page-outline__label {
+    margin: 0 0 10px;
+    font-family: var(--yyg-mono);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--global-text-color-light);
+  }
+
+  .page-outline__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--global-border-color);
+  }
+
+  .page-outline__list li {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  .page-outline__link {
+    display: block;
+    margin-left: -1px;
+    padding: 7px 8px 7px 12px;
+    border-left: 2px solid transparent;
+    color: var(--global-text-color-light);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .page-outline__link:hover,
+  .page-outline__link[aria-current="location"] {
+    color: var(--global-base-color);
+    text-decoration: none;
+  }
+
+  .page-outline__link[aria-current="location"] {
+    border-left-color: var(--global-base-color);
+    background: var(--yyg-accent-soft);
+  }
+}
+
+.page__content :is(h1, h2, h3)[id],
+.archive > :is(h1, h2, h3)[id] {
+  scroll-margin-top: 94px;
+}
+
+@media print {
+  .page-outline-rail { display: none !important; }
+}
+
 .sidebar .author__avatar img {
   padding: 4px;
   border: 1px solid var(--global-border-color);
