@@ -4,18 +4,19 @@ redirect_from:
   - "/en/"
   - "/about/"
   - "/about.html"
-title: "Liu Like (Y0uYuGe)"
+title: "Y0uYuGe"
+seo_title: "Y0uYuGe — Liu Like"
 author_profile: true
 ---
 
 <div class="hero">
   <p class="hero__eyebrow">~$ whoami</p>
-  <h2 class="hero__title">Liu Like<span class="hero__alias">Y0uYuGe · LLK</span></h2>
+  <h2 class="hero__title">Y0uYuGe<span class="hero__alias">Liu Like</span></h2>
   <p class="hero__roles"><span id="hero-typer" data-words='["AI x Security: intelligent offense and defense","Pwn and binary exploitation","Kernel, systems, and containers","Knowledge-augmented NLP"]'>AI x Security: intelligent offense and defense</span><span class="hero__caret" aria-hidden="true"></span></p>
   <p class="hero__motto">Stay curious, build with care, share in public — notes on learning, research, and engineering.</p>
 </div>
 
-I am **Liu Like (LLK / Y0uYuGe)**, an undergraduate student. My work focuses on **AI**, **pwn**, **systems security**, and practical engineering projects that connect research ideas with working code.
+I'm **Liu Like**, known online as **Y0uYuGe**. I am an undergraduate student. My work focuses on **AI**, **pwn**, **systems security**, and practical engineering projects that connect research ideas with working code.
 
 I am currently learning and building across AI and security: vulnerability analysis, intrusion detection, knowledge-augmented NLP systems, operating-system/container practice, and reverse-engineering-oriented security tooling.
 
