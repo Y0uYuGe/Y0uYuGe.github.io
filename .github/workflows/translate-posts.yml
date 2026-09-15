@@ -1,0 +1,90 @@
+name: Translate English posts to Chinese
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "_posts/**/*-en.md"
+  workflow_dispatch:
+    inputs:
+      post:
+        description: "Optional _posts/*-en.md path; blank translates only missing Chinese siblings"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: translate-posts-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OPENAI_TRANSLATION_MODEL: ${{ vars.OPENAI_TRANSLATION_MODEL || 'gpt-5.6-luna' }}
+
+    steps:
+      - name: Check out the English posts and translator
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            _posts
+            scripts
+
+      - name: Test the translator
+        run: python3 -m unittest -v scripts/test_translate_posts.py
+
+      - name: Fetch the previous revision
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        run: git fetch --no-tags --filter=blob:none --depth=1 origin "${{ github.event.before }}"
+
+      - name: Generate Chinese posts from changed English posts
+        if: github.event_name == 'push'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: >-
+          python3 scripts/translate_posts.py
+          --changed-from "${{ github.event.before }}"
+          --changed-to "${{ github.sha }}"
+
+      - name: Generate a manually selected Chinese post
+        if: github.event_name == 'workflow_dispatch' && inputs.post != ''
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SELECTED_POST: ${{ inputs.post }}
+        run: python3 scripts/translate_posts.py --files "$SELECTED_POST"
+
+      - name: Generate missing Chinese posts
+        if: github.event_name == 'workflow_dispatch' && inputs.post == ''
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python3 scripts/translate_posts.py --missing
+
+      - name: Create a translation pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- _posts; then
+            echo "No translated files changed."
+            exit 0
+          fi
+
+          branch="automation/chinese-translations-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add _posts
+          git commit -m "Generate Chinese translations"
+          git push --set-upstream origin "$branch"
+          gh pr create \
+            --base master \
+            --head "$branch" \
+            --title "Generate Chinese translations" \
+            --body "Automatically generated from changed English source posts. Review technical terminology and merge when ready."
