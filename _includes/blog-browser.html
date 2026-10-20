@@ -1,0 +1,52 @@
+{% include base_path %}
+<div class="blog-browser" data-blog-browser data-index-url="{{ '/posts/index.json' | relative_url }}">
+  <p class="blog-browser__error" data-browser-error role="alert" hidden></p>
+  <div class="blog-browser__controls" data-browser-controls hidden>
+    <section class="blog-browser__main" aria-label="Posts">
+      <div class="blog-browser__toolbar">
+        <p class="blog-browser__status" role="status" aria-live="polite" data-browser-status></p>
+        <label for="blog-search"><span class="sr-only">Search posts</span>
+          <svg class="blog-browser__search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+          <input id="blog-search" class="blog-browser__search" type="search" placeholder="Search writing…" autocomplete="off" data-browser-search>
+        </label>
+      </div>
+      <nav class="blog-browser__breadcrumbs" aria-label="Current topic" data-browser-breadcrumbs></nav>
+      <div class="blog-browser__active-filters" aria-label="Selected tags" data-browser-active-filters></div>
+      <div class="blog-browser__results" data-browser-results></div>
+      <nav class="blog-browser__pagination" aria-label="Post pagination" data-browser-pagination></nav>
+    </section>
+    <aside id="blog-filters" class="blog-browser__filters" aria-label="Post filters" data-browser-filters data-mobile-open="false">
+      <div class="blog-browser__filter-header">
+        <h2>Filter by</h2>
+        <button type="button" class="blog-browser__reset" data-browser-reset hidden>Clear filters</button>
+        <button type="button" class="blog-browser__filter-close" aria-label="Close filters" data-browser-filter-close>×</button>
+      </div>
+      <section class="blog-browser__sidebar" aria-labelledby="blog-topics-title">
+        <h3 id="blog-topics-title">Topics</h3>
+        <nav class="blog-browser__folders" aria-label="Post topics" data-browser-folders></nav>
+      </section>
+      <section class="blog-browser__time-panel" aria-labelledby="blog-time-title">
+        <h3 id="blog-time-title">Time</h3>
+        <div class="blog-browser__date-fields">
+          <label for="blog-year">Year<select id="blog-year" data-browser-year><option value="">All years</option></select></label>
+          <label for="blog-month">Month<select id="blog-month" data-browser-month><option value="">All months</option></select></label>
+        </div>
+      </section>
+      <section class="blog-browser__tags-panel" aria-labelledby="blog-tags-title">
+        <h3 id="blog-tags-title">Tags</h3>
+        <label for="blog-tag-search" class="sr-only">Find a tag</label>
+        <input id="blog-tag-search" class="blog-browser__tag-search" type="search" placeholder="Find a tag…" autocomplete="off" data-browser-tag-search>
+        <p class="blog-browser__tag-hint">Match all selected tags.</p>
+        <div class="blog-browser__tags" data-browser-tags></div>
+        <button type="button" class="blog-browser__more-tags" data-browser-more-tags aria-expanded="false" hidden>Show all tags</button>
+      </section>
+    </aside>
+    <button type="button" class="blog-browser__filter-toggle" aria-controls="blog-filters" aria-expanded="false" data-browser-filter-toggle>Filters</button>
+  </div>
+  <div data-browser-fallback>
+    <p>All posts:</p>
+    {% for post in site.posts %}
+      {% include archive-single.html %}
+    {% endfor %}
+  </div>
+</div>

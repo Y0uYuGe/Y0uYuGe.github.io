@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "repository": "Y0uYuGe/aicode-in-the-wild-security-risk-report",
+      "path": "_posts/ai-security/aicode-in-the-wild-security-risk-report",
+      "branch": "main",
+      "fork": true
+    },
+    {
+      "repository": "Y0uYuGe/AI_Study_Note",
+      "path": "_posts/ai-foundations/ai-study-note",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/cs408-computer-networks",
+      "path": "_posts/software-foundations/computer-networks/cs408-computer-networks",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/cs408-computer-organization",
+      "path": "_posts/software-foundations/computer-organization/cs408-computer-organization",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/cs408-data-structures",
+      "path": "_posts/software-foundations/data-structures/cs408-data-structures",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/cs408-operating-systems",
+      "path": "_posts/software-foundations/operating-systems/cs408-operating-systems",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/glibc-chunk-poc-basic",
+      "path": "_posts/endpoint-security/glibc-chunk-poc-basic",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/Graphrag_LLama3.2-class-project",
+      "path": "_posts/ai-infrastructure/graphrag-llama3-2-class-project",
+      "branch": "master",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/IoT_Security_Learning",
+      "path": "_posts/endpoint-security/iot-security-learning",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/kernel-struct-exploit",
+      "path": "_posts/endpoint-security/kernel-struct-exploit",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/learning-cxx",
+      "path": "_posts/ai-infrastructure/learning-cxx",
+      "branch": "main",
+      "fork": true
+    },
+    {
+      "repository": "Y0uYuGe/learning-lm-rs",
+      "path": "_posts/ai-infrastructure/learning-lm-rs",
+      "branch": "main",
+      "fork": true
+    },
+    {
+      "repository": "Y0uYuGe/llkchatroom",
+      "path": "_posts/software-foundations/projects/llkchatroom",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/llkdocker",
+      "path": "_posts/ai-infrastructure/llkdocker",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/MagicSkills",
+      "path": "_posts/ai-infrastructure/magicskills-fork",
+      "branch": "main",
+      "fork": true
+    },
+    {
+      "repository": "Y0uYuGe/nmap_ids",
+      "path": "_posts/endpoint-security/nmap-ids",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/risllkos-advanced",
+      "path": "_posts/software-foundations/operating-systems/risllkos-advanced",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/risllkos-base",
+      "path": "_posts/software-foundations/operating-systems/risllkos-base",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Y0uYuGe/rustlings",
+      "path": "_posts/software-foundations/programming-languages/rustlings",
+      "branch": "main",
+      "fork": true
+    },
+    {
+      "repository": "Y0uYuGe/sextant",
+      "path": "_posts/ai-infrastructure/sextant",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "Narwhal-Lab/MagicSkills",
+      "path": "_posts/ai-infrastructure/magicskills",
+      "branch": "main",
+      "fork": false
+    }
+  ]
+}

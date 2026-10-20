@@ -57,6 +57,13 @@
   }
 }
 
+@media screen and (max-width: 768px) {
+  .page__footer {
+    position: relative;
+    bottom: auto;
+  }
+}
+
 .page__footer-copyright {
   font-family: $global-font-family;
   font-size: $type-size-7;

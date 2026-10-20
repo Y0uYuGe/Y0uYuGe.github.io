@@ -1,0 +1,14 @@
+{% if page.collection == 'posts' %}
+  {% assign folder_parts = page.path | remove_first: '_posts/' | split: '/' %}
+  <nav class="post-folder-path" aria-label="Post topics">
+    <a href="{{ '/posts/' | relative_url }}">Blog Posts</a>
+    {% assign folder_prefix = '' %}
+    {% for folder_part in folder_parts %}
+      {% unless forloop.last %}
+        {% assign folder_prefix = folder_prefix | append: folder_part %}
+        <span aria-hidden="true"> / </span><a href="{{ '/posts/' | relative_url }}?folder={{ folder_prefix | cgi_escape }}">{{ folder_part | escape }}</a>
+        {% assign folder_prefix = folder_prefix | append: '/' %}
+      {% endunless %}
+    {% endfor %}
+  </nav>
+{% endif %}

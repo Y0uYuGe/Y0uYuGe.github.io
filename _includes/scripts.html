@@ -1,4 +1,9 @@
-<script type="module" src="{{ base_path }}/assets/js/main.min.js"></script>
-<script src="{{ base_path }}/assets/js/custom.js"></script>
+<script type="module" src="{{ '/assets/js/main.min.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/custom.js' | relative_url }}"></script>
+{% if page.blog_browser %}
+<script defer src="{{ '/assets/js/blog-browser.js' | relative_url }}"></script>
+{% endif %}
 
 {% include analytics.html %}
+
+{% include comments-providers/scripts.html %}

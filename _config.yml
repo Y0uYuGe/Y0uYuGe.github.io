@@ -12,7 +12,7 @@ site_theme               : "default" # The available themes options are "default
 title                    : "Y0uYuGe" # Website name / online handle
 title_separator          : "-"
 name                     : &name "Liu Like" # Author's name in pinyin
-description              : &description "Y0uYuGe is the personal blog of Liu Like, covering AI, pwn, systems security, and hands-on engineering projects."
+description              : &description "Y0uYuGe is the personal blog of Liu Like, covering endpoint security, AI security, embodied AI, and AI infrastructure."
 url                      : https://y0uyuge.github.io # The base hostname & protocol for your site e.g. "https://[your GitHub username].github.io",
                                                            # or if you already have some other page hosted on Github then use "https://[your GitHub username].github.io/[Your Repo Name]"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
@@ -26,7 +26,7 @@ author:
   avatar           : "profile.png"
   name             : *name
   pronouns         : # example: "she/her"  
-  bio              : "AI, pwn, systems security, and builder mindset."
+  bio              : "Endpoint Security · AI Security · Embodied AI · AI Infrastructure"
   location         : "China"
   employer         : 
   uri              : "https://y0uyuge.github.io"
@@ -87,9 +87,11 @@ publication_category:
   books:
     title: 'Books'
   manuscripts:
-    title: 'Journal Articles'    
+    title: 'Journal Articles'
   conferences:
     title: 'Conference Papers'
+  preprints:
+    title: 'Preprints'
 
 # Site Settings
 teaser                   :  # filename of teaser fallback teaser image placed in /images/ for social media previews
@@ -174,7 +176,6 @@ exclude:
   - "*.sublime-workspace"
   - .asset-cache
   - .bundle
-  - .github
   - .jekyll-assets-cache
   - .sass-cache
   - assets/js/_main.js
@@ -183,7 +184,6 @@ exclude:
   - CHANGELOG
   - Capfile
   - config
-  - Dockerfile
   - Gemfile
   - Gruntfile.js
   - gulpfile.js
@@ -195,6 +195,8 @@ exclude:
   - Rakefile
   - README
   - scripts
+  - start-preview.ps1
+  - sync-projects.ps1
   - tmp
   - vendor
 keep_files:
@@ -304,7 +306,7 @@ sass:
 
 
 # Outputting
-permalink: /:categories/:title/
+permalink: /posts/:path/
 # paginate: 5 # amount of posts to show
 # paginate_path: /page:num/
 timezone: Etc/UTC # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones

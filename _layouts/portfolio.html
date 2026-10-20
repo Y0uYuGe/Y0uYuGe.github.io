@@ -1,0 +1,26 @@
+---
+layout: single
+---
+
+<div class="portfolio-detail">
+  <div class="portfolio-detail__overview">
+    <p class="portfolio-project__meta">
+      <span>{{ page.project_type | default: "Project" | escape }}</span>
+      {% if page.project_status %}<span class="portfolio-project__status">{{ page.project_status | escape }}</span>{% endif %}
+    </p>
+    <div class="portfolio-detail__summary">{{ page.excerpt | markdownify }}</div>
+    {% if page.technologies.size > 0 %}
+    <ul class="portfolio-technologies" aria-label="Technologies">
+      {% for technology in page.technologies %}<li>{{ technology | escape }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    <div class="portfolio-detail__links">
+      {% if page.demo_url %}<a href="{{ page.demo_url | relative_url | escape }}">Open knowledge graph <span aria-hidden="true">&rarr;</span></a>{% endif %}
+      {% if page.repository %}<a href="{{ page.repository | escape }}">View source on GitHub <span aria-hidden="true">&nearr;</span></a>{% endif %}
+      <a href="{{ '/portfolio/' | relative_url }}">All projects <span aria-hidden="true">&rarr;</span></a>
+    </div>
+  </div>
+  <div class="portfolio-detail__body">
+    {{ content }}
+  </div>
+</div>

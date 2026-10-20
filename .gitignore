@@ -21,3 +21,26 @@ package-lock.json
 
 # Ignore files created by MacOS
 .DS_Store
+
+# Project workspaces: source stays in each independent repository.
+/_posts/ai-security/aicode-in-the-wild-security-risk-report/
+/_posts/ai-foundations/ai-study-note/
+/_posts/software-foundations/computer-networks/cs408-computer-networks/
+/_posts/software-foundations/computer-organization/cs408-computer-organization/
+/_posts/software-foundations/data-structures/cs408-data-structures/
+/_posts/software-foundations/operating-systems/cs408-operating-systems/
+/_posts/endpoint-security/glibc-chunk-poc-basic/
+/_posts/ai-infrastructure/graphrag-llama3-2-class-project/
+/_posts/endpoint-security/iot-security-learning/
+/_posts/endpoint-security/kernel-struct-exploit/
+/_posts/ai-infrastructure/learning-cxx/
+/_posts/ai-infrastructure/learning-lm-rs/
+/_posts/software-foundations/projects/llkchatroom/
+/_posts/ai-infrastructure/llkdocker/
+/_posts/ai-infrastructure/magicskills-fork/
+/_posts/endpoint-security/nmap-ids/
+/_posts/software-foundations/operating-systems/risllkos-advanced/
+/_posts/software-foundations/operating-systems/risllkos-base/
+/_posts/software-foundations/programming-languages/rustlings/
+/_posts/ai-infrastructure/sextant/
+/_posts/ai-infrastructure/magicskills/

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 330" role="img" aria-labelledby="title desc">
+  <title id="title">MagicSkills skill reuse workflow</title>
+  <desc id="desc">Install skill directories into a shared pool. Compose named Skills collections from the pool and persist their path references in REGISTRY. Each collection can synchronize an AGENTS.md file or expose a CLI and Python tool interface.</desc>
+  <style>
+    :root { color-scheme: light dark; --paper: #f8f7f3; --surface: #ffffff; --ink: #242c32; --muted: #647078; --line: #b7c2c9; --accent: #b5432d; --soft: #f7e9e4; }
+    @media (prefers-color-scheme: dark) { :root { --paper: #1d2429; --surface: #283138; --ink: #eef1f2; --muted: #bdc8cf; --line: #667984; --accent: #ffab92; --soft: #39302d; } }
+    .paper { fill: var(--paper); }
+    .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+    .accent-box { fill: var(--soft); stroke: var(--accent); stroke-width: 1.5; }
+    .arrow { fill: none; stroke: var(--muted); stroke-width: 1.7; marker-end: url(#arrow); }
+    .head { fill: var(--ink); font: 600 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .body { fill: var(--muted); font: 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .label { fill: var(--accent); font: 600 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: 1.1px; }
+    .code { fill: var(--ink); font: 16px ui-monospace, 'Cascadia Code', Consolas, monospace; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7 Z" fill="var(--muted)"/></marker>
+  </defs>
+  <rect class="paper" width="940" height="330" rx="12"/>
+  <text class="label" x="32" y="34">ONE LIBRARY · MULTIPLE AGENTS</text>
+  <rect class="box" x="30" y="96" width="242" height="132" rx="8"/>
+  <text class="head" x="50" y="128">Shared skill pool</text>
+  <text class="code" x="50" y="158">SKILL.md + files</text>
+  <text class="body" x="50" y="187">Installed and discovered</text>
+  <text class="body" x="50" y="210">through Allskills</text>
+  <path class="arrow" d="M272 162 H322"/>
+  <rect class="accent-box" x="330" y="96" width="250" height="132" rx="8"/>
+  <text class="head" x="350" y="128">Skills collections</text>
+  <text class="body" x="350" y="158">Select a set for each agent</text>
+  <text class="body" x="350" y="187">REGISTRY saves names</text>
+  <text class="body" x="350" y="210">and skill path references</text>
+  <path class="arrow" d="M580 162 H612 V112 H658"/>
+  <path class="arrow" d="M612 162 V237 H658"/>
+  <rect class="box" x="666" y="69" width="244" height="86" rx="8"/>
+  <text class="head" x="686" y="103">AGENTS.md</text>
+  <text class="body" x="686" y="132">Sync selected skill context</text>
+  <rect class="box" x="666" y="194" width="244" height="86" rx="8"/>
+  <text class="head" x="686" y="228">CLI / Python</text>
+  <text class="body" x="686" y="257">List · read · execute</text>
+  <text class="body" x="32" y="303">Skill content stays in local directories; collections reference the same underlying files.</text>
+</svg>

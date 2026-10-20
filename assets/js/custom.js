@@ -215,7 +215,7 @@
         { rootMargin: "0px 0px -8% 0px", threshold: 0.05 }
       );
       document
-        .querySelectorAll(".archive__item, .work-time-card")
+        .querySelectorAll(".archive__item")
         .forEach(function (el) {
           el.classList.add("reveal");
           io.observe(el);

@@ -1,0 +1,24 @@
+<div class="list__item publication-list-item">
+  <article class="archive__item publication-card" itemscope itemtype="http://schema.org/CreativeWork">
+    <h2 class="archive__item-title" itemprop="headline">
+      <a href="{{ include.publication.url | relative_url }}" rel="permalink">{{ title }}</a>
+    </h2>
+    <div class="publication-card__body{% if include.publication.method_figure.image %} publication-card__body--illustrated{% endif %}">
+      {% include publication-method-figure.html publication=include.publication compact=true %}
+      <div class="publication-card__info">
+        <p class="publication-card__venue"><i>{{ include.publication.venue }}</i>, {{ include.publication.date | default: '1900-01-01' | date: '%Y' }}</p>
+        {% include publication-authors.html publication=include.publication %}
+        {% if include.publication.excerpt %}
+        <div class="archive__item-excerpt" itemprop="description">{{ include.publication.excerpt | markdownify }}</div>
+        {% endif %}
+        {% if include.publication.paperurl or include.publication.bibtexurl or include.publication.slidesurl %}
+        <p class="publication-card__links">
+          {% if include.publication.paperurl %}<a href="{% if include.publication.paperurl contains '://' %}{{ include.publication.paperurl }}{% else %}{{ include.publication.paperurl | relative_url }}{% endif %}">PDF</a>{% endif %}
+          {% if include.publication.bibtexurl %}<a href="{% if include.publication.bibtexurl contains '://' %}{{ include.publication.bibtexurl }}{% else %}{{ include.publication.bibtexurl | relative_url }}{% endif %}">BibTeX</a>{% endif %}
+          {% if include.publication.slidesurl %}<a href="{% if include.publication.slidesurl contains '://' %}{{ include.publication.slidesurl }}{% else %}{{ include.publication.slidesurl | relative_url }}{% endif %}">Slides</a>{% endif %}
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </article>
+</div>
