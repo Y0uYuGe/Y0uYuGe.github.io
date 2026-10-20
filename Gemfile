@@ -11,3 +11,5 @@ end
 
 gem 'github-pages'
 gem 'connection_pool', '2.5.0'
+# Windows does not ship the zoneinfo database used by Jekyll/TZInfo.
+gem 'tzinfo-data'
