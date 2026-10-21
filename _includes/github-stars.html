@@ -1,0 +1,14 @@
+{% assign stars_prefix = include.repository | slice: 0, 19 %}
+{% if stars_prefix == 'https://github.com/' %}
+  {% assign stars_repository = include.repository | remove_first: 'https://github.com/' | downcase %}
+  {% assign stars_parts = stars_repository | split: '/' %}
+  {% if stars_parts.size == 2 %}
+    {% assign stars_repository = stars_parts | join: '/' %}
+    {% assign stars_snapshot = site.data['github-stars'] %}
+    {% assign stars_count = stars_snapshot.repositories[stars_repository] %}
+    <a class="portfolio-stars" href="https://github.com/{{ stars_repository | escape }}/stargazers" data-github-stars="{{ stars_repository | escape }}" data-stars-checked-at="{{ stars_snapshot.checked_at | escape }}" aria-label="{{ stars_repository | escape }} GitHub stars{% if stars_count != nil %}: {{ stars_count }}{% endif %}" title="GitHub stars{% if stars_count != nil %} · Last checked {{ stars_snapshot.checked_at | escape }}{% endif %}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9Z"/></svg>
+      <span data-stars-count>{% if stars_count != nil %}{{ stars_count }}{% else %}—{% endif %}</span><span>Stars</span>
+    </a>
+  {% endif %}
+{% endif %}

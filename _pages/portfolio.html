@@ -8,10 +8,11 @@ author_profile: true
 ---
 
 {% assign project_posts = site.posts | where: "project_page", true %}
-{% assign projects = site.portfolio | concat: project_posts | sort: "project_order" %}
+{% assign project_pages = site.pages | where: "project_page", true %}
+{% assign projects = site.portfolio | concat: project_posts | concat: project_pages | sort: "project_order" %}
 <div class="portfolio-index">
   <div class="portfolio-index__intro">
-    <p>Projects in security, systems, and AI, with implementation notes and source code.</p>
+    <p>Projects and open-source contributions in security, systems, and AI, with source code and contribution records.</p>
     <span class="portfolio-index__count">{{ projects.size }} projects</span>
   </div>
 
@@ -32,7 +33,11 @@ author_profile: true
       <div class="portfolio-project__links">
         <a href="{{ project.url | relative_url }}" aria-label="Read about {{ project.title | escape }}">Project details <span aria-hidden="true">&rarr;</span></a>
         {% if project.demo_url %}<a href="{{ project.demo_url | relative_url | escape }}" aria-label="Open interactive demo for {{ project.title | escape }}">Interactive demo <span aria-hidden="true">&rarr;</span></a>{% endif %}
-        {% if project.repository %}<a href="{{ project.repository | escape }}" aria-label="{{ project.title | escape }} on GitHub">GitHub <span aria-hidden="true">&nearr;</span></a>{% endif %}
+        {% if project.repository %}
+        <a href="{{ project.repository | escape }}" aria-label="{{ project.title | escape }} on GitHub">GitHub <span aria-hidden="true">&nearr;</span></a>
+        {% include github-stars.html repository=project.repository %}
+        {% include project-contribution.html repository=project.repository %}
+        {% endif %}
       </div>
     </div>
   </article>

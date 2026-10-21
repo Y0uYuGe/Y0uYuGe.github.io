@@ -13,7 +13,7 @@
 <!-- Custom theme overrides -->
 <link rel="stylesheet" href="{{ '/assets/css/custom.css' | relative_url }}"/>
 <link rel="stylesheet" href="{{ '/assets/css/blog-browser.css' | relative_url }}"/>
-{% if page.url == "/portfolio/" or page.collection == "portfolio" %}
+{% if page.url == "/portfolio/" or page.collection == "portfolio" or page.project_page or page.layout == "portfolio" %}
 <link rel="stylesheet" href="{{ '/assets/css/portfolio.css' | relative_url }}"/>
 {% endif %}
 

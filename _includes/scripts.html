@@ -3,6 +3,9 @@
 {% if page.blog_browser %}
 <script defer src="{{ '/assets/js/blog-browser.js' | relative_url }}"></script>
 {% endif %}
+{% if page.url == "/portfolio/" or page.collection == "portfolio" or page.project_page or page.layout == "portfolio" %}
+<script defer src="{{ '/assets/js/github-stars.js' | relative_url }}"></script>
+{% endif %}
 
 {% include analytics.html %}
 

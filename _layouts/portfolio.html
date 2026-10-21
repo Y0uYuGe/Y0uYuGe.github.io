@@ -16,7 +16,11 @@ layout: single
     {% endif %}
     <div class="portfolio-detail__links">
       {% if page.demo_url %}<a href="{{ page.demo_url | relative_url | escape }}">Open knowledge graph <span aria-hidden="true">&rarr;</span></a>{% endif %}
-      {% if page.repository %}<a href="{{ page.repository | escape }}">View source on GitHub <span aria-hidden="true">&nearr;</span></a>{% endif %}
+      {% if page.repository %}
+      <a href="{{ page.repository | escape }}">View source on GitHub <span aria-hidden="true">&nearr;</span></a>
+      {% include github-stars.html repository=page.repository %}
+      {% include project-contribution.html repository=page.repository %}
+      {% endif %}
       <a href="{{ '/portfolio/' | relative_url }}">All projects <span aria-hidden="true">&rarr;</span></a>
     </div>
   </div>

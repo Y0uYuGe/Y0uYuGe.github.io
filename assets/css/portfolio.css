@@ -23,6 +23,12 @@
 .portfolio-technologies li + li::before { content: "\00b7"; margin-right: 0.65rem; color: var(--global-dark-border-color); }
 .portfolio-project__links,
 .portfolio-detail__links { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.55rem 1rem; font-size: 0.68rem; line-height: 1.6; }
+.portfolio-index a.portfolio-stars,
+.portfolio-detail a.portfolio-stars { display: inline-flex; align-items: center; gap: 0.28rem; color: var(--global-text-color-light); white-space: nowrap; text-decoration: none; }
+.portfolio-stars svg { flex: none; }
+.portfolio-stars [data-stars-count] { font-variant-numeric: tabular-nums; }
+.portfolio-index a.portfolio-stars:hover,
+.portfolio-detail a.portfolio-stars:hover { color: var(--global-link-color); }
 .portfolio-index a:focus-visible,
 .portfolio-detail a:focus-visible { outline: 2px solid var(--global-base-color); outline-offset: 3px; }
 

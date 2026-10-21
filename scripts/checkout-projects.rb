@@ -30,6 +30,10 @@ class ProjectCheckouts
     Y0uYuGe/rustlings
     Y0uYuGe/sextant
     Narwhal-Lab/MagicSkills
+    Narwhal-Lab/Narwhal-aicode-risks
+    CloudEver-Team/RedCortex
+    CloudEver-Team/cloudever_tecent_penetration_2026_4
+    CloudEver-Team/.github
   ].freeze
   DATE_MARKDOWN = /\A\d{4}-\d{2}-\d{2}-.+\.(?:md|markdown)\z/i
 
@@ -179,6 +183,9 @@ class ProjectCheckouts
       '-c', 'submodule.recurse=false',
       '-c', 'fetch.recurseSubmodules=false',
       '-c', 'maintenance.auto=false',
+      '-c', 'http.version=HTTP/1.1',
+      '-c', 'http.lowSpeedLimit=1',
+      '-c', 'http.lowSpeedTime=45',
       '-c', 'protocol.ext.allow=never',
       *arguments, chdir: chdir
     )

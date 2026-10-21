@@ -17,7 +17,7 @@
 | `_portfolio/` | 兼容旧项目记录；现有项目正文已迁入 `_posts/领域/项目/` | 新项目文档写在项目目录内 |
 | `_publications/` | 论文记录，列表按分类和日期展示，点击标题进入正文页 | 填写论文元信息和正文 |
 | `_talks/`、`_teaching/` | 演讲、教学记录 | 有实际内容时添加对应记录 |
-| `_data/` | 导航菜单和界面文字 | 调整菜单、界面用词 |
+| `_data/` | 导航菜单、界面文字、项目清单、Star 和贡献记录 | 调整菜单、项目登记和展示信息 |
 | `scripts/` | 项目下载与发布文档白名单工具；不输出到网站 | 维护项目工作目录与同步规则 |
 | `assets/` | 浏览器加载的 CSS、JavaScript 和图标字体 | 调整外观和交互 |
 | `_sass/` | 主题样式源文件，包括布局、主题和第三方样式 | 深入修改主题样式 |
@@ -192,7 +192,7 @@ _posts/ai-infrastructure/sextant/
 └── 2026-10-20-sextant.md          # 博客发布文档
 ```
 
-已下载的 21 个项目及其目录见 [_data/project-workspaces.json](_data/project-workspaces.json)，包含个人仓库、学习 fork 与 Narwhal-Lab/MagicSkills。博客仓库整目录忽略项目源码，发布工具只将明确选定的文章作为普通文件加入博客 Git，不使用子模块。新克隆博客只含公开文档；需要完整源码时在根目录运行：
+当前登记的 25 个独立项目工作目录见 [_data/project-workspaces.json](_data/project-workspaces.json)，包含个人仓库、学习 Fork 及 Narwhal-Lab、CloudEver-Team 的参与项目。博客本身已经是当前仓库，无需在内部再次克隆。博客仓库整目录忽略项目源码，发布工具只将明确选定的文章作为普通文件加入博客 Git，不使用子模块。新克隆博客只含公开文档；需要完整源码时在根目录运行：
 
 ```powershell
 ./sync-projects.ps1 -Download
@@ -244,6 +244,10 @@ excerpt: "用一两句话说明项目解决的问题和已经实现的能力。"
 
 `project_page: true` 让已发布文章同时出现在 Portfolio；Blog Posts 仍按实际领域/项目路径组织。固定 `permalink` 决定网址，搬动文件时可保持地址。原有 7 篇项目介绍已保留原 `/portfolio/.../` 地址。
 
+Portfolio 也收录有实际提交记录的团队项目和个人学习实现，并提供 Contribution 链接指向具体提交。证据保存在 `_data/project-contributions.json`；同一项目的上游仓库与个人 Fork 合并展示，没有个人改动的学习 Fork 暂只保留在本地。私有项目的文档继续保持草稿。博客自身的项目介绍位于仓库根目录 `2026-10-21-personal-blog.md`，通过同一 `project_page` 标记加入 Portfolio。
+
+填写 GitHub `repository` 链接后，Portfolio 列表和项目详情会显示可点击的 Star 数量。页面保留 `_data/github-stars.json` 中的已核实数量作为初始显示，并通过 GitHub 公开接口刷新；浏览器缓存一小时，请求失败时保留已有数字并等待十五分钟后再尝试。新项目尚未获取到数量时显示 `—`，不会将未知数量写成零。
+
 正文配图放到博客已有 `images/projects/项目名/` 或 `images/portfolio/`，使用绝对站内路径；项目源码内的图片不会顺带发布。下载源码不自动发表 README 或开发笔记。
 
 准备公开时将 `published` 改为 `true`，运行：
@@ -268,6 +272,8 @@ excerpt: "用一两句话说明项目解决的问题和已经实现的能力。"
 打开 http://127.0.0.1:4000/ 。启动和重新生成全部文章需要几十秒。保存文章、页面或样式后会自动重新生成，浏览器刷新即可查看；修改 `_config.yml` 后需要重启预览。
 
 根启动器会先生成 `local/project-docs-config.yml`，再加载站点、本地及项目发布配置。完整源码共处时请使用该入口；不要绕过项目白名单启动预览。`./start-preview.ps1 -BuildOnly` 仅生成站点。旧 `local/start-preview.ps1` 已代理到根入口。
+
+本地读取器会在遍历前跳过清单中的完整源码目录，只读取白名单选中的项目文章，避免源码归档的超长路径影响 Windows 预览。发布后的文章、页面和资源还会再次接受发布边界检查。
 
 当前 Ruby 所需的表情符号兼容处理已包含在受版本控制的根启动器中。换电脑时需安装 Ruby、Bundler 和 `Gemfile` 依赖；源码下载与文档工具本身只依赖 Ruby 标准库及 Git。
 

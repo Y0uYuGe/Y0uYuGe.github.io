@@ -126,6 +126,30 @@
       "path": "_posts/ai-infrastructure/magicskills",
       "branch": "main",
       "fork": false
+    },
+    {
+      "repository": "Narwhal-Lab/Narwhal-aicode-risks",
+      "path": "_posts/ai-security/narwhal-aicode-risks",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "CloudEver-Team/RedCortex",
+      "path": "_posts/security-foundations/projects/redcortex",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "CloudEver-Team/cloudever_tecent_penetration_2026_4",
+      "path": "_posts/security-foundations/projects/cloudever-penetration-2026",
+      "branch": "main",
+      "fork": false
+    },
+    {
+      "repository": "CloudEver-Team/.github",
+      "path": "_posts/security-foundations/projects/cloudever-community",
+      "branch": "main",
+      "fork": false
     }
   ]
 }

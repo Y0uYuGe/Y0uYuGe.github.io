@@ -1,0 +1,5 @@
+{% assign contribution_repository = include.repository | remove_first: 'https://github.com/' | downcase %}
+{% assign contribution = site.data['project-contributions'][contribution_repository] %}
+{% if contribution %}
+<a href="{{ contribution.url | escape }}" title="{{ contribution.subject | escape }}" aria-label="View contribution to {{ contribution_repository | escape }}">Contribution <span aria-hidden="true">&nearr;</span></a>
+{% endif %}

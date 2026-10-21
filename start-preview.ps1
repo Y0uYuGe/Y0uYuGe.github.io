@@ -77,6 +77,7 @@ try {
 require 'bundler/setup'
 require 'jemoji'
 require 'jekyll'
+require File.expand_path('scripts/project-post-reader.rb', Dir.pwd)
 require 'json'
 require 'yaml'
 require 'set'

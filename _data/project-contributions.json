@@ -1,0 +1,107 @@
+{
+  "y0uyuge/y0uyuge.github.io": {
+    "url": "https://github.com/Y0uYuGe/Y0uYuGe.github.io/commit/ed378f8c75a2fac706f89cacc9704c5e3425948b",
+    "subject": "Declare timezone data for fresh Windows blog checkouts",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/cs408-computer-organization": {
+    "url": "https://github.com/Y0uYuGe/cs408-computer-organization/commit/d0d7336cdbda44613a80efb3933eda8b2a8dc2f9",
+    "subject": "Use identical UART bytes for portable retirement-count tests",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/cs408-operating-systems": {
+    "url": "https://github.com/Y0uYuGe/cs408-operating-systems/commit/715892961333166ad672e384b80026ccb7df1396",
+    "subject": "Build persistent 408 teaching kernel and complete staged curriculum",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/cs408-data-structures": {
+    "url": "https://github.com/Y0uYuGe/cs408-data-structures/commit/0e95c08149e469113e98555c6cdc48a423478971",
+    "subject": "Use OS file locks and unique snapshots for reliable Windows concurrency",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/cs408-computer-networks": {
+    "url": "https://github.com/Y0uYuGe/cs408-computer-networks/commit/cd944ccbc8bb0813ea029f4f6fac32cc341ae5bc",
+    "subject": "Build complete 408 teaching system and staged curriculum",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/kernel-struct-exploit": {
+    "url": "https://github.com/Y0uYuGe/kernel-struct-exploit/commit/2a36667b1cb5b845f0a0efa2cc2f40bc32ee09a2",
+    "subject": "Build sourced Android kernel exploitation knowledge graph",
+    "evidence": "GitHub account-linked commit"
+  },
+  "narwhal-lab/narwhal-aicode-risks": {
+    "url": "https://github.com/Narwhal-Lab/Narwhal-aicode-risks/commit/60e2bcd784c461178ade7adf1bc4d91c621c79f1",
+    "subject": "Add case: Copilot Visual Studio prompt injection RCE",
+    "evidence": "GitHub account-linked commit"
+  },
+  "cloudever-team/cloudever_tecent_penetration_2026_4": {
+    "url": "https://github.com/CloudEver-Team/cloudever_tecent_penetration_2026_4/commit/54cccc7dd3e0c4cbfb53d8ec9d0f9736b03e3785",
+    "subject": "init",
+    "evidence": "GitHub account-linked commit"
+  },
+  "cloudever-team/redcortex": {
+    "url": "https://github.com/CloudEver-Team/RedCortex/commit/238a7c05169463317a2ea3dcb3219d6e553d27b7",
+    "subject": "Add competition banner to README",
+    "evidence": "GitHub account-linked commit"
+  },
+  "cloudever-team/.github": {
+    "url": "https://github.com/CloudEver-Team/.github/commit/abdf4ac86ef92a649f876bb0328e1ea540cfd18a",
+    "subject": "profile",
+    "evidence": "GitHub account-linked commit"
+  },
+  "narwhal-lab/magicskills": {
+    "url": "https://github.com/Narwhal-Lab/MagicSkills/commit/1ba6ae32b4df4349195ec38c283535b68619a085",
+    "subject": "Refine AIG scan CLI and update docs",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/nmap_ids": {
+    "url": "https://github.com/Y0uYuGe/nmap_ids/commit/16004aa9b99a9a6972554ac1740c9ff1ad8cbfbf",
+    "subject": "report",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/ai_study_note": {
+    "url": "https://github.com/Y0uYuGe/AI_Study_Note/commit/d452998bb378071498282d4299c09b8ab1b12b5c",
+    "subject": "Update Readme.md",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/iot_security_learning": {
+    "url": "https://github.com/Y0uYuGe/IoT_Security_Learning/commit/c34c4e87fe2963430194c992f75ab4aa3c4c3f6b",
+    "subject": "Add initial README file",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/graphrag_llama3.2-class-project": {
+    "url": "https://github.com/Y0uYuGe/Graphrag_LLama3.2-class-project/commit/a9e45ecddd3e9cbe1e48b6e11a4c628f872c6c24",
+    "subject": "Update Readme.md",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/glibc-chunk-poc-basic": {
+    "url": "https://github.com/Y0uYuGe/glibc-chunk-poc-basic/commit/eaf548a82681485f70303367385a12ff7a3adb75",
+    "subject": "Update README.md",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/llkdocker": {
+    "url": "https://github.com/Y0uYuGe/llkdocker/commit/6e56951310d8aa731de096838a944cd5e580645c",
+    "subject": "run-d",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/risllkos-base": {
+    "url": "https://github.com/Y0uYuGe/risllkos-base/commit/0e9e50f736c7867e41f65ca7f7a6b73232088cfb",
+    "subject": "Revert changes made in commit <commit-hash>",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/llkchatroom": {
+    "url": "https://github.com/Y0uYuGe/llkchatroom/commit/a66f88ff0fc734a4ed0cd807992b1fabd1f79ab3",
+    "subject": "Update README.md",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/risllkos-advanced": {
+    "url": "https://github.com/Y0uYuGe/risllkos-advanced/commit/889daed536343ea7ba68a5b69f753787d0aff131",
+    "subject": "Initial commit",
+    "evidence": "GitHub account-linked commit"
+  },
+  "y0uyuge/learning-cxx": {
+    "url": "https://github.com/Y0uYuGe/learning-cxx/commit/06ac0678f2395ad76cab73f945d9cbd3ac01d930",
+    "subject": "C++ exercise implementations in the learning fork",
+    "evidence": "Historical FULLK author; learning fork commit"
+  }
+}
