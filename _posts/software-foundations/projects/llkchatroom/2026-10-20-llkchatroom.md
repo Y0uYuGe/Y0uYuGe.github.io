@@ -4,8 +4,6 @@ title: llkchatroom
 excerpt: An Android chat client and Java socket server for text and file exchange on a local network. Separate connections
   handle messages and binary transfers.
 permalink: /portfolio/llkchatroom/
-redirect_from:
-- /en/portfolio/llkchatroom/
 project_order: 60
 project_type: Networking practice
 project_status: Code available

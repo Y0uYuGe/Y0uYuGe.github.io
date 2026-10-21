@@ -1,9 +1,5 @@
 ---
 permalink: /
-redirect_from:
-  - "/en/"
-  - "/about/"
-  - "/about.html"
 title: "Y0uYuGe"
 seo_title: "Y0uYuGe — Liu Like"
 author_profile: true

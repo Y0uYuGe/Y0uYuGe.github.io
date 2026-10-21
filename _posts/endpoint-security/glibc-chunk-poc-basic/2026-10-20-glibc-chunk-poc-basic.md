@@ -13,8 +13,6 @@ technologies: &id001
 - glibc
 - GDB
 - patchelf
-redirect_from:
-- /en/portfolio/glibc-chunk-poc/
 date: '2026-10-20'
 published: true
 project_page: true

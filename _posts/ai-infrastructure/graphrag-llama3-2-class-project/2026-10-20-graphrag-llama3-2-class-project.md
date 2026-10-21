@@ -4,8 +4,6 @@ title: GraphRAG + Llama 3.2
 excerpt: A course project connecting GraphRAG retrieval with local language models. A FastAPI service exposes local,
   global, and combined search through a chat API.
 permalink: /portfolio/graphrag-llama/
-redirect_from:
-- /en/portfolio/graphrag-llama/
 project_order: 50
 project_type: Course project
 project_status: Code available

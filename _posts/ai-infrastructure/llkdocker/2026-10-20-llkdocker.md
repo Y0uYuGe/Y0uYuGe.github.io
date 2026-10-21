@@ -13,8 +13,6 @@ technologies: &id001
 - Linux namespaces
 - cgroups
 - OverlayFS
-redirect_from:
-- /en/portfolio/llkdocker/
 date: '2026-10-20'
 published: true
 project_page: true
