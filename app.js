@@ -275,7 +275,7 @@ const b64dec = (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\
 async function ghFile(cfg, file) {
   const url = `https://api.github.com/repos/${cfg.repo}/contents/${file}`;
   const headers = { Authorization: 'Bearer ' + cfg.token, Accept: 'application/vnd.github+json' };
-  const r = await fetch(`${url}?ref=${S.data.site.inbox.branch}&t=${Date.now()}`, { headers });
+  const r = await fetch(`${url}?t=${Date.now()}`, { headers });
   if (r.status === 404) return { url, headers, sha: null, text: '' };
   if (!r.ok) throw new Error(r.status === 401 ? 'token 无效或已过期' : `GitHub ${r.status}`);
   const j = await r.json();
@@ -298,7 +298,7 @@ async function capture(text) {
   const block = `### ${pad(d.getHours())}:${pad(d.getMinutes())}\n${text.trim()}\n\n`;
   for (let attempt = 0; attempt < 2; attempt++) {
     const f = await ghFile(cfg, today() + '.md');
-    const r = await fetch(f.url, { method: 'PUT', headers: f.headers, body: JSON.stringify({ message: 'note from phone', content: b64enc(f.text + block), sha: f.sha || undefined, branch: S.data.site.inbox.branch }) });
+    const r = await fetch(f.url, { method: 'PUT', headers: f.headers, body: JSON.stringify({ message: 'note from phone', content: b64enc(f.text + block), sha: f.sha || undefined }) });
     if (r.ok) return;
     if (r.status !== 409 && r.status !== 422) throw new Error(`GitHub ${r.status}`);
   }
@@ -309,10 +309,18 @@ const entriesHTML = (list) => list.map((e) => `<div class="entry"><div class="wh
 
 function captureHTML() {
   if (S.mode === 'blog' && !ghCfg()) {
-    return `<div class="section capture"><h4>连接收件箱（只需一次）</h4>
-      <input id="cap-repo" value="${esc(S.data.site.inbox.repo)}" placeholder="owner/repo">
-      <input id="cap-token" type="password" placeholder="GitHub fine-grained token（只授权该仓库 Contents 读写）">
-      <div class="row"><button data-cap="save">保存</button><span class="msg">token 只保存在这台设备的浏览器里</span></div></div>`;
+    // 首次使用：两个按钮直达预填好的 GitHub 页面，回来粘贴 token 即可
+    const [owner, name] = S.data.site.inbox.repo.split('/');
+    const newRepo = `https://github.com/new?name=${encodeURIComponent(name)}&visibility=private&description=${encodeURIComponent('手机记录收件箱')}`;
+    const newToken = `https://github.com/settings/personal-access-tokens/new?name=${encodeURIComponent('studio-inbox')}&description=${encodeURIComponent('work_studio 手机记录')}&target_name=${encodeURIComponent(owner)}&expires_in=none&contents=write`;
+    return `<div class="section capture"><h4>第一次使用：连接收件箱（只需一次）</h4>
+      <ol class="steps">
+        <li><a href="${newRepo}" target="_blank"><button>① 创建私有仓库 ${esc(name)}</button></a><div class="msg">打开后直接点 Create repository（已建好可跳过）</div></li>
+        <li><a href="${newToken}" target="_blank"><button>② 生成 token</button></a><div class="msg">Repository access 选 Only select repositories → ${esc(name)}，其它已预填，点 Generate 后复制</div></li>
+        <li>③ 粘贴 token：<input id="cap-token" type="password" placeholder="github_pat_…"></li>
+      </ol>
+      <input id="cap-repo" type="hidden" value="${esc(S.data.site.inbox.repo)}">
+      <div class="row"><button data-cap="save">保存，开始记录</button><span class="msg">token 只保存在这台手机的浏览器里</span></div></div>`;
   }
   return `<div class="section capture"><h4>快速记录</h4>
     <textarea id="cap-text" placeholder="想到什么写什么。写 #文件夹名 可以归到对应节点"></textarea>

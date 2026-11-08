@@ -92,3 +92,7 @@ main { flex: 1; display: flex; min-height: 0; }
 .entry { padding: 8px 0; border-bottom: 1px solid var(--line); }
 .entry .when { color: var(--muted); font-size: 12px; }
 .entry .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.capture .steps { margin: 0 0 8px; padding-left: 0; list-style: none; }
+.capture .steps li { margin-bottom: 12px; }
+.capture .steps .msg { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.capture .steps input { margin: 6px 0 0; }
