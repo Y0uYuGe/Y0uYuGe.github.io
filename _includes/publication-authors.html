@@ -1,0 +1,20 @@
+{% if include.publication.authors or include.publication.affiliations %}
+<div class="publication-authors">
+  {% if include.publication.authors %}
+  <p class="publication-authors__names">
+    {%- for author in include.publication.authors -%}
+      {%- if author.highlight -%}<strong>{{ author.name | escape }}</strong>{%- else -%}{{ author.name | escape }}{%- endif -%}
+      {%- if author.affiliations -%}<sup>{{ author.affiliations | join: ',' }}</sup>{%- endif -%}
+      {%- unless forloop.last -%}, {% endunless -%}
+    {%- endfor -%}.
+  </p>
+  {% endif %}
+  {% if include.publication.affiliations %}
+  <p class="publication-affiliations">
+    {% for affiliation in include.publication.affiliations %}
+    <span><sup>{{ affiliation[0] | escape }}</sup> {{ affiliation[1] | escape }}</span>
+    {% endfor %}
+  </p>
+  {% endif %}
+</div>
+{% endif %}

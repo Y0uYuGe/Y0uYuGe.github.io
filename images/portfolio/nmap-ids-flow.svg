@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 410" role="img" aria-labelledby="title desc">
+  <title id="title">nmap_ids capture and inference workflow</title>
+  <desc id="desc">Network traffic is observed by Zeek. Node-RED watches connection logs, extracts CSV data, and calls Flask for feature transformation and prediction. An offline training notebook supplies the random forest model. Prediction results feed a history view and an email alert branch.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#857e72"/></marker>
+  </defs>
+  <rect width="960" height="410" rx="12" fill="#f5f2eb"/>
+  <g fill="none" stroke="#857e72" stroke-width="2" marker-end="url(#arrow)">
+    <path d="M170 104H202"/><path d="M370 104H402"/><path d="M600 104H632"/>
+    <path d="M360 277H402"/><path d="M600 277H658V182H728V160"/>
+    <path d="M830 160V244"/>
+  </g>
+  <g fill="#fffdfa" stroke="#d6cfbf" stroke-width="1.5">
+    <rect x="22" y="56" width="148" height="96" rx="8"/>
+    <rect x="202" y="56" width="168" height="96" rx="8"/>
+    <rect x="402" y="56" width="198" height="96" rx="8"/>
+    <rect x="632" y="40" width="306" height="120" rx="8" stroke="#b64831"/>
+    <rect x="150" y="229" width="210" height="96" rx="8"/>
+    <rect x="402" y="229" width="198" height="96" rx="8"/>
+    <rect x="700" y="244" width="238" height="96" rx="8"/>
+  </g>
+  <g font-family="system-ui,Segoe UI,sans-serif" text-anchor="middle" fill="#343633">
+    <g font-size="19" font-weight="600">
+      <text x="96" y="95">Network</text><text x="96" y="121">traffic</text>
+      <text x="286" y="95">Zeek</text>
+      <text x="501" y="86">Node-RED</text>
+      <text x="785" y="76" fill="#a53825">Flask service</text>
+      <text x="255" y="261">Training notebook</text>
+      <text x="501" y="267">Saved model</text>
+      <text x="819" y="279">Prediction history</text>
+    </g>
+    <g font-size="16" fill="#6c695f">
+      <text x="286" y="122">conn.log</text>
+      <text x="501" y="111">Watch → CSV → POST</text>
+      <text x="501" y="134">Start / stop capture</text>
+      <text x="785" y="105">Feature transformation</text>
+      <text x="785" y="132">Random forest prediction</text>
+      <text x="255" y="287">Labeled connection data</text>
+      <text x="255" y="309">RandomForest + GridSearch</text>
+      <text x="501" y="295">joblib estimator</text>
+      <text x="819" y="307">Logs · email alert branch</text>
+    </g>
+    <text x="22" y="382" text-anchor="start" font-size="15" fill="#6c695f">Source overview · paths and service settings depend on the local environment</text>
+  </g>
+</svg>

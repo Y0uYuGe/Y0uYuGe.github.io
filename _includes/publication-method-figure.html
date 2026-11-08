@@ -1,0 +1,21 @@
+{% if include.publication.method_figure.image %}
+  {% assign method_image_url = include.publication.method_figure.image %}
+  {% unless method_image_url contains '://' %}
+    {% assign method_image_url = method_image_url | relative_url %}
+  {% endunless %}
+<figure class="publication-method-figure">
+  <a href="{{ method_image_url | escape }}" aria-label="View the method figure at full size">
+    <img src="{{ method_image_url | escape }}" alt="{{ include.publication.method_figure.alt | default: 'Method overview' | escape }}"{% if include.publication.method_figure.width %} width="{{ include.publication.method_figure.width }}"{% endif %}{% if include.publication.method_figure.height %} height="{{ include.publication.method_figure.height }}"{% endif %}>
+  </a>
+  {% if include.compact or include.publication.method_figure.caption or include.publication.method_figure.source %}
+  <figcaption>
+    {% if include.compact %}
+    Method overview{% if include.publication.method_figure.source %} · <a href="{{ include.publication.method_figure.source | escape }}">Source</a>{% endif %}
+    {% else %}
+    {{ include.publication.method_figure.caption | escape }}
+    {% if include.publication.method_figure.source %}<a href="{{ include.publication.method_figure.source | escape }}">Source: the original paper</a>.{% endif %}
+    {% endif %}
+  </figcaption>
+  {% endif %}
+</figure>
+{% endif %}

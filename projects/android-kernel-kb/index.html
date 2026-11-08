@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="有来源、有适用条件的 Android 内核漏洞利用知识图谱：攻击面、漏洞成因、利用原语、方法、防护与公开案例。">
+  <title>Android Kernel Atlas · 内核漏洞利用知识图谱</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script defer src="data/knowledge.js"></script>
+  <script defer src="assets/graph-core.js"></script>
+  <script defer src="assets/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到知识图谱</a>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Android Kernel Atlas 首页"><span class="brand-mark" aria-hidden="true">⌘</span><span>Android Kernel Atlas<small>内核漏洞利用知识图谱</small></span></a>
+    <nav aria-label="知识库视图" class="tabs">
+      <button data-view="graph" aria-pressed="true">知识图谱</button>
+      <button data-view="catalog" aria-pressed="false">知识目录</button>
+      <button data-view="coverage" aria-pressed="false">覆盖矩阵</button>
+      <button data-view="sources" aria-pressed="false">资料来源</button>
+    </nav>
+    <a class="repo-link" href="https://github.com/Y0uYuGe/kernel-struct-exploit" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+  </header>
+  <div class="project-summary"><p>把手法放回条件与证据中理解。</p><div id="stats" aria-live="polite"></div></div>
+  <div class="workspace" id="workspace">
+    <aside class="sidebar" aria-label="知识目录筛选">
+      <label for="search" class="search-label">搜索知识点</label>
+      <input type="search" id="search" placeholder="Binder、UAF、CVE…" maxlength="200" autocomplete="off">
+      <details class="filters" id="filters" open>
+        <summary>目录筛选</summary>
+        <div id="type-filters" class="type-filters" aria-label="节点类型"></div>
+        <label for="applicability">适用范围</label>
+        <select id="applicability"><option value="">不限范围</option></select>
+        <label for="coverage-filter">资料状态</label>
+        <select id="coverage-filter"><option value="">全部状态</option></select>
+        <button id="clear-filters" class="text-button">清除筛选</button>
+      </details>
+      <div class="directory-heading"><h2>知识点</h2><span id="result-count" aria-live="polite"></span></div>
+      <div id="node-list" class="node-list"></div>
+    </aside>
+    <main id="main" class="main-panel" tabindex="-1">
+      <p id="load-error" role="alert" hidden></p>
+      <section id="view-graph" aria-label="关系图">
+        <div class="panel-heading"><div><p class="eyebrow">RELATIONSHIP EXPLORER</p><h1 id="graph-title">知识关系图</h1></div><button id="share" class="quiet-button">复制链接</button></div>
+        <div class="graph-toolbar">
+          <div class="segmented"><button id="focus-mode" aria-pressed="true">关系图</button><button id="overview-mode" aria-pressed="false">分类概览</button></div>
+          <label for="depth">邻域 <select id="depth"><option value="1">1 跳</option><option value="2">2 跳</option></select></label>
+          <div class="zoom-tools"><button id="zoom-out" aria-label="缩小图谱">−</button><button id="fit" aria-label="重置图谱视图">复位</button><button id="zoom-in" aria-label="放大图谱">＋</button></div>
+        </div>
+        <div class="graph-canvas"><svg id="graph" viewBox="0 0 960 680" role="group" aria-label="交互式知识关系图"></svg><span class="canvas-hint">拖动画布 · 滚轮缩放 · 点击节点</span></div>
+        <p id="graph-note" class="graph-note" aria-live="polite"></p>
+        <div id="legend" class="legend" aria-label="图谱图例"></div>
+        <details class="path-tool"><summary>查找两个知识点的关联路径</summary><p>沿资料关系寻找联系；关联路径不表示可以直接组合成利用链。</p><div class="path-controls"><label for="path-target">从当前知识点到</label><select id="path-target"></select><button id="find-path" class="quiet-button">查看路径</button><button id="clear-path" class="text-button">返回邻域</button></div><div id="path-result" aria-live="polite"></div></details>
+      </section>
+      <section id="view-catalog" hidden aria-label="知识目录"><div class="panel-heading"><div><p class="eyebrow">KNOWLEDGE DIRECTORY</p><h1>知识目录</h1></div><button id="export-filtered" class="quiet-button">导出当前结果</button></div><div id="catalog-list" class="catalog-list"></div></section>
+      <section id="view-coverage" hidden aria-label="覆盖矩阵"><div class="panel-heading"><div><p class="eyebrow">SCOPE & EVIDENCE</p><h1>覆盖矩阵</h1></div><button id="export-all" class="quiet-button">导出完整 JSON</button></div><div class="scope-note"><h2>覆盖的含义</h2><p>这是可持续扩展的公开研究知识库。节点和关系附有来源；“资料已核对”表示说明与公开资料相符，不表示利用已经复现，也不表示全部 Android 设备都适用。</p><p>Android 版本、内核分支、OEM 驱动、SELinux 域和补丁回移都影响可达性。未公开方法、厂商闭源实现及未来的新方法无法声明已经穷尽。</p></div><div id="coverage-matrix"></div><div id="coverage-gaps"></div></section>
+      <section id="view-sources" hidden aria-label="一手资料"><div class="panel-heading"><div><p class="eyebrow">PRIMARY REFERENCES</p><h1>资料来源</h1></div></div><p class="section-description">官方文档、原作者研究、公告和源码。每条关系保留其依据，便于回到原文核对适用条件。</p><label for="source-search" class="sr-only">搜索资料标题或发布者</label><input type="search" id="source-search" placeholder="搜索资料标题、发布者…"><div id="source-list" class="source-list"></div></section>
+    </main>
+    <aside class="detail-panel" id="details" aria-label="知识点详情" aria-live="polite"></aside>
+  </div>
+  <footer class="footer"><span id="review-date"></span><span>Y0uYuGe · 以来源为依据，以适用条件为边界</span></footer>
+  <div id="toast" role="status" class="toast" hidden></div>
+</body>
+</html>

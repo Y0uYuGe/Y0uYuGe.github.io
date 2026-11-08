@@ -1,0 +1,13 @@
+{% include base_path %}
+{% assign ui_locale = site.locale %}
+{% if site.tag_archive.path and page.tags.size > 0 %}
+  {% assign sorted_tags = page.tags | sort_natural %}
+  <p class="page__taxonomy">
+    <strong><i class="fa fa-fw fa-tags" aria-hidden="true"></i> {{ site.data.ui-text[ui_locale].tags_label | default: "Tags:" }} </strong>
+    <span itemprop="keywords">
+      {% for tag_word in sorted_tags %}
+        <a href="{{ '/tags/' | relative_url }}?tag={{ tag_word | cgi_escape }}" class="page__taxonomy-item" rel="tag">{{ tag_word | escape }}</a>{% unless forloop.last %}<span class="sep">, </span>{% endunless %}
+      {% endfor %}
+    </span>
+  </p>
+{% endif %}
