@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Workspace</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="bar">
+  <a id="brand" href="#/"></a>
+  <span id="subtitle"></span>
+  <input id="search" type="search" placeholder="搜索节点…" autocomplete="off">
+  <button id="agents-pill" hidden></button>
+  <button id="capture-btn" title="快速记录">✎ 记录</button>
+  <button id="fit" title="回到根节点">⌖</button>
+</header>
+<main>
+  <div id="map"><div id="canvas"><svg id="links"></svg><div id="nodes"></div></div></div>
+  <aside id="panel" hidden>
+    <div id="panel-head"><nav id="crumbs"></nav><button id="close" title="关闭">×</button></div>
+    <div id="panel-body"></div>
+  </aside>
+</main>
+<script src="vendor/marked.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
