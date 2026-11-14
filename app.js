@@ -17,7 +17,7 @@ const S = {
   focus: store.get('focus', ''),
   layout: store.get('layout', 'right'),
   view: store.get('view', 'map'),
-  tab: 'note', noteView: store.get('noteView', 'doc'),
+  tab: 'note', noteView: store.get('noteView', 'doc') === 'map' ? 'map' : 'doc',
   panelKey: '',
 };
 const index = new Map(); // path -> 工作区节点
@@ -1368,9 +1368,12 @@ $('#panel-body').addEventListener('click', async (e) => {
 $('#panel').addEventListener('click', async (e) => {
   const t = e.target;
   if (t.dataset.tab) { S.tab = t.dataset.tab; return renderPanel(true); }
-  if (t.dataset.pv) {
-    if (t.dataset.pv === 'files') S.tab = 'files';
-    else { S.tab = 'note'; S.noteView = t.dataset.pv; store.set('noteView', S.noteView); }
+  // 标题行的「文档 / 导图 / AI」：AI 是单独的标签页，文档 / 导图是笔记的两种看法（按钮里可能有数字，所以用 closest）
+  const pvb = t.closest('[data-pv]');
+  if (pvb) {
+    const v = pvb.dataset.pv;
+    if (v === 'ai') S.tab = 'ai';
+    else { S.tab = 'note'; S.noteView = v; store.set('noteView', v); }
     return renderPanel(true);
   }
   if (t.dataset.open !== undefined) return post('api/open', { path: t.dataset.open }).catch((err) => alert(err.message));
