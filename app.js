@@ -105,6 +105,7 @@ const nodeClassOf = (v) => (v.a
   : [v.n.note && 'has-note', v.hit && 'hit'].filter(Boolean).join(' '));
 const map = new MindMap($('#map'), {
   layout: S.layout,
+  minimap: false,
   render: workspaceNode,
   nodeClass: nodeClassOf,
   onSelect: (v) => (v.a ? openAgent(v.a.id) : openNode(v.id)),
@@ -186,7 +187,7 @@ function workspaceNode(v) {
   const n = v.n;
   const short = shortName(n);
   const t = short.length > 34 ? short.slice(0, 33) + '…' : short;
-  let h = `${isPinned(n.path) && n.path ? '<span class="pin" title="在工作台里">📌</span>' : ''}<span class="mm-label" title="${esc(n.name)}">${esc(t)}</span>`;
+  let h = `${isPinned(n.path) && n.path ? '<span class="pin" title="已固定到「正在做」">📌</span>' : ''}<span class="mm-label" title="${esc(n.name)}">${esc(t)}</span>`;
   if (n.note?.status) h += `<span class="status">${esc(n.note.status)}</span>`;
   if (S.mode === 'local') {
     if (n.blog?.on) h += `<span class="pub${n.blog.how === 'self' ? '' : ' faint'}" title="${BLOG_HOW[n.blog.how]}">🌐</span>`;
@@ -334,9 +335,7 @@ $('#map-tools').addEventListener('click', (e) => {
   const f = e.target.closest('[data-focus]');
   if (f) setFocus(f.dataset.focus);
 });
-$('#layout-btn').onclick = () => { S.layout = S.layout === 'right' ? 'both' : 'right'; store.set('layout', S.layout); map.setLayout(S.layout); };
 $('#fit-btn').onclick = () => map.fit();
-$('#help-btn').onclick = () => showHelp();
 // ---------- 搜索：节点名字 + 笔记正文 ----------
 // 输入时：导图只留命中的节点（名字或正文命中）；下面弹出结果，名字命中马上出，正文命中稍后到。
 // 点结果：打开那篇笔记，滚到这个词并高亮。↑↓ 选、Enter 打开、Esc 清空。
@@ -560,7 +559,7 @@ function updateWorkCount() {
 function renderWork() {
   S.pins = S.pins.filter((p) => index.has(p));
   $('#work-filter').innerHTML = `<b>正在做 ${S.pins.length} 个文件夹</b>
-    <span class="hint">在导图里选中文件夹，点「📌 加入工作台」</span>
+    <span class="hint">在「全部笔记」里选中文件夹，点「📌 正在做」把它固定到这里</span>
     ${S.mode === 'local' && !sx().up && sx().canStart ? '<span class="sxhint">sextant 未运行 <button data-sx-start>启动 sextant</button></span>' : ''}`;
   const grid = $('#work-grid');
   grid.className = 'cols-' + Math.min(3, Math.max(1, S.pins.length));
@@ -571,7 +570,7 @@ function renderWork() {
     if (!pane.el.isConnected) grid.appendChild(pane.el);
   }
   grid.querySelector(':scope > .empty')?.remove();
-  if (!S.pins.length) grid.insertAdjacentHTML('beforeend', '<div class="empty pad">还没有固定的文件夹。在导图里点一个文件夹，在右侧面板点「📌 加入工作台」，它就会出现在这里。</div>');
+  if (!S.pins.length) grid.insertAdjacentHTML('beforeend', '<div class="empty pad">还没有固定的文件夹。在「全部笔记」里点一个文件夹，在右侧面板点「📌 正在做」，它就会出现在这里。</div>');
 }
 
 function createPane(p) {
@@ -610,7 +609,7 @@ function updatePane(pane) {
     ${badges(agentsUnder(p))}
     <span class="pacts"><button data-pane-act="locate" title="在导图中定位">定位</button>
     ${local ? `<button data-open="${esc(p)}" title="在资源管理器中打开">资源管理器</button><a href="${vscodeUrl(absPath(p))}"><button>VS Code</button></a>` : ''}
-    <button class="icon" data-pane-act="max" title="放大">⤢</button><button class="icon" data-pane-act="unpin" title="移出工作台">✕</button></span>`;
+    <button class="icon" data-pane-act="max" title="放大">⤢</button><button class="icon" data-pane-act="unpin" title="不再固定">✕</button></span>`;
   renderSub(pane);
 }
 
@@ -640,23 +639,21 @@ const liquid = (s) => s
   .replace(/\{\{\s*['"]([^'"]+)['"]\s*\|\s*(?:relative_url|absolute_url)\s*\}\}/g, '$1')
   .replace(/\{%-?\s*(?:raw|endraw)\s*-?%\}/g, '');
 
-const isInboxSel = () => S.mode === 'local' && S.sel === S.data.inboxPath;
 
-function panelKeyOf(n, sessions, inbox) {
-  return JSON.stringify([n.path, n.note?.mtime, sessions.length, inbox.length, S.tab, S.noteView, !!S.reading]);
+function panelKeyOf(n, sessions) {
+  return JSON.stringify([n.path, n.note?.mtime, sessions.length, S.tab, S.noteView, !!S.reading]);
 }
 
 async function renderPanel(force) {
   if (S.agent) return renderAgentPanel(force);
   if (S.agentView) { S.agentView = null; S.agentLive?.destroy(); S.agentLive = null; force = true; }
-  const n = index.get(S.sel) || (isInboxSel() && { name: '收件箱', dir: S.sel, path: S.sel, children: [], parent: S.data.tree });
+  const n = index.get(S.sel);
   if (!n) return;
   const local = S.mode === 'local';
   if (!local) return renderBlogPanel(n, force);
   const sessions = local ? agentsUnder(n.path) : [];
-  const inbox = !local ? [] : isInboxSel() ? S.data.inbox : S.data.inbox.filter((e) => n.path && (e.tags.includes(n.dir) || e.tags.includes(n.name)));
   // 轮询时只有内容变了才重画；正在导图上改字、或终端开着时不打断
-  const key = panelKeyOf(n, sessions, inbox);
+  const key = panelKeyOf(n, sessions);
   const typing = S.noteMap?.editing || S.editingNote || S.liveEditing;
   if (!force && (key === S.panelKey || (typing && S.panelNode === n.path))) return;
   const sameNode = S.panelNode === n.path;
@@ -667,7 +664,7 @@ async function renderPanel(force) {
   [...editors].forEach((e) => e.destroy());
   await S.pendingSave;
   let { note, files = [] } = await getNote(n.path);
-  if (!note && local && n.path && !isInboxSel()) {
+  if (!note && local && n.path) {
     note = { meta: { title: n.name }, body: '', file: absPath(n.path) + PATH_SEP() + n.dir + '.md', mtime: 0, offset: 4, virtual: true };
   }
   S.note = note ? { ...note, path: n.path } : null;
@@ -685,14 +682,14 @@ async function renderPanel(force) {
   top += '</div></div>';
   if (local) {
     const dirPath = n.path;
-    // 一行小按钮：新建 AI（蜂群 / 任意 agent 的会话，在 sextant 的表单里选）+ 打开方式 + 工作台
+    // 一行小按钮：在这里开 AI、用 VS Code / 访达打开、博客里公开吗、固定到「正在做」
+    const finder = PATH_SEP() === '/' ? '访达' : '资源管理器';
     top += '<div class="actions">';
-    top += '<button class="primary" data-newmission title="在这个文件夹新建：蜂群任务（多个 agent 协作）或一个 agent 的会话">＋ 新建</button>';
+    top += '<button class="primary" data-newmission title="在这个文件夹开一个 AI：单个 agent 的会话，或多个 agent 的蜂群任务">＋ AI</button>';
     top += `<a href="${vscodeUrl(absPath(n.path))}"><button title="用 VS Code 打开这个文件夹">VS Code</button></a>`;
-    top += `<button data-open="${esc(dirPath)}" title="在资源管理器中打开 ${esc(absPath(dirPath))}">资源管理器</button>`;
-    if (S.data.launchers.includes('终端')) top += '<button data-launch="终端" title="在这个文件夹打开终端">终端</button>';
+    top += `<button data-open="${esc(dirPath)}" title="在${finder}中打开 ${esc(absPath(dirPath))}">${finder}</button>`;
     top += blogSelect(n);
-    if (n.path) top += `<button data-pin="${esc(n.path)}" class="${isPinned(n.path) ? 'pinned' : ''}" title="${isPinned(n.path) ? '已在工作台，点击移出' : '加入工作台'}">📌${isPinned(n.path) ? ' 已固定' : ' 工作台'}</button>`;
+    if (n.path) top += `<button data-pin="${esc(n.path)}" class="${isPinned(n.path) ? 'pinned' : ''}" title="${isPinned(n.path) ? '已固定到「📌 正在做」，点击取消' : '固定到顶栏的「📌 正在做」'}">📌${isPinned(n.path) ? ' 已固定' : ''}</button>`;
     top += '</div>';
   }
   $('#panel-top').innerHTML = top;
@@ -732,15 +729,11 @@ async function renderPanel(force) {
       if (S.find) { const q = S.find; S.find = null; editor.ready.then(() => highlightFind(editor.el, q)); }
       body.appendChild(editor.el);
     }
-    if (local && isInboxSel()) body.insertAdjacentHTML('beforeend', captureHTML());
-    if (inbox.length) body.insertAdjacentHTML('beforeend', `<div class="section"><h4>${isInboxSel() ? '收件箱' : '收件箱中的相关记录'}</h4>${entriesHTML(inbox.slice(0, 50), isInboxSel() ? null : n)}</div>`);
     if (!n.path) body.insertAdjacentHTML('beforeend', recentList());
   } else if (S.tab === 'files') {
     renderFiles(n, files);
   }
   body.scrollTop = scroll;
-  const draft = S.draft;
-  if (draft && $('#cap-text')) $('#cap-text').value = draft;
 }
 
 // ---------- 博客 ----------
@@ -754,7 +747,7 @@ function blogSelect(n) {
   const cur = n.blog?.how === 'self' ? (n.blog.on ? 'on' : 'off') : '';
   const inh = inheritedBlog(n) ? '显示' : '不显示';
   const o = (v, label) => `<option value="${v}"${cur === v ? ' selected' : ''}>${label}</option>`;
-  return `<select data-blog="${esc(n.path)}" title="这个文件夹和下面所有子文件夹在博客里显示吗">${o('', '🌐 跟随上级（' + inh + '）')}${o('on', '🌐 在博客显示')}${o('off', '🌐 不在博客显示')}</select>`;
+  return `<select data-blog="${esc(n.path)}" title="这个文件夹（和下面所有子文件夹）在博客里公开吗">${o('', '🌐 随上级·' + (inh === '显示' ? '公开' : '不公开'))}${o('on', '🌐 公开')}${o('off', '🌐 不公开')}</select>`;
 }
 $('#panel').addEventListener('change', async (e) => {
   const sel = e.target.closest('[data-blog]');
@@ -763,32 +756,23 @@ $('#panel').addEventListener('change', async (e) => {
   try { await post('api/blog/set', { path: sel.dataset.blog, on }); S.panelKey = ''; await refresh(); }
   catch (err) { alert(err.message); }
 });
-$('#blog-btn').onclick = async () => {
-  const b = $('#blog-btn'), w = window.open('about:blank', '_blank');
-  b.disabled = true; b.textContent = '生成中…';
-  try {
-    const r = await post('api/blog/build', {});
-    if (w) w.location = r.preview;
-    flash(`博客已生成：${r.notes} 篇文章${r.broken ? `，${r.broken} 个坏链接` : ''}`);
-  } catch (err) { w?.close(); alert(err.message); }
-  b.disabled = false; b.textContent = '🌐 博客预览';
-};
 
 // 发布：生成并列出这次的改动（不上传）→ 你点「确认上传」→ 后台推送，这里显示进度
 $('#pub-btn').onclick = async () => {
   const dlg = document.createElement('div');
   dlg.id = 'pub-dlg';
-  dlg.innerHTML = '<div class="box"><h3>发布到博客</h3><p class="msg">正在生成，并和线上对比…</p></div>';
+  dlg.innerHTML = '<div class="box"><h3>博客</h3><p class="msg">正在按 🌐 设置生成，并和线上对比…</p></div>';
   document.body.appendChild(dlg);
   const box = dlg.firstChild, close = () => { clearInterval(dlg.timer); dlg.remove(); };
   dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.dataset.close !== undefined) close(); });
   let r;
   try { r = await post('api/blog/publish/prepare', {}); }
-  catch (err) { box.innerHTML = `<h3>发布到博客</h3><p>没法生成：</p><pre>${esc(err.message)}</pre><div class="row"><button data-close>关闭</button></div>`; return; }
-  if (!r.total) { box.innerHTML = `<h3>发布到博客</h3><p>和线上完全一样，没有要上传的。</p><div class="row"><a href="${esc(r.url)}" target="_blank">${esc(r.url)}</a><button data-close>关闭</button></div>`; return; }
+  catch (err) { box.innerHTML = `<h3>博客</h3><p>没法生成：</p><pre>${esc(err.message)}</pre><div class="row"><button data-close>关闭</button></div>`; return; }
+  const pv = `<p class="grp">已生成。<a href="${esc(r.preview)}" target="_blank">在本机预览 ↗</a>（和上传后的样子一样）</p>`;
+  if (!r.total) { box.innerHTML = `<h3>博客</h3>${pv}<p>和线上完全一样，没有要上传的。</p><div class="row"><a href="${esc(r.url)}" target="_blank">打开线上博客 ↗</a><button data-close>关闭</button></div>`; return; }
   const list = (k, label) => r[k].length ? `<h4>${label} ${r[k].length} 篇</h4><ul>${r[k].slice(0, 200).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
   const grp = Object.entries(r.groups).sort().map(([top, c]) => `${esc(top)}：${Object.entries(c).filter(([, v]) => v).map(([k, v]) => k + ' ' + v).join('，')}`).join('<br>');
-  box.innerHTML = `<h3>发布到博客</h3>
+  box.innerHTML = `<h3>博客</h3>${pv}
     <p>公开的文章共 ${r.notes} 篇。这次相对线上：</p>
     <div class="arts">${list('added', '新增文章') + list('changed', '修改文章') + list('removed', '删除文章') || '<p class="msg">文章没有变化（只有页面文件变了）</p>'}</div>
     <details><summary class="grp">共 ${r.total} 个文件</summary><p class="grp">${grp}</p></details>
@@ -1086,7 +1070,7 @@ function noteEditor(n, note, onChange) {
         if (note.virtual) { note.virtual = false; note.file = r.file || note.file; }
         if (n.note) n.note.mtime = r.mtime;
         ed.doc = NM.parse(body, title);
-        S.panelKey = panelKeyOf(n, S.mode === 'local' ? agentsUnder(n.path) : [], S.mode === 'local' && n.path ? S.data.inbox.filter((e) => e.tags.includes(n.dir) || e.tags.includes(n.name)) : []);
+        S.panelKey = panelKeyOf(n, S.mode === 'local' ? agentsUnder(n.path) : []);
         onChange(ed.doc, line, opts);
       } catch (err) {
         S.editingNote = false;
@@ -1381,7 +1365,6 @@ function renderNoteMap(n, note) {
 
 $('#panel-body').addEventListener('click', async (e) => {
   const t = e.target;
-  if (t.dataset.cap) return onCapture(t.dataset.cap);
   if (t.hasAttribute('data-help')) return showHelp();
   if (t.dataset.nv) { S.noteView = t.dataset.nv; store.set('noteView', S.noteView); return renderPanel(true); }
   if (t.dataset.preview) { $('#preview').innerHTML = `<iframe src="${t.dataset.preview}"></iframe>`; return; }
@@ -1454,70 +1437,7 @@ function applyWidths() {
   addEventListener('resize', applyWidths);
 }
 
-// ---------- 收件箱（快速记录） ----------
-// 本地：经本地服务写入 workspace/inbox 并 git 同步。博客（手机）：用 GitHub API 直接写私有仓库，token 只存在本机浏览器。
-const pad = (n) => String(n).padStart(2, '0');
-const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
-const ghCfg = () => JSON.parse(localStorage.getItem('studio.inbox') || 'null');
-const b64enc = (s) => { const b = new TextEncoder().encode(s); let r = ''; for (let i = 0; i < b.length; i += 0x8000) r += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(r); };
-const b64dec = (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, '')), (c) => c.charCodeAt(0)));
-
-async function ghFile(cfg, file) {
-  const url = `https://api.github.com/repos/${cfg.repo}/contents/${file}`;
-  const headers = { Authorization: 'Bearer ' + cfg.token, Accept: 'application/vnd.github+json' };
-  const r = await fetch(`${url}?t=${Date.now()}`, { headers });
-  if (r.status === 404) return { url, headers, sha: null, text: '' };
-  if (!r.ok) throw new Error(r.status === 401 ? 'token 无效或已过期' : `GitHub ${r.status}`);
-  const j = await r.json();
-  return { url, headers, sha: j.sha, text: b64dec(j.content) };
-}
-
-function parseEntries(text, date) {
-  const parts = text.split(/^### (\d{1,2}:\d{2})[^\n]*\n/m), out = [];
-  for (let i = parts.length - 2; i >= 1; i -= 2) if (parts[i + 1].trim()) out.push({ date, time: parts[i], text: parts[i + 1].trim() });
-  return out;
-}
-
-async function capture(text) {
-  if (S.mode === 'local') return post('api/inbox', { text });
-  const cfg = ghCfg(), d = new Date();
-  const block = `### ${pad(d.getHours())}:${pad(d.getMinutes())}\n${text.trim()}\n\n`;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const f = await ghFile(cfg, today() + '.md');
-    const r = await fetch(f.url, { method: 'PUT', headers: f.headers, body: JSON.stringify({ message: 'note from phone', content: b64enc(f.text + block), sha: f.sha || undefined }) });
-    if (r.ok) return;
-    if (r.status !== 409 && r.status !== 422) throw new Error(`GitHub ${r.status}`);
-  }
-  throw new Error('写入冲突，请重试');
-}
-
-// 记录列表。工作台里每条带「归入笔记」：在某个文件夹的面板里就归入这个文件夹；在收件箱里归入它 #标签 对应的文件夹，没有标签就问你
-const tagNode = (e) => e.tags.map((t) => [...index.values()].find((n) => n.path && (n.dir === t || n.name === t))).find(Boolean);
-function entriesHTML(list, target) {
-  S.entries = list;
-  return list.map((e, i) => {
-    const to = target || tagNode(e);
-    const btn = S.mode === 'local' ? `<button class="file-btn" data-file-entry="${i}" data-to="${esc(to?.path || '')}" title="追加到笔记的「记录」里，收件箱里这条标为已归入">${to ? `归入「${esc(to.name)}」` : '归入笔记…'}</button>` : '';
-    return `<div class="entry"><div class="when">${esc(e.date)} ${esc(e.time)}${btn}</div><div class="text">${esc(e.text)}</div></div>`;
-  }).join('');
-}
-$('#panel-body').addEventListener('click', async (ev) => {
-  const b = ev.target.closest('[data-file-entry]');
-  if (!b) return;
-  const e = S.entries[+b.dataset.fileEntry];
-  let to = b.dataset.to;
-  if (!to) {
-    const name = prompt('归入哪个文件夹？输入文件夹名（导图上显示的名字或文件夹名）');
-    if (!name) return;
-    const hit = [...index.values()].filter((n) => n.path && (n.name === name.trim() || n.dir === name.trim()));
-    if (!hit.length) return alert('没有找到叫「' + name + '」的文件夹');
-    to = hit[0].path;
-  }
-  try { await post('api/inbox/file', { ...e, path: to }); flash(`已归入「${index.get(to)?.name || to}」的记录`); S.panelKey = ''; refresh(); }
-  catch (err) { alert(err.message); }
-});
-
-// 可以先改再保存的小窗：AI 结论写入笔记用
+// ---------- 小窗：先改再保存（AI 结论写入笔记用） ----------
 function editDialog(title, text, onSave) {
   const dlg = document.createElement('div');
   dlg.id = 'pub-dlg';
@@ -1532,68 +1452,6 @@ function editDialog(title, text, onSave) {
   dlg.querySelector('textarea').focus();
 }
 
-function captureHTML() {
-  if (S.mode === 'blog' && !ghCfg()) {
-    const [ghOwner, name] = S.data.site.inbox.repo.split('/');
-    const newRepo = `https://github.com/new?name=${encodeURIComponent(name)}&visibility=private&description=${encodeURIComponent('手机记录收件箱')}`;
-    const newToken = `https://github.com/settings/personal-access-tokens/new?name=${encodeURIComponent('studio-inbox')}&description=${encodeURIComponent('work_studio 手机记录')}&target_name=${encodeURIComponent(ghOwner)}&expires_in=none&contents=write`;
-    return `<div class="section capture"><h4>第一次使用：连接收件箱（只需一次）</h4>
-      <ol class="steps">
-        <li><a href="${newRepo}" target="_blank"><button>① 创建私有仓库 ${esc(name)}</button></a><div class="msg">打开后直接点 Create repository（已建好可跳过）</div></li>
-        <li><a href="${newToken}" target="_blank"><button>② 生成 token</button></a><div class="msg">Repository access 选 Only select repositories → ${esc(name)}，其它已预填，点 Generate 后复制</div></li>
-        <li>③ 粘贴 token：<input id="cap-token" type="password" placeholder="github_pat_…"></li>
-      </ol>
-      <input id="cap-repo" type="hidden" value="${esc(S.data.site.inbox.repo)}">
-      <div class="row"><button data-cap="save">保存，开始记录</button><span class="msg">token 只保存在这台手机的浏览器里</span></div></div>`;
-  }
-  return `<div class="section capture"><h4>快速记录</h4>
-    <textarea id="cap-text" placeholder="想到什么写什么。写 #文件夹名 可以归到对应节点"></textarea>
-    <div class="row"><button data-cap="send">记录</button><span class="msg" id="cap-msg"></span>
-    ${S.mode === 'blog' ? '<span class="link" data-cap="reset">断开</span>' : ''}</div></div>`;
-}
-
-async function renderCapturePanel() {
-  $('#crumbs').innerHTML = '<a href="#/">首页</a> / 快速记录';
-  $('#panel-top').innerHTML = '';
-  $('#tabs').hidden = true;
-  const body = $('#panel-body');
-  body.innerHTML = captureHTML() + '<div class="section"><h4>今天</h4><div id="cap-list" class="empty">…</div></div>';
-  $('#panel').hidden = false;
-  $('#cap-text')?.focus();
-  const list = $('#cap-list');
-  if (!ghCfg()) { list.textContent = ''; return; }
-  try {
-    const entries = parseEntries((await ghFile(ghCfg(), today() + '.md')).text, today());
-    list.className = '';
-    list.innerHTML = entriesHTML(entries) || '<span class="empty">还没有记录</span>';
-  } catch (e) { list.textContent = e.message; }
-}
-
-async function onCapture(action) {
-  if (action === 'save') {
-    const repo = $('#cap-repo').value.trim(), token = $('#cap-token').value.trim();
-    if (!repo || !token) return;
-    localStorage.setItem('studio.inbox', JSON.stringify({ repo, token }));
-    return renderCapturePanel();
-  }
-  if (action === 'reset') { localStorage.removeItem('studio.inbox'); return renderCapturePanel(); }
-  const ta = $('#cap-text'), msg = $('#cap-msg'), text = ta.value.trim();
-  if (!text) return;
-  msg.textContent = '保存中…';
-  try {
-    await capture(text);
-    ta.value = '';
-    S.draft = '';
-    msg.textContent = '已记录 ' + new Date().toLocaleTimeString().slice(0, 5);
-    if (S.mode === 'blog') renderCapturePanel();
-    else { S.panelKey = ''; refresh(); }
-  } catch (e) { msg.textContent = '失败：' + e.message; }
-}
-
-$('#capture-btn').onclick = () => { if (S.view !== 'map') setView('map'); location.hash = '#capture'; };
-$('#panel-body').addEventListener('keydown', (e) => { if (e.target.id === 'cap-text' && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) onCapture('send'); });
-$('#panel-body').addEventListener('input', (e) => { if (e.target.id === 'cap-text') S.draft = e.target.value; });
-
 // ---------- 路由 ----------
 function route() {
   // #ai/<id>：直接打开某个 AI（会话的终端 / 任务的蜂群图），#ai/new:<文件夹> 打开新建表单
@@ -1603,21 +1461,11 @@ function route() {
     if (S.sel === null) { S.sel = index.has(folder) ? folder : ''; renderMap(); }
     return openAgent(id);
   }
-  if (location.hash === '#capture') {
-    // 本地模式下收件箱就是工作区里的 inbox 文件夹节点
-    if (S.mode === 'local') { location.replace('#/' + S.data.inboxPath); return; }
-    S.sel = '#capture';
-    renderMap();
-    return renderCapturePanel();
-  }
   let p = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
   // 博客的整页阅读：#/文章路径?read，不离开首页（导图只是藏起来，返回是瞬间的）
   const reading = p.endsWith('?read');
   if (reading) p = p.slice(0, -5);
   setReading(reading && (S.mode === 'local' ? index.has(p) : !!index.get(p)?.url));
-  if (S.mode === 'local' && p === S.data.inboxPath && !index.has(p)) {
-    S.sel = p; renderMap(); S.panelKey = ''; return renderPanel();
-  }
   // 地址里的节点暂时不在树上（比如刚新建的文件夹还没扫描到）：先显示根节点，扫描到后再跳过去
   S.wantPath = index.has(p) ? null : p;
   if (!index.has(p)) p = '';
