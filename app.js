@@ -415,8 +415,10 @@ function highlightFind(root, q) {
 function openNode(p) {
   S.panelClosed = false;
   if (S.agent) { S.agent = null; S.panelKey = ''; renderMap(); }
-  if (location.hash === '#/' + p || decodeURIComponent(location.hash) === '#/' + p) { S.panelKey = ''; renderPanel(true); }
-  else location.hash = '#/' + p;
+  // 整页阅读时在左边导图上点另一篇文章：继续整页阅读
+  const h = '#/' + p + (S.reading && index.get(p)?.url ? '?read' : '');
+  if (location.hash === h || decodeURIComponent(location.hash) === h) { S.panelKey = ''; renderPanel(true); }
+  else location.hash = h;
 }
 
 // ---------- 视图切换 ----------
@@ -747,24 +749,14 @@ $('#pub-btn').onclick = async () => {
   };
 };
 
-// 整页阅读左边的目录树：和导图同一棵树，当前文章所在的分支展开、本篇高亮；点别的文章直接切过去
-function readNav(cur) {
-  const onPath = new Set();
-  for (let c = cur; c; c = c.parent) onPath.add(c.path);
-  const item = (c) => {
-    const label = c.url ? `<a href="#/${esc(c.path)}?read" class="${c === cur ? 'cur' : ''}">${esc(c.name)}</a>` : `<span>${esc(c.name)}</span>`;
-    if (!c.children.length) return `<li>${label}</li>`;
-    return `<li><details${onPath.has(c.path) ? ' open' : ''}><summary>${label}</summary><ul>${c.children.map(item).join('')}</ul></details></li>`;
-  };
-  return `<a class="back" href="#/${esc(cur.path)}">◎ 回到导图</a><ul>${S.data.tree.children.map(item).join('')}</ul>`;
-}
-
 function setReading(on) {
   if (S.reading === on) return;
   S.reading = on;
   document.body.classList.toggle('reading', on);
   if (on) { S.panelClosed = false; S.panelKey = ''; }
-  else requestAnimationFrame(() => { S.panelKey = ''; map.drawMini(); });
+  else S.panelKey = '';
+  // 导图区域变宽 / 变窄了：让选中的节点留在视野里
+  requestAnimationFrame(() => { map.drawMini(); if (S.sel !== null) map.reveal(S.sel); });
 }
 
 // 博客模式的右侧面板：文章正文取自文章页（构建时已渲染好），只读；「整页阅读」打开文章页
@@ -777,15 +769,15 @@ async function renderBlogPanel(n, force) {
   for (let c = n; c; c = c.parent) chain.unshift(c);
   $('#crumbs').innerHTML = chain.slice(0, -1).map((c) => `<a href="#/${esc(c.path)}">${esc(c.name)}</a>`).join(' / ');
   const m = n.note || {};
-  let top = `<div class="titlerow"><h1 class="title">${esc(n.path ? m.title || n.name : S.data.site.title)}</h1><div class="meta">`;
-  top += (m.tags || []).map((t) => `<span class="chip">#${esc(t)}</span>`).join('');
-  if (m.date) top += `<span>${esc(m.date)}</span>`;
-  top += '</div></div>';
+  // 一行放下：标题、标签、日期，右边是「文档 / 导图」和整页阅读开关
   if (S.noteView !== 'map') S.noteView = 'doc';
   const pv = (k, label) => `<button data-pv="${k}" class="${S.noteView === k ? 'on' : ''}">${label}</button>`;
-  if (n.url && S.reading) top += `<div class="actions"><a href="#/${esc(n.path)}"><button class="primary">← 返回导图</button></a><span class="seg pv">${pv('doc', '文档')}${pv('map', '导图')}</span><a href="${esc(n.url)}" target="_blank" title="这篇文章单独的网页，适合分享给别人"><button>🔗 分享链接</button></a></div>`;
-  else if (n.url) top += `<div class="actions"><span class="seg pv">${pv('doc', '文档')}${pv('map', '导图')}</span><a href="#/${esc(n.path)}?read"><button class="primary">整页阅读</button></a></div>`;
-  else if (!n.path && S.data.site.subtitle) top += `<div class="hint">${esc(S.data.site.subtitle)}</div>`;
+  const meta = (m.tags || []).map((t) => `<span class="chip">#${esc(t)}</span>`).join('') + (m.date ? `<span>${esc(m.date)}</span>` : '');
+  const acts = n.url ? `<span class="bacts"><span class="seg pv">${pv('doc', '文档')}${pv('map', '导图')}</span>${S.reading
+    ? `<a href="#/${esc(n.path)}" title="恢复原来的宽度（Esc）"><button>⤡ 退出整页</button></a>`
+    : `<a href="#/${esc(n.path)}?read" title="文章区放大，导图留在左边（也可以在导图上双击文章）"><button class="primary">⤢ 整页阅读</button></a>`}</span>` : '';
+  let top = `<div class="titlerow"><h1 class="title" title="${esc(n.path ? m.title || n.name : S.data.site.title)}">${esc(n.path ? m.title || n.name : S.data.site.title)}</h1><div class="meta">${meta}</div>${acts}</div>`;
+  if (!n.path && S.data.site.subtitle) top += `<div class="hint">${esc(S.data.site.subtitle)}</div>`;
   $('#panel-top').innerHTML = top;
   $('#tabs').hidden = true;
   $('#panel').hidden = !!S.panelClosed;
@@ -819,13 +811,9 @@ async function renderBlogPanel(n, force) {
     const sibs = (n.parent?.children || []).filter((c) => c.url);
     const i = sibs.indexOf(n), prev = sibs[i - 1], next = sibs[i + 1];
     const pn = (x, label) => x ? `<a href="#/${esc(x.path)}?read"><span class="l">${label}</span>${esc(x.name)}</a>` : '<span></span>';
-    body.innerHTML = `<div class="read-wrap"><nav class="read-nav">${readNav(n)}</nav><div class="read-main"><div class="post-body blog-body">${html || '<p class="empty">加载失败</p>'}</div>${list}
+    body.innerHTML = `<div class="read-wrap"><div class="read-main"><div class="post-body blog-body">${html || '<p class="empty">加载失败</p>'}</div>${list}
       <nav class="read-pn">${pn(prev, '上一篇')}${pn(next, '下一篇')}</nav></div><aside class="read-toc"></aside></div>`;
     const heads = [...body.querySelectorAll('.blog-body h2[id], .blog-body h3[id]')];
-    // 只滚左边目录，让本篇在中间（scrollIntoView 会把整个面板也带着滚）
-    const nav = body.querySelector('.read-nav'), cur = nav.querySelector('.cur');
-    if (cur) nav.scrollTop = cur.offsetTop - nav.offsetTop - nav.clientHeight / 2;
-    body.scrollTop = 0;
     if (heads.length > 2) body.querySelector('.read-toc').innerHTML = '<div class="toc-h">目录</div>' + heads.map((h) => `<a data-anchor="${esc(h.id)}" class="d${h.tagName[1]}">${esc(h.textContent)}</a>`).join('');
   } else body.innerHTML = `<div class="post-body blog-body">${html || '<p class="empty">加载失败</p>'}</div>` + list;
   enhance(body.querySelector('.blog-body'));
