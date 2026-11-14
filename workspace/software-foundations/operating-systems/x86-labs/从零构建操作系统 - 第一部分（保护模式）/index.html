@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建操作系统 - 第一部分（保护模式） · Y0uYuGe</title>
+<meta name="description" content="x86 是 Intel 通用计算机系列的标准编号缩写，也标识一套通用的计算机指令集合。这个 x 与处理器没有任何关系，它是对所有“*86”系统的一种简单、宽泛的定义，例如 i386、586、奔腾（Pentium）。由于早期 Intel 的 CPU 编号都是 8086、80286 这样（都含有 86），而且整个系列的 CPU 都是指令兼容的，所以用 X86 来标识所使用的指令集合。如今的奔腾、P2、P4、赛扬系列都支持 X86 指令系统，所以都属于 X86 家族。CPU 根据内存映射的规则来控制内存访问。从实模式切换到保护模式。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/x86-labs">x86 实验</a></nav>
+    <h1>从零构建操作系统 - 第一部分（保护模式）</h1>
+    <div class="meta"><time>2023-10-30</time><span class="tag">#系统架构</span><span class="tag">#编程语言</span><span class="tag">#C 语言</span></div>
+    <article class="post-body">
+<h1 id="保护模式">保护模式</h1>
+<h2 id="x86">x86</h2>
+<p>  X86 架构是一种计算机语言指令集，指 Intel 通用计算机系列的标准编号缩写，也标识一套通用的计算机指令集合</p>
+<p>  x86 是 Intel 通用计算机系列的标准编号缩写，也标识一套通用的计算机指令集合。这个 x 与处理器没有任何关系，它是对所有“*86”系统的一种简单、宽泛的定义，例如 i386、586、奔腾（Pentium）。由于早期 Intel 的 CPU 编号都是 8086、80286 这样（都含有 86），而且整个系列的 CPU 都是指令兼容的，所以用 X86 来标识所使用的指令集合。如今的奔腾、P2、P4、赛扬系列都支持 X86 指令系统，所以都属于 X86 家族。</p>
+<p>X86 指令集是美国 Intel 公司为其第一块 16 位 CPU（i8086）专门开发的。美国 IBM 公司 1981 年推出的世界第一台 PC 机中的 CPU——i8088（i8086 的简化版）使用的也是 X86 指令，同时电脑中为提高浮点数据处理能力而增加的 X87 系列数学协处理器则另外使用 X87 指令；后来就将 X86 指令集和 X87 指令集统称为 X86 指令集。虽然随着 CPU 技术的不断发展，Intel 陆续研制出更新型的 i80386、i80486 直到今天的 Pentium 4（以下简称 P4）系列，但为了保证电脑能继续运行以往开发的各类应用程序，以保护和继承丰富的软件资源，Intel 公司所生产的所有 CPU 仍然继续使用 X86 指令集，所以它的 CPU 仍属于 X86 系列。</p>
+<p>BIOS 是英文“Basic Input Output System”的缩写</p>
+<h2 id="寄存器">寄存器</h2>
+<p><img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%EF%BC%89/assets/csdn-134067276/image-001-cef1f2188b.png" alt="图片"></p>
+<h2 id="虚拟-8086-模式">虚拟 8086 模式</h2>
+<p>虚拟 8086 模式又称虚拟实模式，它允许在保护模式操作系统的控制下执行实模式程序。</p>
+<h2 id="保护的是什么">保护的是什么</h2>
+<p>保护各个进程所占用的内存部分的安全</p>
+<h2 id="内存映射">内存映射</h2>
+<p>CPU 根据内存映射的规则来控制内存访问
+内存中的不同区域可以称为段
+为了方便 CPU 管理内存，可以把内存中的各个区域登记到一张表（全局描述符表）中。这样 CPU 就可以通过全局描述符表（GDT）获知该段的一些相关信息</p>
+<h2 id="进入保护模式---第一部分">进入保护模式 - 第一部分</h2>
+<p>从实模式切换到保护模式
+只需将 CR0 寄存器中的 PE 标志位置 1 即可进入保护模式
+汇编指令为：</p>
+<pre><code class="language-c">move eax,cr0
+or eax,1
+mov cr0,eax
+</code></pre>
+<h2 id="进入保护模式---第二部分">进入保护模式 - 第二部分</h2>
+<p> 上面三条语句之后必须紧跟一条 JMP 或 CALL 指令，否则会出现一些错误
+  因为 cr0 寄存器的 PE 标志位改为 1 之后，后续已经以流水线方式按 32 位形式执行的 16 位指令会导致错误，所以此时需要一条跳转指令让 CPU 重置一次</p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%89/"><span class="l">上一篇</span>从零构建操作系统 - 第二部分（保护模式下的内存管理）</a><a href="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%88GRUB%20%E5%BC%95%E5%AF%BC%E5%AE%9E%E6%88%98%EF%BC%89/"><span class="l">下一篇</span>从零构建操作系统（四）（GRUB 引导实战）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#x86">x86</a><a class="d2" href="#寄存器">寄存器</a><a class="d2" href="#虚拟-8086-模式">虚拟 8086 模式</a><a class="d2" href="#保护的是什么">保护的是什么</a><a class="d2" href="#内存映射">内存映射</a><a class="d2" href="#进入保护模式---第一部分">进入保护模式 - 第一部分</a><a class="d2" href="#进入保护模式---第二部分">进入保护模式 - 第二部分</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

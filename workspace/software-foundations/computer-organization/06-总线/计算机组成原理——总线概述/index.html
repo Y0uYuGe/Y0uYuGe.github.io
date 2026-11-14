@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理——总线概述 · Y0uYuGe</title>
+<meta name="description" content="最初，各部件是按功能相互连接的。采用这种分散连接方式，增加或移除外部设备时重新布线会非常麻烦。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF">总线</a></nav>
+    <h1>计算机组成原理——总线概述</h1>
+    <div class="meta"><time>2023-12-30</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<h1 id="总线示意图">总线示意图</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-001-54c907bf47.png" alt="图片"></p>
+<h1 id="总线的物理实现">总线的物理实现</h1>
+<p>如果这是数据总线，那么当 CPU 分别在四根线上发出高低电平信号时，信号沿着导线传到其他部件，从而实现数据传送
+但如果同时向总线的所有导线发送数据，就可能产生冲突，比如一个是 0 而另一个是 1
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-002-8d4cc9313d.png" alt="图片"></p>
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-003-102a10a354.png" alt="图片"></p>
+<h1 id="总线的定义">总线的定义</h1>
+<p>最初，各部件是按功能相互连接的。采用这种分散连接方式，增加或移除外部设备时重新布线会非常麻烦
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-004-438f105c1f.png" alt="图片"></p>
+<h1 id="总线的特性">总线的特性</h1>
+<p>传输方向指总线上的数字信号朝哪个方向传送
+有效电平范围是指只有当电平落在某个范围内时，信号才有效，即为 1
+传输线的功能指它传输的是地址、数据还是控制信号
+时间特性：各种信号何时发出的时序安排
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-005-bae58961fe.png" alt="图片"></p>
+<h1 id="总线的分类">总线的分类</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-006-98e4022d29.png" alt="图片"></p>
+<h2 id="按数据传输格式分类">按数据传输格式分类</h2>
+<h3 id="串行总线">串行总线</h3>
+<p>一次只能传输一位
+抗干扰能力强——大概是因为只有一路电信号，没有其他电信号对它产生干扰。我觉得可以参考物理中电生磁、磁生电、电干扰电的概念
+拆卸与装配：由于大多数数据都不止 1 位，当需要一位一位地传输数据时，必须把多位数据拆成单独的位；接收时，还要把这些单独的位重新装配成原来的多位数据
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-007-c25d90157a.png" alt="图片"></p>
+<h3 id="并行总线">并行总线</h3>
+<p>一次可以传输多位
+频率越高，对其他线路数字信号的干扰就越强
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-008-b851cf7449.png" alt="图片"></p>
+<h2 id="按总线功能分类">按总线功能分类</h2>
+<p>片内总线、系统总线和通信总线——层次逐级升高
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-009-f6b2b474f2.png" alt="图片"></p>
+<h3 id="注意系统总线的进一步分类">注意系统总线的进一步分类</h3>
+<p>数据总线：当线数等于机器字长时，读出内容的长度正好是 CPU 一次能处理的最大长度；如果等于存储字长，则一次读取就能取出对应的内容。它是双向的，因为数据需要在两个方向上传输</p>
+<p>地址总线：采用统一编址时，必须考虑设备的数量。例如，主存是 0~n，那么一个设备的地址是 n+1，另一个设备的地址是 n+2。此时地址总线宽度所能表示的最大二进制数必须能达到 n+2。它是单向的，因为传输方向只能是从 CPU 到主存，所以必然是单向的</p>
+<p>控制总线：不同的控制线对应不同的控制信号。有些控制线用于向其他部件发出信号，另一些则用于接收其他部件发给 CPU 的信号
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-010-ec40ef74cf.png" alt="图片"></p>
+<h1 id="总线结构">总线结构</h1>
+<h2 id="单总线结构">单总线结构</h2>
+<p>由于不同设备同时向总线发送的信号可能发生冲突，因此不支持并发传输
+带宽低意味着传输慢，因为传输不一定能立即进行——必须等其他部件释放总线，否则就会冲突
+由于只有一条总线，需要考虑的问题没那么复杂，所以连接设备比较容易。
+此外，由于系统总线传输速度快，而总线上 I/O 设备的数据速度慢，总线的一部分性能可能被浪费
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-011-bc723f7c12.png" alt="图片"></p>
+<h2 id="双总线结构">双总线结构</h2>
+<p>突发传送：你发出所需的一个数据的地址，但得到的是该数据以及与之相邻连续存放的数据
+CPU 与通道之间通过主存总线传输，速度没有浪费；I/O 设备与通道之间通过 I/O 总线传输，速度同样没有浪费。
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-012-0b8c3b6098.png" alt="图片"></p>
+<h2 id="三总线结构">三总线结构</h2>
+<p>DMA 总线速度快，用于连接高速外设；I/O 总线速度慢，用于连接低速外设
+CPU 通过 I/O 总线访问低速外设，充分利用了 I/O 总线
+如果需要访问磁盘，可以先通过 DMA 把磁盘内容传送到主存，再传给 CPU
+效率较低，因为三条总线同一时刻只能有一条工作
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-013-a0c13580fb.png" alt="图片"></p>
+<h2 id="四总线结构">四总线结构</h2>
+<p>不同的总线速度不同，用桥接器在它们之间进行转换
+数据缓冲与转换：桥接器可以把接收到的串行数据转换成并行数据再发送出去
+控制：决定哪个设备获得总线使用权
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-014-ddc5f5b804.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/assets/csdn-135219441/image-015-686d3d3879.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/"><span class="l">上一篇</span>计算机组成原理 - 总线性能指标</a><a href="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/"><span class="l">下一篇</span>计算机组成原理——总线仲裁（集中仲裁、分布仲裁）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#按数据传输格式分类">按数据传输格式分类</a><a class="d3" href="#串行总线">串行总线</a><a class="d3" href="#并行总线">并行总线</a><a class="d2" href="#按总线功能分类">按总线功能分类</a><a class="d3" href="#注意系统总线的进一步分类">注意系统总线的进一步分类</a><a class="d2" href="#单总线结构">单总线结构</a><a class="d2" href="#双总线结构">双总线结构</a><a class="d2" href="#三总线结构">三总线结构</a><a class="d2" href="#四总线结构">四总线结构</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

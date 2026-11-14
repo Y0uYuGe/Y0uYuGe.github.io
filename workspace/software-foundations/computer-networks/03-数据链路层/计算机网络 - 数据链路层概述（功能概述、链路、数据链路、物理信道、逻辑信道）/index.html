@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 数据链路层概述（功能概述、链路、数据链路、物理信道、逻辑信道） · Y0uYuGe</title>
+<meta name="description" content="最基本的服务是让物理层传输得更准确，使到达网络层的内容没有差错。无确认的无连接服务：通常用于实时通信或误码率较低的信道。有确认的无连接服务：不建立连接，但收到后必须回复确认，否则数据会被重传。有确认的面向连接服务：建立连接，收到后必须回复确认，否则数据会被重传。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82">数据链路层</a></nav>
+    <h1>计算机网络 - 数据链路层概述（功能概述、链路、数据链路、物理信道、逻辑信道）</h1>
+    <div class="meta"><time>2024-02-03</time><span class="tag">#计算机网络</span><span class="tag">#网络</span><span class="tag">#网络协议</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<ul>
+<li><p>封装成帧是指数据链路层在来自上层网络层的数据包（如 IP 数据报）前后加上自己的帧头和帧尾，构成一个完整的帧。这一过程包括对数据的封装，使其能够在物理介质上传输。封装成帧的目的是让接收端能够准确识别一个帧的开始和结束，提取出控制信息，并最终恢复出原始数据。帧头和帧尾中包含源和目的 MAC 地址、以太网类型字段以及循环冗余校验（CRC）等信息。</p>
+</li>
+<li><p>透明传输是指在数据传输过程中，数据链路层不对业务数据的内容做任何更改或处理，即数据直接通过互连功能方式，不经过任何纠错处理。透明传输可以保证数据的完整性和原始性，它允许上层交付的任何数据都能被传输，而不对数据本身施加限制或修改。这种传输方式的优点是能够保持数据的原貌，但同时也意味着如果传输过程中出现错误，这些错误不会被纠正，可能导致数据被错误接收。</p>
+</li>
+<li><p>数据链路层的比特差错通常指某个比特出错，而帧差错则涉及整个数据帧的错误，包括丢失、重复或失序。</p>
+</li>
+</ul>
+<p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-001-75daafd99d.png" alt="图片"></p>
+<h1 id="数据链路层的研究思路">数据链路层的研究思路</h1>
+<p>即接收端先解封装，再重新封装，然后把数据发送出去。
+因此，不同结点在同一水平层上的数据内容是相同的。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-002-b891491f68.png" alt="图片"></p>
+<h1 id="数据链路层的基本概念">数据链路层的基本概念</h1>
+<p>物理信道通过传输介质进行传输，可以是无线的，也可以是有线的。</p>
+<p>数据链路则是在通过传输介质传输的基础上，还规定了一些规则。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-003-bde705ae61.png" alt="图片"></p>
+<h1 id="数据链路层的功能概述">数据链路层的功能概述</h1>
+<p>最基本的服务是让物理层传输得更准确，使到达网络层的内容没有差错。</p>
+<p>无确认的无连接服务：通常用于实时通信或误码率较低的信道。
+有确认的无连接服务：不建立连接，但收到后必须回复确认，否则数据会被重传。
+有确认的面向连接服务：建立连接，收到后必须回复确认，否则数据会被重传。</p>
+<p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-004-20dfe98e03.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%EF%BC%88%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E7%9A%84%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%8F%8A%E5%85%B6%E4%B8%8E%E4%BC%A0%E8%BE%93%E5%B1%82%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%8C%BA%E5%88%AB%E3%80%81%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E6%96%B9%E6%B3%95%E3%80%81%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93%E3%80%81/"><span class="l">上一篇</span>计算机网络 - 流量控制（数据链路层的流量控制及其与传输层流量控制的区别、流量控制的方法、可靠传输、滑动窗口与流量控制的关系）</a><a href="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0/"><span class="l">下一篇</span>计算机网络 - 停止等待协议（停止等待协议属于哪一层？起源、前提与应用；无差错情况；有差错情况——数据帧丢失或检测出错、ACK 丢失、ACK 迟到；停止等待协议的性能分析）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

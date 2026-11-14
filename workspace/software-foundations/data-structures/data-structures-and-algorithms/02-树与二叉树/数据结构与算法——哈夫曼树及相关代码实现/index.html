@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据结构与算法——哈夫曼树及相关代码实现 · Y0uYuGe</title>
+<meta name="description" content="带权的 n 个叶子结点构成的二叉树可以有很多种形态（左右也不只是两种形态）——可以自己画一画。【问题描述】（1）哈夫曼树问题。（2）利用哈夫曼编码进行通信可以大大提高信道利用率，缩短信息传输时间，降低传输成本。但是，这要求在发送端通过一个编码系统对待传数据预先编码，在接收端将传来的数据进行译码（复原）。对于双工信道（即可以双向传输信息的信道），每端都需要一个完整的编/译码系统。试为这样的信息收发站写一个哈夫曼码的编/译码系统。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/data-structures">数据结构</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms">数据结构与算法</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91">树与二叉树</a></nav>
+    <h1>数据结构与算法——哈夫曼树及相关代码实现</h1>
+    <div class="meta"><time>2023-12-03</time><span class="tag">#数据结构</span><span class="tag">#算法</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-001-1bfe5120d8.png" alt="图片"></p>
+<h1 id="带权路径长度">带权路径长度</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-002-58ff420f21.png" alt="图片"></p>
+<h1 id="哈夫曼树的定义">哈夫曼树的定义</h1>
+<p>带权的 n 个叶子结点构成的二叉树可以有很多种形态（左右也不只是两种形态）——可以自己画一画
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-003-575b65f555.png" alt="图片"></p>
+<h1 id="哈夫曼树的构造">哈夫曼树的构造</h1>
+<p>也就是说，权值最小的叶子结点成为路径最长的叶子结点</p>
+<h2 id="方法一">方法一</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-004-b2112a74d5.png" alt="图片"></p>
+<h2 id="方法二">方法二</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-005-dfd0c3e109.png" alt="图片">
+两者本质上是一样的：每次找出权值最小的两个结点，合并成一个新结点</p>
+<h1 id="哈夫曼编码">哈夫曼编码</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-006-1a2d2221a0.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-007-a55440d80a.png" alt="图片">
+前缀编码是指没有一个编码是另一个编码开头部分的前缀
+换句话说，没有一个编码是另一个编码的子集
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-008-453258284f.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-009-8c3a3a57e8.png" alt="图片"></p>
+<h1 id="英文字母频次">英文字母频次</h1>
+<p>即把每个频次作为权值，然后构造对应的哈夫曼树，最后得到各个编码
+数据压缩率可以看作：对应哈夫曼树的 WPL / 原来定长编码的 WPL
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-010-ee7a6f4e2f.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-011-53ca4a9969.png" alt="图片"></p>
+<h1 id="实验内容哈夫曼树">实验内容：哈夫曼树</h1>
+<h2 id="一实验的问题与要求需求分析">一、实验的问题与要求（需求分析）：</h2>
+<p>【问题描述】（1）哈夫曼树问题。（2）利用哈夫曼编码进行通信可以大大提高信道利用率，缩短信息传输时间，降低传输成本。但是，这要求在发送端通过一个编码系统对待传数据预先编码，在接收端将传来的数据进行译码（复原）。对于双工信道（即可以双向传输信息的信道），每端都需要一个完整的编/译码系统。试为这样的信息收发站写一个哈夫曼码的编/译码系统。 </p>
+<h2 id="二程序设计的基本思想原理和算法描述">二、程序设计的基本思想、原理和算法描述：</h2>
+<ol>
+<li><p>实现哈夫曼编码首先要构造最优二叉树，权值较大的叶子结点离根结点较近。算法是：从键盘输入的字符串长度决定最优二叉树的结点个数；遍历这个字符串长度，用字符建立 n 棵单结点树。选出权值最小和次小的两个根结点合并成一棵树；重复这个过程——合并权值最小和次小的根结点——直到每个结点都出现在最优二叉树中。</p>
+</li>
+<li><p>构造哈夫曼编码：</p>
+</li>
+</ol>
+<p>左分支为 0，右分支为 1；每个结点对应的二进制编码就是该结点的哈夫曼编码。采用从叶子结点向上回溯的方法，每回退一步记录一位。把得到的编码存入 code[]。</p>
+<ol start="3">
+<li>编码：</li>
+</ol>
+<p>  把字符串与得到的哈夫曼树进行比对，按照左分支为 0、右分支为 1 输出对应的编码。</p>
+<ol start="4">
+<li>译码：根据哈夫曼树对编码进行回溯。</li>
+</ol>
+<h2 id="三调试和运行程序过程中产生的问题及采取的措施">三、调试和运行程序过程中产生的问题及采取的措施：</h2>
+<pre><code>用 printf 打印相关内容来观察变化
+</code></pre>
+<h2 id="四源程序及注释">四、源程序及注释</h2>
+<pre><code class="language-c">#include&quot;stdio.h&quot;
+#include&quot;stdlib.h&quot;
+#include&quot;string.h&quot;
+#define status int
+#define OK 1
+#define Maxvalue 100
+#define Maxleaf 30 
+typedef struct
+{ 
+    int weight;
+    int parent ,lchild,rchild ;
+}HTNode,*HuffmanTree;
+
+typedef char * *HuffmanCode; //指向字符指针的指针
+
+status Select(HuffmanTree HT,int n,int &amp;s1, int &amp;s2) //选择最小的两个节点
+{
+    HuffmanTree p;int i;
+    int lnode= Maxvalue,mnode= Maxvalue;
+    for(p=HT,i=1;i&lt;=n;i++)
+    { 
+        //lnode小于始终会小于mmnode，因为if的匹配顺序
+        if(p[i].weight&lt;lnode&amp;&amp;p[i].parent==0)// 判断该节点的权重是否小于当前的lnode并且已经有父节点的不要
+    { 
+        mnode=lnode;         //此时mmode更新为lnode
+        lnode=p[i].weight;  //lnode更新为当前节点的权重
+        s2=s1;          //S2为mmnode对应节点的索引 S1为lnode对应节点的索引 此时将mnode的索引更新
+        s1=i;      //更新lnode的索引更新
+    }
+    else if(p[i].weight&lt;mnode&amp;&amp;p[i].parent==0) //当该节点的权重大于lnode时并判断是否小于当前的mnode并且已经有父节点的不要
+    {
+        mnode=p[i].weight;   //更新mnode的为当前节点的权重
+        s2=i;           //更新mnode此时的索引
+    }
+    }
+    return OK;
+}
+void HuffmanCoding(HuffmanTree &amp;HT,HuffmanCode &amp;HC, int *w,int n)
+{   
+    int i,m,start,f,s1=0,s2=0 ,c;char *cd;
+    HuffmanTree p;
+    if(n&lt;=1)return;//叶子节点判断
+    m=2*n-1;  //求出叶子节点对应的二叉树的节点个数 合并次数+节点个数=对应二叉树的节点个数
+    HT=(HuffmanTree)malloc((m+1)*sizeof(HTNode));
+    for(p=HT+1,i=1;i&lt;=n;++i,++p,++w)
+    { 
+        (*p).weight=*w;// 刚开始的节点赋权值
+        (*p).parent=0; 
+        (*p).lchild=0;
+        (*p).rchild=0;
+    }
+    for(i=1;i&lt;=n;i++)
+    { 
+        printf(&quot;刚开始的第%d个叶子节点weight：%d ,parent：%d ,lchild：%d ,rchild：%d &quot;,i,HT[i].weight,HT[i].parent,HT[i].lchild,HT[i].rchild);
+        printf(&quot;\n&quot;);  //刚开始的
+    }
+    for(;i&lt;=m;i++)  
+    { 
+        (*p).weight=0; //其他节点初始化为0
+        (*p).parent=0;
+        (*p).lchild=0;
+        (*p).rchild=0;
+        p++; 
+    }
+    for(i=1;i&lt;=m;i++)
+    {   
+        printf(&quot;初始化完成的哈夫曼树的第%d节点:%d ,%d ,%d ,%d &quot;,i,HT[i].weight,HT[i].parent,HT[i].lchild,HT[i].rchild);
+        printf(&quot;\n&quot;);}
+    for(i=n+1;i&lt;=m;++i)
+    {
+        Select(HT,i-1,s1,s2);  //传入的是原来的和新建的节点范围，返回的是对应节点中权重最小的两个
+        HT[s1].parent=i;      //然后建立父子关系
+        HT[s2].parent=i;
+        HT[i].lchild=s1;
+        HT[i].rchild=s2;
+        HT[i].weight=HT[s1].weight+HT[s2].weight; //父节点的权重等于两个孩子的权重和
+    }
+    for(p=HT+1,i=1;i&lt;=m;i++,p++)
+    {
+        printf(&quot;编码完成后的哈夫曼树的第%d个节点：%d,%d,%d,%d&quot;,i,(*p).weight,(*p).parent,(*p).lchild,(*p).rchild); 
+        printf(&quot;\n&quot;);
+    } 
+    //从叶子到根逆向求每个字符的赫夫曼编码
+        HC=(HuffmanCode )malloc((n+1) *sizeof(char *)); //编码的字符串地址数组 大小为(n+1)*8 但类型为HuffmanCode，即单位为八个字节 指向char* 
+        cd=(char*)malloc(n*sizeof(char));// n个字符的指针，对应编码结果
+        cd[n-1]=&#39;\0&#39;; //结束符
+        for(i=1;i&lt;=n;++i) //遍历初始的叶子的节点
+        {
+        start=n-1;    //编码从后往前一个一个字符的赋值
+        for(c=i,f=HT[i].parent; f!=0; c=f,f=HT[f].parent) //从初始叶子节点遍历父节点，直到对应父节点为0时停止
+        {
+        if(HT[f].lchild==c) cd[--start]=&#39;0&#39;; //如果父节点的左孩子为当前节点则此时编码为0
+        
+        else cd[--start]=&#39;1&#39;; //如果父节点的右孩子为当前节点则此时编码为1
+
+        }//则当前叶子节点对应的编码转换完成
+        HC[i]=(char *)malloc((n-start)*sizeof(char));//赋予满足编码长度的字符串地址
+        strcpy(HC[i],&amp;cd[start]); //赋值给当前节点的编码
+        printf(&quot;当前第%d个叶子的编码为：%s\n&quot;,i,HC[i]); 
+        }
+        free(cd);
+}
+
+int main()
+{
+    HuffmanTree HT;HuffmanCode HC;
+    int n,i; int w[8]={5,29,7,8,14,23,3,11};
+    printf(&quot;%d&quot;,sizeof(char *));
+    printf(&quot;请输入叶子节点的个数：\n&quot;);
+    scanf(&quot;%d&quot;,&amp;n); //输入叶子节点的个数
+    HuffmanCoding(HT,HC, w,n); //生成哈夫曼树并输出对应各个叶子节点的编码
+    return 0;
+}
+</code></pre>
+<h2 id="五运行结果">五、运行结果</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E2%80%94%E2%80%94%E5%93%88%E5%A4%AB%E6%9B%BC%E6%A0%91%E5%8F%8A%E7%9B%B8%E5%85%B3%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/assets/csdn-134769383/image-012-f1d88b3ccc.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%BA%BF%E7%B4%A2%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E7%BA%BF%E7%B4%A2%E5%8C%96%E4%BB%A5%E5%8F%8A%E5%9C%A8%E7%BA%BF%E7%B4%A2%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E6%89%BE%E5%89%8D%E9%A9%B1%E5%92%8C%E5%90%8E%E7%BB%A7/"><span class="l">上一篇</span>数据结构与算法 - 线索二叉树的线索化以及在线索二叉树中找前驱和后继</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#方法一">方法一</a><a class="d2" href="#方法二">方法二</a><a class="d2" href="#一实验的问题与要求需求分析">一、实验的问题与要求（需求分析）：</a><a class="d2" href="#二程序设计的基本思想原理和算法描述">二、程序设计的基本思想、原理和算法描述：</a><a class="d2" href="#三调试和运行程序过程中产生的问题及采取的措施">三、调试和运行程序过程中产生的问题及采取的措施：</a><a class="d2" href="#四源程序及注释">四、源程序及注释</a><a class="d2" href="#五运行结果">五、运行结果</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

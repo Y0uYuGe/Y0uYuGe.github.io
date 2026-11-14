@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密码学原理与技术 - 第 11 章 - 哈希函数 · Y0uYuGe</title>
+<meta name="description" content="2 的 80 次方是当前计算机能够达到的范围。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/security-foundations">安全基础</a><span class="sep">›</span><a href="/#/security-foundations/cryptography">密码学</a><span class="sep">›</span><a href="/#/security-foundations/cryptography/textbook-notes">教材笔记</a></nav>
+    <h1>密码学原理与技术 - 第 11 章 - 哈希函数</h1>
+    <div class="meta"><time>2025-01-04</time><span class="tag">#哈希算法</span><span class="tag">#密码学</span><span class="tag">#算法</span><span class="tag">#哈希</span></div>
+    <article class="post-body">
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-001-308606aa32.png" alt="图片"></p>
+<h1 id="为什么需要哈希函数">为什么需要哈希函数</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-002-2cdf0da0b2.png" alt="图片"></p>
+<h2 id="使用哈希函数的数字签名">使用哈希函数的数字签名</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-003-61ed3bf64c.png" alt="图片"></p>
+<h2 id="使用哈希函数进行数字签名的基本协议">使用哈希函数进行数字签名的基本协议</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-004-497b2ce361.png" alt="图片"></p>
+<h2 id="哈希函数的基本输入输出特性">哈希函数的基本输入输出特性</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-005-a95e4bc76c.png" alt="图片"></p>
+<h1 id="安全性质">安全性质</h1>
+<h2 id="哈希函数的三个安全性要求">哈希函数的三个安全性要求</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-006-fd7123b784.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-007-be5f2f3565.png" alt="图片"></p>
+<h2 id="为什么基于哈希的数字签名方案是安全的">为什么基于哈希的数字签名方案是安全的？</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-008-401603fa5c.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-009-e34ca0db9e.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-010-8aba8252fe.png" alt="图片"></p>
+<h2 id="抗碰撞性与生日攻击">抗碰撞性与生日攻击</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-011-ddce736124.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-012-435189033e.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-013-8e969876f2.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-014-c7b1a39492.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-015-0165e79977.png" alt="图片">
+2 的 80 次方是当前计算机能够达到的范围</p>
+<h1 id="算法">算法</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-016-a6ef263eb4.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-017-53b016b272.png" alt=" "></p>
+<h2 id="基于分组密码构造哈希函数">基于分组密码构造哈希函数</h2>
+<p>每个 xi 是分组密码的输入长度，最终的哈希结果是 xn 经过函数 e 之后的结果</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-018-87a6c63d23.png" alt="图片"></p>
+<p>这个是反过来的，但最终的哈希结果仍然是 xn 经过函数 e 之后的结果</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-019-5bb0d54703.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-020-4673022da5.png" alt="图片"></p>
+<h2 id="专用哈希函数----md4-哈希函数族">专用哈希函数 -- MD4 哈希函数族</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-021-8a70f421f6.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-022-03c10442d4.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-023-d98a5a703c.png" alt="图片"></p>
+<h1 id="示例安全哈希算法-sha-256">示例：安全哈希算法 SHA-256</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-024-a441890261.png" alt="图片"></p>
+<h2 id="sha-2">SHA-2</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-025-088be9c304.png" alt="图片">
+整体框架
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-026-b5a359b4d8.png" alt="图片">
+每个分组大小为 512 位
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-027-3e769b638a.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-028-b6f874c512.png" alt="图片"></p>
+<h3 id="sha-256-预处理">SHA-256 预处理</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-029-9960404a12.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-030-47fa2218a8.png" alt="图片"></p>
+<h3 id="sha-256-压缩函数">SHA-256 压缩函数</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-031-3032f41fea.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-032-681106ba5a.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-033-e4e2cacb7d.png" alt="图片"><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-034-b6a011584a.png" alt="图片"></p>
+<h3 id="sha-256-压缩函数中的第-j-轮迭代">SHA-256 压缩函数中的第 j 轮迭代</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-035-10a22e7ef8.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/assets/csdn-144929113/image-036-b917e0ebf0.png" alt="图片"></p>
+<h1 id="参考资料">参考资料</h1>
+<ol>
+<li><p><strong>众多哈希函数及其规范的概览</strong>：  </p>
+<ul>
+<li><a href="http://ehash.iaik.tugraz.at/wiki/The_Hash_Function_Zoo">http://ehash.iaik.tugraz.at/wiki/The_Hash_Function_Zoo</a></li>
+</ul>
+</li>
+<li><p><strong>生日悖论</strong>：  </p>
+<ul>
+<li>维基百科给出了很好的解释：  </li>
+<li><a href="http://en.wikipedia.org/wiki/Birthday_problem">http://en.wikipedia.org/wiki/Birthday_problem</a></li>
+</ul>
+</li>
+<li><p><strong>SHA 标准</strong>：  </p>
+<ul>
+<li><strong>SHA1+2</strong>：  <ul>
+<li><a href="http://csrc.nist.gov/publications/fips/fips180-2/fips180-2withchangenotice.pdf">http://csrc.nist.gov/publications/fips/fips180-2/fips180-2withchangenotice.pdf</a></li>
+</ul>
+</li>
+<li><strong>SHA3 概览</strong>：  <ul>
+<li><a href="http://ehash.iaik.tugraz.at/wiki/The_SHA-3_Zoo">http://ehash.iaik.tugraz.at/wiki/The_SHA-3_Zoo</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>CrypTool</strong>：  </p>
+<ul>
+<li>CrypTool 是一个学习程序，也可以进行哈希运算：  </li>
+<li><a href="http://www.cryptool.org/">http://www.cryptool.org/</a></li>
+</ul>
+</li>
+</ol>
+<hr>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/"><span class="l">上一篇</span>密码学原理与技术 - 第 10 章 - 数字签名</a><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC4%E7%AB%A0%20-%20%E9%AB%98%E7%BA%A7%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88AES%EF%BC%89/"><span class="l">下一篇</span>密码学原理与技术 - 第4章 - 高级加密标准（AES）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#使用哈希函数的数字签名">使用哈希函数的数字签名</a><a class="d2" href="#使用哈希函数进行数字签名的基本协议">使用哈希函数进行数字签名的基本协议</a><a class="d2" href="#哈希函数的基本输入输出特性">哈希函数的基本输入输出特性</a><a class="d2" href="#哈希函数的三个安全性要求">哈希函数的三个安全性要求</a><a class="d2" href="#为什么基于哈希的数字签名方案是安全的">为什么基于哈希的数字签名方案是安全的？</a><a class="d2" href="#抗碰撞性与生日攻击">抗碰撞性与生日攻击</a><a class="d2" href="#基于分组密码构造哈希函数">基于分组密码构造哈希函数</a><a class="d2" href="#专用哈希函数----md4-哈希函数族">专用哈希函数 -- MD4 哈希函数族</a><a class="d2" href="#sha-2">SHA-2</a><a class="d3" href="#sha-256-预处理">SHA-256 预处理</a><a class="d3" href="#sha-256-压缩函数">SHA-256 压缩函数</a><a class="d3" href="#sha-256-压缩函数中的第-j-轮迭代">SHA-256 压缩函数中的第 j 轮迭代</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

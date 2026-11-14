@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模糊测试 1：Fuzz + AFL 原理 + 基本使用 + ASAN 原理 + AFL 源码 · Y0uYuGe</title>
+<meta name="description" content="shenhao 师傅 yyds。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/fuzzing/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%201%EF%BC%9AFuzz%20%2B%20AFL%20%E5%8E%9F%E7%90%86%20%2B%20%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%20%2B%20ASAN%20%E5%8E%9F%E7%90%86%20%2B%20AFL%20%E6%BA%90%E7%A0%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/fuzzing">模糊测试</a></nav>
+    <h1>模糊测试 1：Fuzz + AFL 原理 + 基本使用 + ASAN 原理 + AFL 源码</h1>
+    <div class="meta"><time>2025-03-02</time><span class="tag">#fuzz</span><span class="tag">#AFL</span><span class="tag">#ASAN</span></div>
+    <article class="post-body">
+<p>shenhao 师傅 yyds。</p>
+<h1 id="什么是-fuzz模糊测试">什么是 FUZZ（模糊测试）？</h1>
+<p>它自动生成大量样本，用某种方法对其进行变异，输入给被测程序，并根据程序的反馈判断程序是否存在相关漏洞</p>
+<h2 id="相关工具">相关工具</h2>
+<p><img src="/workspace/endpoint-security/fuzzing/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%201%EF%BC%9AFuzz%20%2B%20AFL%20%E5%8E%9F%E7%90%86%20%2B%20%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%20%2B%20ASAN%20%E5%8E%9F%E7%90%86%20%2B%20AFL%20%E6%BA%90%E7%A0%81/assets/csdn-139492836/image-001-e61c4e3ed7.png" alt="图片"></p>
+<h2 id="两种主流模糊测试方式的基本原理">两种主流模糊测试方式的基本原理</h2>
+<ul>
+<li>基于生成的输入模糊测试：1. 随机；2. 基于模板生成（例如 HTTP 报文，其中每个字段可以分为固定、任意可变、有限可变三类）</li>
+<li>基于变异、覆盖率引导的模糊测试：样本变异 -&gt; 触发新路径，感知进程反馈 -&gt; 根据反馈再次对样本进行变异并输入</li>
+</ul>
+<h1 id="afl-原理">AFL 原理</h1>
+<h2 id="路径信息反馈">路径信息反馈</h2>
+<p>反馈流程：
+	1. 数据生成器
+	2. 数据输入
+	3. 执行进程（已插桩）
+	4. 收集并整理路径信息
+	5. 反馈给数据生成器，进行针对性变异</p>
+<p>插桩方式：</p>
+<ol>
+<li>汇编级：在从汇编语言到二进制的过程中，找到条件跳转点，如 JNZ adder，插入函数；不同汇编架构的插桩函数也不同</li>
+<li>llvm pass（官方 API）：clang/llvm IR 在不同架构下是通用的；在 IR 级进行插桩
+  clang：高级语言 -&gt; IR
+  llvm：IR -&gt; 汇编/二进制</li>
+</ol>
+<p>插桩函数：覆盖率信息反馈</p>
+<pre><code>1. fuzz 开始时，有一个 afl-fuzz 主进程，它创建一块共享内存区域并执行程序进程
+2. 当程序进程在执行过程中触发不同路径时，会执行 afl-maybe-log（random_num 参数是插桩时随机生成的数字），为当前路径生成一个哈希索引
+3. 进程将共享内存中该哈希索引位置的值加 1
+4. afl-fuzz 访问共享内存，获取路径信息
+</code></pre>
+<p> 代码层面：计算当前索引</p>
+<pre><code class="language-cpp">   index=afl_pre_loc^random_num
+   afl_pre_loc=random_num&gt;&gt;1(防止A到A和B到B都是异或为0)
+   
+   v8 = __CFADD__((*( _BYTE *)(v6 + index))++, 1); // 预防整数溢出
+// template&lt;class T, class U&gt; int8 __CFADD__(T x, U y)
+// {  不同数据类型（如 uint8, uint16, uint32, uint64）之间进行加法操作时，检查是否会发生溢出
+//     int size = sizeof(T) &gt; sizeof(U) ? sizeof(T) : sizeof(U);
+//     if ( size == 1 )
+//         return uint8(x) &gt; uint8(x+y);
+//     if ( size == 2 )
+//         return uint16(x) &gt; uint16(x+y);
+//     if ( size == 4 )
+//         return uint32(x) &gt; uint32(x+y);
+//     return uint64(x) &gt; uint64(x+y);
+// }
+*( _BYTE *)(v6 + index) += v8;//共享内存出+1还是溢出所以不加
+
+   
+</code></pre>
+<h2 id="forkserver">forkserver</h2>
+<p>afl-fuzz 第一次执行时，程序进程会把自身变成一个 forkserver</p>
+<pre><code class="language-cpp">v6 = _afl_area_ptr;
+if ( !_afl_area_ptr ) // fork_server_is_on
+{
+    if ( _afl_setup_failure ) // fork_server init
+        return v5 + 127;
+    v6 = _afl_global_area_ptr;
+    if ( _afl_global_area_ptr )
+    {
+        afl_area_ptr = _afl_global_area_ptr;
+    }
+    else  //这里
+    {
+        v17 = v4;
+        v18 = random_num;
+        afl_shm_id_str = getenv(&quot;__AFL_SHM_ID&quot;); // afl-fuzz通过环境变量AFL_SHM_ID传递共享内存handle
+        if ( !afl_shm_id_str
+            || (v11 = atoi(afl_shm_id_str), afl_shm_addr = shmat(v11, 0LL, 0), afl_shm_addr == (_BYTE *)-1LL) )
+        {
+            ++_afl_setup_failure;
+            v5 = v17;
+            return v5 + 127;
+        }
+        *afl_shm_addr = 1;
+        _afl_area_ptr = (__int64)afl_shm_addr; // target
+        _afl_global_area_ptr = afl_shm_addr;
+        v16 = afl_shm_addr;
+        if ( write(199, &amp;_afl_temp, 4uLL) == 4 ) // 通过199管道通知afl-fuzz, forkserver已准备完毕
+        {
+            while ( 1 ) // 开始作为forkserver
+            {
+                v13 = 198;
+                if ( read(198, &amp;_afl_temp, 4uLL) != 4 ) // 收到afl-fuzz指令，fork新进程
+                    break; // 如果198管道关闭，forkserver退出
+                LODWORD(v14) = fork();
+                if ( v14 &lt; 0 )
+                    break;
+                if ( !v14 ) // 父进程(forkserver)，子进程是目标程序进入afl_fork_resume，关闭由forkserver继承而来的管道后，正常执行
+                    goto _afl_fork_resume;
+                _afl_fork_pid = v14;
+                write(199, &amp;_afl_fork_pid, 4uLL); //传输子进程pid给afl-fuzz
+                v13 = _afl_fork_pid;
+                LODWORD(v15) = waitpid(_afl_fork_pid, &amp;_afl_temp, 0); // 父进程(forkserver)获得子进程pid，并通过waitpid等待子进程退出
+                if ( v15 &lt;= 0 )
+                    break;
+                write(199, &amp;_afl_temp, 4uLL); // afl_temp保存子进程退出信息，由199管道传递给afl-fuzz后继续循环等待下一次指令
+            }
+        }
+    }
+}
+
+else
+{
+之前覆盖信息反馈的逻辑
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/fuzzing/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%201%EF%BC%9AFuzz%20%2B%20AFL%20%E5%8E%9F%E7%90%86%20%2B%20%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%20%2B%20ASAN%20%E5%8E%9F%E7%90%86%20%2B%20AFL%20%E6%BA%90%E7%A0%81/assets/csdn-139492836/image-002-70496a9ff6.png" alt="图片"></p>
+<p>数据归一化：统一那些路径执行次数只有细微差异的情况，从而找出能产生更有利路径的样本</p>
+<pre><code class="language-cpp">如   [0]         = 0,
+[]里的数据会被映射到 右边的数据
+static const u8 count_class_lookup8[256] = {
+    [0]         = 0,
+    [1]         = 1,
+    [2]         = 2,
+    [3]         = 4,
+    [4 ... 7]   = 8,
+    [8 ... 15]  = 16,
+    [16 ... 31] = 32,
+    [32 ... 127] = 64,
+    [128 ... 255] = 128
+};
+</code></pre>
+<h2 id="样本变异">样本变异</h2>
+<p><a href="https://rk700.github.io/2018/01/04/afl-mutations/">https://rk700.github.io/2018/01/04/afl-mutations/</a>
+获取到一个样本的路径信息后，会对其进行评估；如果合适，就把该样本加入变异队列，接下来会继续对这个样本进行变异
+确定性变异：</p>
+<ul>
+<li>bitflip：按位翻转
+如果路径没有变化，就认为该字段没有价值
+如果路径以相同的方式变化，就认为是一个固定的 token 组合</li>
+<li>arithmetic：整数加减算术运算 </li>
+<li>interest：替换为特殊值（边界值）</li>
+<li>dictionary：把自动生成的（位翻转后的）或用户提供的 token 替换／插入到原始样本中
+非确定性变异：</li>
+<li>havoc：随机变异，随机选择一种变异方式</li>
+<li>splice：样本拼接</li>
+</ul>
+<h2 id="覆盖率引导存在的问题">覆盖率引导存在的问题</h2>
+<p>对于大型项目：</p>
+<ol>
+<li>哈希比较简单（通过异或生成索引）</li>
+<li>共享内存对应的数组长度有限</li>
+<li>路径太多会导致哈希冲突（多条路径映射到同一个位置；AFL 在路径过多时会减少插桩位置的数量，但这并没有从根本上解决问题）</li>
+</ol>
+<p>对策：afl-fuzz 第一次执行目标程序时把它变成一个 forkserver，之后由它 fork 子进程
+4. 检测 afl-fuzz 的特征（比如共享内存相关的环境变量），清除它们，或者直接写共享内存来干扰 fuzzing
+5. 检测 198/199 管道是否存在，或者直接读写这些管道来判断 AFL 是否在 fuzz</p>
+<h1 id="基本使用">基本使用</h1>
+<p>AFL++ 功能更多，但很多用不到 &gt; AFL 更容易修改</p>
+<h2 id="基础">基础</h2>
+<pre><code class="language-bash"># 拉取aflplusplus镜像
+docker pull aflplusplus/aflplusplus
+# 运行容器
+docker run --name afl -it -d aflplusplus/aflplusplus /bin/bash
+# 连接容器
+docker exec -it afl /bin/bash
+</code></pre>
+<p>afl-clang-lto 和 afl-clang-lto++ 功能更多</p>
+<pre><code class="language-bash">mkdir work
+wget https://dl.xpdfreader.com/old/xpdf-3.02.tar.gz
+tar -zxvf xpdf-3.02.tar.gz
+cd  xpdf-3.02
+CC=afl-clang-fast CXX=afl-clang-fast++ ./configure --prefix=/root/work/xpdf-3.02/install  #配置 Xpdf 项目，将其安装路径设置为 /root/work/xpdf-3.02/install
+
+AFL_USE_ASAN=1 make #make 命令用于编译项目。AFL_USE_ASAN=1 启用了地址空间布局随机化（ASAN）
+make install
+</code></pre>
+<p>样本：简洁 + 覆盖更多功能点</p>
+<pre><code class="language-bash">mkdir input
+# input
+wget https://github.com/mozilla/pdf.js-sample-files/raw/master/helloworld.pdf
+wget http://www.africau.edu/images/default/sample.pdf
+wget https://www.melbpc.org.au/wp-content/uploads/2017/10/small-example-pdf-file.pdf
+</code></pre>
+<p>两种输入方式：文件（用 @@ 表示）和标准输入</p>
+<pre><code class="language-bash">cd ..
+afl-fuzz -i input/ -o output/ -m none ./install/bin/pdftotext @@ demo_test
+
+#-m 参数用于设置目标程序的内存限制。none 表示不设置内存限制，允许目标程序使用无限内存。如果设置了具体的内存限制（如 -m 100 表示 100MB），AFL 会在目标程序超出限制时停止其运行。
+
+#demo_test：是目标程序 pdftotext 的输出文件名
+#output/：是 AFL 模糊测试的结果保存目录。
+
+ls output/default/crashes
+README.txt  id:000000,sig:11,src:000830,time:1106600,execs:207213,op:havoc,rep:14
+</code></pre>
+<h2 id="字典的使用">字典的使用</h2>
+<p>固定的 token 组合很难被变异出来，而除了固定组合之外，其他路径都是一样的，不会给出路径反馈</p>
+<ol>
+<li>使用预定义的固定 token 组合来减少变异时间</li>
+<li>或者重新实现并插桩库函数（例如把 strcmp 变成逐字符的字符串比较，这样每正确变异出一个字符就会产生新的路径反馈）</li>
+</ol>
+<pre><code class="language-bash">cd ~/work
+wget http://xmlsoft.org/download/libxml2-2.9.4.tar.gz
+tar -zxvf libxml2-2.9.4.tar.gz
+cd libxml2-2.9.4
+# 
+CC=afl-clang-lto CXX=afl-clang-lto++ CFLAGCXXFLAGS=&quot;-fsanitize=address&quot; LDFLAGS=&quot;-fsanitize=address&quot; ./configure --prefix=&quot;/root/work/libxml2-2.9.4/install/&quot; --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-python LIBS=&#39;-ldl&#39;
+make
+make install
+</code></pre>
+<pre><code class="language-bash"># input
+wget https://raw.githubusercontent.com/antonio-morales/Fuzzing101/main/Exercise%205/SampleInput.xml
+</code></pre>
+<p>-M：主 fuzz 进程执行确定性变异
+-S：次要 fuzz 进程执行非确定性变异
+两者是协作关系；各自获取对方的输出进行变异 fuzz</p>
+<pre><code class="language-bash">afl-fuzz -m none -i ./input/ -o ./output -x xml.dict -M m ./install/bin/xmllint --memory --noenc --nocdata --dtdattr --loaddtd --valid --xinclude @@
+afl-fuzz -m none -i ./input/ -o ./output -x xml.dict -S s0 ./install/bin/xmllint --memory --noenc --nocdata --dtdattr --loaddtd --valid --xinclude @@
+afl-fuzz -m none -i ./input/ -o ./output -x xml.dict -S s1 ./install/bin/xmllint --memory --noenc --nocdata --dtdattr --loaddtd --valid --xinclude @@
+</code></pre>
+<p>现成的字典</p>
+<pre><code class="language-bash">ls /AFLplusplus/dictionaries/
+README.md       exif.dict        jpeg2000.dict    pdf.dict       sql.dict               webm.dict
+aff.dict        fbs.dict         js.dict          perl.dict      stata.dict             webp.dict
+ass.dict        ftp.dict         json.dict        png.dict       svg.dict               wkt.dict
+atom.dict       gif.dict         jsonnet.dict     proj4.dict     tex.dict               x86.dict
+av1_dc.dict     graphviz.dict    jsonschema.dict  protobuf.dict  theme-load-fuzz.dict   xml.dict
+bash.dict       heif.dict        markdown.dict    ps.dict        tiff.dict              xml_UTF_16.dict
+bdf.dict        hoextdown.dict   math.dict        psd.dict       tokener_parse_ex.dict  xml_UTF_16BE.dict
+bmp.dict        html_tags.dict   mathml.dict      regexp.dict    toml.dict              xml_UTF_16LE.dict
+bz2.dict        http.dict        mp4.dict         riff.dict      type42.dict            xpath.dict
+creole.dict     icc.dict         mysqld.dict      rss.dict       url.dict               xslt.dict
+css.dict        iccprofile.dict  ogg.dict         rst.dict       utf8.dict              yaml.dict
+csv.dict        icns.dict        openexr.dict     rtf.dict       vcf.dict               yara.dict
+dds.dict        initfile.dict    otf.dict         ruby.dict      vhd.dict               zip.dict
+djvu.dict       jbig2.dict       pbm.dict         sas.dict       vpx_dec.dict
+docommand.dict  jpeg.dict        pcap.dict        spss.dict      wav.dict
+</code></pre>
+<p>另外，你也可以用 <code>strings &lt;executable_name&gt;</code> 获取程序相关的字符串，作为字典使用</p>
+<h2 id="延迟插桩与持久化-fuzzing">延迟插桩与持久化 fuzzing</h2>
+<pre><code class="language-bash">ls /AFLplusplus/utils/persistent_mode/
+Makefile  persistent_demo.c  persistent_demo_new.c  test-instr.c
+</code></pre>
+<p>  __AFL_INIT() 放在可信代码的下方、可疑代码的上方，延迟 fork_server 的启动，这样 fork 之后只执行后面的可疑代码</p>
+<p>__AFL_LOOP(UINT_MAX) 让一个子进程可以接受多次样本投喂：把程序包在一个循环里
+多个样本的路径信息是否都会进入共享内存？每次循环迭代开始时共享内存会被清空
+样本之间是否会相互影响？循环体开始时进行初始化，循环体结束时释放相关资源</p>
+<p>多用于网络程序的 fuzz，因为网络程序通常都包含一个用于接收消息包的无限循环
+<img src="/workspace/endpoint-security/fuzzing/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%201%EF%BC%9AFuzz%20%2B%20AFL%20%E5%8E%9F%E7%90%86%20%2B%20%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%20%2B%20ASAN%20%E5%8E%9F%E7%90%86%20%2B%20AFL%20%E6%BA%90%E7%A0%81/assets/csdn-139492836/image-003-8aaee4eb6b.png" alt="图片"></p>
+<pre><code class="language-bash">cd  /AFLplusplus/utils/persistent_mode/                 
+make
+afl-fuzz -i input/  -o output/  ./persistent_demo
+
+/AFLplusplus/utils/persistent_mode/output/default/crashes # cat id:000000,sig:06,src:000004,time:1885
+,execs:26697,op:havoc,rep:3   |  ../../../persistent_demo
+one
+two
+three
+four
+five
+six
+Aborted (core dumped)
+
+</code></pre>
+<h2 id="qemu-模式">qemu 模式</h2>
+<p><a href="https://github.com/shellphish/afl-other-arch">https://github.com/shellphish/afl-other-arch</a></p>
+<p><a href="https://github.com/AFLplusplus/AFLplusplus/tree/stable/qemu_mode">针对 afl-fuzz 的高性能纯二进制插桩</a></p>
+<pre><code class="language-c">cd qemu_mode
+</code></pre>
+<ul>
+<li>qemu 仿真的架构与宿主机相同</li>
+</ul>
+<pre><code class="language-c">./build_qemu_support.sh
+</code></pre>
+<ul>
+<li>qemu 仿真的架构与宿主机不同</li>
+</ul>
+<pre><code class="language-bash">CPU_target=arm ./build_qemu_support.sh
+</code></pre>
+<ul>
+<li>qemu 需要在另一种架构上运行，并且 qemu 仿真的架构也是另一种架构；这种情况下需要静态编译 qemu</li>
+</ul>
+<pre><code class="language-bash"> STATIC=1 HOST=arm-linux-gnueabi CPU_target=arm ./build_qemu_support.sh
+</code></pre>
+<p>然后设置为全局可用</p>
+<pre><code class="language-bash">cd ..
+make install
+</code></pre>
+<p>正常编译</p>
+<pre><code class="language-bash">gcc test-instr.c -o test-instr
+</code></pre>
+<p>开始 fuzz</p>
+<pre><code class="language-bash">afl-fuzz -i input/ -o output/ -m none -Q ./test-instr
+</code></pre>
+<p>qemu 可以把被仿真架构的汇编翻译成宿主机对应的汇编</p>
+<p>qemu 知道待翻译指令的地址和功能（或内容）</p>
+<p>qemu 把一条指令翻译成宿主机上的汇编指令时，由于它知道待翻译指令的作用，就可以在这时识别并对其插桩
+<img src="/workspace/endpoint-security/fuzzing/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%201%EF%BC%9AFuzz%20%2B%20AFL%20%E5%8E%9F%E7%90%86%20%2B%20%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%20%2B%20ASAN%20%E5%8E%9F%E7%90%86%20%2B%20AFL%20%E6%BA%90%E7%A0%81/assets/csdn-139492836/image-004-a19d2239e9.png" alt="图片"></p>
+<p>基于 qemu 知道当前指令的地址和功能这一原理，我们可以设置 forkserver 的延迟启动</p>
+<ul>
+<li>通过设置 <code>AFL_ENTRYPOINT</code> 环境变量为 forkserver 开始启动的位置，实现延迟启动
+基于 qemu 知道当前指令的地址和功能这一原理，我们也可以设置持久化 fuzzing 的范围</li>
+<li>通过设置 <code>AFL_QEMU_PERSISTENT_ADDR</code> 设置起始地址，<code>AFL_QEMU_PERSISTENT_RET</code> 设置返回地址，定义一个范围，最终实现在该范围内的持久化 fuzzing</li>
+</ul>
+<h1 id="asan">ASAN</h1>
+<h2 id="开源-asan">开源 ASAN</h2>
+<p>一个用于检测内存访问错误的工具</p>
+<p>用 -fsanitize=address 标志编译；执行过程中发生内存访问错误时程序会崩溃</p>
+<ul>
+<li>不可访问的内存，比如 UAF 和 double free</li>
+<li>越界读写问题</li>
+</ul>
+<p>KASAN 和 ASAN 本质上是一样的；两者都是通过编译器插桩来实现的</p>
+<p>数据区域被划分为可访问区域和不可访问区域（red_zone）</p>
+<p>shadow memory 与普通内存的比例是 1:8，也就是一个字节代表八个（对齐的）字节的内存访问信息。两者存在映射关系，是两块独立的区域（其中一块是 shadow memory，通常固定在 0x7FFF8000）</p>
+<p>例如在内核中：
+<img src="/workspace/endpoint-security/fuzzing/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%201%EF%BC%9AFuzz%20%2B%20AFL%20%E5%8E%9F%E7%90%86%20%2B%20%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%20%2B%20ASAN%20%E5%8E%9F%E7%90%86%20%2B%20AFL%20%E6%BA%90%E7%A0%81/assets/csdn-139492836/image-005-02df10a672.png" alt="图片"></p>
+<p> shadow memory 的值：1-7 表示有多少字节可以访问；0 表示全部可以访问；负数表示全部不可以访问</p>
+<p>检测某个数据区域是否可访问的大致过程如下；详细可参考 <a href="https://www.anquanke.com/post/id/237502">linux内核（5.4.81）——KASAN</a></p>
+<p>__asan_loadN(addr)/__asan_storeN(addr) 的主要功能：</p>
+<ol>
+<li>检查要检测的地址是否在 shadow memory 映射的区域内</li>
+<li>然后检查 addr 处的 N 个字节内存是否可用</li>
+</ol>
+<p> 设置某个数据区域是否可访问</p>
+<ul>
+<li>堆：不可访问的情况，比如 UAF 和 double free
+malloc 时，把对应的 shadow memory 区域设置为 0
+free 时，把对应的 shadow 区域设置为负数或其他值（因为库函数可能需要使用被释放的区域）</li>
+<li>栈：越界读写问题
+两个连续数组的问题可能导致越界访问无法被检测到，因为溢出到下一个数组会显示为可访问
+在函数入口处，分配空间时，会把数组前后的某段区域在 shadow memory 中设置为不可访问（负数），并把数组对应的 shadow memory 区域设置为 0</li>
+</ul>
+<p>在 IDA 中，我发现与堆相关的设置操作被整合进了 malloc 和 free 中；访问堆内存时，会检查对应的 shadow memory 值是 0，还是大于要访问的大小</p>
+<p>IDA 显示栈会分配一块更大的空间，里面包含 ASAN 的描述信息、redzone 和数组，并设置 shadow memory 的值</p>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main()
+{
+    char buf1[] = &quot;abcdefg&quot;;
+    char tmp[] = &quot;hi&quot;;
+    char buf2[] = &quot;jkl&quot;;
+
+    printf(&quot;%c\n&quot;, tmp[3]);
+
+    return 0;
+}
+</code></pre>
+<p>反汇编后</p>
+<pre><code class="language-cpp">int __fastcall main(int argc, const char **argv, const char **envp)
+{
+  unsigned __int64 extend_stack_1; // rbx
+  __int64 v4; // rax
+  __int64 v5; // rax
+  _DWORD *v6; // r12
+  char v7; // cl
+  _BYTE extend_stack[120]; // [rsp+0h] [rbp-A0h] BYREF 存储ASAN必要描述和redzone和数组
+  unsigned __int64 v10; // [rsp+78h] [rbp-28h]
+
+  extend_stack_1 = (unsigned __int64)extend_stack;
+  if ( edata )
+  {
+    v4 = __asan_stack_malloc_1(0x60LL, argv, envp);
+    if ( v4 )
+      extend_stack_1 = v4;
+  }
+  v5 = extend_stack_1 + 128;
+  *(_QWORD *)extend_stack_1 = &#39;A\xB5\x8A\xB3&#39;;
+  *(_QWORD *)(extend_stack_1 + 8) = &quot;3 32 3 5 tmp:7 48 4 6 buf2:8 64 8 6 buf1:6&quot;;
+  *(_QWORD *)(extend_stack_1 + 0x10) = main;
+  v6 = (_DWORD *)(extend_stack_1 &gt;&gt; 3);
+  v6[0x1FFFE000] = 0xF1F1F1F1;                  // F为负数，都不能访问
+  v6[0x1FFFE001] = 0xF204F203;                  // 0x20部分有3个字节可以访问
+                                                // 0x30部分有4个字节可以访问
+  v6[0x1FFFE002] = 0xF3F3F300;                  // 0x40部分有八个字节可以访问
+  v10 = __readfsqword(0x28u);
+  *(_QWORD *)(extend_stack_1 + 0x40) = &#39;gfedcba&#39;;
+  if ( *(char *)(((extend_stack_1 + 0x20) &gt;&gt; 3) + 0x7FFF8000) &lt; 0
+    || *(_BYTE *)(((extend_stack_1 + 0x22) &gt;&gt; 3) + 0x7FFF8000) != 0
+    &amp;&amp; (char)((extend_stack_1 + 0x22) &amp; 7) &gt;= *(_BYTE *)(((extend_stack_1 + 0x22) &gt;&gt; 3) + 0x7FFF8000) )
+  {
+    v5 = ((__int64 (__fastcall *)(unsigned __int64, __int64))__asan_report_store_n)(extend_stack_1 + 0x20, 3LL);
+  }
+  strcpy((char *)(v5 - 0x60), &quot;hi&quot;);
+  *(_DWORD *)(v5 - 0x50) = &#39;lkj&#39;;
+  v7 = *(_BYTE *)(((unsigned __int64)(v5 - 0x60 + 3) &gt;&gt; 3) + 0x7FFF8000);
+  if ( v7 != 0 &amp;&amp; ((v5 - 0x60 + 3) &amp; 7) &gt;= v7 )
+    v5 = ((__int64 (__fastcall *)(__int64))__asan_report_load1)(v5 - 0x60 + 3);
+  printf(&quot;%c\n&quot;, (unsigned int)*(char *)(v5 - 93));
+  if ( extend_stack == (_BYTE *)extend_stack_1 )
+  {
+    *(_QWORD *)((extend_stack_1 &gt;&gt; 3) + 0x7FFF8000) = 0LL;
+    *(_DWORD *)((extend_stack_1 &gt;&gt; 3) + 0x7FFF8008) = 0;
+  }
+  else
+  {
+    *(_QWORD *)extend_stack_1 = 1172321806LL;
+    *(_QWORD *)((extend_stack_1 &gt;&gt; 3) + 0x7FFF8000) = 0xF5F5F5F5F5F5F5F5LL;
+    *(_DWORD *)((extend_stack_1 &gt;&gt; 3) + 0x7FFF8008) = -168430091;
+    **(_BYTE **)(extend_stack_1 + 120) = 0;
+  }
+  return 0;
+}
+</code></pre>
+<h2 id="闭源-asan">闭源 ASAN</h2>
+<p>两种方式都只适用于堆
+闭源环境下栈的 ASAN 仍未解决，因为设置区域需要增大栈空间，在汇编层面这比给闭源堆 ASAN 插入代码对程序逻辑的破坏更大</p>
+<h3 id="二进制重写">二进制重写</h3>
+<p><a href="https://git.zephyr-software.com/opensrc/zafl">https://git.zephyr-software.com/opensrc/zafl
+</a></p>
+<p><a href="https://github.com/HexHive/retrowrite.git">https://github.com/HexHive/retrowrite.git
+</a></p>
+<p>ASAN 的区域设置和区域检测主要是通过插桩实现的</p>
+<p>对于闭源程序，从二进制程序中获取到汇编后，对代码段进行插桩</p>
+<p>因为需要在函数的开头和结尾处插桩，比如设置某些区域，</p>
+<p>如何找到它们？</p>
+<ol>
+<li>对代码段中的所有指令进行插桩，反复丢弃并重试，直到插桩能正常运行而不崩溃为止。目标是把所有函数的起始点都插桩进去</li>
+<li>使用函数表直接插桩</li>
+</ol>
+<p>在插入代码而不破坏原有功能时存在的问题：</p>
+<ol>
+<li>插入汇编代码可能会改变汇编代码的位置；例如跳转指令的目标地址可能保持不变，但对应的内容已经改变</li>
+<li>inline hook：插入一条跳转指令（指令长度小，比直接插入更好，但仍然存在第一种方式的后果）；跳转指令跳到插桩函数，然后再跳回来</li>
+</ol>
+<p>中间语言插桩——不在汇编层面插桩，因为不同架构比较麻烦：二进制 -&gt; 汇编 -&gt; IR，对 IR 插桩，抹平各种架构的差异</p>
+<h3 id="动态库劫持">动态库劫持</h3>
+<p>适用于堆的 UAF/double free</p>
+<ol>
+<li>劫持 malloc/free 动态库的内部实现，并插桩以设置内存</li>
+<li>UAF：使用时需要进行检查，这同样需要插桩；可以通过 qemu 的仿真来实现（遇到 store 或 load 指令时插入检查）</li>
+<li>double free：free 之前检查是否已经被设置为负数（已释放）</li>
+</ol>
+<p>LD_PRELOAD 指定动态库；这里的动态库函数会被优先加载</p>
+<p><a href="https://github.com/andreafioraldi/qasan/tree/master">QASAN</a></p>
+<h1 id="afl-源码">AFL 源码</h1>
+<p><a href="https://eternalsakura13.com/2020/08/23/afl/">sakuraのAFL源码全注释</a></p>
+<pre><code class="language-bash">apt install afl
+或者git clone https://github.com/google/AFL.git
+cd AFL
+make
+  
+</code></pre>
+<p>编译</p>
+<pre><code class="language-bash">./afl-gcc test-instr.c   -o test-instr
+afl-cc 2.57b by &lt;lcamtuf@google.com&gt;
+afl-as 2.57b by &lt;lcamtuf@google.com&gt;
+[+] Instrumented 5 locations (64-bit, non-hardened mode, ratio 100%).
+</code></pre>
+<p>输入文件、输出文件夹，以及 afl-fuzz</p>
+<pre><code class="language-bash">sudo echo /proc/sys/kernel/core_pattern
+./afl-fuzz  -i ./input/ -o output/ ./test-instr
+</code></pre>
+<p>crash：使程序崩溃的样本
+hang：afl-fuzz 有一个计时器；如果程序长时间不退出，就认为是 hang，并保存该 hang 样本
+queue：历史样本</p>
+<h2 id="整体流程">整体流程</h2>
+<p><img src="/workspace/endpoint-security/fuzzing/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%201%EF%BC%9AFuzz%20%2B%20AFL%20%E5%8E%9F%E7%90%86%20%2B%20%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%20%2B%20ASAN%20%E5%8E%9F%E7%90%86%20%2B%20AFL%20%E6%BA%90%E7%A0%81/assets/csdn-139492836/image-006-fda5e01d93.png" alt="图片"></p>
+<h2 id="1-afl-gcc">1. afl-gcc</h2>
+<p>afl-gcc 的核心逻辑如下：</p>
+<pre><code class="language-c">int main(int argc, char** argv) {
+	……
+  find_as(argv[0]); //find assem compiler
+
+  edit_params(argc, argv);
+  // 1. find c compiler 
+  // 2. edit the compile args (change assem compiler to afl-as  and set AFL_USE_ASAM environment arg to set asan)
+  
+  // execvp(&quot;gcc&quot;,&quot;-B afl-as&quot;)
+  execvp(cc_params[0], (char**)cc_params);
+  //execvp() 是一个 Unix/Linux 系统提供的标准库函数，用于启动一个新的进程，并用指定的程序替换当前进程的映像
+ //#include &lt;unistd.h&gt;
+//pid_t execvp(const char *file, char *const argv[]);
+//file: 这是指定要执行的程序的名字。execvp() 会在环境变量 PATH 所定义的目录中搜索这个程序。如果找到了这个程序，就会执行它；如果没有找到，函数就会失败。
+//argv: 这是一个字符串数组，包含了程序名以及传递给程序的参数。最后一个元素必须是 NULL，表示参数列表的结束。
+  ……
+}
+</code></pre>
+<h3 id="find_as">find_as</h3>
+<p>寻找汇编语言编译器</p>
+<h3 id="edit_params">edit_params</h3>
+<ol>
+<li>根据命令行参数找到对应的 C 编译器</li>
+<li>根据命令行参数编辑编译参数<ul>
+<li>指定汇编语言编译器的路径为 afl-as</li>
+<li>可以通过 AFL_USE_ASAN 环境变量在编译时设置 asan</li>
+</ul>
+</li>
+</ol>
+<h3 id="execvp">execvp</h3>
+<p>带参数执行 gcc 进行编译</p>
+<h2 id="2-afl-as">2. afl-as</h2>
+<h3 id="add_instrumentation">add_instrumentation</h3>
+<blockquote>
+<p>instr_ok 表示是否处于代码段中</p>
+</blockquote>
+<ul>
+<li><p>读取输入的汇编文件</p>
+</li>
+<li><p>只在代码段中插桩</p>
+</li>
+<li><p>在函数入口、跳转指令之后以及跳转目标处插桩</p>
+</li>
+<li><p>输出插桩后的文件</p>
+</li>
+<li><p>trampoline_fmt_64/trampoline_fmt_32 分别对应 64 位/32 位的插桩代码，调用 __afl_maybe_log</p>
+</li>
+<li><p>调用编译器（as）进行编译</p>
+</li>
+</ul>
+<pre><code class="language-c">fprintf(outf, use_64bit ? trampoline_fmt_64 : trampoline_fmt_32,
+                R(MAP_SIZE));  //R(MAP_SIZE)是随机数，会作为afl_maybe_log里的随机数
+</code></pre>
+<h2 id="3-afl-clang-fast">3. afl-clang-fast</h2>
+<p>clang：高级代码 -&gt; IR
+llvm：IR -&gt; 汇编 -&gt; bin（提供了一些修改 IR 的 API，即 llvm pass）</p>
+<ul>
+<li>runOnModule 遍历代码块进行路径覆盖率插桩</li>
+<li>__AFL_INIT()-&gt;__afl_manual_init：与延迟插桩相关</li>
+<li>__afl_persistent_loop：与持久化 fuzzing 相关</li>
+</ul>
+<h2 id="4-afl-fuzz">4. afl-fuzz</h2>
+<blockquote>
+<p>fuzz_one 开始</p>
+</blockquote>
+<ul>
+<li><p>通过 mmap 把 test_case 的内容映射到 orig_in/in_buf</p>
+</li>
+<li><p>样本变异</p>
+<ul>
+<li>bitflip 1/1</li>
+<li>bitflip 2/1</li>
+<li>bitflip 4/1</li>
+<li>bitflip 8/8</li>
+<li>bitflip 16/8</li>
+<li>bitflip 32/8</li>
+<li>arith 8/8</li>
+<li>arith 16/8</li>
+<li>arith 32/8</li>
+<li>interest 8/8 =&gt;interesting_8</li>
+<li>interest 16/8 =&gt; interesting_16</li>
+<li>interest 32/8 =&gt; interesting_32</li>
+<li>dict</li>
+<li>havoc</li>
+<li>splice</li>
+</ul>
+</li>
+<li><p>common_fuzz_stuff 投喂样本</p>
+<ul>
+<li>post_handler：对变异后的样本进行自定义调整</li>
+<li>write_to_testcase =&gt; 投喂样本数据：文件投喂（out_file）和标准输入投喂，单进程</li>
+<li>run_target<ul>
+<li>清空共享内存</li>
+<li>在 forkserver 模式下，通过管道通知 forkserver 创建子进程，并等待子进程退出（等待时设置了超时，以检测 hang）</li>
+<li>classify_counts：对共享内存中的数据进行归一化</li>
+</ul>
+</li>
+<li>save_if_interesting：<ul>
+<li>has_new_bits 检查共享内存，判断当前样本是否触发了新路径或是否有意义</li>
+<li>如果有意义，就把它加入变异队列</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="说明">说明</h1>
+<p>一定要把 AFL 源码仔仔细细地读一遍
+网络设备/IOT：libfuzz + frida
+多次交互：样本中包含多次交互的输入数据，目标程序分别把样本作为多次交互中每一次的输入</p>
+
+    </article>
+    
+    <nav class="pn"><span></span><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#相关工具">相关工具</a><a class="d2" href="#两种主流模糊测试方式的基本原理">两种主流模糊测试方式的基本原理</a><a class="d2" href="#路径信息反馈">路径信息反馈</a><a class="d2" href="#forkserver">forkserver</a><a class="d2" href="#样本变异">样本变异</a><a class="d2" href="#覆盖率引导存在的问题">覆盖率引导存在的问题</a><a class="d2" href="#基础">基础</a><a class="d2" href="#字典的使用">字典的使用</a><a class="d2" href="#延迟插桩与持久化-fuzzing">延迟插桩与持久化 fuzzing</a><a class="d2" href="#qemu-模式">qemu 模式</a><a class="d2" href="#开源-asan">开源 ASAN</a><a class="d2" href="#闭源-asan">闭源 ASAN</a><a class="d3" href="#二进制重写">二进制重写</a><a class="d3" href="#动态库劫持">动态库劫持</a><a class="d2" href="#整体流程">整体流程</a><a class="d2" href="#1-afl-gcc">1. afl-gcc</a><a class="d3" href="#find_as">find_as</a><a class="d3" href="#edit_params">edit_params</a><a class="d3" href="#execvp">execvp</a><a class="d2" href="#2-afl-as">2. afl-as</a><a class="d3" href="#add_instrumentation">add_instrumentation</a><a class="d2" href="#3-afl-clang-fast">3. afl-clang-fast</a><a class="d2" href="#4-afl-fuzz">4. afl-fuzz</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

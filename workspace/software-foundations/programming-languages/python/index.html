@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机器学习与数据科学——专题一 Python 正则表达式——[正则表达式入门 - 1] · Y0uYuGe</title>
+<meta name="description" content="这里我们可以看到 a 和 b 匹配到了 na。字符 a 之所以能被匹配，是因为它不是 e，而变量 c 的值为空。这种情况下正则引擎只匹配到了字符串 n 的位置，n 之后没有能匹配 [^e] 的字符，所以这里也匹配失败。有些常见的字符组非常大。比如我们要匹配任意数字，如果照着上面的代码，每次都得用 [0123456789]，这显然很不明智；如果用这种方式写代码去匹配 a-z 的字母，肯定会把我们逼疯。听起来很复杂，其实非常简单。下面我们就开始体验最简单的正则表达式。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/programming-languages/python" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/programming-languages">编程语言</a></nav>
+    <h1>机器学习与数据科学——专题一 Python 正则表达式——[正则表达式入门 - 1]</h1>
+    <div class="meta"><time>2024-01-17</time><span class="tag">#机器学习</span><span class="tag">#python</span><span class="tag">#正则表达式</span></div>
+    <article class="post-body">
+<h1 id="第-1-关">第 1 关</h1>
+<h2 id="相关知识">相关知识</h2>
+<p>为了完成本关任务，你需要掌握：</p>
+<p>在 Python 中使用正则表达式；
+最基础的正则表达式；
+正则匹配函数。
+在 Python 中使用正则表达式
+正所谓人生苦短，我用 Python。Python 的一个特点就是拥有海量的库。它自然也有用于正则匹配的常用库，而且这个库内置在 Python 标准库中，使用起来非常方便——只需在代码中导入 re 模块即可。</p>
+<blockquote>
+<p>import re
+Python 的 re 模块使 Python 拥有了使用正则表达式全部功能的能力。为了能灵活运用正则表达式，我们现在的任务就是学习如何使用 re 库中的正则。</p>
+</blockquote>
+<p> <strong>最基础的正则表达式</strong>
+正则表达式是一种以简单直观的方式通过查找模式来匹配文本的工具。
+听起来很复杂，其实非常简单。下面我们就开始体验最简单的正则表达式。最简单的正则表达式就是只包含简单字母数字字符的正则表达式——不含任何其他字符。这种情况下，正则表达式完全就是一个普通字符串。</p>
+<p>例如，如果我们要匹配张明，那么“张明”这两个字就是我们需要的正则表达式。</p>
+<p><strong>正则匹配函数</strong>
+既然知道了最基础的正则表达式，那么在 Python 中如何使用呢？首先我们学习第一个函数：search() 函数。它的作用是接收一个正则表达式和一个字符串，返回找到的第一个匹配的字符串。</p>
+<pre><code class="language-python">import re
+a = re.search(r&#39;fox&#39;,&#39;the quick brown fox jumpred&#39;)  #第一个参数为正则表达式，第二个参数为要处理的字符串
+print(a.span())      # span方法获取的是正则表达式匹配到的位置
+b =  re.search(r&#39;www&#39;,&#39;the quick brown fox jumpred&#39;) 
+print(b)   #如果匹配不到则会返回None
+输出如下：
+
+(16, 19)
+None
+如何匹配到了，我们输出他在正则表达式中的位置，如果没有匹配到，则输出为空。
+</code></pre>
+<p><strong>字符串前缀</strong>
+<img src="/workspace/software-foundations/programming-languages/python/assets/csdn-135659519/image-001-20f5f01dcf.png" alt="图片"></p>
+<h2 id="任务要求">任务要求</h2>
+<p>本关任务：学会导入 Python 的正则表达式库，并用库中的 search 方法编写一个匹配小程序。该方法可以检查学生信息中是否有某个学生的名字。</p>
+<p>根据提示，具体任务如下：</p>
+<ol>
+<li><p>导入相关的包；</p>
+</li>
+<li><p>检查这条信息是否属于张明，并把查找结果存入 is_zhangming 变量。</p>
+</li>
+</ol>
+<p>代码完成后点击评测，平台会对你编写的代码进行测试，当你的结果与预期输出一致时，即为通过。</p>
+<p>测试输入：张伟 86-14870293148；
+预期输出：
+None</p>
+<p>测试输入：张明；
+预期输出：
+（0，2）</p>
+<h2 id="代码">代码</h2>
+<pre><code class="language-python"># coding=utf-8
+import re
+# 在此导入python正则库
+
+check_name = input()
+# 在此使用正则匹配&#39;张明&#39;的信息，结果存储到is_zhangming中
+########## Begin ##########
+is_zhangming=re.search(r&quot;张明&quot;,check_name)
+########## End ##########
+
+if is_zhangming is not None:
+    print(is_zhangming.span())
+else:
+    print(is_zhangming)
+</code></pre>
+<h1 id="第-2-关">第 2 关</h1>
+<h2 id="相关知识-1">相关知识</h2>
+<p>为了完成本关任务，你需要掌握：</p>
+<p>获取多个匹配；
+字符组。
+在上一个任务中，我们学习了只包含简单字母数字字符的正则表达式，但如果仅此而已，就大大低估了正则表达式的威力。正则表达式的强大之处在于能够指定文本模式进行匹配。本关我们将学习正则表达式中的字符组匹配。</p>
+<p>获取多个匹配
+在很多常见场景中需要进行多个匹配，比如从学生名单中筛选出所有姓张的学生的人数。</p>
+<p>对于这类需求，我们可以使用 re 模块中的 findall 或 finditer 方法。两者的区别在于 findall 返回的是一个列表，而 finditer 返回的是一个生成器。</p>
+<pre><code class="language-python">l = re.findall(r&#39;张&#39;,&#39;张三 张三丰 张无忌 张小凡&#39;)
+print(l)
+[&#39;张&#39;, &#39;张&#39;, &#39;张&#39;, &#39;张&#39;]
+在这个例子中，我们会发现 findall 返回了 4 个“张”，这是因为“张”字在后面的字符串中出现了 4 次。即 findall 返回了所有的匹配信息。
+</code></pre>
+<p>字符组
+字符组允许匹配一组可能的字符。在正则表达式中，[] 表示字符组。我们来看一个例子。</p>
+<pre><code class="language-python">&#39;I like Python3 and I like python2.7 &#39;
+在这句话中，既有大写的 Python,又有全部是小写的 python 。如果我要求都匹配出来，这时候该怎么操作了？这就是正则匹配中字符组的威力了。下面看下示例。
+
+a = re.findall(r&#39;[Pp]ython&#39;,&#39;I like Python3 and I like python2.7 &#39;)
+print(a)
+[&#39;Python&#39;, &#39;python&#39;]
+可以发现 [Pp] 既可以匹配大写的 P 也可以匹配小写的 p ，这里值的我们注意的是 [Pp] 仅匹配一个字符，他表示匹配在这个[]内的某一个。
+</code></pre>
+<h2 id="任务要求-1">任务要求</h2>
+<p>本关任务：使用正则表达式的字符组写法，编写一个能从文本中快速匹配出 python 和 Python 的小程序。
+编程要求
+根据提示，在右侧编辑器 Begin-End 区间补充代码，具体任务如下：</p>
+<p>编写一个从文本中快速匹配出 python 和 Python 的小程序，并输出匹配到的所有内容。
+测试说明
+代码完成后点击评测，平台会对你编写的代码进行测试，当你的结果与预期输出一致时，即为通过。</p>
+<p>测试输入：I LIKE Python3 and i like python2.7；
+预期输出：
+[Python, python]</p>
+<h2 id="代码-1">代码</h2>
+<pre><code class="language-python"># coding=utf-8
+
+import re
+
+input_str = input()
+
+# 编写获取python和Python的正则，并存储到match_python变量中
+
+########## Begin ##########
+match_python=re.findall(r&quot;[Pp]ython&quot;,input_str)
+
+########## End ##########
+
+print(match_python)
+
+</code></pre>
+<h1 id="第-3-关">第 3 关</h1>
+<h2 id="相关知识-2">相关知识</h2>
+<p>为了完成本关任务，你需要掌握：</p>
+<p>区间；
+区间取反。
+本关我们将学习正则表达式的区间与区间取反。</p>
+<p>区间
+有些常见的字符组非常大。比如我们要匹配任意数字，如果照着上面的代码，每次都得用 [0123456789]，这显然很不明智；如果用这种方式写代码去匹配 a-z 的字母，肯定会把我们逼疯。</p>
+<p>为了适应这一点，正则引擎在字符组中使用连字符（-）表示区间，所以我们可以用 [0-9] 匹配任意数字。同样，如果要匹配所有小写字母，可以写成 [a-z]；要匹配所有大写字母，可以写成 [A-Z]。</p>
+<p>我们可能还会有这样的需求：匹配连字符本身。由于 - 会被正则引擎理解为表示区间，这种情况下需要对 - 进行转义。</p>
+<p>示例：</p>
+<pre><code class="language-python">
+a = re.findall(r&#39;[0-9]&#39;,&#39;xxx007abc&#39;)
+b = re.findall(r&#39;[a-z]&#39;,&#39;abc001ABC&#39;)
+c = re.findall(r&#39;[A-Za-z0-9]&#39;,&#39;abc007ABC&#39;)
+d = re.findall(r&#39;[0-9\-]&#39;,&#39;0edu 007-edu&#39;)
+print(a)
+print(b)
+print(c)
+print(d)
+执行结果如下：
+
+[&#39;0&#39;, &#39;0&#39;, &#39;7&#39;]
+[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]
+[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;0&#39;, &#39;0&#39;, &#39;7&#39;, &#39;A&#39;, &#39;B&#39;, &#39;C&#39;]
+[&#39;0&#39;, &#39;0&#39;, &#39;0&#39;, &#39;7&#39;, &#39;-&#39;]
+</code></pre>
+<p>区间取反
+到目前为止，我们定义的字符组都是由可能出现的字符定义的，但有时我们可能希望根据不会出现的字符来定义字符组，例如：匹配不包含数字的字符组。</p>
+<pre><code class="language-python">
+a = re.findall(r&#39;[^0-9]&#39;,&#39;xxx007abc&#39;)
+b = re.search(r&#39;[^0-9]&#39;,&#39;xxx007abc&#39;)
+print(a)
+print(b)
+执行结果如下：
+
+[&#39;x&#39;, &#39;x&#39;, &#39;x&#39;, &#39;a&#39;, &#39;b&#39;, &#39;c&#39;]
+&lt;re.Match object; span=(0, 1), match=&#39;x&#39;&gt;
+</code></pre>
+<p>可以在字符组开头使用 ^ 字符来进行取反操作，从而对一个字符组取反（意思是匹配除指定字符以外的所有字符）。</p>
+<p>接下来再看一个表达式：n[^e]，它表示字符 n 后面跟着除 e 以外的任意字符。</p>
+<pre><code class="language-python">
+a = re.findall(r&#39;n[^e]&#39;,&#39;final&#39;)
+b = re.search(r&#39;n[^e]&#39;,&#39;final&#39;)
+c = re.findall(&#39;r[n[^e]]&#39;,&#39;Python&#39;)
+print(a)
+print(b)
+print(c)
+执行结果如下：
+
+[&#39;na&#39;]
+&lt;re.Match object; span=(2, 4), match=&#39;na&#39;&gt;
+[]
+</code></pre>
+<p>这里我们可以看到 a 和 b 匹配到了 na。字符 a 之所以能被匹配，是因为它不是 e，而变量 c 的值为空。这种情况下正则引擎只匹配到了字符串 n 的位置，n 之后没有能匹配 [^e] 的字符，所以这里也匹配失败。</p>
+<h2 id="注意">注意</h2>
+<p>search 找到的是第一个匹配，而 findall 找到的是所有匹配。</p>
+<h2 id="任务描述">任务描述</h2>
+<p>本关任务：使用正则表达式的区间写法，编写一个能从文本中快速匹配出数字和非数字字符的小程序。</p>
+<p>编程要求
+请仔细阅读右侧代码，根据提示，在右侧编辑器 Begin-End 区间补充代码，具体任务如下：</p>
+<p>匹配数字字符信息；</p>
+<p>匹配非数字字符信息。</p>
+<p>测试说明
+代码完成后点击评测，平台会对你编写的代码进行测试，当你的结果与预期输出一致时，即为通过。</p>
+<p>测试输入：Python3 and python2.7；
+预期输出：
+[&#39;3&#39;, &#39;2&#39;, &#39;7&#39;]
+[&#39;P&#39;, &#39;y&#39;, &#39;t&#39;, &#39;h&#39;, &#39;o&#39;, &#39;n&#39;, &#39; &#39;, &#39;a&#39;, &#39;n&#39;, &#39;d&#39;, &#39; &#39;, &#39;p&#39;, &#39;y&#39;, &#39;t&#39;, &#39;h&#39;, &#39;o&#39;, &#39;n&#39;, &#39;.&#39;]</p>
+<h2 id="代码-2">代码</h2>
+<pre><code class="language-python"># coding=utf-8
+
+import re
+
+input_str = input()
+
+# 1、编写获取到数字的正则，并输出匹配到的信息
+########## Begin #re#########
+a=re.findall(r&quot;[0-9]&quot;,input_str)
+########## End ##########
+print(a)
+# 2、编写获取到不是数字的正则，并输出匹配到的信息
+########## Begin ##########
+b=re.findall(r&quot;[^0-9]&quot;,input_str)
+########## End ##########
+print(b)
+
+
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/programming-languages/interpreter-implementation/"><span class="l">上一篇</span>解释器实现</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#相关知识">相关知识</a><a class="d2" href="#任务要求">任务要求</a><a class="d2" href="#代码">代码</a><a class="d2" href="#相关知识-1">相关知识</a><a class="d2" href="#任务要求-1">任务要求</a><a class="d2" href="#代码-1">代码</a><a class="d2" href="#相关知识-2">相关知识</a><a class="d2" href="#注意">注意</a><a class="d2" href="#任务描述">任务描述</a><a class="d2" href="#代码-2">代码</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

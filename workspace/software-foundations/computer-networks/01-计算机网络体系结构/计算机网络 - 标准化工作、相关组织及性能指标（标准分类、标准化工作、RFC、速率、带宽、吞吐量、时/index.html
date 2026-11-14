@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 标准化工作、相关组织及性能指标（标准分类、标准化工作、RFC、速率、带宽、吞吐量、时延、时延带宽积、RTT、利用率） · Y0uYuGe</title>
+<meta name="description" content="因为我们假设每个时刻都有数据，即利用率高。此时由于每个时刻都有一些数据流出，如果链路上数据不多，流出后可能恰好没有数据了；而如果数据很多，流出后仍然有数据，这就对应利用率高。先写草稿，然后发邮件。如果通过就成为建议标准，此时就是 RFC 文档。然后放到网上让很多人修改，此时是草案标准。最后交给 IETF IAB，如果通过就成为因特网标准。在收到确认之前可以一直发送数据。RTT 越大，收到确认越晚，发送的时间越多，发送的数据也越多。带宽也是一种速率，只不过是理想的最高速率，而吞吐量是速率之和。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84">计算机网络体系结构</a></nav>
+    <h1>计算机网络 - 标准化工作、相关组织及性能指标（标准分类、标准化工作、RFC、速率、带宽、吞吐量、时延、时延带宽积、RTT、利用率）</h1>
+    <div class="meta"><time>2024-01-19</time><span class="tag">#计算机网络</span><span class="tag">#网络</span><span class="tag">#服务器</span></div>
+    <article class="post-body">
+<h1 id="标准化工作及相关组织">标准化工作及相关组织</h1>
+<h2 id="标准化工作">标准化工作</h2>
+<p>即需要统一的标准，这样才能相互兼容
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-001-c501f0062d.png" alt="图片"></p>
+<h2 id="标准的分类">标准的分类</h2>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-002-fb0f319e53.png" alt="图片"></p>
+<h2 id="rfc-流程">RFC 流程</h2>
+<p>第三个阶段现在基本已经没有了</p>
+<p>先写草稿，然后发邮件。如果通过就成为建议标准，此时就是 RFC 文档。然后放到网上让很多人修改，此时是草案标准。最后交给 IETF IAB，如果通过就成为因特网标准
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-003-813108690c.png" alt="图片"></p>
+<h2 id="与标准化相关的组织">与标准化相关的组织</h2>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-004-6e45f64119.png" alt="图片"></p>
+<h2 id="总结">总结</h2>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-005-b1ddcdc5d7.png" alt="图片"></p>
+<h1 id="性能指标">性能指标</h1>
+<h2 id="速率">速率</h2>
+<p>接收端单位时间内从发送端接收到多少比特的数据
+注意存储容量和速率之间换算倍数的区别</p>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-006-9de92a1326.png" alt="图片"></p>
+<h2 id="带宽">带宽</h2>
+<p>第一张图表示 3us 后的链路，三个笑脸代表三个 us 中每个 us 发送到链路上的 1 比特数据
+第二张图类似，只不过每个 us 对应 2 比特
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-007-d8847f2b32.png" alt="图片"></p>
+<h2 id="吞吐量">吞吐量</h2>
+<p>某个接口上所有链路速率之和
+例如图中交换机的吞吐量为 20mb/s + 10mb/s
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-008-c6ece327c9.png" alt="图片"></p>
+<h2 id="时延">时延</h2>
+<h3 id="发送时延">发送时延</h3>
+<p>从发送方开始发送第一个比特到最后一个比特被发送到链路上所需的时间</p>
+<p>做题时一般把带宽当作发送速率，但实际上并没有那么理想</p>
+<p>例如发送的长度为 10，发送速率为 10b/s，那么按照公式，此时的发送时延为 1s
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-009-a46dc3acc0.png" alt="图片"></p>
+<h3 id="传播时延">传播时延</h3>
+<p>就是从链路一端传到另一端的时间
+电磁波在链路中的传播速度比在真空中慢
+它取决于链路的长度和电磁波的传播速度
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-010-1df8844dda.png" alt="图片"></p>
+<h3 id="排队时延和处理时延">排队时延和处理时延</h3>
+<p>此时 10 比特到达路由器，但由于路由器繁忙，这些比特先被放入路由器的缓存空间等待一段时间，这个等待时间就可以称为排队时延</p>
+<p>处理时延是排队结束后路由器开始处理这些比特所需的时间。处理完之后，还要等待输出链路空闲，才能发送到路由器对应的出口
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-011-29985dc7b5.png" alt="图片"></p>
+<h3 id="补充高速链路">补充：高速链路</h3>
+<p>高速只是提高了带宽，传播时延不受影响
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-012-ee68b31b6c.png" alt="图片"></p>
+<h2 id="时延带宽积">时延带宽积</h2>
+<p>这里的带宽是发送方向数据链路发送数据的带宽</p>
+<p>链路是一个圆柱体，带宽就是横截面</p>
+<p>可以理解为：每个单位时间向链路上发送一个带宽的比特，随着时间推移它们沿链路传播，于是就形成了一段由比特组成的链路长度
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-013-5d489f77bf.png" alt="图片"></p>
+<h2 id="往返时间rtt">往返时间（RTT）</h2>
+<p> 端处理时间有时会被忽略，具体看题目要求</p>
+<p>在这个定义中，接收方收到数据后立即发送确认</p>
+<p>开始是指开始发送数据，即开始放置比特的时刻；结束是指收到的确认的第一个比特到达的时刻
+在收到确认之前可以一直发送数据。RTT 越大，收到确认越晚，发送的时间越多，发送的数据也越多</p>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-014-b20c94fe66.png" alt="图片"></p>
+<h2 id="利用率">利用率</h2>
+<p>信道利用率：链路上有数据通过时就认为链路被利用</p>
+<p>如果利用率高，说明有数据的时间更多，相应地链路上的数据也更多，这就会导致拥塞，即排队</p>
+<p>为什么利用率高就意味着链路上的数据多？
+因为我们假设每个时刻都有数据，即利用率高。此时由于每个时刻都有一些数据流出，如果链路上数据不多，流出后可能恰好没有数据了；而如果数据很多，流出后仍然有数据，这就对应利用率高
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-015-bf90e31004.png" alt="图片"></p>
+<h2 id="总结-1">总结</h2>
+<p>带宽也是一种速率，只不过是理想的最高速率，而吞吐量是速率之和
+发送时延（主机向链路发送）和传播时延（沿链路传播）
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81%E7%9B%B8%E5%85%B3%E7%BB%84%E7%BB%87%E5%8F%8A%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%88%E6%A0%87%E5%87%86%E5%88%86%E7%B1%BB%E3%80%81%E6%A0%87%E5%87%86%E5%8C%96%E5%B7%A5%E4%BD%9C%E3%80%81RFC%E3%80%81%E9%80%9F%E7%8E%87%E3%80%81%E5%B8%A6%E5%AE%BD%E3%80%81%E5%90%9E%E5%90%90%E9%87%8F%E3%80%81%E6%97%B6/assets/csdn-135656932/image-016-3372bfefc4.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%E3%80%81%E5%8D%8F%E8%AE%AE%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%9C%8D%E5%8A%A1/"><span class="l">下一篇</span>计算机网络 - 分层结构、协议、接口与服务</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#标准化工作">标准化工作</a><a class="d2" href="#标准的分类">标准的分类</a><a class="d2" href="#rfc-流程">RFC 流程</a><a class="d2" href="#与标准化相关的组织">与标准化相关的组织</a><a class="d2" href="#总结">总结</a><a class="d2" href="#速率">速率</a><a class="d2" href="#带宽">带宽</a><a class="d2" href="#吞吐量">吞吐量</a><a class="d2" href="#时延">时延</a><a class="d3" href="#发送时延">发送时延</a><a class="d3" href="#传播时延">传播时延</a><a class="d3" href="#排队时延和处理时延">排队时延和处理时延</a><a class="d3" href="#补充高速链路">补充：高速链路</a><a class="d2" href="#时延带宽积">时延带宽积</a><a class="d2" href="#往返时间rtt">往返时间（RTT）</a><a class="d2" href="#利用率">利用率</a><a class="d2" href="#总结-1">总结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

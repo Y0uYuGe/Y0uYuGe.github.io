@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - 程序查询方式（流程图、演示过程、例题、定时查询、独占查询） · Y0uYuGe</title>
+<meta name="description" content="每输出一个字，状态即视为完成，CPU 取走数据寄存器中的内容。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F">输入/输出系统</a></nav>
+    <h1>计算机组成原理 - 程序查询方式（流程图、演示过程、例题、定时查询、独占查询）</h1>
+    <div class="meta"><time>2024-01-07</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<h1 id="io-方式介绍">IO 方式介绍</h1>
+<p>每输出一个字，状态即视为完成，CPU 取走数据寄存器中的内容
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-001-cd7ab5d1e7.png" alt="图片"></p>
+<h1 id="程序查询方式">程序查询方式</h1>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-002-bc6aa5ff97.png" alt="图片"></p>
+<p>这里模拟打印三个字符</p>
+<p>假设三个字符在主存中。CPU 先从主存中读取一个字符到 CPU 的寄存器中——这是一次主存读操作。</p>
+<p>CPU 向打印机发出打印命令字。首先由打印机驱动程序处理，把打印命令字放入 CPU 的寄存器；然后通过 OUT 指令把命令字送到 IO 端口的控制寄存器（OUT 指令先通过地址线送出要写入的 IO 端口，再通过控制线送出写操作，最后命令字通过数据线传送到控制寄存器）</p>
+<p>随后 IO 控制逻辑部件把控制寄存器中的命令信号传给外设接口控制逻辑，由它通过控制线向打印机发出相应的控制信号</p>
+<p>打印机收到命令后启动。工作完成后，通过状态线向 IO 接口报告完成。IO 控制逻辑部件把该状态信号放入状态寄存器 Rn+1。（该寄存器之前存放的是命令字，但命令字已经送到 IO 控制逻辑并处理完毕，不再需要，所以现在存放状态信号也没问题。）</p>
+<p>OUT 指令把打印命令字送入控制寄存器后，CPU 不断检查状态寄存器是否变成了完成信号（即反复使用 IN 指令，通过数据线把状态寄存器的内容输入到 CPU 的寄存器中，由 CPU 检查该寄存器的值是否为完成信号）</p>
+<p>检查到完成信号后，CPU 通过地址线指明本次操作的对象是数据缓冲寄存器，通过控制线指明这是写操作，同时把存放在寄存器中的待打印字符传到数据线上。待打印字符就成功写入数据缓冲寄存器</p>
+<p>数据缓冲寄存器中的数据随后传给 IO 控制逻辑，再传给外设接口控制逻辑，再通过数据线传给打印机，同时通过控制线也发出相应的控制信号。</p>
+<p>打印完成后，打印机通过状态线向 IO 接口报告完成信号，接口再把完成信号传给状态寄存器</p>
+<p>CPU 检测到打印机已经完成工作后，把第二个待打印字符写入数据缓冲寄存器；流程与打印第一个字符相同</p>
+<p>最后一个字符打印完成后，打印机向接口发送完成信号，接口再传给状态寄存器。同时，CPU 内部有一个计数器，用来记录是否已经打印了规定的字符数。当发现全部打印完毕，且最后一次打印信号已经完成时，CPU 向打印机发出停止命令字（当然也要先经过驱动程序）并写入控制寄存器</p>
+<p>IO 控制逻辑（IO 接口）随后把这个停止控制信号发送给外设接口控制逻辑，再通过控制总线发送给打印机，打印机便停止工作</p>
+<h1 id="程序查询方式流程图">程序查询方式流程图</h1>
+<p>传递参数：计数器需要计数到多少才算传输完成，以及要传输的数据
+CPU 与 IO 设备串行工作，即二者的工作相互依赖
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-003-f293bdab74.png" alt="图片"></p>
+<h1 id="程序查询方式---例题">程序查询方式 - 例题</h1>
+<p>慢速 IO 设备在程序查询方式下对 CPU 影响很小
+快速 IO 设备在程序查询方式下对 CPU 影响很大
+CPU 实际上可以采用定时查询（查询不占用全部时间，查询与程序执行交替进行）或独占查询
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-004-87f159c838.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p>下图中，上面的程序查询方式就是独占查询方式
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-005-e848b8d19f.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/"><span class="l">上一篇</span>程序中断方式</a><a href="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E8%BE%93%E5%85%A5%20-%20%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F%E4%B8%8E%20IO%20%E6%8E%A7%E5%88%B6%E6%96%B9%E5%BC%8F/"><span class="l">下一篇</span>计算机组成原理 - 输入/输出系统与 IO 控制方式</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

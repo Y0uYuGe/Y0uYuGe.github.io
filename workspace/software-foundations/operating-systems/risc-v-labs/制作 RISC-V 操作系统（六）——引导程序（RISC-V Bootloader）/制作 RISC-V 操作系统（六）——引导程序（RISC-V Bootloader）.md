@@ -1,0 +1,87 @@
+---
+title: "制作 RISC-V 操作系统（六）——引导程序（RISC-V Bootloader）"
+date: "2024-03-21 23:34:28 +0800"
+categories:
+  - "操作系统与体系结构"
+tags:
+  - "risc-v"
+  - "linux"
+  - "运维"
+excerpt: "qemu 将平台的外设和内存统一映射，从零到最高地址分配所有物理地址；下图展示了不同硬件对应的物理地址范围（qemu 模拟的物理地址）。BIOS 引导完成后，由 bootloader 接手初始化硬件设备、建立内存空间映射，从而为操作系统内核准备好正确的软硬件环境。当 rd 为 x0 时，csr 中的数据不会写入 x0，只执行第二步，相当于把一个寄存器写入 csr。Bootloader 初始化：bootloader 初始化包括设置基本的硬件环境，例如处理器模式、内存管理单元（MMU）等。"
+source: "CSDN"
+original_url: "https://blog.csdn.net/llovewuzhengzi/article/details/136725470"
+csdn_article_id: "136725470"
+migrated: true
+---
+
+{% raw %}
+# 硬件基本概念
+hart：可以理解为一个处理器
+![图片](./assets/csdn-136725470/image-001-3adc8737d1.png)
+platform：可以理解为芯片（包含处理器和一些外设）
+DRAM：动态内存
+ROM：只读存储器，断电后内容依然保留
+
+随着技术的进步，芯片的集成度越来越高，最终实现了片上系统（system on chip）
+![图片](./assets/csdn-136725470/image-002-b84286e256.png)
+qemu 模拟的就是 platform
+![图片](./assets/csdn-136725470/image-003-4f9171796b.png)
+# qemu-virt 地址映射
+qemu 将平台的外设和内存统一映射，从零到最高地址分配所有物理地址。下图展示了不同硬件对应的物理地址范围（qemu 模拟的物理地址）
+![图片](./assets/csdn-136725470/image-004-7de62fcb8e.png)
+# 系统启动
+Bootloader 加载：上电时，处理器从预先定义的存储设备（如硬盘、固态硬盘、闪存等）中加载 bootloader。bootloader 位于启动设备的特定位置，负责启动操作系统。
+
+Bootloader 初始化：bootloader 初始化包括设置基本的硬件环境，例如处理器模式、内存管理单元（MMU）等。
+
+内核加载：bootloader 将操作系统内核加载到内存中的特定位置。这个内核通常是一个独立的预编译二进制文件，包含操作系统的核心功能。
+
+内核初始化与启动：内核一旦被加载到内存，处理器就转去执行内核。内核会执行一系列初始化操作，包括初始化硬件设备、启动设备驱动、构建必要的数据结构等。
+
+
+编译时用 -Ttext 选择一个位置（例如 0x80000000）作为内核的起始位置
+qemu -kernel 指定要加载的内核
+![图片](./assets/csdn-136725470/image-005-4278ce0a5a.png)
+八个核同时运行，每个核独立工作；一上电，每个核都会同时运行这个流程。
+
+
+# CSR![图片](./assets/csdn-136725470/image-006-2ac505303b.png)
+
+# 机器模式下的 CSR
+![图片](./assets/csdn-136725470/image-007-2834c1bd13.png)
+# 对应的 CSR 指令
+不同模式对应不同的寄存器，操作这些寄存器的指令也不同 
+![图片](./assets/csdn-136725470/image-008-2f941ea272.png)
+Atomic：原子操作，不可被打断，一气呵成
+## csrrw
+![图片](./assets/csdn-136725470/image-009-5977d404ff.png)
+当 rd 为 x0 时，csr 中的数据不会写入 x0，只执行第二步，相当于把一个寄存器写入 csr。对应的伪指令是 csrw
+## csrrs
+![图片](./assets/csdn-136725470/image-010-b0c9a12fec.png)
+这种情况下，如果 x6 为 0，就相当于把 csr 的值复制到 rd，而 csr 保持不变，可以等价于一次读操作
+# mhartid
+![图片](./assets/csdn-136725470/image-011-2e5230b6e9.png)
+# Bootloader 做了什么
+上电时八个核会同时开始运行，但为了简化流程，我们设置了特殊参数，让每个核判断自己是否应该运行，从而实现上电时八个核中只有一个核运行
+![图片](./assets/csdn-136725470/image-012-ec563ed0d8.png)
+目前先记住 bootloader 要做哪些事，后面再解释
+## 判断当前 hart 是否为第一个 hart
+![图片](./assets/csdn-136725470/image-013-49243025fb.png)
+忙等自旋实际上仍让 cpu 在运行，依然消耗电能。而使用 WFI 时 cpu 处于休眠状态，此时 cpu 停止运行
+## 初始化栈
+选择一块区域并设置相关的栈指针即可
+##  跳转到 C 执行环境
+实际上就是跳转到原本的 C 代码所对应的汇编（因为最终都被编译成了汇编）
+# 内核启动过程
+1. 上电后，CPU 自动执行 BIOS（位于主板 ROM 中，主要检查硬件是否有问题）
+2.  最后 BIOS 将磁盘零号扇区的内容（MBR，主引导记录）加载到内存，并开始执行 MBR
+3. 执行 MBR 时，它会选择某个系统分区，并将其第一个扇区的内容（该系统的 bootloader）加载到内存
+4. 开始执行加载进来的扇区内容，随后系统启动
+
+# Bootloader
+引导加载程序通常称为 Bootloader，是启动 Linux 操作系统的关键组件。它的主要作用是在计算机启动时加载操作系统内核，并把控制权交给内核，从而启动操作系统。Bootloader 还负责检测和初始化硬件设备，为操作系统提供必要的信息和参数。
+# 相关代码
+BIOS 引导完成后，由 bootloader 接手初始化硬件设备、建立内存空间映射，从而为操作系统内核准备好正确的软硬件环境
+
+[https://github.com/FULLK/risllkos/tree/main/Fullkenerl](https://github.com/FULLK/risllkos/tree/main/Fullkenerl)
+{% endraw %}

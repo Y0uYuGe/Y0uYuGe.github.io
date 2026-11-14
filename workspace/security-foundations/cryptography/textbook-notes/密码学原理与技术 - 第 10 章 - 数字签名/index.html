@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密码学原理与技术 - 第 10 章 - 数字签名 · Y0uYuGe</title>
+<meta name="description" content="基于张思颖同学的笔记整理。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/security-foundations">安全基础</a><span class="sep">›</span><a href="/#/security-foundations/cryptography">密码学</a><span class="sep">›</span><a href="/#/security-foundations/cryptography/textbook-notes">教材笔记</a></nav>
+    <h1>密码学原理与技术 - 第 10 章 - 数字签名</h1>
+    <div class="meta"><time>2025-01-02</time><span class="tag">#密码学</span><span class="tag">#RSA</span></div>
+    <article class="post-body">
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-001-3685f1643a.png" alt="图片"></p>
+<blockquote>
+<p>基于张思颖同学的笔记整理</p>
+</blockquote>
+<h1 id="数字签名的原理">数字签名的原理</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-002-031e0be684.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-003-26a767b399.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-004-b5f8b3c25b.png" alt="图片">
+在数字世界中模仿实体手写签名是不安全的，因为实体手写签名可以理解为在电子文档后面附加一个数字签名；而数字世界中可以复制，攻击者可以复制该签名来伪造。因此，每份电子文档都必须与其签名紧密绑定——明文和私钥共同作为签名函数的输入，从而建立这种紧密绑定
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-005-7472f46fc1.png" alt="图片"></p>
+<h2 id="核心流程">核心流程</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-006-e89b55501c.png" alt="图片"></p>
+<h2 id="签名方案的安全性">签名方案的安全性</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-007-430571f367.png" alt="图片"></p>
+<h1 id="安全服务">安全服务</h1>
+<h2 id="核心安全服务">核心安全服务</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-008-941fcbabb4.png" alt="图片"></p>
+<h2 id="附加安全服务">附加安全服务</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-009-35d27ab60a.png" alt="图片"></p>
+<h1 id="rsa-数字签名方案">RSA 数字签名方案</h1>
+<h2 id="教科书式-rsa-签名方案的主要思想">教科书式 RSA 签名方案的主要思想</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-010-f8182762b3.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-011-49e2fbdc4d.png" alt="图片"></p>
+<h2 id="rsa-签名方案的安全性与性能">RSA 签名方案的安全性与性能</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-012-6998695484.png" alt="图片"></p>
+<h2 id="针对教科书式-rsa-数字签名的存在性伪造攻击">针对教科书式 RSA 数字签名的存在性伪造攻击</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-013-44e0f851a7.png" alt="图片"></p>
+<h2 id="存在性伪造与填充">存在性伪造与填充</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-014-ed954d9b66.png" alt="图片"></p>
+<h2 id="rsa-填充概率签名方案pss">RSA 填充：概率签名方案（PSS）</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-015-9b33dd9ac8.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-016-61728c7d4c.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-017-0c6988e2f8.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-018-2d42d26a1d.png" alt="图片"></p>
+<h1 id="elgamal-数字签名方案">Elgamal 数字签名方案</h1>
+<p>发表于 1985 年
+基于计算离散对数的困难性
+与同名的加密方案有很大不同
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-019-8e3622d8b4.png" alt="图片"></p>
+<h2 id="流程">流程</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-020-fd1e1ad1fe.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-021-e29ad26dd6.png" alt="图片">
+验证原理
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-022-3250cbfc40.png" alt="图片">
+示例
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-023-edc52c4452.png" alt="图片"></p>
+<h2 id="教科书式-elgamal-数字签名方案的安全性">教科书式 Elgamal 数字签名方案的安全性</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-024-2016caeec4.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-025-2e00e2cc31.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-026-655a494cf1.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-027-55825c0106.png" alt="图片"></p>
+<h1 id="数字签名算法dsa">数字签名算法（DSA）</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-028-f1f947061c.png" alt="图片"></p>
+<h2 id="dsa-密钥生成">DSA 密钥生成</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-029-f7844dbb3d.png" alt="图片"></p>
+<h2 id="dsa-签名生成">DSA 签名生成</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-030-eb33143c61.png" alt="图片"></p>
+<h2 id="dsa-签名验证">DSA 签名验证</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-031-a9e2603832.png" alt="图片"></p>
+<h2 id="dsa-的正确性证明">DSA 的正确性证明</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-032-9d0420c2ec.png" alt="图片"></p>
+<h2 id="示例">示例</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-033-522895cf50.png" alt="图片"></p>
+<h2 id="安全性">安全性</h2>
+<p>模数更小，因此指数演算法（index calculus）不再适用</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-034-14247e420f.png" alt="图片"></p>
+<h1 id="椭圆曲线数字签名算法ecdsa">椭圆曲线数字签名算法（ECDSA）</h1>
+<h2 id="公钥算法的位长度">公钥算法的位长度</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-035-589f196fd9.png" alt="图片"><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-036-7acd266d4a.png" alt="图片"></p>
+<h2 id="密钥生成">密钥生成</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-037-22f3d2145d.png" alt="图片"></p>
+<h2 id="签名生成">签名生成</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-038-e487d4c12e.png" alt="图片"></p>
+<h2 id="签名验证">签名验证</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2010%20%E7%AB%A0%20-%20%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/assets/csdn-144566988/image-039-15a46e07a1.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%207%20%E7%AB%A0%20-%20RSA%20%E5%AF%86%E7%A0%81%E4%BD%93%E5%88%B6/"><span class="l">上一篇</span>密码学原理与技术 - 第 7 章 - RSA 密码体制</a><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%2011%20%E7%AB%A0%20-%20%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0/"><span class="l">下一篇</span>密码学原理与技术 - 第 11 章 - 哈希函数</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#核心流程">核心流程</a><a class="d2" href="#签名方案的安全性">签名方案的安全性</a><a class="d2" href="#核心安全服务">核心安全服务</a><a class="d2" href="#附加安全服务">附加安全服务</a><a class="d2" href="#教科书式-rsa-签名方案的主要思想">教科书式 RSA 签名方案的主要思想</a><a class="d2" href="#rsa-签名方案的安全性与性能">RSA 签名方案的安全性与性能</a><a class="d2" href="#针对教科书式-rsa-数字签名的存在性伪造攻击">针对教科书式 RSA 数字签名的存在性伪造攻击</a><a class="d2" href="#存在性伪造与填充">存在性伪造与填充</a><a class="d2" href="#rsa-填充概率签名方案pss">RSA 填充：概率签名方案（PSS）</a><a class="d2" href="#流程">流程</a><a class="d2" href="#教科书式-elgamal-数字签名方案的安全性">教科书式 Elgamal 数字签名方案的安全性</a><a class="d2" href="#dsa-密钥生成">DSA 密钥生成</a><a class="d2" href="#dsa-签名生成">DSA 签名生成</a><a class="d2" href="#dsa-签名验证">DSA 签名验证</a><a class="d2" href="#dsa-的正确性证明">DSA 的正确性证明</a><a class="d2" href="#示例">示例</a><a class="d2" href="#安全性">安全性</a><a class="d2" href="#公钥算法的位长度">公钥算法的位长度</a><a class="d2" href="#密钥生成">密钥生成</a><a class="d2" href="#签名生成">签名生成</a><a class="d2" href="#签名验证">签名验证</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

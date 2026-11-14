@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统——进程互斥的软件实现方法（单标志法、双标志先检查法、双标志后检查法、Peterson 算法） · Y0uYuGe</title>
+<meta name="description" content="当进程 P0 的 while 循环执行到一半切换到进程 P1 时，P1 也会进入它的 while 循环；当进程 P1 的 while 循环执行到一半又切换回进程 P0 时，P0 的 while 循环仍会继续执行——就这样来回切换，但时钟都卡在各个进程的 while 循环里。这种方法会受下一个使用者的限制：如果下一个使用者一直不使用，那么当前这个也不能连续使用两次。让权等待：此时如果进程无法进入临界区，就会在 while 循环中卡住一段时间，浪费处理机资源。如果进程 A 打印到一半被切换到进程 B，那么打印的内容就会混在一起。注意 while 循环没有内容（它有一个 ;）。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5">同步与互斥</a></nav>
+    <h1>操作系统——进程互斥的软件实现方法（单标志法、双标志先检查法、双标志后检查法、Peterson 算法）</h1>
+    <div class="meta"><time>2024-02-05</time><span class="tag">#操作系统</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-001-709e4750cf.png" alt="图片"></p>
+<h1 id="如果没有进程互斥">如果没有进程互斥</h1>
+<p>如果进程 A 打印到一半被切换到进程 B，那么打印的内容就会混在一起。
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-002-3164cfbdbf.png" alt="图片"></p>
+<h1 id="单标志法">单标志法</h1>
+<p>注意 while 循环没有内容（它有一个 ;）。
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-003-6752b7e2b3.png" alt="图片"></p>
+<h2 id="例子">例子</h2>
+<p>小渣和老渣上厕所。</p>
+<p>这种方法会受下一个使用者的限制：如果下一个使用者一直不使用，那么当前这个也不能连续使用两次。</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-004-eb0b970bd0.png" alt="图片"></p>
+<h1 id="双标志先检查法">双标志先检查法</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-005-c17157c6c1.png" alt="图片">
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-006-dd7e2534a9.png" alt="图片"></p>
+<h1 id="双标志后检查法">双标志后检查法</h1>
+<p>当进程 P0 的 while 循环执行到一半切换到进程 P1 时，P1 也会进入它的 while 循环；当进程 P1 的 while 循环执行到一半又切换回进程 P0 时，P0 的 while 循环仍会继续执行——就这样来回切换，但时钟都卡在各个进程的 while 循环里。</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-007-455d312a65.png" alt="图片"></p>
+<h1 id="peterson-算法">Peterson 算法</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-008-3c1f2c2f53.png" alt="图片">
+让权等待：此时如果进程无法进入临界区，就会在 while 循环中卡住一段时间，浪费处理机资源。
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-009-87eccfa60e.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/assets/csdn-136038798/image-010-302dda96c7.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/"><span class="l">上一篇</span>操作系统 - 信号量机制（整型信号量、记录型信号量）及利用信号量实现进程互斥、同步和前驱关系</a><a href="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E9%97%AE%E9%A2%98%20%2B%20%E5%A4%9A%E7%94%9F%E4%BA%A7%E8%80%85-%E5%A4%9A%E6%B6%88%E8%B4%B9%E8%80%85%E9%97%AE%E9%A2%98%EF%BC%88%E7%9B%B8%E9%82%BB%20P%E3%80%81V%20%E6%93%8D%E4%BD%9C%E7%9A%84%E9%A1%BA%E5%BA%8F%E8%83%BD%E5%90%A6%E6%94%B9%E5%8F%98%EF%BC%9F%E6%AD%BB%E9%94%81%EF%BC%9B/"><span class="l">下一篇</span>操作系统——生产者-消费者问题 + 多生产者-多消费者问题（相邻 P、V 操作的顺序能否改变？死锁；问题分析与实现）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

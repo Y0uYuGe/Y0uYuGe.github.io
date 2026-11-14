@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 奈奎斯特准则与香农定理（码间串扰，两者的区别） · Y0uYuGe</title>
+<meta name="description" content="4000 Hz 无法通过，是因为其振荡频率太高：时间间隔变得非常短，码元之间的边界再也无法区分——也就是说码元传输速率太快，无法分辨码元；或者说码元长度太短，通过时的识别时间过短，来不及处理。200 Hz 无法通过，是因为它容易受到其他高频信号的影响，产生严重的衰减或干扰，甚至可能消失，因此无法通过。频率越高 = 信号变化越快 = 码元变化越快 = 码元传输速率越高（更密集，码元长度更短，速度更快）。当两个公式都适用时，分别计算并取较小值；较小的那个能保证两个条件都得到满足。对于模拟信号，信号带宽是一个频率。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82">物理层</a></nav>
+    <h1>计算机网络 - 奈奎斯特准则与香农定理（码间串扰，两者的区别）</h1>
+    <div class="meta"><time>2024-01-25</time><span class="tag">#计算机网络</span></div>
+    <article class="post-body">
+<h1 id="失真">失真</h1>
+<p>简单来说就是结果与原始信号不同
+两种情况</p>
+<p>前三项是正相关的；最后一项是负相关的
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-001-f072a79873.png" alt="图片"></p>
+<p>码元传输速率越高，失真越严重。可能的原因包括：</p>
+<ol>
+<li>信号频率成分增加：随着码元传输速率上升，信号的频率成分也相应增加。高频信号更容易受到电路特性的影响，例如电阻、电容和电感的响应，这可能改变信号波形并产生失真。</li>
+<li>信道带宽限制：根据奈奎斯特准则，为了避免码间串扰，码元传输速率存在上限，即信道的最大带宽。如果传输速率超过这一限制，信号之间会相互干扰，导致失真。</li>
+<li>信号衰减与噪声干扰：随着传输速率上升，信号在传输介质中的衰减也会加剧，噪声对信号的影响也更加显著。所有这些因素都会降低接收端的信号质量，增加失真的风险。</li>
+</ol>
+<h1 id="失真的一种现象码间串扰">失真的一种现象——码间串扰</h1>
+<p>模拟信号是连续的；电话信道是模拟信道
+模拟信号的信号带宽是一个频率
+信号带宽不等于信道带宽
+200 Hz 无法通过，是因为它容易受到其他高频信号的影响，产生严重的衰减或干扰，甚至可能消失，因此无法通过
+4000 Hz 无法通过，是因为其振荡频率太高：时间间隔变得非常短，码元之间的边界再也无法区分——也就是说码元传输速率太快，无法分辨码元；或者说码元长度太短，通过时的识别时间过短，来不及处理
+就像一群人连续不断地走过——你能分辨出每一个人吗？——而如果是一个一个地走过，你就能清楚地认出每个人
+传输速率慢</p>
+<p>高电平和低电平都是码元信号
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-002-6ce81bf506.png" alt="图片">传输速率快</p>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-003-65a78b0165.png" alt="图片"></p>
+<p>频率越高 = 信号变化越快 = 码元变化越快 = 码元传输速率越高（更密集，码元长度更短，速度更快）
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-004-44d9a24e89.png" alt="图片"></p>
+<h1 id="奈奎斯特准则奈奎斯特定理">奈奎斯特准则（奈奎斯特定理）</h1>
+<p>理想的（无外部干扰）低通（带宽受限；低于最大频率的频率可以通过）</p>
+<p>用于限制码元传输速率</p>
+<p>频带越宽 = 信道带宽越大</p>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-005-92570960ab.png" alt="图片"></p>
+<h2 id="例题">例题</h2>
+<p>每个相位有 4 种幅度，共 16 种幅度，因此有十六种波形信号
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-006-5568ef3954.png" alt="图片"></p>
+<h1 id="香农定理">香农定理</h1>
+<p>信噪比可以类比为：学生听到的是老师的声音，还是差生的声音</p>
+<p>“无差错”是指接收方能够获得正确的信号
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-007-a516433ec1.png" alt="图片">
+无差错传输是指没有错误
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-008-e1f106aa31.png" alt="图片"></p>
+<h2 id="例题-1">例题</h2>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-009-4b380c303d.png" alt="图片"></p>
+<h1 id="奈奎斯特与香农">奈奎斯特与香农</h1>
+<p>奈奎斯特：从内部减少码元之间的信号干扰
+香农：在噪声影响下施加的限制——是外部的</p>
+<p>当两个公式都适用时，分别计算并取较小值；较小的那个能保证两个条件都得到满足</p>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/assets/csdn-135826483/image-010-ce260662f4.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/"><span class="l">上一篇</span>计算机网络 - 编码与调制（基带信号、基带传输、宽带信号、宽带传输、编码、调制）</a><a href="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/"><span class="l">下一篇</span>计算机网络 - 数据通信基础（数据通信模型、相关术语、单工／半双工／全双工、串行／并行、同步／异步、码元、数据传输速率、带宽）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

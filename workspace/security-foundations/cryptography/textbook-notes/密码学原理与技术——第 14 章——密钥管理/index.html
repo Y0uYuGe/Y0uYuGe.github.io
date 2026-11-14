@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密码学原理与技术——第 14 章——密钥管理 · Y0uYuGe</title>
+<meta name="description" content="如果攻击者设法获得了 KEK，就能解密之前用该 KEK 加密的所有会话密钥。因此，攻击者只需保存过去的加密通信数据，一旦获得 KEK，过去的所有通信都能被解密。在理想的密钥协商（或密钥交换）协议中，任何一方都不能完全控制密钥的取值：密钥由双方共同生成。用户持有公钥管理机构的公钥，用于解密该机构用自己的私钥加密的内容。下面的 Int(1) 用于填充；更准确地说，它应该是多个 0 与一个 1 拼接（0||1）。非对称密钥建立协议生成的密钥非常大，不适合作为对称密钥。如果没有对公钥的完整性保护，就可能被替换，而来源看起来仍然正确。na 和 nb 都是随机数。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/security-foundations">安全基础</a><span class="sep">›</span><a href="/#/security-foundations/cryptography">密码学</a><span class="sep">›</span><a href="/#/security-foundations/cryptography/textbook-notes">教材笔记</a></nav>
+    <h1>密码学原理与技术——第 14 章——密钥管理</h1>
+    <div class="meta"><time>2025-01-05</time><span class="tag">#密码学</span><span class="tag">#服务器</span><span class="tag">#网络</span></div>
+    <article class="post-body">
+<h1 id="引言">引言</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-001-6ef5fd45f2.png" alt="图片">
+在理想的密钥协商（或密钥交换）协议中，任何一方都不能完全控制密钥的取值：密钥由双方共同生成。</p>
+<h1 id="n2-密钥分配问题">n2 密钥分配问题</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-002-a5260544e9.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-003-661e5ffb46.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-004-933c92f1d8.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-005-9bd2b0c818.png" alt="图片"></p>
+<h1 id="密钥派生">密钥派生</h1>
+<h2 id="密钥新鲜性">密钥新鲜性</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-006-1765357639.png" alt="图片"></p>
+<h2 id="密钥派生-1">密钥派生</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-007-8d6d2c64c8.png" alt="图片"></p>
+<p>非对称密钥建立协议生成的密钥非常大，不适合直接用作对称密钥。</p>
+<p>密钥通过密钥派生函数生成。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-008-ed05591958.png" alt="图片"></p>
+<p>HMAK 生成的签名相当随机，所以可以把它看作一个伪随机函数。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-009-bf23e36e5a.png" alt="图片"></p>
+<h2 id="基于口令的密钥派生">基于口令的密钥派生</h2>
+<p>下面的 Int(1) 用于填充；更准确地说，它应该是多个 0 与一个 1 拼接（0||1）。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-010-ac682199ba.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-011-a1dc84fefb.png" alt="图片"></p>
+<h1 id="使用对称密钥技术建立密钥">使用对称密钥技术建立密钥</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-012-f8ecd25a3c.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-013-dcd5e6dfab.png" alt="图片">
+KDC 已经与每个用户各自保存了一个共享的对称密钥。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-014-bbbd9602ae.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-015-0071203084.png" alt="图片"></p>
+<h2 id="toy-protocol-的优点与不安全性">toy protocol 的优点与不安全性</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-016-931cd36122.png" alt="图片"></p>
+<ul>
+<li>单点故障：攻破 KDC 就攻破了一切。</li>
+<li>重放攻击：截获第一轮中用会话密钥加密的 ya 和 yb 值；然后在下一轮请求会话密钥时，截获该请求，并把上一轮截获的会话密钥分别发给双方，使他们使用旧的会话密钥进行通信。</li>
+<li>密钥确认攻击：Oscar 截获请求并篡改，使其变成 Alice 与 Oscar 之间的请求。KDC 随后生成会话密钥并把会话密钥发给 Alice。Alice 解密出自己的会话密钥，加密消息，并把它和另一个加密的会话密钥一起发给 Bob。Oscar 在中间截获并解密，得到会话密钥和消息。此后 Alice 与 Bob 之间使用该会话密钥的所有通信都会被 Oscar 截获，于是 Alice 以为自己在和 Bob 通信，实际上却在和 Oscar 通信。</li>
+</ul>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-017-edae1be54e.png" alt="图片"></p>
+<h2 id="kerberosneedham-schroeder-协议">Kerberos：Needham-Schroeder 协议</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-018-cf22a7e70b.png" alt="图片">
+na 和 nb 都是随机数。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-019-1650c4e0c8.png" alt="图片"></p>
+<p>如果攻击者设法获得了 KEK，就能解密之前用该 KEK 加密的所有会话密钥。会话密钥用于保护实际的通信内容（如文件传输和消息）。因此，攻击者只需保存过去的加密通信数据，一旦获得 KEK，过去的所有通信都能被解密。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-020-742101d5ed.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-021-ccf2050313.png" alt="图片"></p>
+<h1 id="使用非对称技术建立密钥">使用非对称技术建立密钥</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-022-68e66ae26e.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-023-c52f1ebb86.png" alt="图片"></p>
+<h2 id="中间人攻击">中间人攻击</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-024-9b520d6dc5.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-025-fb8106b1d4.png" alt="图片"></p>
+<p> 如果没有对公钥的完整性保护，就可能被替换，而来源看起来仍然正确。
+公钥分发：不要求机密性，但要求真实性。</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-026-25209f480d.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-027-794abd4eb0.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-028-fb8a77bc3e.png" alt="图片"></p>
+<h2 id="公钥的分发">公钥的分发</h2>
+<h3 id="公开发布">公开发布</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-029-2632cc53fa.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-030-0b187f47ae.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-031-e778c39a38.png" alt="图片"></p>
+<h3 id="公开可访问的目录">公开可访问的目录</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-032-6715ea6b83.png" alt="图片">
+在公钥目录中，条目以（身份信息，公钥）这样的对的形式存在。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-033-4d226cbbf3.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-034-a9f816d413.png" alt="图片"></p>
+<h3 id="公钥管理机构">公钥管理机构</h3>
+<p>用户持有公钥管理机构的公钥，用于解密该机构用自己的私钥加密的内容。</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-035-c5ddc6543e.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-036-f2da58149d.png" alt="图片"></p>
+<h3 id="公钥证书非常重要">公钥证书（非常重要）</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-037-22cb806d19.png" alt="图片"></p>
+<h2 id="证书">证书</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-038-0cb0efde27.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-039-89b045fdff.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-040-9cfee04f67.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-041-e5a9cde63b.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-042-adf022a4c1.png" alt="图片">
+CA 自己的公钥一般通过操作系统或浏览器自动安装。</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-043-fbafae4418.png" alt="图片"></p>
+<h3 id="现实世界中的证书">现实世界中的证书</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-044-8a82e63995.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-045-519be4a3c5.png" alt="图片"></p>
+<p>证书签名算法：PKCS #1 SHA-256 带 RSA 加密：先哈希，再用 RSA 加密生成签名。</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-046-eb6127515e.png" alt="图片"></p>
+<h2 id="公钥基础设施">公钥基础设施</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-047-b97e469b1c.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%2014%20%E7%AB%A0%E2%80%94%E2%80%94%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86/assets/csdn-144934702/image-048-866c1e3eed.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/"><span class="l">上一篇</span>密码学原理与技术——第 1 章——引言</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#密钥新鲜性">密钥新鲜性</a><a class="d2" href="#密钥派生-1">密钥派生</a><a class="d2" href="#基于口令的密钥派生">基于口令的密钥派生</a><a class="d2" href="#toy-protocol-的优点与不安全性">toy protocol 的优点与不安全性</a><a class="d2" href="#kerberosneedham-schroeder-协议">Kerberos：Needham-Schroeder 协议</a><a class="d2" href="#中间人攻击">中间人攻击</a><a class="d2" href="#公钥的分发">公钥的分发</a><a class="d3" href="#公开发布">公开发布</a><a class="d3" href="#公开可访问的目录">公开可访问的目录</a><a class="d3" href="#公钥管理机构">公钥管理机构</a><a class="d3" href="#公钥证书非常重要">公钥证书（非常重要）</a><a class="d2" href="#证书">证书</a><a class="d3" href="#现实世界中的证书">现实世界中的证书</a><a class="d2" href="#公钥基础设施">公钥基础设施</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

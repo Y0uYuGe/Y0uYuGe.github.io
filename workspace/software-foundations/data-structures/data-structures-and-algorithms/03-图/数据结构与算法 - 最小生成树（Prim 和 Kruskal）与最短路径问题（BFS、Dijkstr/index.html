@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据结构与算法 - 最小生成树（Prim 和 Kruskal）与最短路径问题（BFS、Dijkstra 和 Floyd） · Y0uYuGe</title>
+<meta name="description" content="先找到代价最低的节点；每有一个节点加入树中，都需要更新各个节点加入树的最低代价（即把原来的代价与各节点和新加入节点之间的代价比较）。比如 v2 到 v3 是基于经过 v1 中转的，但在允许经过 v2 中转的这一轮中，就把它视为连通的。然后顶点 6 出队，更新其邻接节点，并把各邻接节点入队。然后顶点 1 出队，其邻接节点入队，并更新各邻接节点。先访问顶点 2，然后是更新其邻接顶点后的结果。允许在 v0 v1 v2 v3 v4 中转。已经是基于之前在 v0 v1 中转的结果了。允许在 v0 v1 v2 v3 中转。同一个图的最小生成树可能不唯一。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/data-structures">数据结构</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms">数据结构与算法</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE">图</a></nav>
+    <h1>数据结构与算法 - 最小生成树（Prim 和 Kruskal）与最短路径问题（BFS、Dijkstra 和 Floyd）</h1>
+    <div class="meta"><time>2023-12-17</time><span class="tag">#算法</span><span class="tag">#数据结构</span><span class="tag">#广度优先搜索</span></div>
+    <article class="post-body">
+<h1 id="最小生成树">最小生成树</h1>
+<h2 id="概述">概述</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-001-1fde210a5b.png" alt="图片"></p>
+<h2 id="生成树">生成树</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-002-e760e7d80a.png" alt="图片"></p>
+<h2 id="广度优先生成树">广度优先生成树</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-003-398b78cec4.png" alt="图片"></p>
+<h2 id="深度优先生成树">深度优先生成树</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-004-108718ed6a.png" alt="图片"></p>
+<h2 id="最小生成树-1">最小生成树</h2>
+<p>适用于带权连通图
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-005-ebd1f461d0.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-006-440f7e9496.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-007-d6dfdf4507.png" alt="图片"></p>
+<h2 id="prim-算法">Prim 算法</h2>
+<p>同一个图的最小生成树可能不唯一</p>
+<p>从城市 P 出发
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-008-cd8e12a977.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-009-11e25f78dc.png" alt="图片"></p>
+<p>从农场出发也是一样
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-010-0b7f9b9d75.png" alt="图片"></p>
+<h2 id="kruskal-算法">Kruskal 算法</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-011-157ab00866.png" alt="图片"></p>
+<h2 id="prim-与-kruskal-对比">Prim 与 Kruskal 对比</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-012-7a3e58803a.png" alt="图片"></p>
+<h3 id="prim-的实现">Prim 的实现</h3>
+<p>先找到代价最低的节点；每有一个节点加入树中，都需要更新各个节点加入树的最低代价（即把原来的代价与各节点和新加入节点之间的代价比较）
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-013-a8732c04c8.png" alt="图片"></p>
+<h3 id="kruskal-的实现">Kruskal 的实现</h3>
+<p>查找并查集的根（如果用二叉树实现）需要 log2E
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-014-3da74641fa.png" alt="图片"></p>
+<h2 id="小结">小结</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-015-f31ecddf55.png" alt="图片"></p>
+<h1 id="最短路径问题">最短路径问题</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-016-570241421c.png" alt="图片"></p>
+<h2 id="单源最短路径问题">单源最短路径问题</h2>
+<h3 id="bfs-求无权图的单源最短路径">BFS 求无权图的单源最短路径</h3>
+<p>先访问顶点 2，然后是更新其邻接顶点后的结果
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-017-c5839f9521.png" alt="图片">
+然后顶点 1 出队，其邻接节点入队，并更新各邻接节点
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-018-9c5d38a02c.png" alt="图片">
+然后顶点 6 出队，更新其邻接节点，并把各邻接节点入队
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-019-5102d324aa.png" alt="图片">
+顶点 5 没有邻接节点
+所以接着处理顶点 3
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-020-92a709a550.png" alt="图片">
+处理顶点 7
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-021-dc41fdf159.png" alt="图片">
+顶点 4 和 8 的邻接节点都已被访问过，所以不做处理</p>
+<h3 id="小结-1">小结</h3>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-022-813e70e876.png" alt="图片"></p>
+<h3 id="dijkstra-算法">Dijkstra 算法</h3>
+<p>BFS 的局限性（默认每条路径长度相同）
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-023-61d82637c2.png" alt="图片">
+初始化之后，即更新初始节点及其邻接节点
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-024-cda1a50320.png" alt="图片">
+第一轮之后
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-025-41ea325500.png" alt="图片">
+第二轮之后
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-026-44ccbd1e50.png" alt="图片"></p>
+<p>第三轮之后
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-027-4b9c6aa0e3.png" alt="图片">
+第四轮之后</p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-028-c7bc238506.png" alt="图片">
+求两个顶点之间的最短路径
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-029-80c7aeda9b.png" alt="图片"> </p>
+<h4 id="算法时间复杂度">算法时间复杂度</h4>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-030-8990a17436.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-031-5e3632e5ce.png" alt="图片"></p>
+<h4 id="不适用的情况">不适用的情况</h4>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-032-5336b6aaee.png" alt="图片"></p>
+<h2 id="各顶点间的最短路径问题">各顶点间的最短路径问题</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-033-903f28f519.png" alt="图片"></p>
+<h3 id="floyd-算法">Floyd 算法</h3>
+<p>初始时
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-034-abf0a6a015.png" alt="图片">
+  允许在 v0 中转
+  <img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-035-b7d7ce2ec0.png" alt="图片">
+  允许在 v0 v1 中转
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-036-297dc2309c.png" alt="图片">
+允许在 v0 v1 v2 中转
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-037-1384fbbb01.png" alt="图片"></p>
+<h4 id="求两个顶点之间的最短路径">求两个顶点之间的最短路径</h4>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-038-d46ef46cd4.png" alt="图片"></p>
+<h4 id="核心代码">核心代码</h4>
+<p>空间复杂度为 n*n 的矩阵那么多
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-039-d5fb4b07d6.png" alt="图片"></p>
+<h4 id="例子">例子</h4>
+<p>初始状态
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-040-ab32cda70c.png" alt="图片">
+允许在 v0 中转
+发现没有变化
+从图中可以看出 v0 没有入边，所以自然无法作为中转点
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-041-c1e6069c40.png" alt="图片">
+允许在 v0 v1 中转
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-042-6e3fd23abd.png" alt="图片">
+允许在 v0 v1 v2 中转
+已经是基于之前在 v0 v1 中转的结果了
+比如 v2 到 v3 是基于经过 v1 中转的，但在允许经过 v2 中转的这一轮中，就把它视为连通的
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-043-e314b9ceb5.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-044-bc9d2bec15.png" alt="图片">
+允许在 v0 v1 v2 v3 中转</p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-045-874fb4345d.png" alt="图片">
+允许在 v0 v1 v2 v3 v4 中转
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-046-6f5e0f565d.png" alt="图片"></p>
+<h4 id="求两个顶点之间的最短路径-1">求两个顶点之间的最短路径</h4>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-047-0a8859231c.png" alt="图片"></p>
+<h4 id="floyd-用于负权图">Floyd 用于负权图</h4>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-048-52c1f2f462.png" alt="图片"></p>
+<h4 id="无法解决的问题">无法解决的问题</h4>
+<p>回路越多，路径越短</p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-049-61188b758d.png" alt="图片"></p>
+<h3 id="小结-2">小结</h3>
+<p>BFS 用邻接矩阵是 V 的平方，用邻接表是 V+E
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/assets/csdn-135039877/image-050-c9a9d40666.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/"><span class="l">上一篇</span>数据结构与算法 - 用有向无环图描述表达式</a><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/"><span class="l">下一篇</span>数据结构与算法 - AOV 网与 AOE 网、（逆）拓扑排序与关键路径</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#概述">概述</a><a class="d2" href="#生成树">生成树</a><a class="d2" href="#广度优先生成树">广度优先生成树</a><a class="d2" href="#深度优先生成树">深度优先生成树</a><a class="d2" href="#最小生成树-1">最小生成树</a><a class="d2" href="#prim-算法">Prim 算法</a><a class="d2" href="#kruskal-算法">Kruskal 算法</a><a class="d2" href="#prim-与-kruskal-对比">Prim 与 Kruskal 对比</a><a class="d3" href="#prim-的实现">Prim 的实现</a><a class="d3" href="#kruskal-的实现">Kruskal 的实现</a><a class="d2" href="#小结">小结</a><a class="d2" href="#单源最短路径问题">单源最短路径问题</a><a class="d3" href="#bfs-求无权图的单源最短路径">BFS 求无权图的单源最短路径</a><a class="d3" href="#小结-1">小结</a><a class="d3" href="#dijkstra-算法">Dijkstra 算法</a><a class="d2" href="#各顶点间的最短路径问题">各顶点间的最短路径问题</a><a class="d3" href="#floyd-算法">Floyd 算法</a><a class="d3" href="#小结-2">小结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

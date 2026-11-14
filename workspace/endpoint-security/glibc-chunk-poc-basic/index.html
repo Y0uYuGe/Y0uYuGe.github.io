@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>glibc-chunk-poc-basic · Y0uYuGe</title>
+<meta name="description" content="通过简短的 C 语言示例和分配器笔记，介绍 glibc 堆行为、bin 操作以及不同版本的利用技术。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/glibc-chunk-poc-basic" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a></nav>
+    <h1>glibc-chunk-poc-basic</h1>
+    <div class="meta"><time>2026-10-20</time><span class="tag">#C</span><span class="tag">#glibc</span><span class="tag">#GDB</span><span class="tag">#patchelf</span></div>
+    <article class="post-body">
+<h2 id="背景">背景</h2>
+<p>将一种技术简化为短小的分配序列，更容易理解 glibc 分配器的行为。本仓库收集了 C 语言概念验证程序，以及有关 chunk 元数据、分配器检查和调试的笔记。README 中注明了整个示例集所参考的已有堆利用资料。</p>
+<h2 id="实现与覆盖范围">实现与覆盖范围</h2>
+<p>源码目录按技术分类，包括 <code>unlink</code>、fastbin 双重释放、unsorted bin 和 large bin、堆块重叠，以及 tcache 操作。其他目录还研究了 IO 结构、退出处理及相关控制流目标。</p>
+<p>下面两个简短示例展示了这种研究方式：</p>
+<table>
+<thead>
+<tr>
+<th>示例</th>
+<th>代码展示的行为</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/Y0uYuGe/glibc-chunk-poc-basic/blob/main/fastbin_double_free/2.23.c"><code>fastbin_double_free/2.23.c</code></a></td>
+<td>重复释放及后续分配的序列，最后通过地址比较观察结果。</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Y0uYuGe/glibc-chunk-poc-basic/blob/main/tcache_poisoning/2.27.c"><code>tcache_poisoning/2.27.c</code></a></td>
+<td>修改已释放的条目，然后进行分配并打印目标地址。</td>
+</tr>
+</tbody></table>
+<p>示例使分配序列紧贴所研究的行为，便于对照分配器源码阅读，并在调试器中检查内存，不会将机制隐藏在更大的目标程序中。</p>
+<h2 id="环境与复现">环境与复现</h2>
+<p>版本标签是理解示例所需的背景。针对 glibc 2.23 或 2.27 编写的程序，应在对应的分配器和动态加载器环境中分析；宿主机默认 libc 的行为可能不同。</p>
+<p><a href="https://github.com/Y0uYuGe/glibc-chunk-poc-basic/blob/main/tcache_poisoning/start"><code>tcache_poisoning/start</code></a> 脚本使用 GCC 调试信息编译，通过 <code>patchelf</code> 修改 libc 依赖和解释器，然后打开 GDB。脚本中的绝对路径 <code>/home/llk/...</code> 需要替换为本地对应路径。README 还介绍了如何添加分配器源码和调试信息。</p>
+<h2 id="开发历史与笔记">开发历史与笔记</h2>
+<p><a href="https://github.com/Y0uYuGe/glibc-chunk-poc-basic/blob/main/README.md">阅读分配器笔记与参考资料</a> · <a href="https://github.com/Y0uYuGe/glibc-chunk-poc-basic/tree/main">浏览全部示例</a> · <a href="https://github.com/Y0uYuGe/glibc-chunk-poc-basic/commits/main/">查看仓库提交记录</a></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#背景">背景</a><a class="d2" href="#实现与覆盖范围">实现与覆盖范围</a><a class="d2" href="#环境与复现">环境与复现</a><a class="d2" href="#开发历史与笔记">开发历史与笔记</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

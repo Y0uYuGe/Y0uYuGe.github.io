@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据结构与算法 - AOV 网与 AOE 网、（逆）拓扑排序与关键路径 · Y0uYuGe</title>
+<meta name="description" content="然后开始出栈，直到栈空为止；每个出栈的顶点保存到输出数组中，把它所指向的顶点的入度减 1，并在此过程中把入度变为零的顶点压入栈中。所有活动的最迟发生时间必须由活动的执行时间和所有事件的最迟发生时间推导得出。所有事件的最迟发生时间并不等于所有活动的最迟发生时间。缩短到一定程度之后，再继续缩短就无法再缩短整个工程的工期了。所有事件的最早发生时间就是所有活动的最早发生时间。如果当前网中不存在没有前驱的顶点，则说明存在环。它必须是 DAG（有向无环图）；先把入度为 0 的顶点压入栈中。沿着关键路径反向推导。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/data-structures">数据结构</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms">数据结构与算法</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE">图</a></nav>
+    <h1>数据结构与算法 - AOV 网与 AOE 网、（逆）拓扑排序与关键路径</h1>
+    <div class="meta"><time>2023-12-17</time><span class="tag">#数据结构</span><span class="tag">#算法</span></div>
+    <article class="post-body">
+<h1 id="aov-网">AOV 网</h1>
+<p>它必须是 DAG（有向无环图）
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-001-def1b272eb.png" alt="图片"></p>
+<h1 id="拓扑排序">拓扑排序</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-002-0bb89bea3c.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-003-17ae014c8a.png" alt="图片">
+排序后的序列并不唯一
+如果当前网中不存在没有前驱的顶点，则说明存在环
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-004-5b5901dd0d.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-005-f6a5aa85d5.png" alt="图片"></p>
+<h1 id="代码实现">代码实现</h1>
+<p>这里使用邻接表进行存储
+先把入度为 0 的顶点压入栈中
+然后开始出栈，直到栈空为止；每个出栈的顶点保存到输出数组中，把它所指向的顶点的入度减 1，并在此过程中把入度变为零的顶点压入栈中 
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-006-cd1dd201de.png" alt="图片"></p>
+<h2 id="时间复杂度">时间复杂度</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-007-48463e55e4.png" alt="图片"></p>
+<h1 id="逆拓扑排序">逆拓扑排序</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-008-62ba4cd31e.png" alt="图片"></p>
+<h2 id="实现">实现</h2>
+<p>逆邻接表
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-009-a17b996c4c.png" alt="图片"></p>
+<h2 id="用-dfs-算法实现逆拓扑排序">用 DFS 算法实现逆拓扑排序</h2>
+<p> <img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-010-e767023061.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-011-901f50e168.png" alt="图片"></p>
+<h2 id="总结">总结</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-012-7429f15560.png" alt="图片"></p>
+<h1 id="aoe-网">AOE 网</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-013-c9ebbb9df5.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-014-7d5a4fa0c2.png" alt="图片"></p>
+<h2 id="关键路径">关键路径</h2>
+<p>下图中用红色标出了关键路径
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-015-78c3b3f42f.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-016-1b2dd3509b.png" alt="图片">
+沿着关键路径反向推导
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-017-d72076592b.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-018-969ab8057a.png" alt="图片"></p>
+<h2 id="求关键路径">求关键路径</h2>
+<p>所有事件的最早发生时间就是所有活动的最早发生时间
+所有事件的最迟发生时间并不等于所有活动的最迟发生时间
+所有活动的最迟发生时间必须由活动的执行时间和所有事件的最迟发生时间推导得出
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-019-4e24fe4045.png" alt="图片"></p>
+<h3 id="求事件的最早发生时间">求事件的最早发生时间</h3>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-020-45421bd09f.png" alt="图片"></p>
+<h3 id="求事件的最迟发生时间">求事件的最迟发生时间</h3>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-021-2b1979f2db.png" alt="图片"></p>
+<h3 id="求活动的最早发生时间">求活动的最早发生时间</h3>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-022-9fdcf4e261.png" alt="图片"></p>
+<h3 id="求活动的最迟发生时间">求活动的最迟发生时间</h3>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-023-8691684e74.png" alt="图片"></p>
+<h3 id="求活动的时间余量">求活动的时间余量</h3>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-024-a918e9d633.png" alt="图片"></p>
+<h2 id="关键活动与关键路径的性质">关键活动与关键路径的性质</h2>
+<p>缩短到一定程度之后，再继续缩短就无法再缩短整个工程的工期了</p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-025-eeb8856592.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-026-5fc2319aad.png" alt="图片"></p>
+<h2 id="总结-1">总结</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-027-98e6c8cb0e.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20AOV%20%E7%BD%91%E4%B8%8E%20AOE%20%E7%BD%91%E3%80%81%EF%BC%88%E9%80%86%EF%BC%89%E6%8B%93%E6%89%91%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84/assets/csdn-135045109/image-028-c07a032bbf.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/"><span class="l">上一篇</span>数据结构与算法 - 最小生成树（Prim 和 Kruskal）与最短路径问题（BFS、Dijkstra 和 Floyd）</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#时间复杂度">时间复杂度</a><a class="d2" href="#实现">实现</a><a class="d2" href="#用-dfs-算法实现逆拓扑排序">用 DFS 算法实现逆拓扑排序</a><a class="d2" href="#总结">总结</a><a class="d2" href="#关键路径">关键路径</a><a class="d2" href="#求关键路径">求关键路径</a><a class="d3" href="#求事件的最早发生时间">求事件的最早发生时间</a><a class="d3" href="#求事件的最迟发生时间">求事件的最迟发生时间</a><a class="d3" href="#求活动的最早发生时间">求活动的最早发生时间</a><a class="d3" href="#求活动的最迟发生时间">求活动的最迟发生时间</a><a class="d3" href="#求活动的时间余量">求活动的时间余量</a><a class="d2" href="#关键活动与关键路径的性质">关键活动与关键路径的性质</a><a class="d2" href="#总结-1">总结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

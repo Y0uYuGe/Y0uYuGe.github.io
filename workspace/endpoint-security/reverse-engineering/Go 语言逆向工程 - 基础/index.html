@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Go 语言逆向工程 - 基础 · Y0uYuGe</title>
+<meta name="description" content="Module 是比 Package 更高层的概念：一个 Module 可以包含多个不同的 Package，而每个 Package 又可以包含多个目录和许多源文件。Moduledata 条目可以串成一个链表，在一个完整的可执行 Go 二进制文件中，只有一个 firstmoduledata 包含上面展示的完整字段集合。一个 Module 可以包含多个不同的 Package，而每个 Package 又可以包含多个目录和许多源文件。该命令可以显示可执行文件的基本信息；如果调试信息已被剥离，……">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/reverse-engineering">逆向工程</a></nav>
+    <h1>Go 语言逆向工程 - 基础</h1>
+    <div class="meta"><time>2024-11-26</time><span class="tag">#golang</span><span class="tag">#编程语言</span><span class="tag">#后端</span></div>
+    <article class="post-body">
+<h1 id="go-编译参数-ldflags--w--s-的作用与问题">go 编译参数 ldflags -w -s 的作用与问题</h1>
+<p><a href="https://blog.csdn.net/Kevin_Gates/article/details/130107710">https://blog.csdn.net/Kevin_Gates/article/details/130107710</a>
+-ldflags 参数可以用来向编译器传递额外的参数。其中，-w 和 -s 是两个常用的参数。</p>
+<ul>
+<li>w：剥离 DWARF 调试信息。这会减小可执行文件的体积。</li>
+<li>s：剥离符号表信息。这会进一步减小可执行文件的体积。</li>
+</ul>
+<p>使用 <code>-ldflags &quot;-w -s&quot;</code> 参数编译出可执行文件之后，可以通过以下方式检查生成的可执行文件是否已经剥离了调试信息和符号表。</p>
+<h3 id="使用-file-命令检查文件类型">使用 <code>file</code> 命令检查文件类型</h3>
+<p><code>file</code> 命令可以显示可执行文件的基本信息；如果调试信息已被剥离，<code>file</code> 的输出中就不应提到调试符号。
+<img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-001-1e9c6f7607.png" alt="图片"></p>
+<h1 id="go-语言逆向相关参考资料">Go 语言逆向相关参考资料</h1>
+<p><a href="https://www.cnblogs.com/lordtianqiyi/articles/16315905.html">https://www.cnblogs.com/lordtianqiyi/articles/16315905.html</a>
+<a href="https://forum.butian.net/share/1874">https://forum.butian.net/share/1874</a>
+<a href="https://jiayu0x.com/2020/09/28/go-binary-reverse-engineering-tips-and-example/">https://jiayu0x.com/2020/09/28/go-binary-reverse-engineering-tips-and-example/</a>
+<a href="https://xz.aliyun.com/t/9015?time__1311=n4%2bxnD0DuAitG=DODy7DlhjmE3biDBn7QZDWqAID">推荐阅读：从正向开发角度理解 Go 逆向</a>
+<a href="https://zu1k.com/posts/security/reverse/golang-reverse/">Golang 逆向资料合集</a></p>
+<p><a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-garbage-collector/">Go 语言设计与实现</a></p>
+<h1 id="go-id">go ID</h1>
+<p>Build ID 是 Go 二进制文件中的元数据之一</p>
+<pre><code class="language-cpp">llk@ubuntu:~/Desktop/go-reverse/basic$ go tool buildid basic
+-VH5aOSX9mVrJNbHxruF/FwnNtemK3U4RER9TE7_8/5x300ikDrpjLHazn79N3/ftLrOMaMAByiPF3chfMM
+</code></pre>
+<p>无论是用 gccgo 还是 go 编译的，都可以通过 <code>file</code> 或 <code>readelf -n</code> 看到 BuildID</p>
+<h1 id="版本">版本</h1>
+<pre><code class="language-bash">一、查看版本号
+go version xx.exe
+二、查看地址以及依赖库
+go version -m xxx.exe
+</code></pre>
+<h1 id="goroot-与-gopath">GOROOT 与 GOPATH</h1>
+<ul>
+<li><strong><code>GOROOT</code></strong>：主要是 Go 工具链的位置；通常不需要手动修改。</li>
+<li><strong><code>GOPATH</code></strong>：用来管理和组织用户的 Go 项目；可以根据需要进行设置和修改，方便管理不同的工作区。</li>
+</ul>
+<h3 id="goroot">GOROOT</h3>
+<ul>
+<li><strong>定义</strong>：<code>GOROOT</code> 是 Go 的安装目录。它指向包含 Go 工具链、标准库源码、编译器等内容的目录。</li>
+<li><strong>默认值</strong>：安装 Go 时，<code>GOROOT</code> 通常会自动设置为安装路径。例如，通过官方安装程序安装 Go 时，<code>GOROOT</code> 可能是 <code>/usr/local/go</code>（类 Unix 系统）或 <code>C:\Go</code>（Windows）。</li>
+<li><strong>作用</strong>：<ul>
+<li>存放 Go 编译器和工具链。</li>
+<li>包含标准库源码。</li>
+<li>Go 工具使用 <code>GOROOT</code> 来定位编译器、链接器等工具，以及标准库源码。</li>
+</ul>
+</li>
+</ul>
+<h3 id="gopath">GOPATH</h3>
+<ul>
+<li><strong>定义</strong>：<code>GOPATH</code> 是 Go 项目的工作目录。它指向开发者的工作空间，可以包含多个目录。</li>
+<li><strong>默认值</strong>：如果没有设置 <code>GOPATH</code>，默认通常是用户主目录下的 <code>go</code> 目录（例如 <code>$HOME/go</code>）。</li>
+<li><strong>结构</strong>：<code>GOPATH</code> 目录通常包含三个子目录：<ul>
+<li><code>src</code>：存放源代码。</li>
+<li><code>pkg</code>：存放编译后的包对象文件。</li>
+<li><code>bin</code>：存放编译后生成的可执行文件。</li>
+</ul>
+</li>
+<li><strong>作用</strong>：<ul>
+<li>用于存放和组织用户的 Go 代码。</li>
+<li><code>go get</code> 命令会把依赖包下载到 <code>GOPATH</code> 的 <code>src</code> 目录中。</li>
+<li>编译时，Go 工具会在 <code>GOPATH</code> 中查找包的源代码。</li>
+</ul>
+</li>
+</ul>
+<h3 id="goroot-与-gopath-的关系">GOROOT 与 GOPATH 的关系</h3>
+<ul>
+<li><code>GOROOT</code> 是 Go 工具链的安装目录，包含标准库。</li>
+<li><code>GOPATH</code> 是用户的工作空间目录，包含用户的代码和第三方库。</li>
+</ul>
+<h3 id="示例">示例</h3>
+<p>假设你在 <code>$HOME/go_projects</code> 下开发一个项目：</p>
+<ol>
+<li><p>你可以把 <code>GOPATH</code> 设置为 <code>$HOME/go_projects</code>：</p>
+<pre><code class="language-sh">export GOPATH=$HOME/go_projects
+</code></pre>
+</li>
+<li><p>你的项目目录结构可能是这样的：</p>
+<pre><code>$HOME/go_projects/
+    src/
+        github.com/
+            yourusername/
+                yourproject/
+                    main.go
+    pkg/
+    bin/
+</code></pre>
+</li>
+<li><p>编译你的项目：</p>
+<pre><code class="language-sh">cd $HOME/go_projects/src/github.com/yourusername/yourproject
+go build
+</code></pre>
+</li>
+</ol>
+<p>编译后的可执行文件会出现在 <code>$HOME/go_projects/bin</code> 目录中。</p>
+<h1 id="go-build-与-go-mod">go build 与 go mod</h1>
+<pre><code class="language-cpp">go build命令用来启动编译，它可以将Go语言程序与相关依赖编译成一个可执行文件，其语法格式如下。
+go build fileName  -o 可执行程序名
+其中 fileName 为所需要的参数，可以是一个或者多个 Go 源文件名（当有多个参数时需要使用空格将两个相邻的参数隔开），也可以省略不写。
+使用 go build 命令进行编译时，不同参数的执行结果也是不同的。
+</code></pre>
+<p>编译一个 Go 程序同样也是一个编译和链接的过程</p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-002-b5f76de68d.png" alt="图片">
+<a href="https://juejin.cn/post/6914195712737542157">golang 包管理工具----go mod</a></p>
+<p>一个 Module 可以包含多个不同的 Package，而每个 Package 又可以包含多个目录和许多源文件。</p>
+<pre><code class="language-cpp">Module :moduledata 里面有pclntab 全名是 Program Counter Line Table
+</code></pre>
+<h1 id="pclntab程序计数器行号表">pclntab（程序计数器行号表）</h1>
+<p>它对应源码中的 pcHeader 结构体，位于 <code>src/runtime/symtab.go</code></p>
+<pre><code class="language-cpp">// pcHeader 包含 pclntab 查找使用的数据。
+type pcHeader struct {
+        magic          uint32  // 0xFFFFFFF1: 用于识别 pcHeader 结构的魔数。
+        pad1, pad2     uint8   // 0,0: 对齐结构在内存中的填充字节。
+        minLC          uint8   // 架构的最小指令大小。
+        ptrSize        uint8   // 指针的字节大小（取决于 32 位或 64 位架构）。
+        nfunc          int     // 模块中的函数数量。
+        nfiles         uint    // 文件表中的条目数量（模块中的源文件数量）。
+        textStart      uintptr // 功能入口 PC 偏移的基地址，等于 moduledata.text。
+        funcnameOffset uintptr // 从 pcHeader 开始到 funcnametab 变量的偏移量，包含函数名。
+        cuOffset       uintptr // 从 pcHeader 开始到 cutab 变量的偏移量，用于编译单元信息。
+        filetabOffset  uintptr // 从 pcHeader 开始到 filetab 变量的偏移量，包含文件名。
+        pctabOffset    uintptr // 从 pcHeader 开始到 pctab 变量的偏移量，用于 PC 数据表。
+        pclnOffset     uintptr // 从 pcHeader 开始到 pclntab 变量的偏移量，用于 PC 到行号的映射。
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-003-aa7c929ece.png" alt="图片"></p>
+<ol>
+<li><p><strong>cu_offset</strong>：</p>
+<ul>
+<li><code>cu_offset</code> 是编译单元的偏移量。</li>
+<li>在 <code>gopclntab</code> 中，一个编译单元是一个包含函数信息、行号表等内容的大块。</li>
+<li><code>cu_offset</code> 指的是当前函数在该编译单元中的偏移位置。</li>
+</ul>
+</li>
+<li><p><strong>pctab</strong>：</p>
+<ul>
+<li><code>pctab</code> 是一个存储程序计数器（PC）与行号之间映射关系的表。</li>
+<li>这种映射关系使得在运行时能够从某个 PC 值反查出对应的源码行号，便于调试和错误处理。</li>
+</ul>
+</li>
+<li><p><strong>runtime_pclntab</strong>：</p>
+<ul>
+<li><code>runtime_pclntab</code> 是整个 <code>gopclntab</code> 的起始点或基址。</li>
+<li>它是一张全局表，包含所有函数的 PC 到函数信息的映射。</li>
+</ul>
+</li>
+<li><p><strong>dq offset cu_offset - offset runtime_pclntab</strong>：</p>
+<ul>
+<li>这表示当前函数的 <code>cu_offset</code> 减去全局 <code>runtime_pclntab</code> 的偏移量，得到一个具体的偏移值。</li>
+<li>这个偏移值用来在整个 <code>gopclntab</code> 结构中定位当前函数。</li>
+</ul>
+</li>
+<li><p><strong>dq offset pctab - offset runtime_pclntab</strong>：</p>
+<ul>
+<li>这表示当前函数的 <code>pctab</code> 减去全局 <code>runtime_pclntab</code> 的偏移量。</li>
+<li>这个偏移值用来在整个 <code>gopclntab</code> 结构中定位 <code>pctab</code>。</li>
+</ul>
+</li>
+</ol>
+<p>函数表
+函数地址偏移是相对于函数表中第一个函数的地址
+<img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-004-fe5faf8a9e.png" alt="图片">
+源文件表
+<img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-005-400df44bca.png" alt="图片"></p>
+<h1 id="moduledata">Moduledata</h1>
+<p>Module 是比 Package 更高层的概念：一个 Module 可以包含多个不同的 Package，而每个 Package 又可以包含多个目录和许多源文件。</p>
+<p>相应地，Moduledata 也是 Go 二进制文件中一个更高层的数据结构，包含了许多其他结构的索引信息</p>
+<p>根据 Moduledata 的定义，源码路径是 <code>src/runtime/symtab.go</code></p>
+<pre><code class="language-cpp">type moduledata struct {
+        sys.NotInHeap // 仅用于静态数据
+
+        // 指向pcHeader结构的指针，包含程序计数器的头信息
+        pcHeader     *pcHeader
+        funcnametab  []byte      // 函数名称表
+        cutab        []uint32    // 编译单元表
+        filetab      []byte      // 文件表
+        pctab        []byte      // 程序计数器表
+        pclntable    []byte      // PC到行号的映射表
+        ftab         []functab   // 函数表
+        findfunctab  uintptr     // findfunctab函数的起始地址
+        minpc, maxpc uintptr     // 代码段的起始和结束地址
+
+        text, etext           uintptr // 代码段的起始和结束地址
+        noptrdata, enoptrdata uintptr // 不包含指针的数据段的起始和结束地址
+        data, edata           uintptr // 数据段的起始和结束地址
+        bss, ebss             uintptr // BSS段的起始和结束地址
+        noptrbss, enoptrbss   uintptr // 不包含指针的BSS段的起始和结束地址
+        covctrs, ecovctrs     uintptr // 覆盖计数器的起始和结束地址
+        end, gcdata, gcbss    uintptr // 结束地址，GC数据，GC BSS
+        types, etypes         uintptr // 类型信息的起始和结束地址
+        rodata                uintptr // 只读数据段的起始地址
+        gofunc                uintptr // go.func.*
+
+        textsectmap []textsect // 文本段映射
+        typelinks   []int32    // 类型链接信息，存储类型偏移
+        itablinks   []*itab    // 接口表链接
+
+        ptab []ptabEntry // P 表
+
+        pluginpath string       // 插件路径
+        pkghashes  []modulehash // 包哈希信息
+
+        // 这个切片记录了启动程序所需的初始化任务。由链接器构建。
+        inittasks []*initTask
+
+        modulename   string       // 模块名
+        modulehashes []modulehash // 模块哈希信息
+
+        hasmain uint8 // 如果模块包含main函数，则值为1，否则为0
+
+        gcdatamask, gcbssmask bitvector // GC数据和BSS段的位向量
+
+        typemap map[typeOff]*_type // 前一个模块中从偏移量到*_rtype的映射
+
+        bad bool // 模块加载失败，应被忽略
+
+        next *moduledata // 指向下一个模块的指针
+}
+</code></pre>
+<p>Moduledata 条目可以串成一个链表，在一个完整的可执行 Go 二进制文件中，只有一个 firstmoduledata 包含上面展示的完整字段集合</p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-006-a78343f64d.png" alt="图片"></p>
+<h1 id="程序启动">程序启动</h1>
+<p><a href="https://juejin.cn/post/7035633561805783070">Golang 程序启动流程</a></p>
+<blockquote>
+<p>rt0_amd64_linux-&gt;rt0_amd64-&gt;runtime_rt0_go
+rt0_go 代码相当长，可以分为两部分。第一部分处理系统参数获取和运行时检查。第二部分是 Go 程序启动的核心；整体启动流程如下
+<img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-007-a847cfba44.png" alt="图片">
+执行 runtime.main 主要完成以下工作：</p>
+</blockquote>
+<ol>
+<li><p>启动系统后台监控 sysmon 线程</p>
+</li>
+<li><p>执行 runtime 包内的 init</p>
+</li>
+<li><p>启动 GC</p>
+</li>
+<li><p>执行用户包依赖的 init</p>
+</li>
+<li><p>执行用户的 main.main 方法</p>
+</li>
+<li><p><strong><code>rt0_go</code> 函数</strong></p>
+<ul>
+<li>程序启动时，Go 运行时的入口点是 <code>rt0_go</code> 函数。该函数负责初始化运行时环境。</li>
+</ul>
+</li>
+<li><p><strong><code>schedinit</code>：初始化运行时组件</strong></p>
+<ul>
+<li><code>rt0_go</code> 调用 <code>runtime_schedinit_0</code> 来初始化调度器、内存分配器、垃圾回收器等。</li>
+<li><strong>调度器初始化</strong>：初始化调度器，为管理 Goroutine 的创建、调度和执行做准备。</li>
+<li><strong>内存分配器初始化</strong>：初始化堆内存管理，为 Goroutine 和程序数据分配内存。</li>
+<li><strong>垃圾回收器初始化</strong>：初始化垃圾回收器，自动管理内存的分配和回收。</li>
+</ul>
+</li>
+<li><p><strong><code>newproc</code>：创建主 Goroutine</strong></p>
+<ul>
+<li><code>rt0_go</code> 调用 <code>runtime_newproc_0</code> 来创建主 Goroutine。主 Goroutine 的入口函数是 <code>runtime.main</code>，而不是用户的 <code>main</code> 函数。</li>
+<li><strong>创建 Goroutine</strong>：<code>newproc</code> 函数负责创建一个新的 Goroutine，并将其加入调度器的队列。这个 Goroutine 的入口函数就是 <code>runtime.main</code>。</li>
+</ul>
+</li>
+<li><p><strong><code>mstart</code>：启动调度器的调度循环</strong></p>
+<ul>
+<li><code>rt0_go</code> 调用 <code>runtime_mstart</code> 来启动主线程。主线程执行 <code>runtime.main</code> 函数。</li>
+<li><strong>调度循环</strong>：<code>mstart</code> 函数启动调度器的调度循环，开始执行队列中的 Goroutine。首先执行的 Goroutine 就是入口方法为 <code>runtime.main</code> 的 G。</li>
+</ul>
+</li>
+<li><p><strong><code>runtime.main</code>：执行初始化并运行用户的 <code>main</code> 函数</strong></p>
+<ul>
+<li><code>runtime.main</code> 函数首先会执行一些必要的初始化操作，例如设置全局变量、初始化标准库。</li>
+<li>然后，<code>runtime.main</code> 调用用户的 <code>main</code> 函数。</li>
+</ul>
+</li>
+</ol>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/"><span class="l">上一篇</span>使用 IDA：以 2023 年 CISCN 中南赛区 pwn 题为例进行逆向分析</a><a href="/workspace/endpoint-security/reverse-engineering/Protobuf%EF%BC%88%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%E4%BB%A5%E5%8F%8A%20IDA%20%E4%B8%AD%20Protobuf%20%E8%A7%A3%E5%8C%85%E7%9A%84%E9%80%86%E5%90%91%E8%AF%86%E5%88%AB%E4%B8%8E%E5%A4%8D%E7%94%A8%EF%BC%89/"><span class="l">下一篇</span>Protobuf（基本使用以及 IDA 中 Protobuf 解包的逆向识别与复用）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d3" href="#使用-file-命令检查文件类型">使用 file 命令检查文件类型</a><a class="d3" href="#goroot">GOROOT</a><a class="d3" href="#gopath">GOPATH</a><a class="d3" href="#goroot-与-gopath-的关系">GOROOT 与 GOPATH 的关系</a><a class="d3" href="#示例">示例</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

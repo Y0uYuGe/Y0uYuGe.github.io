@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - TCP/IP 模型与五层参考模型（OSI 与 TCP/IP 的异同、五层参考模型、数据的封装与解封装） · Y0uYuGe</title>
+<meta name="description" content="传输层：TCP/IP 也提供无连接服务，是出于实际效率需求的考虑；OSI 是更严谨的标准，所以没有无连接服务。网络层：TCP/IP 只有无连接服务而没有面向连接服务，同样是考虑到实际效率需求，所以没有面向连接的功能。传输层是端到端的，具有可靠传输的功能，即面向连接的功能。异构网络互联：使不同厂商生产的设备能够互相通信。TCP/IP：基于协议栈分层。网络接口层：数据链路层和物理层。TCP/IP：先有实践，后有理论。OSI：先有理论，但没有实践。五层参考模型相当于兼顾了严谨性与实用性。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20TCP%20-%20IP%20%E6%A8%A1%E5%9E%8B%E4%B8%8E%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%EF%BC%88OSI%20%E4%B8%8E%20TCP%20-%20IP%20%E7%9A%84%E5%BC%82%E5%90%8C%E3%80%81%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84">计算机网络体系结构</a></nav>
+    <h1>计算机网络 - TCP/IP 模型与五层参考模型（OSI 与 TCP/IP 的异同、五层参考模型、数据的封装与解封装）</h1>
+    <div class="meta"><time>2024-01-22</time><span class="tag">#计算机网络</span><span class="tag">#tcp-ip</span><span class="tag">#网络协议</span></div>
+    <article class="post-body">
+<h1 id="osi-与-tcpip">OSI 与 TCP/IP</h1>
+<p>OSI：先有理论，但没有实践
+TCP/IP：先有实践，后有理论
+TCP/IP：基于协议栈分层
+网络接口层：数据链路层和物理层
+应用层：包含上面三层</p>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20TCP%20-%20IP%20%E6%A8%A1%E5%9E%8B%E4%B8%8E%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%EF%BC%88OSI%20%E4%B8%8E%20TCP%20-%20IP%20%E7%9A%84%E5%BC%82%E5%90%8C%E3%80%81%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83/assets/csdn-135753176/image-001-df014fde47.png" alt="图片"></p>
+<h1 id="osi-与-tcpip-的相同点">OSI 与 TCP/IP 的相同点</h1>
+<p>异构网络互联：使不同厂商生产的设备能够互相通信</p>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20TCP%20-%20IP%20%E6%A8%A1%E5%9E%8B%E4%B8%8E%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%EF%BC%88OSI%20%E4%B8%8E%20TCP%20-%20IP%20%E7%9A%84%E5%BC%82%E5%90%8C%E3%80%81%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83/assets/csdn-135753176/image-002-e2813b59d7.png" alt="图片"></p>
+<h1 id="osi-与-tcpip-的不同点">OSI 与 TCP/IP 的不同点</h1>
+<p>IP 协议是无连接的
+传输层是端到端的，具有可靠传输的功能，即面向连接的功能</p>
+<p>传输层：TCP/IP 也提供无连接服务，是出于实际效率需求的考虑；OSI 是更严谨的标准，所以没有无连接服务
+网络层：TCP/IP 只有无连接服务而没有面向连接服务，同样是考虑到实际效率需求，所以没有面向连接的功能</p>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20TCP%20-%20IP%20%E6%A8%A1%E5%9E%8B%E4%B8%8E%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%EF%BC%88OSI%20%E4%B8%8E%20TCP%20-%20IP%20%E7%9A%84%E5%BC%82%E5%90%8C%E3%80%81%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83/assets/csdn-135753176/image-003-4678f0e385.png" alt="图片"></p>
+<h1 id="五层参考模型">五层参考模型</h1>
+<p>它相当于兼顾了严谨性与实用性
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20TCP%20-%20IP%20%E6%A8%A1%E5%9E%8B%E4%B8%8E%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%EF%BC%88OSI%20%E4%B8%8E%20TCP%20-%20IP%20%E7%9A%84%E5%BC%82%E5%90%8C%E3%80%81%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83/assets/csdn-135753176/image-004-6c1ee680e3.png" alt="图片"></p>
+<h1 id="五层参考模型中的数据封装与解封装">五层参考模型中的数据封装与解封装</h1>
+<p>应用层形成报文
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20TCP%20-%20IP%20%E6%A8%A1%E5%9E%8B%E4%B8%8E%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%EF%BC%88OSI%20%E4%B8%8E%20TCP%20-%20IP%20%E7%9A%84%E5%BC%82%E5%90%8C%E3%80%81%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83/assets/csdn-135753176/image-005-81a1219bfc.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20TCP%20-%20IP%20%E6%A8%A1%E5%9E%8B%E4%B8%8E%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%EF%BC%88OSI%20%E4%B8%8E%20TCP%20-%20IP%20%E7%9A%84%E5%BC%82%E5%90%8C%E3%80%81%E4%BA%94%E5%B1%82%E5%8F%82%E8%80%83/assets/csdn-135753176/image-006-0fb9bb48d4.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20OSI%20%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%B1%E6%9D%A5%E3%80%81%E9%80%9A%E4%BF%A1%E8%BF%87%E7%A8%8B%E3%80%81%E9%80%90%E5%B1%82%E5%88%86%E6%9E%90%EF%BC%89/"><span class="l">上一篇</span>计算机网络 - OSI 参考模型（由来、通信过程、逐层分析）</a><span></span></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

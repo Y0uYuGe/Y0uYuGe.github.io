@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统 - 调度的概念与层次（低／中／高级调度、挂起状态与七状态模型）及进程调度的过程、时机、切换与方式（临界区、进程调度的时机／方式／切换与过程） · Y0uYuGe</title>
+<meta name="description" content="狭义的进程调度是从就绪队列中选一个进程来运行；被选中的进程可能就是刚被挂起又放回就绪队列的那个，这种情况不需要进程切换，因为还是同一个进程。如果是另一个进程，就需要进程切换（因为是不同的进程）。当一个就绪进程被换出到外存时，就进入就绪挂起状态；当它需要再次运行时，就把它的内容激活，也就是重新换入内存，回到就绪状态。中断处理过程中的进程切换是指从中断处理程序跳转到另一个程序。“保存”是指保存到进程控制块（PCB）中；“恢复”是指从 PCB 中读出相应的信息并恢复。切换频率越高，并发程度就越高。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6">处理机调度</a></nav>
+    <h1>操作系统 - 调度的概念与层次（低／中／高级调度、挂起状态与七状态模型）及进程调度的过程、时机、切换与方式（临界区、进程调度的时机／方式／切换与过程）</h1>
+    <div class="meta"><time>2024-01-29</time><span class="tag">#操作系统</span></div>
+    <article class="post-body">
+<h1 id="调度的概念与层次">调度的概念与层次</h1>
+<h2 id="概述">概述</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-001-c4dd3e1b35.png" alt="图片"></p>
+<h2 id="调度的基本概念">调度的基本概念</h2>
+<p>这是一个资源分配的问题
+<img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-002-848318f73a.png" alt="图片"></p>
+<h2 id="三个层次的调度---高级调度">三个层次的调度 - 高级调度</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-003-ec773a476b.png" alt="图片"></p>
+<h2 id="三个层次的调度---低级调度">三个层次的调度 - 低级调度</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-004-dae4031dd7.png" alt="图片"></p>
+<h2 id="三个层次的调度---中级调度">三个层次的调度 - 中级调度</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-005-e10df8810a.png" alt="图片"></p>
+<h2 id="补充挂起状态与七状态模型">补充：挂起状态与七状态模型</h2>
+<p>当一个就绪进程被换出到外存时，就进入就绪挂起状态；当它需要再次运行时，就把它的内容激活，也就是重新换入内存，回到就绪状态
+阻塞状态也是同理</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-006-848d112e59.png" alt="图片"></p>
+<h2 id="三个层次调度的关系与比较">三个层次调度的关系与比较</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-007-68d63498cc.png" alt="图片"></p>
+<h2 id="总结">总结</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-008-c8c1db504a.png" alt="图片"></p>
+<h1 id="进程调度的过程时机切换与方式">进程调度的过程、时机、切换与方式</h1>
+<h2 id="概述-1">概述</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-009-2ebdd3e666.png" alt="图片"></p>
+<h2 id="进程调度的时机">进程调度的时机</h2>
+<p>中断处理过程中的进程切换是指从中断处理程序跳转到另一个程序
+<img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-010-6486d16b99.png" alt="图片"></p>
+<h2 id="临界区">临界区</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-011-4a66c42fe2.png" alt="图片"></p>
+<h2 id="进程调度的方式">进程调度的方式</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-012-9bbbe54c1a.png" alt="图片"></p>
+<h2 id="进程切换及其过程">进程切换及其过程</h2>
+<p>狭义的进程调度是从就绪队列中选一个进程来运行；被选中的进程可能就是刚被挂起又放回就绪队列的那个，这种情况不需要进程切换，因为还是同一个进程。如果是另一个进程，就需要进程切换（因为是不同的进程）</p>
+<p>“保存”是指保存到进程控制块（PCB）中
+“恢复”是指从 PCB 中读出相应的信息并恢复</p>
+<p>切换频率越高，并发程度就越高</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-013-d8ff8699db.png" alt="图片"></p>
+<h2 id="总结-1">总结</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%B1%82%E6%AC%A1%EF%BC%88%E4%BD%8E%EF%BC%8F%E4%B8%AD%EF%BC%8F%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6%E3%80%81%E6%8C%82%E8%B5%B7%E7%8A%B6%E6%80%81%E4%B8%8E%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%89%E5%8F%8A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E8%BF%87%E7%A8%8B%E3%80%81%E6%97%B6%E6%9C%BA%E3%80%81%E5%88%87%E6%8D%A2/assets/csdn-135888028/image-014-3d2b9fbc89.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/software-foundations/operating-systems/fundamentals/03-%E5%A4%84%E7%90%86%E6%9C%BA%E8%B0%83%E5%BA%A6/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%B0%83%E5%BA%A6%E5%99%A8%E4%B8%8E%E7%A9%BA%E9%97%B2%E8%BF%9B%E7%A8%8B%EF%BC%88%E8%B0%83%E5%BA%A6%E5%99%A8%E4%B8%8E%E8%BF%9B%E7%A8%8B%EF%BC%8F%E7%BA%BF%E7%A8%8B%E8%B0%83%E5%BA%A6%EF%BC%89%E5%8F%8A%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95%E7%9A%84%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%88CPU%20%E5%88%A9%E7%94%A8%E7%8E%87%E3%80%81%E7%B3%BB%E7%BB%9F%E5%90%9E/"><span class="l">下一篇</span>操作系统 - 调度器与空闲进程（调度器与进程／线程调度）及调度算法的评价指标（CPU 利用率、系统吞吐量、周转时间、等待时间、响应时间）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#概述">概述</a><a class="d2" href="#调度的基本概念">调度的基本概念</a><a class="d2" href="#三个层次的调度---高级调度">三个层次的调度 - 高级调度</a><a class="d2" href="#三个层次的调度---低级调度">三个层次的调度 - 低级调度</a><a class="d2" href="#三个层次的调度---中级调度">三个层次的调度 - 中级调度</a><a class="d2" href="#补充挂起状态与七状态模型">补充：挂起状态与七状态模型</a><a class="d2" href="#三个层次调度的关系与比较">三个层次调度的关系与比较</a><a class="d2" href="#总结">总结</a><a class="d2" href="#概述-1">概述</a><a class="d2" href="#进程调度的时机">进程调度的时机</a><a class="d2" href="#临界区">临界区</a><a class="d2" href="#进程调度的方式">进程调度的方式</a><a class="d2" href="#进程切换及其过程">进程切换及其过程</a><a class="d2" href="#总结-1">总结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

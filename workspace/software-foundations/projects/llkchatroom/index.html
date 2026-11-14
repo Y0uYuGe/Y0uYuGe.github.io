@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llkchatroom · Y0uYuGe</title>
+<meta name="description" content="An Android chat client and Java socket server for text and file exchange on a local network. Separate connections handle messages and binary transfers.">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/projects/llkchatroom" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/projects">项目</a></nav>
+    <h1>llkchatroom</h1>
+    <div class="meta"><time>2026-10-20</time><span class="tag">#Java</span><span class="tag">#Android</span><span class="tag">#TCP sockets</span><span class="tag">#Gradle</span></div>
+    <article class="post-body">
+<h2 id="background">Background</h2>
+<p>A small chat application makes network programming tangible: a user action becomes a message, a server forwards it, and another device updates its interface. llkchatroom explores that path through an Android client and a Java server, including text and file exchange over a local network.</p>
+<p>The repository contains the Android application under <code>app/</code>, the socket server under <code>server/</code>, and a README explaining the communication flow with code examples.</p>
+<h2 id="implementation">Implementation</h2>
+<p>The server opens two TCP listeners: port <code>8848</code> for messages and port <code>18848</code> for file transfers. Each accepted connection is assigned a worker thread. The message worker reads text lines and forwards them to connected message clients; the file worker receives file metadata and bytes, stores the transfer, and relays it to file clients.</p>
+<p>On Android, <code>ClientThread</code> and <code>FileThread</code> manage the two connections. Handlers and Loopers carry work between the interface and network threads, while a RecyclerView displays sent and received messages. The login screen records a display name and the device&#39;s local address. Text records include those fields alongside the message content.</p>
+<p>File transfers use a separate path with a filename, a declared length, byte-stream operations, and an end marker. Pictures, video, and audio travel through this generic file mechanism. The implementation provides a compact case study in message framing, connection handling, and coordinating network work with an Android interface.</p>
+<h2 id="inspect-the-work">Inspect the work</h2>
+<ul>
+<li><a href="https://github.com/Y0uYuGe/llkchatroom/tree/main/app/src/main/java/com/example/chatroom">Android client</a>: activities, message model, adapter, and socket threads.</li>
+<li><a href="https://github.com/Y0uYuGe/llkchatroom/tree/main/server">Server implementation</a>: listeners and message/file relay workers.</li>
+<li><a href="https://github.com/Y0uYuGe/llkchatroom/blob/main/README.md">Protocol walkthrough</a>: setup steps and explanations of the client/server code.</li>
+<li><a href="https://github.com/Y0uYuGe/llkchatroom/commits/main/">Development history</a>: changes recorded in the repository.</li>
+</ul>
+<h2 id="running-the-project">Running the project</h2>
+<p>Use Android Studio and the repository&#39;s Gradle project for the client, plus a Java environment for the server. The checked-in Android configuration uses compile/target SDK <code>34</code> and minimum SDK <code>21</code>.</p>
+<p>Start the server on a reachable computer, set the server address in both Android connection classes, and place the devices on the same network. Adjust the server&#39;s file-storage path for the host machine and permit access to the two listening ports. The README describes a phone-and-computer hotspot setup for trying the application.</p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/projects/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%8F%AF%E4%BB%A5%E5%8F%91%E9%80%81%E6%B6%88%E6%81%AF%E3%80%81%E8%AF%AD%E9%9F%B3%E3%80%81%E5%9B%BE%E7%89%87%E3%80%81%E8%A7%86%E9%A2%91%E5%92%8C%E8%A1%A8%E6%83%85%E5%8C%85%EF%BC%88%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%EF%BC%89%E7%9A%84%E8%81%8A%E5%A4%A9%E5%AE%A4/"><span class="l">上一篇</span>实现一个可以发送消息、语音、图片、视频和表情包（任意文件）的聊天室</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#background">Background</a><a class="d2" href="#implementation">Implementation</a><a class="d2" href="#inspect-the-work">Inspect the work</a><a class="d2" href="#running-the-project">Running the project</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

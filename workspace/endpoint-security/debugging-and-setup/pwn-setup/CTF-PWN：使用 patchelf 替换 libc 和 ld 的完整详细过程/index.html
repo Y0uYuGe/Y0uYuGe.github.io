@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-PWN：使用 patchelf 替换 libc 和 ld 的完整详细过程 · Y0uYuGe</title>
+<meta name="description" content="ldd 可执行文件名：第一行不用管；第二行是 libc，libc 是 C 标准库；第三行是 ld，ld 是动态链接器。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/debugging-and-setup">调试与环境</a><span class="sep">›</span><a href="/#/endpoint-security/debugging-and-setup/pwn-setup">Pwn 环境</a></nav>
+    <h1>CTF-PWN：使用 patchelf 替换 libc 和 ld 的完整详细过程</h1>
+    <div class="meta"><time>2023-11-05</time><span class="tag">#网络安全</span><span class="tag">#安全</span><span class="tag">#系统安全</span><span class="tag">#学习</span><span class="tag">#Pwn</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<h1 id="查看当前链接情况">查看当前链接情况</h1>
+<pre><code class="language-bash">ldd 可执行文件名
+</code></pre>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-001-029b89d32b.png" alt="图片">
+第一行不用管
+第二行是 libc，libc 是 C 标准库
+第三行是 ld，ld 是动态链接器</p>
+<h1 id="查看当前-libc-和-ld-的版本">查看当前 libc 和 ld 的版本</h1>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-002-46f3e97b2c.png" alt="图片"></p>
+<h1 id="查看正确对应的-libc-和-ld-版本">查看正确对应的 libc 和 ld 版本</h1>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-003-e5eb5fd8bf.png" alt="图片">
+是 2.31-0ubuntu9.9，与当前的不一致</p>
+<h1 id="在-glibc-all-in-one-中下载对应或相近的版本">在 glibc-all-in-one 中下载对应或相近的版本</h1>
+<p>查看是否有对应版本
+<img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-004-b620833db8.png" alt="图片">
+下载
+<img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-005-3a408d802b.png" alt="图片"></p>
+<h1 id="使用-patchelf-修改-libc-和-ld">使用 patchelf 修改 libc 和 ld</h1>
+<pre><code class="language-bash">patchelf --set-interpreter 新的ld文件的路径 当前程序名
+</code></pre>
+<p>``<img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-006-0fae858d96.png" alt="图片">
+ld 已修改
+<img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-007-fde4f7a674.png" alt="图片"></p>
+<pre><code class="language-bash">patchelf --replace-needed 原来第二行的==&gt;前的libc名 新的libc文件的路径
+</code></pre>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-008-79f0f47da8.png" alt="图片">
+libc 已修改
+<img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-009-d35bdb60f4.png" alt="图片"></p>
+<h1 id="测试程序能否正常运行">测试程序能否正常运行</h1>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN%EF%BC%9A%E4%BD%BF%E7%94%A8%20patchelf%20%E6%9B%BF%E6%8D%A2%20libc%20%E5%92%8C%20ld%20%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B/assets/csdn-134234465/image-010-eeaabae07c.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/debugging-and-setup/pwn-setup/CTF-PWN-%E5%B7%A5%E5%85%B7%E9%85%8D%E7%BD%AE/"><span class="l">上一篇</span>CTF-PWN-工具配置</a><a href="/workspace/endpoint-security/debugging-and-setup/pwn-setup/Kali%20%E4%B8%AD%E4%B8%80%E7%AB%99%E5%BC%8F%E6%90%AD%E5%BB%BA%20pwn%20%E7%8E%AF%E5%A2%83/"><span class="l">下一篇</span>Kali 中一站式搭建 pwn 环境</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

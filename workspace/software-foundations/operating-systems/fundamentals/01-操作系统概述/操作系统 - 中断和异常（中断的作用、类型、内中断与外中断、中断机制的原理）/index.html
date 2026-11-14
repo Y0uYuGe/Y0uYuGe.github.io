@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统 - 中断和异常（中断的作用、类型、内中断与外中断、中断机制的原理） · Y0uYuGe</title>
+<meta name="description" content="时钟中断每隔一段时间触发一次；中断处理程序执行完毕后，系统切换到用户态去运行其他程序，如此反复。也许经过多次时钟中断之后，原来的程序才重新开始执行。I/O 中断由外部设备发出；当一次输入或输出操作完成时（即 I/O 操作完成或设备完成其工作），就会发出中断信号。中断向量表中存放的是中断向量，中断向量的内容是跳转到中断处理程序的指令。trap 指令会主动切换状态，但它不是特权指令。“当前执行的指令非法”是指参数等原因造成的问题。故障（fault）不在本节讨论范围内，后面会更详细地介绍。刚启动后在 CPU 上运行的是内核程序。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0">操作系统概述</a></nav>
+    <h1>操作系统 - 中断和异常（中断的作用、类型、内中断与外中断、中断机制的原理）</h1>
+    <div class="meta"><time>2024-01-19</time><span class="tag">#操作系统</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89/assets/csdn-135707267/image-001-be4707e2cb.png" alt="图片"></p>
+<h1 id="中断的作用">中断的作用</h1>
+<p>刚启动后在 CPU 上运行的是内核程序</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89/assets/csdn-135707267/image-002-3579fde5d9.png" alt="图片"></p>
+<h1 id="中断的类型">中断的类型</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89/assets/csdn-135707267/image-003-66452f3c29.png" alt="图片"></p>
+<h1 id="内中断示例">内中断示例</h1>
+<p>“当前执行的指令非法”是指参数等原因造成的问题
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89/assets/csdn-135707267/image-004-26d8bc2df0.png" alt="图片">
+trap 指令会主动切换状态，但它不是特权指令</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89/assets/csdn-135707267/image-005-5d30190c84.png" alt="图片"></p>
+<h1 id="外中断">外中断</h1>
+<p>时钟中断每隔一段时间触发一次；中断处理程序执行完毕后，系统切换到用户态去运行其他程序，如此反复。也许经过多次时钟中断之后，原来的程序才重新开始执行</p>
+<p>I/O 中断由外部设备发出；当一次输入或输出操作完成时（即 I/O 操作完成或设备完成其工作），就会发出中断信号
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89/assets/csdn-135707267/image-006-bde4510c47.png" alt="图片"></p>
+<h1 id="中断的分类">中断的分类</h1>
+<p>故障（fault）不在本节讨论范围内，后面会更详细地介绍</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89/assets/csdn-135707267/image-007-884d52a216.png" alt="图片"></p>
+<h1 id="中断机制的基本原理">中断机制的基本原理</h1>
+<p>中断向量表中存放的是中断向量，中断向量的内容是跳转到中断处理程序的指令
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89/assets/csdn-135707267/image-008-b2c08d2829.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8%EF%BC%88%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8%E3%80%81%E7%B1%BB%E5%9E%8B%E3%80%81%E5%86%85%E4%B8%AD%E6%96%AD%E4%B8%8E%E5%A4%96%E4%B8%AD%E6%96%AD%E3%80%81%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86%EF%BC%89/assets/csdn-135707267/image-009-1f8196c981.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%99%9A%E6%8B%9F%E6%9C%BA%EF%BC%88%E4%BC%A0%E7%BB%9F%E8%AE%A1%E7%AE%97%E6%9C%BA%E3%80%81%E8%99%9A%E6%8B%9F%E6%9C%BA%E3%80%81%E4%B8%A4%E7%B1%BB%20VMM%20%E7%9A%84%E6%AF%94%E8%BE%83%E3%80%81%E6%8C%87%E4%BB%A4%E7%BA%A7%E5%88%AB%E3%80%81%E7%89%B9%E6%9D%83%E4%B8%8E%E6%95%8F%E6%84%9F%EF%BC%89/"><span class="l">上一篇</span>操作系统 - 虚拟机（传统计算机、虚拟机、两类 VMM 的比较、指令级别、特权与敏感）</a><span></span></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

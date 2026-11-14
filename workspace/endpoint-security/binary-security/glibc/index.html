@@ -1,0 +1,1353 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IO 源码阅读：glibc 2.35 · Y0uYuGe</title>
+<meta name="description" content="它分配一个大小为 sizeof (struct locked_FILE) 的结构体，然后 _IO_no_init 初始化所分配的结构体，_IO_JUMPS 赋值 vtable，_IO_new_file_init_internal 把结构体链入 list_all，接着 _IO_file_fopen 发起系统调用打开文件并设置文件描述符。_IO_doallocbuf 分配一块缓冲区并赋值 _IO_buf_base 和 _IO_buf_end 指针。_IO_sputn 最终会调用 _IO_new_file_xsputn 函数。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/binary-security/glibc" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/binary-security">二进制安全</a></nav>
+    <h1>IO 源码阅读：glibc 2.35</h1>
+    <div class="meta"><time>2024-06-09</time><span class="tag">#io</span><span class="tag">#Pwn</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<h1 id="参考">参考</h1>
+<p><a href="https://wiki.wgpsec.org/knowledge/ctf/iofile.html">https://wiki.wgpsec.org/knowledge/ctf/iofile.html</a>
+<a href="https://blog.wingszeng.top/pwn-glibc-file-struct-and-related-functions/#%E8%AF%BB%E5%8F%96%E7%BC%93%E5%86%B2%E5%8C%BA">https://blog.wingszeng.top/pwn-glibc-file-struct-and-related-functions/#%E8%AF%BB%E5%8F%96%E7%BC%93%E5%86%B2%E5%8C%BA</a></p>
+<h1 id="缓冲机制">缓冲机制</h1>
+<ul>
+<li>读：先从文件读取一大块数据到缓冲区，然后从缓冲区中读取所需的那部分数据</li>
+<li>写：先写入缓冲区，当缓冲区满时再写出到文件</li>
+</ul>
+<h1 id="io_file_plus">IO_FILE_PLUS</h1>
+<h1 id="fopen">fopen</h1>
+<p>fopen 实际上是 IO_new_fopen，它首先进入 fopen_internal</p>
+<h2 id="fopen_internal">fopen_internal</h2>
+<p><img src="/workspace/endpoint-security/binary-security/glibc/assets/csdn-139436027/image-001-5f040c86f0.png" alt="图片"></p>
+<pre><code class="language-c">FILE *
+__fopen_internal (const char *filename, const char *mode, int is32)
+{
+  struct locked_FILE
+  {
+    struct _IO_FILE_plus fp;
+#ifdef _IO_MTSAFE_IO
+    _IO_lock_t lock;
+#endif
+    struct _IO_wide_data wd;
+  } *new_f = (struct locked_FILE *) malloc (sizeof (struct locked_FILE));
+
+  if (new_f == NULL)
+    return NULL;
+#ifdef _IO_MTSAFE_IO
+  new_f-&gt;fp.file._lock = &amp;new_f-&gt;lock;
+#endif
+  _IO_no_init (&amp;new_f-&gt;fp.file, 0, 0, &amp;new_f-&gt;wd, &amp;_IO_wfile_jumps);
+  _IO_JUMPS (&amp;new_f-&gt;fp) = &amp;_IO_file_jumps;
+  _IO_new_file_init_internal (&amp;new_f-&gt;fp);
+  if (_IO_file_fopen ((FILE *) new_f, filename, mode, is32) != NULL)
+    return __fopen_maybe_mmap (&amp;new_f-&gt;fp.file);
+
+  _IO_un_link (&amp;new_f-&gt;fp);
+  free (new_f);
+  return NULL;
+}
+</code></pre>
+<p>它分配一个大小为 sizeof (struct locked_FILE) 的结构体。然后 _IO_no_init 初始化所分配的结构体，_IO_JUMPS 赋值 vtable，_IO_new_file_init_internal 把结构体链入 list_all，接着 _IO_file_fopen 发起系统调用打开文件并设置文件描述符</p>
+<h2 id="_io_no_init">_IO_no_init</h2>
+<pre><code class="language-c">560     void
+561     _IO_no_init (FILE *fp, int flags, int orientation,
+562                  struct _IO_wide_data *wd, const struct _IO_jump_t *jmp)
+563     {
+564       _IO_old_init (fp, flags);
+565       fp-&gt;_mode = orientation;
+566       if (orientation &gt;= 0)
+567         {
+568           fp-&gt;_wide_data = wd;
+569           fp-&gt;_wide_data-&gt;_IO_buf_base = NULL;
+570           fp-&gt;_wide_data-&gt;_IO_buf_end = NULL;
+571           fp-&gt;_wide_data-&gt;_IO_read_base = NULL;
+572           fp-&gt;_wide_data-&gt;_IO_read_ptr = NULL;
+573           fp-&gt;_wide_data-&gt;_IO_read_end = NULL;
+574           fp-&gt;_wide_data-&gt;_IO_write_base = NULL;
+575           fp-&gt;_wide_data-&gt;_IO_write_ptr = NULL;
+576           fp-&gt;_wide_data-&gt;_IO_write_end = NULL;
+577           fp-&gt;_wide_data-&gt;_IO_save_base = NULL;
+578           fp-&gt;_wide_data-&gt;_IO_backup_base = NULL;
+579           fp-&gt;_wide_data-&gt;_IO_save_end = NULL;
+580
+581           fp-&gt;_wide_data-&gt;_wide_vtable = jmp;
+582         }
+583       else
+584         /* Cause predictable crash when a wide function is called on a byte
+585            stream.  */
+586         fp-&gt;_wide_data = (struct _IO_wide_data *) -1L;
+587       fp-&gt;_freeres_list = NULL;
+588     }
+</code></pre>
+<h3 id="_io_old_init">_IO_old_init</h3>
+<p><img src="/workspace/endpoint-security/binary-security/glibc/assets/csdn-139436027/image-002-115886a9dc.png" alt="图片"></p>
+<pre><code class="language-c">8
+529     void
+530     _IO_old_init (FILE *fp, int flags)
+531     {
+532       fp-&gt;_flags = _IO_MAGIC|flags;
+533       fp-&gt;_flags2 = 0;
+534       if (stdio_needs_locking)
+535         fp-&gt;_flags2 |= _IO_FLAGS2_NEED_LOCK;
+536       fp-&gt;_IO_buf_base = NULL;
+537       fp-&gt;_IO_buf_end = NULL;
+538       fp-&gt;_IO_read_base = NULL;
+539       fp-&gt;_IO_read_ptr = NULL;
+540       fp-&gt;_IO_read_end = NULL;
+541       fp-&gt;_IO_write_base = NULL;
+542       fp-&gt;_IO_write_ptr = NULL;
+543       fp-&gt;_IO_write_end = NULL;
+544       fp-&gt;_chain = NULL; /* Not necessary. */
+545
+546       fp-&gt;_IO_save_base = NULL;
+547       fp-&gt;_IO_backup_base = NULL;
+548       fp-&gt;_IO_save_end = NULL;
+549       fp-&gt;_markers = NULL;
+550       fp-&gt;_cur_column = 0;
+551     #if _IO_JUMPS_OFFSET
+552       fp-&gt;_vtable_offset = 0;
+553     #endif
+554     #ifdef _IO_MTSAFE_IO
+555       if (fp-&gt;_lock != NULL)
+556         _IO_lock_init (*fp-&gt;_lock);
+557     #endif
+558     }
+</code></pre>
+<h2 id="_io_new_file_init_internal">_IO_new_file_init_internal</h2>
+<pre><code class="language-c">void
+105     _IO_new_file_init_internal (struct _IO_FILE_plus *fp)
+106     {
+107       /* POSIX.1 allows another file handle to be used to change the position
+108          of our file descriptor.  Hence we actually don&#39;t know the actual
+109          position before we do the first fseek (and until a following fflush). */
+110       fp-&gt;file._offset = _IO_pos_BAD;
+111       fp-&gt;file._flags |= CLOSED_FILEBUF_FLAGS;
+112
+113       _IO_link_in (fp);
+114       fp-&gt;file._fileno = -1;
+115     }
+</code></pre>
+<h3 id="_io_link_in">_IO_link_in</h3>
+<pre><code class="language-c">      void
+86      _IO_link_in (struct _IO_FILE_plus *fp)
+87      {
+88        if ((fp-&gt;file._flags &amp; _IO_LINKED) == 0)
+89          {
+90            fp-&gt;file._flags |= _IO_LINKED;
+91      #ifdef _IO_MTSAFE_IO
+92            _IO_cleanup_region_start_noarg (flush_cleanup);
+93            _IO_lock_lock (list_all_lock);
+94            run_fp = (FILE *) fp;
+95            _IO_flockfile ((FILE *) fp);
+96      #endif
+97            fp-&gt;file._chain = (FILE *) _IO_list_all;
+98            _IO_list_all = fp;
+99      #ifdef _IO_MTSAFE_IO
+100           _IO_funlockfile ((FILE *) fp);
+101           run_fp = NULL;
+102           _IO_lock_unlock (list_all_lock);
+103           _IO_cleanup_region_end (0);
+104     #endif
+105         }
+106     }
+107     libc_hidden_def (_IO_link_in)
+</code></pre>
+<h2 id="_io_new_file_fopen">_IO_new_file_fopen</h2>
+<pre><code class="language-c"> FILE *
+211     _IO_new_file_fopen (FILE *fp, const char *filename, const char *mode,
+212                         int is32not64)
+213     {
+214       int oflags = 0, omode;
+215       int read_write;
+216       int oprot = 0666;
+217       int i;
+218       FILE *result;
+219       const char *cs;
+220       const char *last_recognized;
+221
+222       if (_IO_file_is_open (fp))
+223         return 0;
+224       switch (*mode)
+225         {
+226         case &#39;r&#39;:
+227           omode = O_RDONLY;
+228           read_write = _IO_NO_WRITES;
+229           break;
+230         case &#39;w&#39;:
+231           omode = O_WRONLY;
+232           oflags = O_CREAT|O_TRUNC;
+233           read_write = _IO_NO_READS;
+234           break;
+235         case &#39;a&#39;:
+236           omode = O_WRONLY;
+237           oflags = O_CREAT|O_APPEND;
+238           read_write = _IO_NO_READS|_IO_IS_APPENDING;
+239           break;
+240         default:
+241           __set_errno (EINVAL);
+242           return NULL;
+243         }
+244       last_recognized = mode;
+245       for (i = 1; i &lt; 7; ++i)
+246         {
+247           switch (*++mode)
+248             {
+249             case &#39;\0&#39;:
+250               break;
+251             case &#39;+&#39;:
+252               omode = O_RDWR;
+253               read_write &amp;= _IO_IS_APPENDING;
+254               last_recognized = mode;
+255               continue;
+256             case &#39;x&#39;:
+257               oflags |= O_EXCL;
+258               last_recognized = mode;
+259               continue;
+260             case &#39;b&#39;:
+261               last_recognized = mode;
+262               continue;
+pwndbg&gt; 
+263             case &#39;m&#39;:
+264               fp-&gt;_flags2 |= _IO_FLAGS2_MMAP;
+265               continue;
+266             case &#39;c&#39;:
+267               fp-&gt;_flags2 |= _IO_FLAGS2_NOTCANCEL;
+268               continue;
+269             case &#39;e&#39;:
+270               oflags |= O_CLOEXEC;
+271               fp-&gt;_flags2 |= _IO_FLAGS2_CLOEXEC;
+272               continue;
+273             default:
+274               /* Ignore.  */
+275               continue;
+276             }
+277           break;
+278         }
+279
+280       result = _IO_file_open (fp, filename, omode|oflags, oprot, read_write,
+281                               is32not64);
+282
+283       if (result != NULL)
+284         {
+285           /* Test whether the mode string specifies the conversion.  */
+286           cs = strstr (last_recognized + 1, &quot;,ccs=&quot;);
+287           if (cs != NULL)
+288             {
+289               /* Yep.  Load the appropriate conversions and set the orientation
+290                  to wide.  */
+291               struct gconv_fcts fcts;
+292               struct _IO_codecvt *cc;
+293               char *endp = __strchrnul (cs + 5, &#39;,&#39;);
+294               char *ccs = malloc (endp - (cs + 5) + 3);
+295
+296               if (ccs == NULL)
+297                 {
+298                   int malloc_err = errno;  /* Whatever malloc failed with.  */
+299                   (void) _IO_file_close_it (fp);
+300                   __set_errno (malloc_err);
+301                   return NULL;
+302                 }
+303
+304               *((char *) __mempcpy (ccs, cs + 5, endp - (cs + 5))) = &#39;\0&#39;;
+305               strip (ccs, ccs);
+306
+307               if (__wcsmbs_named_conv (&amp;fcts, ccs[2] == &#39;\0&#39;
+308                                        ? upstr (ccs, cs + 5) : ccs) != 0)
+309                 {
+310                   /* Something went wrong, we cannot load the conversion modules.
+311                      This means we cannot proceed since the user explicitly asked
+312                      for these.  */
+313                   (void) _IO_file_close_it (fp);
+314                   free (ccs);
+315                   __set_errno (EINVAL);
+316                   return NULL;
+317                 }
+318
+319               free (ccs);
+320
+321               assert (fcts.towc_nsteps == 1);
+322               assert (fcts.tomb_nsteps == 1);
+323
+324               fp-&gt;_wide_data-&gt;_IO_read_ptr = fp-&gt;_wide_data-&gt;_IO_read_end;
+325               fp-&gt;_wide_data-&gt;_IO_write_ptr = fp-&gt;_wide_data-&gt;_IO_write_base;
+326
+327               /* Clear the state.  We start all over again.  */
+328               memset (&amp;fp-&gt;_wide_data-&gt;_IO_state, &#39;\0&#39;, sizeof (__mbstate_t));
+329               memset (&amp;fp-&gt;_wide_data-&gt;_IO_last_state, &#39;\0&#39;, sizeof (__mbstate_t));
+330
+331               cc = fp-&gt;_codecvt = &amp;fp-&gt;_wide_data-&gt;_codecvt;
+332
+333               cc-&gt;__cd_in.step = fcts.towc;
+334
+335               cc-&gt;__cd_in.step_data.__invocation_counter = 0;
+336               cc-&gt;__cd_in.step_data.__internal_use = 1;
+337               cc-&gt;__cd_in.step_data.__flags = __GCONV_IS_LAST;
+338               cc-&gt;__cd_in.step_data.__statep = &amp;result-&gt;_wide_data-&gt;_IO_state;
+339
+340               cc-&gt;__cd_out.step = fcts.tomb;
+341
+342               cc-&gt;__cd_out.step_data.__invocation_counter = 0;
+343               cc-&gt;__cd_out.step_data.__internal_use = 1;
+344               cc-&gt;__cd_out.step_data.__flags = __GCONV_IS_LAST | __GCONV_TRANSLIT;
+345               cc-&gt;__cd_out.step_data.__statep = &amp;result-&gt;_wide_data-&gt;_IO_state;
+346
+347               /* From now on use the wide character callback functions.  */
+348               _IO_JUMPS_FILE_plus (fp) = fp-&gt;_wide_data-&gt;_wide_vtable;
+349
+350               /* Set the mode now.  */
+351               result-&gt;_mode = 1;
+352             }
+353         }
+354
+355       return result;
+356     }
+357     libc_hidden_ver (_IO_new_file_fopen, _IO_file_fopen)
+</code></pre>
+<h3 id="_io_file_open">_IO_file_open</h3>
+<pre><code class="language-c">    FILE *
+180     _IO_file_open (FILE *fp, const char *filename, int posix_mode, int prot,
+181                    int read_write, int is32not64)
+182     {
+183       int fdesc;
+184       if (__glibc_unlikely (fp-&gt;_flags2 &amp; _IO_FLAGS2_NOTCANCEL))
+185         fdesc = __open_nocancel (filename,
+186                                  posix_mode | (is32not64 ? 0 : O_LARGEFILE), prot);
+187       else
+188         fdesc = __open (filename, posix_mode | (is32not64 ? 0 : O_LARGEFILE), prot);
+189       if (fdesc &lt; 0)
+190         return NULL;
+191       fp-&gt;_fileno = fdesc;
+192       _IO_mask_flags (fp, read_write,_IO_NO_READS+_IO_NO_WRITES+_IO_IS_APPENDING);
+193       /* For append mode, send the file offset to the end of the file.  Don&#39;t
+194          update the offset cache though, since the file handle is not active.  */
+195       if ((read_write &amp; (_IO_IS_APPENDING | _IO_NO_READS))
+196           == (_IO_IS_APPENDING | _IO_NO_READS))
+197         {
+198           off64_t new_pos = _IO_SYSSEEK (fp, 0, _IO_seek_end);
+199           if (new_pos == _IO_pos_BAD &amp;&amp; errno != ESPIPE)
+200             {
+201               __close_nocancel (fdesc);
+202               return NULL;
+203             }
+204         }
+205       _IO_link_in ((struct _IO_FILE_plus *) fp);
+206       return fp;
+207     }
+208     libc_hidden_def (_IO_file_open)
+</code></pre>
+<h1 id="fread">fread</h1>
+<p>fread 实际上调用 _IO_fread</p>
+<h2 id="_io_fread">_IO_fread</h2>
+<p>buf 是读取后数据保存的位置，fp 是要读取的文件
+它调用 _IO_sgetn 函数</p>
+<pre><code class="language-c">
+30      size_t  _IO_fread (void *buf, size_t size, size_t count, FILE *fp)
+31      {
+32        size_t bytes_requested = size * count;
+33        size_t bytes_read;
+34        CHECK_FILE (fp, 0);
+35        if (bytes_requested == 0)
+36          return 0;
+37        _IO_acquire_lock (fp);
+38        bytes_read = _IO_sgetn (fp, (char *) buf, bytes_requested);
+39        _IO_release_lock (fp);
+40        return bytes_requested == bytes_read ? count : bytes_read / size;
+41      }
+42      libc_hidden_def (_IO_fread)
+</code></pre>
+<h2 id="_io_sgetn">_IO_sgetn</h2>
+<pre><code class="language-c">   407 size_t
+   408 _IO_sgetn (FILE *fp, void *data, size_t n)
+   409 {
+   410   /* FIXME handle putback buffer here! */
+ ► 411   return _IO_XSGETN (fp, data, n);
+   412 }
+   413 libc_hidden_def (_IO_sgetn)
+</code></pre>
+<p> _IO_XSGETN (fp, data, n) 最终会调用 _IO_file_xsgetn 函数</p>
+<pre><code class="language-c">1270    size_t
+1271    _IO_file_xsgetn (FILE *fp, void *data, size_t n)
+1272    {
+1273      size_t want, have;
+1274      ssize_t count;
+1275      char *s = data;
+1276
+1277      want = n;
+1278
+1279      if (fp-&gt;_IO_buf_base == NULL)
+1280        {
+1281          /* Maybe we already have a push back pointer.  */
+1282          if (fp-&gt;_IO_save_base != NULL)
+1283            {
+1284              free (fp-&gt;_IO_save_base);
+1285              fp-&gt;_flags &amp;= ~_IO_IN_BACKUP;
+1286            }
+1287          _IO_doallocbuf (fp);
+1288        }
+1289
+1290      while (want &gt; 0)
+1291        {
+1292          have = fp-&gt;_IO_read_end - fp-&gt;_IO_read_ptr;
+1293          if (want &lt;= have)
+1294            {
+1295              memcpy (s, fp-&gt;_IO_read_ptr, want);
+1296              fp-&gt;_IO_read_ptr += want;
+1297              want = 0;
+1298            }
+1299          else
+1300            {
+1301              if (have &gt; 0)
+1302                {
+1303                  s = __mempcpy (s, fp-&gt;_IO_read_ptr, have);
+1304                  want -= have;
+1305                  fp-&gt;_IO_read_ptr += have;
+1306                }
+1307
+1308              /* Check for backup and repeat */
+1309              if (_IO_in_backup (fp))
+1310                {
+1311                  _IO_switch_to_main_get_area (fp);
+1312                  continue;
+1313                }
+1314
+1315              /* If we now want less than a buffer, underflow and repeat
+1316                 the copy.  Otherwise, _IO_SYSREAD directly to
+1317                 the user buffer. */
+1318              if (fp-&gt;_IO_buf_base
+1319                  &amp;&amp; want &lt; (size_t) (fp-&gt;_IO_buf_end - fp-&gt;_IO_buf_base))
+1320                {
+1321                  if (__underflow (fp) == EOF)
+1322                    break;
+pwndbg&gt; 
+1323
+1324                  continue;
+1325                }
+1326
+1327              /* These must be set before the sysread as we might longjmp out
+1328                 waiting for input. */
+1329              _IO_setg (fp, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base);
+1330              _IO_setp (fp, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base);
+1331
+1332              /* Try to maintain alignment: read a whole number of blocks.  */
+1333              count = want;
+1334              if (fp-&gt;_IO_buf_base)
+1335                {
+1336                  size_t block_size = fp-&gt;_IO_buf_end - fp-&gt;_IO_buf_base;
+1337                  if (block_size &gt;= 128)
+1338                    count -= want % block_size;
+1339                }
+1340
+1341              count = _IO_SYSREAD (fp, s, count);
+1342              if (count &lt;= 0)
+1343                {
+1344                  if (count == 0)
+1345                    fp-&gt;_flags |= _IO_EOF_SEEN;
+1346                  else
+1347                    fp-&gt;_flags |= _IO_ERR_SEEN;
+1348
+1349                  break;
+1350                }
+1351
+1352              s += count;
+1353              want -= count;
+1354              if (fp-&gt;_offset != _IO_pos_BAD)
+1355                _IO_pos_adjust (fp-&gt;_offset, count);
+1356            }
+1357        }
+1358
+1359      return n - want;
+1360    }
+1361    libc_hidden_def (_IO_file_xsgetn)
+</code></pre>
+<p>它首先检查缓冲区是否已初始化；如果没有，就调用 _IO_doallocbuf 分配一块区域作为缓冲区。然后检查输入缓冲区中剩余的数据是否能满足要读取的数量；如果能，就使用 __mempcpy。如果输入缓冲区的内容小于用户想读取的长度，就先 memcpy 输入缓冲区的内容，再调用 __underflow。如果根本没有可供用户使用的输入缓冲区内容，也会调用 __underflow 来填充缓冲区。然后在某些情况下，当 <code>fp-&gt;_IO_buf_base 1319                  &amp;&amp; want &lt; (size_t) (fp-&gt;_IO_buf_end - fp-&gt;_IO_buf_base)为false</code> 时，改用系统级读取：用 _IO_SYSREAD (fp, s, count) 直接从文件读取到用户的缓冲区</p>
+<h2 id="_io_doallocbuf">_IO_doallocbuf</h2>
+<pre><code class="language-c">341     void
+342     _IO_doallocbuf (FILE *fp)
+343     {
+344       if (fp-&gt;_IO_buf_base)
+345         return;
+346       if (!(fp-&gt;_flags &amp; _IO_UNBUFFERED) || fp-&gt;_mode &gt; 0)
+347         if (_IO_DOALLOCATE (fp) != EOF)
+348           return;
+349       _IO_setb (fp, fp-&gt;_shortbuf, fp-&gt;_shortbuf+1, 0);
+350     }
+351     libc_hidden_def (_IO_doallocbuf)
+</code></pre>
+<p>_IO_DOALLOCATE (fp) 调用 _IO_file_doallocate</p>
+<h3 id="_io_file_doallocate">_IO_file_doallocate</h3>
+<pre><code class="language-c">76      int
+77      _IO_file_doallocate (FILE *fp)
+78      {
+79        size_t size;
+80        char *p;
+81        struct __stat64_t64 st;
+82
+83        size = BUFSIZ;
+84        if (fp-&gt;_fileno &gt;= 0 &amp;&amp; __builtin_expect (_IO_SYSSTAT (fp, &amp;st), 0) &gt;= 0)
+85          {
+86            if (S_ISCHR (st.st_mode))
+87              {
+88                /* Possibly a tty.  */
+89                if (
+90      #ifdef DEV_TTY_P
+91                    DEV_TTY_P (&amp;st) ||
+92      #endif
+93                    local_isatty (fp-&gt;_fileno))
+94                  fp-&gt;_flags |= _IO_LINE_BUF;
+95              }
+96      #if defined _STATBUF_ST_BLKSIZE
+97            if (st.st_blksize &gt; 0 &amp;&amp; st.st_blksize &lt; BUFSIZ)
+98              size = st.st_blksize;
+99      #endif
+100         }
+101       p = malloc (size);
+102       if (__glibc_unlikely (p == NULL))
+103         return EOF;
+104       _IO_setb (fp, p, p + size, 1);
+105       return 1;
+106     }
+107     libc_hidden_def (_IO_file_doallocate)
+</code></pre>
+<p>_IO_SYSSTAT 获取文件信息；_IO_SYSSTAT 函数就是 vtable 中的 __stat 函数。获取文件信息后，据此调整需要用 malloc 分配的大小。然后调用 _IO_setb，把 _IO_buf_base 和 _IO_buf_end 设置为 malloc 分配的内存块的起始地址和结束地址</p>
+<h3 id="_io_file_stat">_IO_file_stat</h3>
+<p>_IO_SYSSTAT 调用 _IO_file_stat </p>
+<pre><code class="language-c">1144    int
+1145    _IO_file_stat (FILE *fp, void *st)
+1146    {
+1147      return __fstat64_time64 (fp-&gt;_fileno, (struct __stat64_t64 *) st);
+1148    }
+1149    libc_hidden_def (_IO_file_stat)
+</code></pre>
+<p>然后它调用 __fstat64_time64</p>
+<pre><code class="language-c">      int
+28      __fstat64_time64 (int fd, struct __stat64_t64 *buf)
+29      {
+30        if (fd &lt; 0)
+31          {
+32            __set_errno (EBADF);
+33            return -1;
+34          }
+35        return __fstatat64_time64 (fd, &quot;&quot;, buf, AT_EMPTY_PATH);
+36      }
+37      #if __TIMESIZE != 64
+38      hidden_def (__fstat64_time64)
+</code></pre>
+<p>然后它调用 __fstatat64_time64 </p>
+<pre><code class="language-c">150     int
+151     __fstatat64_time64 (int fd, const char *file, struct __stat64_t64 *buf,
+152                         int flag)
+153     {
+154       int r;
+155
+156     #if FSTATAT_USE_STATX
+157       r = fstatat64_time64_statx (fd, file, buf, flag);
+158     # ifndef __ASSUME_STATX
+159       if (r == -ENOSYS)
+160         r = fstatat64_time64_stat (fd, file, buf, flag);
+161     # endif
+162     #else
+163       r = fstatat64_time64_stat (fd, file, buf, flag);
+164     #endif
+165
+166       return INTERNAL_SYSCALL_ERROR_P (r)
+167              ? INLINE_SYSCALL_ERROR_RETURN_VALUE (-r)
+168              : 0;
+169     }
+170     #if __TIMESIZE != 64
+171     hidden_def (__fstatat64_time64)
+</code></pre>
+<p>它调用 fstatat64_time64_stat </p>
+<pre><code class="language-c"> static inline int
+89      fstatat64_time64_stat (int fd, const char *file, struct __stat64_t64 *buf,
+90                             int flag)
+91      {
+92        int r;
+93
+94      #if XSTAT_IS_XSTAT64
+95      # ifdef __NR_newfstatat
+96        /* 64-bit kABI, e.g. aarch64, ia64, powerpc64*, s390x, riscv64, and
+97           x86_64.  */
+98        r = INTERNAL_SYSCALL_CALL (newfstatat, fd, file, buf, flag);
+99      # elif defined __NR_fstatat64
+100     #  if STAT64_IS_KERNEL_STAT64
+101       /* 64-bit kABI outlier, e.g. alpha  */
+102       r = INTERNAL_SYSCALL_CALL (fstatat64, fd, file, buf, flag);
+103     #  else
+104       /* 64-bit kABI outlier, e.g. sparc64.  */
+105       struct kernel_stat64 kst64;
+106       r = INTERNAL_SYSCALL_CALL (fstatat64, fd, file, &amp;kst64, flag);
+107       if (r == 0)
+108         __cp_stat64_kstat64 (buf, &amp;kst64);
+109     #  endif
+110     # endif
+111     #else
+112     # ifdef __NR_fstatat64
+113       /* All kABIs with non-LFS support and with old 32-bit time_t support
+114          e.g. arm, csky, i386, hppa, m68k, microblaze, nios2, sh, powerpc32,
+115          and sparc32.  */
+116       struct stat64 st64;
+117       r = INTERNAL_SYSCALL_CALL (fstatat64, fd, file, &amp;st64, flag);
+118       if (r == 0)
+119         {
+120           /* Clear both pad and reserved fields.  */
+121           memset (buf, 0, sizeof (*buf));
+122
+123           buf-&gt;st_dev = st64.st_dev,
+124           buf-&gt;st_ino = st64.st_ino;
+125           buf-&gt;st_mode = st64.st_mode;
+126           buf-&gt;st_nlink = st64.st_nlink;
+127           buf-&gt;st_uid = st64.st_uid;
+128           buf-&gt;st_gid = st64.st_gid;
+129           buf-&gt;st_rdev = st64.st_rdev;
+130           buf-&gt;st_size = st64.st_size;
+131           buf-&gt;st_blksize = st64.st_blksize;
+132           buf-&gt;st_blocks  = st64.st_blocks;
+133           buf-&gt;st_atim = valid_timespec_to_timespec64 (st64.st_atim);
+134           buf-&gt;st_mtim = valid_timespec_to_timespec64 (st64.st_mtim);
+135           buf-&gt;st_ctim = valid_timespec_to_timespec64 (st64.st_ctim);
+136         }
+137     # else
+138       /* 64-bit kabi outlier, e.g. mips64 and mips64-n32.  */
+139       struct kernel_stat kst;
+140       r = INTERNAL_SYSCALL_CALL (newfstatat, fd, file, &amp;kst, flag);
+141       if (r == 0)
+142         __cp_kstat_stat64_t64 (&amp;kst, buf);
+143     # endif
+144     #endif
+145
+146       return r;
+147     }
+</code></pre>
+<h3 id="_io_setb">_IO_setb</h3>
+<p>设置 _IO_buf_base 和 _IO_buf_end </p>
+<pre><code class="language-c">327     void
+328     _IO_setb (FILE *f, char *b, char *eb, int a)
+329     {
+330       if (f-&gt;_IO_buf_base &amp;&amp; !(f-&gt;_flags &amp; _IO_USER_BUF))
+331         free (f-&gt;_IO_buf_base);
+332       f-&gt;_IO_buf_base = b;
+333       f-&gt;_IO_buf_end = eb;
+334       if (a)
+335         f-&gt;_flags &amp;= ~_IO_USER_BUF;
+336       else
+337         f-&gt;_flags |= _IO_USER_BUF;
+338     }
+339     libc_hidden_def (_IO_setb)
+</code></pre>
+<h2 id="__underflow">__underflow</h2>
+<p>__underflow 一般只在缓冲区被完全消耗完时才使用</p>
+<pre><code class="language-c">267     int
+268     __underflow (FILE *fp)
+269     {
+270       if (_IO_vtable_offset (fp) == 0 &amp;&amp; _IO_fwide (fp, -1) != -1)
+271         return EOF;
+272
+273       if (fp-&gt;_mode == 0)
+274         _IO_fwide (fp, -1);
+275       if (_IO_in_put_mode (fp))
+276         if (_IO_switch_to_get_mode (fp) == EOF)
+277           return EOF;
+278       if (fp-&gt;_IO_read_ptr &lt; fp-&gt;_IO_read_end)
+279         return *(unsigned char *) fp-&gt;_IO_read_ptr;
+280       if (_IO_in_backup (fp))
+281         {
+282           _IO_switch_to_main_get_area (fp);
+283           if (fp-&gt;_IO_read_ptr &lt; fp-&gt;_IO_read_end)
+284             return *(unsigned char *) fp-&gt;_IO_read_ptr;
+285         }
+286       if (_IO_have_markers (fp))
+287         {
+288           if (save_for_backup (fp, fp-&gt;_IO_read_end))
+289             return EOF;
+290         }
+291       else if (_IO_have_backup (fp))
+292         _IO_free_backup_area (fp);
+293       return _IO_UNDERFLOW (fp);
+294     }
+295     libc_hidden_def (__underflow)
+</code></pre>
+<p>然后它调用 _IO_new_file_underflow</p>
+<h3 id="_io_new_file_underflow">_IO_new_file_underflow</h3>
+<pre><code class="language-c">8
+459     int
+460     _IO_new_file_underflow (FILE *fp)
+461     {
+462       ssize_t count;
+463
+464       /* C99 requires EOF to be &quot;sticky&quot;.  */
+465       if (fp-&gt;_flags &amp; _IO_EOF_SEEN)
+466         return EOF;
+467
+468       if (fp-&gt;_flags &amp; _IO_NO_READS)
+469         {
+470           fp-&gt;_flags |= _IO_ERR_SEEN;
+471           __set_errno (EBADF);
+472           return EOF;
+473         }
+474       if (fp-&gt;_IO_read_ptr &lt; fp-&gt;_IO_read_end)
+475         return *(unsigned char *) fp-&gt;_IO_read_ptr;
+476
+477       if (fp-&gt;_IO_buf_base == NULL)
+478         {
+479           /* Maybe we already have a push back pointer.  */
+480           if (fp-&gt;_IO_save_base != NULL)
+481             {
+482               free (fp-&gt;_IO_save_base);
+483               fp-&gt;_flags &amp;= ~_IO_IN_BACKUP;
+484             }
+485           _IO_doallocbuf (fp);
+486         }
+487
+488       /* FIXME This can/should be moved to genops ?? */
+489       if (fp-&gt;_flags &amp; (_IO_LINE_BUF|_IO_UNBUFFERED))
+490         {
+491           /* We used to flush all line-buffered stream.  This really isn&#39;t
+492              required by any standard.  My recollection is that
+493              traditional Unix systems did this for stdout.  stderr better
+494              not be line buffered.  So we do just that here
+495              explicitly.  --drepper */
+496           _IO_acquire_lock (stdout);
+497
+498           if ((stdout-&gt;_flags &amp; (_IO_LINKED | _IO_NO_WRITES | _IO_LINE_BUF))
+499               == (_IO_LINKED | _IO_LINE_BUF))
+500             _IO_OVERFLOW (stdout, EOF);
+501
+502           _IO_release_lock (stdout);
+503         }
+504
+505       _IO_switch_to_get_mode (fp);
+506
+507       /* This is very tricky. We have to adjust those
+508          pointers before we call _IO_SYSREAD () since
+509          we may longjump () out while waiting for
+510          input. Those pointers may be screwed up. H.J. */
+511       fp-&gt;_IO_read_base = fp-&gt;_IO_read_ptr = fp-&gt;_IO_buf_base;
+512       fp-&gt;_IO_read_end = fp-&gt;_IO_buf_base;
+513       fp-&gt;_IO_write_base = fp-&gt;_IO_write_ptr = fp-&gt;_IO_write_end
+514         = fp-&gt;_IO_buf_base;
+515
+516       count = _IO_SYSREAD (fp, fp-&gt;_IO_buf_base,
+517                            fp-&gt;_IO_buf_end - fp-&gt;_IO_buf_base);
+518       if (count &lt;= 0)
+519         {
+520           if (count == 0)
+521             fp-&gt;_flags |= _IO_EOF_SEEN;
+522           else
+523             fp-&gt;_flags |= _IO_ERR_SEEN, count = 0;
+524       }
+525       fp-&gt;_IO_read_end += count;
+526       if (count == 0)
+527         {
+528           /* If a stream is read to EOF, the calling application may switch active
+529              handles.  As a result, our offset cache would no longer be valid, so
+530              unset it.  */
+531           fp-&gt;_offset = _IO_pos_BAD;
+532           return EOF;
+533         }
+534       if (fp-&gt;_offset != _IO_pos_BAD)
+535         _IO_pos_adjust (fp-&gt;_offset, count);
+536       return *(unsigned char *) fp-&gt;_IO_read_ptr;
+537     }
+538     libc_hidden_ver (_IO_new_file_underflow, _IO_file_underflow)
+</code></pre>
+<p>它检查 flags 是否允许读取，然后检查缓冲区是否为空（_IO_buf_base）；如果为空，就调用 _IO_doallocbuf。最后，把输入和输出缓冲区指针重置为缓冲区的起始地址，调用 _IO_file_read 从文件读取数据到缓冲区，然后设置输入缓冲区指针</p>
+<h3 id="_io_file_read">_IO_file_read</h3>
+<pre><code class="language-c">1128    ssize_t
+1129    _IO_file_read (FILE *fp, void *buf, ssize_t size)
+1130    {
+1131      return (__builtin_expect (fp-&gt;_flags2 &amp; _IO_FLAGS2_NOTCANCEL, 0)
+1132              ? __read_nocancel (fp-&gt;_fileno, buf, size)
+1133              : __read (fp-&gt;_fileno, buf, size));
+1134    }
+1135    libc_hidden_def (_IO_file_read)
+</code></pre>
+<pre><code class="language-c">   23 ssize_t
+   24 __libc_read (int fd, void *buf, size_t nbytes)
+   25 {
+ ► 26   return SYSCALL_CANCEL (read, fd, buf, nbytes);
+   27 }
+   28 libc_hidden_def (__libc_read)
+</code></pre>
+<h1 id="fwrite">fwrite</h1>
+<p><img src="/workspace/endpoint-security/binary-security/glibc/assets/csdn-139436027/image-003-22d1420484.png" alt="图片"></p>
+<h2 id="_io_fwrite">_IO_fwrite</h2>
+<pre><code class="language-c">29      size_t
+30      _IO_fwrite (const void *buf, size_t size, size_t count, FILE *fp)
+31      {
+32        size_t request = size * count;
+33        size_t written = 0;
+34        CHECK_FILE (fp, 0);
+35        if (request == 0)
+36          return 0;
+37        _IO_acquire_lock (fp);
+38        if (_IO_vtable_offset (fp) != 0 || _IO_fwide (fp, -1) == -1)
+39          written = _IO_sputn (fp, (const char *) buf, request);
+40        _IO_release_lock (fp);
+41        /* We have written all of the input in case the return value indicates
+42           this or EOF is returned.  The latter is a special case where we
+43           simply did not manage to flush the buffer.  But the data is in the
+44           buffer and therefore written as far as fwrite is concerned.  */
+45        if (written == request || written == EOF)
+46          return count;
+47        else
+48          return written / size;
+49      }
+50      libc_hidden_def (_IO_fwrite)
+</code></pre>
+<p>_IO_sputn 最终会调用 _IO_new_file_xsputn 函数</p>
+<h2 id="_io_new_file_xsputn">_IO_new_file_xsputn</h2>
+<pre><code class="language-c">1195    size_t
+1196    _IO_new_file_xsputn (FILE *f, const void *data, size_t n)
+1197    {
+1198      const char *s = (const char *) data;
+1199      size_t to_do = n;
+1200      int must_flush = 0;
+1201      size_t count = 0;
+1202
+1203      if (n &lt;= 0)
+1204        return 0;
+1205      /* This is an optimized implementation.
+1206         If the amount to be written straddles a block boundary
+1207         (or the filebuf is unbuffered), use sys_write directly. */
+1208
+1209      /* First figure out how much space is available in the buffer. */
+1210      if ((f-&gt;_flags &amp; _IO_LINE_BUF) &amp;&amp; (f-&gt;_flags &amp; _IO_CURRENTLY_PUTTING))
+1211        {
+1212          count = f-&gt;_IO_buf_end - f-&gt;_IO_write_ptr;
+1213          if (count &gt;= n)
+1214            {
+1215              const char *p;
+1216              for (p = s + n; p &gt; s; )
+1217                {
+1218                  if (*--p == &#39;\n&#39;)
+1219                    {
+1220                      count = p - s + 1;
+1221                      must_flush = 1;
+1222                      break;
+1223                    }
+1224                }
+1225            }
+1226        }
+1227      else if (f-&gt;_IO_write_end &gt; f-&gt;_IO_write_ptr)
+1228        count = f-&gt;_IO_write_end - f-&gt;_IO_write_ptr; /* Space available. */
+1229
+1230      /* Then fill the buffer. */
+1231      if (count &gt; 0)
+1232        {
+1233          if (count &gt; to_do)
+1234            count = to_do;
+1235          f-&gt;_IO_write_ptr = __mempcpy (f-&gt;_IO_write_ptr, s, count);
+1236          s += count;
+1237          to_do -= count;
+1238        }
+1239      if (to_do + must_flush &gt; 0)
+1240        {
+1241          size_t block_size, do_write;
+1242          /* Next flush the (full) buffer. */
+1243          if (_IO_OVERFLOW (f, EOF) == EOF)
+1244            /* If nothing else has to be written we must not signal the
+1245               caller that everything has been written.  */
+1246            return to_do == 0 ? EOF : n - to_do;
+1247
+1248          /* Try to maintain alignment: write a whole number of blocks.  */
+1249          block_size = f-&gt;_IO_buf_end - f-&gt;_IO_buf_base;
+1250          do_write = to_do - (block_size &gt;= 128 ? to_do % block_size : 0);
+1251
+1252          if (do_write)
+1253            {
+pwndbg&gt; 
+1254              count = new_do_write (f, s, do_write);
+1255              to_do -= count;
+1256              if (count &lt; do_write)
+1257                return n - to_do;
+1258            }
+1259
+1260          /* Now write out the remainder.  Normally, this will fit in the
+1261             buffer, but it&#39;s somewhat messier for line-buffered files,
+1262             so we let _IO_default_xsputn handle the general case. */
+1263          if (to_do)
+1264            to_do -= _IO_default_xsputn (f, s+do_write, to_do);
+1265        }
+1266      return n - to_do;
+1267    }
+1268    libc_hidden_ver (_IO_new_file_xsputn, _IO_file_xsputn)
+</code></pre>
+<p>它首先检查行缓冲机制；如果不适用，就检查输出缓冲区的剩余空间。如果空间足够，就直接 memcpy 到缓冲区中。如果空间为零或不足以容纳要输出的内容，就调用 _IO_OVERFLOW 刷新缓冲区，把缓冲区内容写入文件。然后检查数据是否构成一个大块；如果是，就直接调用 new_do_write 把内容写入文件，而不经过缓冲区。剩余部分，或不构成大块的数据，则通过 _IO_default_xsputn 写入缓冲区</p>
+<h3 id="_io_new_file_overflow">_IO_new_file_overflow</h3>
+<pre><code class="language-c">729     int
+730     _IO_new_file_overflow (FILE *f, int ch)
+731     {
+732       if (f-&gt;_flags &amp; _IO_NO_WRITES) /* SET ERROR */
+733         {
+734           f-&gt;_flags |= _IO_ERR_SEEN;
+735           __set_errno (EBADF);
+736           return EOF;
+737         }
+738       /* If currently reading or no buffer allocated. */
+739       if ((f-&gt;_flags &amp; _IO_CURRENTLY_PUTTING) == 0 || f-&gt;_IO_write_base == NULL)
+740         {
+741           /* Allocate a buffer if needed. */
+742           if (f-&gt;_IO_write_base == NULL)
+743             {
+744               _IO_doallocbuf (f);
+745               _IO_setg (f, f-&gt;_IO_buf_base, f-&gt;_IO_buf_base, f-&gt;_IO_buf_base);
+746             }
+747           /* Otherwise must be currently reading.
+748              If _IO_read_ptr (and hence also _IO_read_end) is at the buffer end,
+749              logically slide the buffer forwards one block (by setting the
+750              read pointers to all point at the beginning of the block).  This
+751              makes room for subsequent output.
+752              Otherwise, set the read pointers to _IO_read_end (leaving that
+753              alone, so it can continue to correspond to the external position). */
+754           if (__glibc_unlikely (_IO_in_backup (f)))
+755             {
+756               size_t nbackup = f-&gt;_IO_read_end - f-&gt;_IO_read_ptr;
+757               _IO_free_backup_area (f);
+758               f-&gt;_IO_read_base -= MIN (nbackup,
+759                                        f-&gt;_IO_read_base - f-&gt;_IO_buf_base);
+760               f-&gt;_IO_read_ptr = f-&gt;_IO_read_base;
+761             }
+762
+763           if (f-&gt;_IO_read_ptr == f-&gt;_IO_buf_end)
+764             f-&gt;_IO_read_end = f-&gt;_IO_read_ptr = f-&gt;_IO_buf_base;
+765           f-&gt;_IO_write_ptr = f-&gt;_IO_read_ptr;
+766           f-&gt;_IO_write_base = f-&gt;_IO_write_ptr;
+767           f-&gt;_IO_write_end = f-&gt;_IO_buf_end;
+768           f-&gt;_IO_read_base = f-&gt;_IO_read_ptr = f-&gt;_IO_read_end;
+769
+770           f-&gt;_flags |= _IO_CURRENTLY_PUTTING;
+771           if (f-&gt;_mode &lt;= 0 &amp;&amp; f-&gt;_flags &amp; (_IO_LINE_BUF | _IO_UNBUFFERED))
+772             f-&gt;_IO_write_end = f-&gt;_IO_write_ptr;
+773         }
+774       if (ch == EOF)
+775         return _IO_do_write (f, f-&gt;_IO_write_base,
+776                              f-&gt;_IO_write_ptr - f-&gt;_IO_write_base);
+777       if (f-&gt;_IO_write_ptr == f-&gt;_IO_buf_end ) /* Buffer is really full */
+778         if (_IO_do_flush (f) == EOF)
+779           return EOF;
+780       *f-&gt;_IO_write_ptr++ = ch;
+781       if ((f-&gt;_flags &amp; _IO_UNBUFFERED)
+782           || ((f-&gt;_flags &amp; _IO_LINE_BUF) &amp;&amp; ch == &#39;\n&#39;))
+783         if (_IO_do_write (f, f-&gt;_IO_write_base,
+784                           f-&gt;_IO_write_ptr - f-&gt;_IO_write_base) == EOF)
+785           return EOF;
+786       return (unsigned char) ch;
+787     }
+788     libc_hidden_ver (_IO_new_file_overflow, _IO_file_overflow)
+</code></pre>
+<p>它首先检查是否设置了 NO_WRITES 标志；如果没有，就检查 _IO_write_base 是否为 NULL。如果为 NULL，就调用 <code>   _IO_doallocbuf (f); 745               _IO_setg (f, f-&gt;_IO_buf_base, f-&gt;_IO_buf_base, f-&gt;_IO_buf_base);</code>_IO_doallocbuf 分配一块缓冲区并赋值 _IO_buf_base 和 _IO_buf_end 指针。然后调用 _IO_setg，最后调用 _IO_do_write 把缓冲区内容写入文件</p>
+<pre><code class="language-c"> // 这两个是宏, 就是设置 read 和 write 的三个指针都为 _IO_buf_base
+      _IO_setg (fp, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base);
+      _IO_setp (fp, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base);
+</code></pre>
+<h3 id="_io_do_write">_IO_do_write</h3>
+<pre><code class="language-c">   421 int
+   422 _IO_new_do_write (FILE *fp, const char *data, size_t to_do)
+   423 {
+   424   return (to_do == 0
+ ► 425           || (size_t) new_do_write (fp, data, to_do) == to_do) ? 0 : EOF;
+   426 }
+   427 libc_hidden_ver (_IO_new_do_write, _IO_do_write)
+   428 
+</code></pre>
+<h3 id="new_do_write">new_do_write</h3>
+<pre><code class="language-c">
+429     static size_t
+430     new_do_write (FILE *fp, const char *data, size_t to_do)
+431     {
+432       size_t count;
+433       if (fp-&gt;_flags &amp; _IO_IS_APPENDING)
+434         /* On a system without a proper O_APPEND implementation,
+435            you would need to sys_seek(0, SEEK_END) here, but is
+436            not needed nor desirable for Unix- or Posix-like systems.
+437            Instead, just indicate that offset (before and after) is
+438            unpredictable. */
+439         fp-&gt;_offset = _IO_pos_BAD;
+440       else if (fp-&gt;_IO_read_end != fp-&gt;_IO_write_base)
+441         {
+442           off64_t new_pos
+443             = _IO_SYSSEEK (fp, fp-&gt;_IO_write_base - fp-&gt;_IO_read_end, 1);
+444           if (new_pos == _IO_pos_BAD)
+445             return 0;
+446           fp-&gt;_offset = new_pos;
+447         }
+448       count = _IO_SYSWRITE (fp, data, to_do);
+449       if (fp-&gt;_cur_column &amp;&amp; count)
+450         fp-&gt;_cur_column = _IO_adjust_column (fp-&gt;_cur_column - 1, data, count) + 1;
+451       _IO_setg (fp, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base);
+452       fp-&gt;_IO_write_base = fp-&gt;_IO_write_ptr = fp-&gt;_IO_buf_base;
+453       fp-&gt;_IO_write_end = (fp-&gt;_mode &lt;= 0
+454                            &amp;&amp; (fp-&gt;_flags &amp; (_IO_LINE_BUF | _IO_UNBUFFERED))
+455                            ? fp-&gt;_IO_buf_base : fp-&gt;_IO_buf_end);
+456       return count;
+457     }
+</code></pre>
+<p>它首先检查是否启用了追加模式；如果没有，就根据 <code>fp-&gt;_IO_read_end != fp-&gt;_IO_write_base</code> 来决定是否调用 _IO_file_seek 定位写入位置。然后调用 _IO_SYSWRITE 写入文件，最后重置写缓冲区指针</p>
+<h3 id="_io_file_seek">_IO_file_seek</h3>
+<pre><code class="language-c">1137    off64_t
+1138    _IO_file_seek (FILE *fp, off64_t offset, int dir)
+1139    {
+1140      return __lseek64 (fp-&gt;_fileno, offset, dir);
+1141    }
+1142    libc_hidden_def (_IO_file_seek)
+</code></pre>
+<h3 id="_io_new_file_write">_IO_new_file_write</h3>
+<pre><code class="language-c">1171    ssize_t
+1172    _IO_new_file_write (FILE *f, const void *data, ssize_t n)
+1173    {
+1174      ssize_t to_do = n;
+1175      while (to_do &gt; 0)
+1176        {
+1177          ssize_t count = (__builtin_expect (f-&gt;_flags2
+1178                                             &amp; _IO_FLAGS2_NOTCANCEL, 0)
+1179                               ? __write_nocancel (f-&gt;_fileno, data, to_do)
+1180                               : __write (f-&gt;_fileno, data, to_do));
+1181          if (count &lt; 0)
+1182            {
+1183              f-&gt;_flags |= _IO_ERR_SEEN;
+1184              break;
+1185            }
+1186          to_do -= count;
+1187          data = (void *) ((char *) data + count);
+1188        }
+1189      n -= to_do;
+1190      if (f-&gt;_offset &gt;= 0)
+1191        f-&gt;_offset += n;
+1192      return n;
+1193    }
+</code></pre>
+<h3 id="_io_do_flush">_IO_do_flush</h3>
+<pre><code class="language-c">#define _IO_do_flush(_f) \
+  ((_f)-&gt;_mode &lt;= 0                                                              \
+   ? _IO_do_write(_f, (_f)-&gt;_IO_write_base,                                      \
+                  (_f)-&gt;_IO_write_ptr-(_f)-&gt;_IO_write_base)                      \
+   : _IO_wdo_write(_f, (_f)-&gt;_wide_data-&gt;_IO_write_base,                         \
+                   ((_f)-&gt;_wide_data-&gt;_IO_write_ptr                              \
+                    - (_f)-&gt;_wide_data-&gt;_IO_write_base)))
+</code></pre>
+<h2 id="_io_default_xsputn">_IO_default_xsputn</h2>
+<pre><code class="language-c">370     _IO_default_xsputn (FILE *f, const void *data, size_t n)
+371     {
+372       const char *s = (char *) data;
+373       size_t more = n;
+374       if (more &lt;= 0)
+375         return 0;
+376       for (;;)
+377         {
+378           /* Space available. */
+379           if (f-&gt;_IO_write_ptr &lt; f-&gt;_IO_write_end)
+380             {
+381               size_t count = f-&gt;_IO_write_end - f-&gt;_IO_write_ptr;
+382               if (count &gt; more)
+383                 count = more;
+384               if (count &gt; 20)
+385                 {
+386                   f-&gt;_IO_write_ptr = __mempcpy (f-&gt;_IO_write_ptr, s, count);
+387                   s += count;
+388                 }
+389               else if (count)
+390                 {
+391                   char *p = f-&gt;_IO_write_ptr;
+392                   ssize_t i;
+393                   for (i = count; --i &gt;= 0; )
+394                     *p++ = *s++;
+395                   f-&gt;_IO_write_ptr = p;
+396                 }
+397               more -= count;
+398             }
+399           if (more == 0 || _IO_OVERFLOW (f, (unsigned char) *s++) == EOF)
+400             break;
+401           more--;
+402         }
+403       return n - more;
+404     }
+405     libc_hidden_def (_IO_default_xsputn)
+</code></pre>
+<p>它首先检查输出缓冲区的剩余空间；如果 count 超过 20，就直接 memcpy 到输出缓冲区，否则在循环中逐字节复制。当缓冲区已满或所有数据都已写入缓冲区时，它检查是否还有更多数据需要写入（more 非零），并调用 _IO_OVERFLOW 尝试刷新缓冲区并写入下一个字符。如果 _IO_OVERFLOW 返回 EOF（出错），或所有数据都已写入缓冲区，循环就结束。</p>
+<h1 id="fclose">fclose</h1>
+<h2 id="_io_new_fclose">_IO_new_fclose</h2>
+<pre><code class="language-c">32      int
+33      _IO_new_fclose (FILE *fp)
+34      {
+35        int status;
+36
+37        CHECK_FILE(fp, EOF);
+38
+39      #if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_1)
+40        /* We desperately try to help programs which are using streams in a
+41           strange way and mix old and new functions.  Detect old streams
+42           here.  */
+43        if (_IO_vtable_offset (fp) != 0)
+44          return _IO_old_fclose (fp);
+45      #endif
+46
+47        /* First unlink the stream.  */
+48        if (fp-&gt;_flags &amp; _IO_IS_FILEBUF)
+49          _IO_un_link ((struct _IO_FILE_plus *) fp);
+50
+51        _IO_acquire_lock (fp);
+52        if (fp-&gt;_flags &amp; _IO_IS_FILEBUF)
+53          status = _IO_file_close_it (fp);
+54        else
+55          status = fp-&gt;_flags &amp; _IO_ERR_SEEN ? -1 : 0;
+56        _IO_release_lock (fp);
+57        _IO_FINISH (fp);
+58        if (fp-&gt;_mode &gt; 0)
+59          {
+60            /* This stream has a wide orientation.  This means we have to free
+61               the conversion functions.  */
+62            struct _IO_codecvt *cc = fp-&gt;_codecvt;
+63
+64            __libc_lock_lock (__gconv_lock);
+65            __gconv_release_step (cc-&gt;__cd_in.step);
+66            __gconv_release_step (cc-&gt;__cd_out.step);
+67            __libc_lock_unlock (__gconv_lock);
+68          }
+69        else
+70          {
+71            if (_IO_have_backup (fp))
+72              _IO_free_backup_area (fp);
+73          }
+74        _IO_deallocate_file (fp);
+75        return status;
+76      }
+77
+78      versioned_symbol (libc, _IO_new_fclose, _IO_fclose, GLIBC_2_1);
+79      strong_alias (_IO_new_fclose, __new_fclose)
+80      versioned_symbol (libc, __new_fclose, fclose, GLIBC_2_1);
+</code></pre>
+<p>然后执行 _IO_un_link </p>
+<h2 id="_io_un_link">_IO_un_link</h2>
+<p>把它从链表中移除</p>
+<pre><code class="language-c">0
+51      void
+52      _IO_un_link (struct _IO_FILE_plus *fp)
+53      {
+54        if (fp-&gt;file._flags &amp; _IO_LINKED)
+55          {
+56            FILE **f;
+57      #ifdef _IO_MTSAFE_IO
+58            _IO_cleanup_region_start_noarg (flush_cleanup);
+59            _IO_lock_lock (list_all_lock);
+60            run_fp = (FILE *) fp;
+61            _IO_flockfile ((FILE *) fp);
+62      #endif
+63            if (_IO_list_all == NULL)
+64              ;
+65            else if (fp == _IO_list_all)
+66              _IO_list_all = (struct _IO_FILE_plus *) _IO_list_all-&gt;file._chain;
+67            else
+68              for (f = &amp;_IO_list_all-&gt;file._chain; *f; f = &amp;(*f)-&gt;_chain)
+69                if (*f == (FILE *) fp)
+70                  {
+71                    *f = fp-&gt;file._chain;
+72                    break;
+73                  }
+74            fp-&gt;file._flags &amp;= ~_IO_LINKED;
+75      #ifdef _IO_MTSAFE_IO
+76            _IO_funlockfile ((FILE *) fp);
+77            run_fp = NULL;
+78            _IO_lock_unlock (list_all_lock);
+79            _IO_cleanup_region_end (0);
+80      #endif
+81          }
+82      }
+83      libc_hidden_def (_IO_un_link)
+</code></pre>
+<h2 id="_io_new_file_close_it">_IO_new_file_close_it</h2>
+<pre><code class="language-c">  int
+127     _IO_new_file_close_it (FILE *fp)
+128     {
+129       int write_status;
+130       if (!_IO_file_is_open (fp))
+131         return EOF;
+132
+133       if ((fp-&gt;_flags &amp; _IO_NO_WRITES) == 0
+134           &amp;&amp; (fp-&gt;_flags &amp; _IO_CURRENTLY_PUTTING) != 0)
+135         write_status = _IO_do_flush (fp);
+136       else
+137         write_status = 0;
+138
+139       _IO_unsave_markers (fp);
+140
+141       int close_status = ((fp-&gt;_flags2 &amp; _IO_FLAGS2_NOCLOSE) == 0
+142                           ? _IO_SYSCLOSE (fp) : 0);
+143
+144       /* Free buffer. */
+145       if (fp-&gt;_mode &gt; 0)
+146         {
+147           if (_IO_have_wbackup (fp))
+148             _IO_free_wbackup_area (fp);
+149           _IO_wsetb (fp, NULL, NULL, 0);
+150           _IO_wsetg (fp, NULL, NULL, NULL);
+151           _IO_wsetp (fp, NULL, NULL);
+152         }
+153       _IO_setb (fp, NULL, NULL, 0);
+154       _IO_setg (fp, NULL, NULL, NULL);
+155       _IO_setp (fp, NULL, NULL);
+156
+157       _IO_un_link ((struct _IO_FILE_plus *) fp);
+158       fp-&gt;_flags = _IO_MAGIC|CLOSED_FILEBUF_FLAGS;
+159       fp-&gt;_fileno = -1;
+160       fp-&gt;_offset = _IO_pos_BAD;
+161
+162       return close_status ? close_status : write_status;
+163     }
+164     libc_hidden_ver (_IO_new_file_close_it, _IO_file_close_it)
+</code></pre>
+<p>它检查文件是否打开；然后，如果支持写入，就把缓冲区内容写入文件（_IO_do_flush），再执行 _IO_SYSCLOSE，也就是 _IO_file_close。最后，把文件结构体的一些指针设置为 NULL，然后再次调用 _IO_un_link</p>
+<h3 id="_io_file_close">_IO_file_close</h3>
+<pre><code class="language-c">   1163 _IO_file_close (FILE *fp)
+   1164 {
+   1165   /* Cancelling close should be avoided if possible since it leaves an
+   1166      unrecoverable state behind.  */
+   1167   return __close_nocancel (fp-&gt;_fileno);
+ ► 1168 }
+   1169 libc_hidden_def (_IO_file_close)
+</code></pre>
+<pre><code class="language-c">   23 int
+   24 __close_nocancel (int fd)
+   25 {
+ ► 26   return INLINE_SYSCALL_CALL (close, fd);
+   27 }
+   28 libc_hidden_def (__close_nocancel)
+</code></pre>
+<p>然后执行 _IO_FINISH </p>
+<h2 id="_io_new_file_finish">_IO_new_file_finish</h2>
+<pre><code class="language-c"> void
+167     _IO_new_file_finish (FILE *fp, int dummy)
+168     {
+169       if (_IO_file_is_open (fp))
+170         {
+171           _IO_do_flush (fp);
+172           if (!(fp-&gt;_flags &amp; _IO_DELETE_DONT_CLOSE))
+173             _IO_SYSCLOSE (fp);
+174         }
+175       _IO_default_finish (fp, 0);
+176     }
+177     libc_hidden_ver (_IO_new_file_finish, _IO_file_finish)
+</code></pre>
+<p>由于上面已经关闭了文件，所以通常直接执行 _IO_default_finish </p>
+<h3 id="_io_default_finish">_IO_default_finish</h3>
+<pre><code class="language-c">598
+599     void
+600     _IO_default_finish (FILE *fp, int dummy)
+601     {
+602       struct _IO_marker *mark;
+603       if (fp-&gt;_IO_buf_base &amp;&amp; !(fp-&gt;_flags &amp; _IO_USER_BUF))
+604         {
+605           free (fp-&gt;_IO_buf_base);
+606           fp-&gt;_IO_buf_base = fp-&gt;_IO_buf_end = NULL;
+607         }
+608
+609       for (mark = fp-&gt;_markers; mark != NULL; mark = mark-&gt;_next)
+610         mark-&gt;_sbuf = NULL;
+611
+612       if (fp-&gt;_IO_save_base)
+613         {
+614           free (fp-&gt;_IO_save_base);
+615           fp-&gt;_IO_save_base = NULL;
+616         }
+617
+618       _IO_un_link ((struct _IO_FILE_plus *) fp);
+619
+620     #ifdef _IO_MTSAFE_IO
+621       if (fp-&gt;_lock != NULL)
+622         _IO_lock_fini (*fp-&gt;_lock);
+623     #endif
+624     }
+625     libc_hidden_def (_IO_default_finish)
+</code></pre>
+<p>释放剩余的各种资源</p>
+<h3 id="_io_deallocate_file">_IO_deallocate_file</h3>
+<p>然后执行以下内容</p>
+<pre><code class="language-c">if (fp-&gt;_mode &gt; 0)
+59          {
+60            /* This stream has a wide orientation.  This means we have to free
+61               the conversion functions.  */
+62            struct _IO_codecvt *cc = fp-&gt;_codecvt;
+63
+64            __libc_lock_lock (__gconv_lock);
+65            __gconv_release_step (cc-&gt;__cd_in.step);
+66            __gconv_release_step (cc-&gt;__cd_out.step);
+67            __libc_lock_unlock (__gconv_lock);
+68          }
+69        else
+70          {
+71            if (_IO_have_backup (fp))
+72              _IO_free_backup_area (fp);
+73          }
+74        _IO_deallocate_file (fp);
+</code></pre>
+<ul>
+<li><p><strong>检查文件流模式</strong>：</p>
+<ul>
+<li><code>if (fp-&gt;_mode &gt; 0)</code> 检查文件流是否以宽字符模式打开（例如涉及 UTF-16 或 UTF-32 等多字节编码）。<code>fp-&gt;_mode</code> 大于 0 表示该流是宽字符定向的。</li>
+</ul>
+</li>
+<li><p><strong>释放宽字符编码资源</strong>：</p>
+<ul>
+<li>如果流处于宽字符模式，就执行以下操作：<ul>
+<li>获取编码转换器结构体指针：<code>struct _IO_codecvt *cc = fp-&gt;_codecvt;</code></li>
+<li>加锁以保证线程安全：<code>__libc_lock_lock(__gconv_lock);</code></li>
+<li>释放输入和输出转换步骤（很可能是字符编码转换的内部状态）：<code>__gconv_release_step(cc-&gt;__cd_in.step)</code> 和 <code>__gconv_release_step(cc-&gt;__cd_out.step)</code></li>
+<li>解锁：<code>__libc_lock_unlock(__gconv_lock);</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>备份区处理</strong>：</p>
+<ul>
+<li>否则（即文件流不处于宽字符模式），检查是否存在备份区：<ul>
+<li><code>if (_IO_have_backup(fp))</code> 确认文件流是否有备份区，备份区通常用于实现写回滚等功能。</li>
+<li>如果存在，就释放备份区：<code>_IO_free_backup_area(fp);</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>释放文件流资源</strong>：</p>
+<ul>
+<li>无论哪种情况，最终都会执行以下内容：<ul>
+<li><code>_IO_deallocate_file(fp);</code> 释放整个文件流结构体及其所有关联资源。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-c">static inline void
+_IO_deallocate_file (FILE *fp)
+{
+  /* The current stream variables.  */
+  if (fp == (FILE *) &amp;_IO_2_1_stdin_ || fp == (FILE *) &amp;_IO_2_1_stdout_
+      || fp == (FILE *) &amp;_IO_2_1_stderr_)
+    return;
+#if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_1)
+  if (_IO_legacy_file (fp))
+    return;
+#endif
+  free (fp);
+}
+</code></pre>
+<p>它检查传入的 fp 是否指向标准流之一：标准输入 stdin、标准输出 stdout 或标准错误 stderr。如果不是，就释放该 FILE 结构体</p>
+
+    </article>
+    
+    <nav class="pn"><span></span><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#fopen_internal">fopen_internal</a><a class="d2" href="#_io_no_init">_IO_no_init</a><a class="d3" href="#_io_old_init">_IO_old_init</a><a class="d2" href="#_io_new_file_init_internal">_IO_new_file_init_internal</a><a class="d3" href="#_io_link_in">_IO_link_in</a><a class="d2" href="#_io_new_file_fopen">_IO_new_file_fopen</a><a class="d3" href="#_io_file_open">_IO_file_open</a><a class="d2" href="#_io_fread">_IO_fread</a><a class="d2" href="#_io_sgetn">_IO_sgetn</a><a class="d2" href="#_io_doallocbuf">_IO_doallocbuf</a><a class="d3" href="#_io_file_doallocate">_IO_file_doallocate</a><a class="d3" href="#_io_file_stat">_IO_file_stat</a><a class="d3" href="#_io_setb">_IO_setb</a><a class="d2" href="#__underflow">__underflow</a><a class="d3" href="#_io_new_file_underflow">_IO_new_file_underflow</a><a class="d3" href="#_io_file_read">_IO_file_read</a><a class="d2" href="#_io_fwrite">_IO_fwrite</a><a class="d2" href="#_io_new_file_xsputn">_IO_new_file_xsputn</a><a class="d3" href="#_io_new_file_overflow">_IO_new_file_overflow</a><a class="d3" href="#_io_do_write">_IO_do_write</a><a class="d3" href="#new_do_write">new_do_write</a><a class="d3" href="#_io_file_seek">_IO_file_seek</a><a class="d3" href="#_io_new_file_write">_IO_new_file_write</a><a class="d3" href="#_io_do_flush">_IO_do_flush</a><a class="d2" href="#_io_default_xsputn">_IO_default_xsputn</a><a class="d2" href="#_io_new_fclose">_IO_new_fclose</a><a class="d2" href="#_io_un_link">_IO_un_link</a><a class="d2" href="#_io_new_file_close_it">_IO_new_file_close_it</a><a class="d3" href="#_io_file_close">_IO_file_close</a><a class="d2" href="#_io_new_file_finish">_IO_new_file_finish</a><a class="d3" href="#_io_default_finish">_IO_default_finish</a><a class="d3" href="#_io_deallocate_file">_IO_deallocate_file</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

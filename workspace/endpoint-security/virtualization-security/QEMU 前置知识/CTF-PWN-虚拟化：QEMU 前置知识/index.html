@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-PWN-虚拟化：QEMU 前置知识 · Y0uYuGe</title>
+<meta name="description" content="访问设备所在内存时，会调用注册的 mmio 读函数 d3dev_mmio_read，读取位置为基址 + 0x128，读取 4 字节。每个 qemu 虚拟机都是宿主机上的一个进程，该进程通过 mmap 分配 0x40000000 字节的宿主机虚拟内存作为虚拟机的物理内存。设备会注册自己的 MMIO 和 PMIO 读写函数，当检测到对其内存或端口的访问时，就会调用注册的读写函数，实现对设备内存的读写访问。对于 0000:00:03.0 这种形式的数据，0000 是 domain，00 是总线号，03 是设备号，0 是功能号。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/virtualization-security">虚拟化安全</a><span class="sep">›</span><a href="/#/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86">QEMU 前置知识</a></nav>
+    <h1>CTF-PWN-虚拟化：QEMU 前置知识</h1>
+    <div class="meta"><time>2024-06-21</time><span class="tag">#PWN</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<h1 id="参考">参考</h1>
+<p><a href="https://xz.aliyun.com/t/6562?time__1311=n4%2bxnD0DRDBAi=GkDgiDlhjmYh2xuCllx7whD&alichlgref=https://www.bing.com/#toc-3">https://xz.aliyun.com/t/6562?time__1311=n4%2bxnD0DRDBAi=GkDgiDlhjmYh2xuCllx7whD&amp;alichlgref=https://www.bing.com/#toc-3</a></p>
+<h1 id="地址相关">地址相关</h1>
+<p>每个 qemu 虚拟机都是宿主机上的一个进程，该进程通过 mmap 分配 0x40000000 字节的宿主机虚拟内存，作为虚拟机的物理内存</p>
+<p>GVA：guest virtual address（虚拟机中的虚拟地址）
+GPA：guest physical address（虚拟机中的物理地址）
+HVA：host virtual address（宿主机上的虚拟地址）
+HPA：host physical address（宿主机上的物理地址）</p>
+<p>GVA 通过虚拟机的页表转换为 GPA，GPA 实际上是宿主机进程 mmap 出来的空间中的偏移，加上基址就得到 HVA（mmap 分配虚拟机所申请大小的内存，作为该虚拟机的物理内存）</p>
+<ol start="2">
+<li>设备可以申请两类空间：memory mapped I/O（MMIO）和 port mapped I/O（PMIO），并使用配置空间中的基址寄存器（BAR）来标记内存地址信息</li>
+</ol>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;assert.h&gt;
+#include &lt;inttypes.h&gt;
+
+#define PAGE_SHIFT  12
+#define PAGE_SIZE   (1 &lt;&lt; PAGE_SHIFT)
+#define PFN_PRESENT (1ull &lt;&lt; 63)
+#define PFN_PFN     ((1ull &lt;&lt; 55) - 1)
+
+int fd;
+
+uint32_t page_offset(uint32_t addr)
+{
+    return addr &amp; ((1 &lt;&lt; PAGE_SHIFT) - 1);
+    //虚拟地址addr在其所在页面内的偏移量
+}
+
+uint64_t gva_to_gfn(void *addr)
+{
+    uint64_t pme, gfn;
+    size_t offset;
+    offset = ((uintptr_t)addr &gt;&gt; 9) &amp; ~7;//页表条目相对于文件开始的偏移量（GFN, Guest Physical Frame Number）
+    lseek(fd, offset, SEEK_SET);//移动文件指针到计算出的偏移量处，准备读取PTE。
+    read(fd, &amp;pme, 8);  //从文件中读取8字节到pme变量即物理块起始地址
+    if (!(pme &amp; PFN_PRESENT))
+        return -1;
+    gfn = pme &amp; PFN_PFN;
+    return gfn;
+}
+
+uint64_t gva_to_gpa(void *addr)
+{
+    uint64_t gfn = gva_to_gfn(addr);
+    assert(gfn != -1);
+    return (gfn &lt;&lt; PAGE_SHIFT) | page_offset((uint64_t)addr);
+}
+
+int main()
+{
+    uint8_t *ptr;
+    uint64_t ptr_mem;
+    // uint64_t ptr_malloc;
+    fd = open(&quot;/proc/self/pagemap&quot;, O_RDONLY);
+    if (fd &lt; 0) {
+        perror(&quot;open&quot;);
+        exit(1);
+    }
+
+    ptr = malloc(256);
+    strcpy(ptr, &quot;Where am I?&quot;);
+    printf(&quot;%s\n&quot;, ptr);
+    ptr_mem = gva_to_gpa(ptr);
+    
+    printf(&quot;Your physical address is at 0x%&quot;PRIx64&quot;\n&quot;, ptr_mem);
+    // ptr_malloc = gva_to_gpa(&amp;malloc);
+    // printf(&quot;malloc physical address 0x%&quot;PRIx64&quot; \n&quot;,ptr_malloc);
+
+    getchar();
+    return 0;
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-001-00152bfc4a.png" alt="图片">
+gdb attach 之后，通过 vmmap 可以看到启动脚本中 -M 指定的分配大小</p>
+<p><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-002-6dabce8a24.png" alt="图片"><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-003-eda9b34e07.png" alt="图片"></p>
+<h1 id="交互相关">交互相关</h1>
+<p> 每个 PCI 设备都有一个总线号、一个设备号和一个功能标识，并且位于某个 PCI 域中。一个 PCI 域最多可以容纳 256 条总线，每条总线最多可以有 32 个设备，每个设备最多可以有 8 个功能 </p>
+<p>   lspci 可以显示设备的域、总线号、设备号和功能号，不同版本的 lspci 显示的内容不同</p>
+<p>   对于 0000:00:03.0 这种形式的数据，0000 是 domain，00 是总线号，03 是设备号，0 是功能号
+<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-004-d06ccfac58.png" alt="图片">
+resource 中的 pmio 端口和 mmio 基址是固定的
+mmio：把配置好的寄存器映射到端口，访问端口即可访问寄存器
+pmio：把配置好的寄存器映射到内存，访问内存即可访问寄存器</p>
+<ul>
+<li>hexdump /sys/devices/pci0000:00/0000:00:03.0/config 可以查看 deviceid、vendorid 等配置信息</li>
+<li>访问 memory mapped I/O 内存：open 得到 fd，然后用 mmap 映射内存地址，直接对内存进行操作</li>
+</ul>
+<pre><code class="language-c">int mmio_fd = open(&quot;/sys/devices/pci0000:00/0000:00:04.0/resource0&quot;, O_RDWR | O_SYNC);
+mmio_mem = mmap(0, 0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, mmio_fd, 0);
+</code></pre>
+<ul>
+<li>访问 port mapped I/O 内存：申请端口访问权限后，用 in 和 out 进行访问</li>
+</ul>
+<pre><code class="language-c">iopl(3);// iopl(3) 表示打开对全部IO端口的访问权限
+inb(port); //从端口读一个字节
+outb(val,port); //往端口写一个字节val
+</code></pre>
+<p>设备会注册自己的 MMIO 和 PMIO 读写函数，当检测到对其内存或端口的访问时，就会调用注册的读写函数，实现对设备内存的读写访问</p>
+<p>访问设备所在内存时，会调用注册的 mmio 读函数 d3dev_mmio_read，读取位置为基址 + 0x128，读取 4 字节。在 d3dev_mmio_read 中识别为 rsi = 0x128（偏移）以及 rdx = 4</p>
+<p><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-005-5417d0cc25.png" alt="图片">
+<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-006-9c875ab240.png" alt="图片">
+写设备所在内存时，会调用注册的 mmio 写函数 d3dev_mmio_write
+<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-007-25fc870d2d.png" alt="图片"></p>
+<pre><code class="language-c">#include &lt;assert.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;inttypes.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+#include&lt;sys/io.h&gt;
+
+
+unsigned char* mmio_mem;
+
+void die(const char* msg)
+{
+    perror(msg);
+    exit(-1);
+}
+
+
+void mmio_write(uint32_t addr, uint32_t value)
+{
+    *((uint32_t*)(mmio_mem + addr)) = value;
+}
+
+uint32_t mmio_read(uint32_t addr)
+{
+    return *((uint32_t*)(mmio_mem + addr));
+}
+
+
+int main(int argc, char *argv[])
+{
+
+    // Open and map I/O memory for the strng device
+    int mmio_fd = open(&quot;/sys/devices/pci0000:00/0000:00:03.0/resource0&quot;, O_RDWR | O_SYNC);//O_SYNC标志表示同步I/O操作，确保对文件的写操作在返回前完成
+    if (mmio_fd == -1)
+        die(&quot;mmio_fd open failed&quot;);
+
+    mmio_mem = mmap(0, 0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, mmio_fd, 0);
+    //PROT_READ | PROT_WRITE：指定映射区域的访问权限，这里允许读写。
+    //MAP_SHARED：映射类型，共享映射意味着对映射区域的修改会反映到设备上，其他映射同一资源的进程也能看到修改。
+    //mmio_fd：之前通过open获得的文件描述符。
+    //0：文件偏移量，从资源的起始位置开始映射。
+    if (mmio_mem == MAP_FAILED)
+        die(&quot;mmap mmio_mem failed&quot;);
+
+    printf(&quot;mmio_mem @ %p\n&quot;, mmio_mem);
+
+    mmio_read(0x128);
+    mmio_write(0x128, 1337);
+    mmio_read(0x128);
+
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-008-771bfd5fb2.png" alt="图片">
+可以看到 rsi 被设置为偏移
+<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-009-0eaf8da720.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-010-8a861dfe9b.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139808175/image-011-a726997380.png" alt="图片"></p>
+<pre><code class="language-c">#include &lt;assert.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;inttypes.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+#include&lt;sys/io.h&gt;
+
+void die(const char* msg)
+{
+    perror(msg);
+    exit(-1);
+}
+
+
+uint32_t pmio_base=0xc040;
+
+uint32_t pmio_write(uint32_t addr, uint32_t value)
+{
+    outl(value,addr);
+}
+
+uint32_t pmio_read(uint32_t addr)
+{
+    return (uint32_t)inl(addr);
+}
+
+int main(int argc, char *argv[])
+{
+
+
+    if (iopl(3) !=0 )
+        die(&quot;I/O permission is not enough&quot;);
+    pmio_read(pmio_base+4);
+    pmio_write(pmio_base+4,1);
+    pmio_read(pmio_base+4);
+
+}
+</code></pre>
+<ul>
+<li>在 qemu 中运行程序时，设备读写涉及的操作是由 qemu 进程执行的，而不是由虚拟机执行——它们操作的是 qemu 进程的虚拟地址，而不是 mmap 出来作为虚拟机内存的那部分（和普通用户态一样）</li>
+<li>注册的读写函数中的 addr 是偏移，mmio 的范围是 0x800，pmio 是 0x20</li>
+</ul>
+<h1 id="配置相关">配置相关</h1>
+<p>PCI 设备有一个配置空间用于存放设备信息，头部最开始的数据是 Device id 和 Vendor id</p>
+<p> 初始化设备时会初始化四个重要的结构体：TypeInfo -&gt; TypeImpl -&gt; ObjectClass -&gt; Object。每个 Object 对应一个具体的设备，在 qemu 启动并通过 -device 参数加载设备时会调用其构造函数</p>
+<p>设备读写操作函数的第一个参数就是指向这个 Object 类的指针</p>
+<h1 id="调试">调试</h1>
+<p>把 exp 打包进文件系统</p>
+<pre><code class="language-bash">gcc -static exp.c -o   exp
+find . | cpio -o --format=newc &gt; ../rootfs.img
+</code></pre>
+<p>启动 qemu</p>
+<pre><code class="language-bash">./launch.sh
+</code></pre>
+<pre><code class="language-bash">touch .gdbinit
+往里面写入断点
+b*d3dev_pmio_write
+b*d3dev_pmio_read
+b*d3dev_mmio_write
+b*d3dev_mmio_read
+去除符号表就用
+b *$rebase(addr)
+</code></pre>
+<pre><code class="language-bash">ps -ef | grep qemu
+一般是最下面的那个进程
+</code></pre>
+<pre><code class="language-bash">sudo gdb attach -p 进程号
+</code></pre>
+<p>在 qemu 中：</p>
+<pre><code class="language-bash">./exp
+</code></pre>
+<p>此时 gdb 会在断点处断下，就可以开始调试了</p>
+<blockquote>
+<p>attach 成功后即可下断点调试。程序开启了 PIE 保护且没有符号表，可以用 pwndbg 的 $rebase() 根据 IDA 中的地址确定进程中的真实地址</p>
+</blockquote>
+<h1 id="qom">QOM</h1>
+<p><a href="https://www.cnblogs.com/edver/p/14684143.html">https://www.cnblogs.com/edver/p/14684143.html</a>
+<a href="https://martins3.github.io/qemu/qom.html">https://martins3.github.io/qemu/qom.html</a></p>
+<p><a href="https://juniorprincewang.github.io/2018/07/23/qemu%E6%BA%90%E7%A0%81%E6%B7%BB%E5%8A%A0%E8%AE%BE%E5%A4%87/">https://juniorprincewang.github.io/2018/07/23/qemu%E6%BA%90%E7%A0%81%E6%B7%BB%E5%8A%A0%E8%AE%BE%E5%A4%87/</a></p>
+<h1 id="待完善以后做题用到了再补充">待完善（以后做题用到了再补充）</h1>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-%E8%99%9A%E6%8B%9F%E6%9C%BA-QEMU-%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8E%20IO%20%E5%A4%84%E7%90%86/"><span class="l">上一篇</span>CTF-虚拟机-QEMU-前置知识-内存管理与 IO 处理</a><span></span></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

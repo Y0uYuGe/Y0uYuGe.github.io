@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 编码与调制（基带信号、基带传输、宽带信号、宽带传输、编码、调制） · Y0uYuGe</title>
+<meta name="description" content="宽带信号：基带信号经过调制后频率变高，就是宽带信号（调制后可以放到复杂恶劣的信道上传输；例如声音经过话筒调制，频率升高，能够抵抗各种信号的干扰，使接收方可以过滤出原来的基带信号）。全 0 时信号不断翻转，接收到的信号一直在变化，可以区分不同码元，容易接收；全 1 时信号一直不变，接收方看到的是不变的信号，无法判断收到了多少个码元。每个原码元被分成低电平和高电平两个码元，频率加倍，对应的频率范围也加倍，因此通带宽度是原基带宽度的两倍。因此如果衰减太大，信号可能就直接消失了。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82">物理层</a></nav>
+    <h1>计算机网络 - 编码与调制（基带信号、基带传输、宽带信号、宽带传输、编码、调制）</h1>
+    <div class="meta"><time>2024-01-27</time><span class="tag">#计算机网络</span></div>
+    <article class="post-body">
+<h1 id="基带信号与宽带信号">基带信号与宽带信号</h1>
+<p>信道上传输的信号除了可以分为数字信号和模拟信号，还可以分为基带信号和宽带信号——只是分类标准不同</p>
+<p>基带信号：没有经过调制的原始电信号，即来自信源的信号；它既可以是数字信号，也可以是模拟信号</p>
+<p>基带传输：在数字信道上传输就是基带传输（传输的一般是数字信号）</p>
+<p>宽带信号：基带信号经过调制后频率变高，就是宽带信号（调制后可以放到复杂恶劣的信道上传输；例如声音经过话筒调制，频率升高，能够抵抗各种信号的干扰，使接收方可以过滤出原来的基带信号）</p>
+<p>宽带传输：在模拟信道上传输就是宽带传输</p>
+<p>衰减是由信号干扰引起的。基带信号的频率一般较低，从接近零频开始。所以如果衰减太大，信号可能就直接消失了。因此基带用于近距离传输
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-001-21faf3fec0.png" alt="图片"></p>
+<h1 id="编码与调制">编码与调制</h1>
+<p>数据是表示消息的符号序列
+信号是数据在信道上传输时的表现形式
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-002-9aee1add2c.png" alt="图片"></p>
+<h1 id="数字数据编码为数字信号">数字数据编码为数字信号</h1>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-003-c086071b84.png" alt="图片">
+无法判断一个码元从哪里开始、到哪里结束，因为码元长度未知；信号没有变化时，无法判断是一个码元还是多个码元。
+所以需要额外一条信道告诉对方什么时候开始接收、多长算一个码元，从而建立同步（即时钟信号）。
+建立同步比较麻烦，所以很少使用<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-004-28399890dc.png" alt="图片">
+归零编码：每个码元结束时都要回到零信号
+信道很多时间都在传输零信号，这意味着信道没有被充分利用（零信号时信道上没有传输内容），所以也不推荐
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-005-62cfe12df2.png" alt="图片">
+反向不归零编码
+全 0 时信号不断翻转，接收到的信号一直在变化，可以区分不同码元，容易接收；全 1 时信号一直不变，接收方看到的是不变的信号，无法判断收到了多少个码元。同样需要额外的信道来确定接收（即时钟信号）
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-006-848c9b066a.png" alt="图片">
+曼彻斯特编码</p>
+<p>跳变作为时钟信号：每发送一个码元就产生一次跳变，接收方由此知道发送了一个码元，再根据跳变前后的信号得出码元的值</p>
+<p>每个原码元被分成低电平和高电平两个码元，频率加倍，对应的频率范围也加倍，因此通带宽度是原基带宽度的两倍
+<strong>码元宽度是传输一个码元所需的时间，而通带宽度和基带宽度指的是信号所占的频率范围</strong></p>
+<blockquote>
+<p>基带宽度和通带宽度是通信系统中的两个重要概念，它们代表不同的信号传输方式和系统设计参数。具体如下：</p>
+</blockquote>
+<ul>
+<li>基带宽度：通常指数字通信中数字信号所占的频率范围。基带信号是信息信号本身的频谱，例如计算机产生的二进制数据信号。基带传输是不经调制直接通过电缆或其他介质发送数字信号，因此基带宽度就是这些数字信号的频谱宽度。</li>
+<li>通带宽度：也称带宽，在模拟通信中是已调信号所占的频率范围。通带传输把基带信号调制到较高的频率上进行传输，以便在信道上实现多路复用、增加信道容量并达到更远的传输距离。</li>
+</ul>
+<blockquote>
+<p>曼彻斯特编码的通带宽度是原基带宽度的两倍，这是由曼彻斯特编码的固有特性决定的。</p>
+</blockquote>
+<ul>
+<li>首先，曼彻斯特编码是一种双相编码：它把每个数据位编码为两个相反的电平——逻辑“0”用先正后负的脉冲表示，逻辑“1”用先负后正的脉冲表示。这意味着每个码元周期内都有一次电平跳变，无论是从正到负还是从负到正。这种跳变提供了自同步能力，因为它携带了时钟信息，接收方可以通过检测这些跳变来同步读取数据。</li>
+<li>其次，由于每个码元包含两种不同的信号状态，这实际上使基带信号的频率加倍（可以理解为码元速率加倍）。在数字通信中，波特率（码元速率）是发送设备每秒能发送的码元数；在曼彻斯特编码中，由于每个数据位被编码为两个不同的电平状态，波特率是数据率的两倍。这也是曼彻斯特编码信号所占通带宽度是原基带宽度两倍的原因。</li>
+<li>最后，通带宽度的增加意味着需要更宽的频谱资源来传输，这可能是一种资源浪费。不过，曼彻斯特编码的优势在于良好的抗噪声能力和自同步能力，这使它在某些应用场景中非常有用，尤其是在噪声较大的环境或对时序要求严格的情况下。<blockquote>
+<p>总之，曼彻斯特编码通过为每个数据位增加一次额外的跳变，确实增加了所需的通带宽度，但它也提供了自同步和抗噪声等其他优势。</p>
+</blockquote>
+</li>
+</ul>
+<p>调制速率是调制后发送信号的码元速率；这里一个原码元（一个数据位）对应两个码元（两次信号变化）的调制速率</p>
+<p>即每比特两个码元（比特就是原码元）
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-007-d0eb699eb6.png" alt="图片">在差分曼彻斯特编码中，跳变作为时钟信号——知道发生了变化，就把区间分成两个码元</p>
+<p>抗噪声：实现算法更复杂</p>
+<p>注意当前码元的后半部分与码元信号的电平相同
+·
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-008-cd94076ee2.png" alt="图片">
+4B/5B 编码
+通过插入一位进行编码
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-009-eb978873b5.png" alt="图片"></p>
+<h1 id="数字数据调制为模拟信号">数字数据调制为模拟信号</h1>
+<p>   调幅：例如 0 没有振幅，1 有振幅<br>   调频：同一时间间隔内波形的个数<br>   调相：0 和 1 对应不同的波形（正弦和余弦）</p>
+<blockquote>
+<p>相位描述的是周期性运动或现象在一个周期内所处的位置。</p>
+</blockquote>
+<p>这相当于 4 种波形，每种有 4 种振幅，所以共有 16 种码元信号
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-010-cb1c3a2574.png" alt="图片">                                                                                                       </p>
+<h1 id="模拟数据编码为数字信号">模拟数据编码为数字信号</h1>
+<p>采样定理：任何模拟信号都是由一系列正弦波组成的</p>
+<p>量化：把采样得到的点按照分级标准转换为整数值</p>
+<blockquote>
+<p>频率是单位时间内周期性变化的次数，通常用赫兹（Hz）表示。</p>
+</blockquote>
+<p>采样频率越高，波形还原得越准确
+这就像根据采样点推出正弦或余弦函数：如果采样频率是信号频率的两倍，就可以在每四分之一周期恰好采到四个点，比较完整地还原波形；如果采样频率等于原频率，采集到的点就无法分辨出波形
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-011-a80be20140.png" alt="图片"></p>
+<h1 id="模拟数据调制为模拟信号">模拟数据调制为模拟信号</h1>
+<p>更准确地说是放大调制，因为调制后的模拟信号在传输过程中可能会有一些损耗，因此需要放大——提高频率</p>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-012-7c2233516c.png" alt="图片">
+将模拟数据调制为模拟信号，是用特定技术把原始模拟信息（如声音或图像）与高频载波信号结合起来，使信号能够有效传输。具体如下：</p>
+<ul>
+<li>调幅（Amplitude Modulation，AM）：通过改变载波的振幅来表示模拟数据。在 AM 中，载波的频率和相位保持不变，而振幅随模拟信号变化。</li>
+<li>调频（Frequency Modulation，FM）：通过改变载波的频率来表示模拟数据。在 FM 中，载波的振幅保持不变，而频率随模拟信号的强弱变化。</li>
+<li>调相（Phase Modulation，PM）：通过改变载波的相位来表示模拟数据。在 PM 中，载波的振幅和频率保持不变，而相位随模拟信号变化。</li>
+<li>此外，调制过程可以看作一种频谱搬移：把基带信号（原始模拟信号）的频谱搬移到更高的频率上。其目的是利用不同频段的特性，实现更远距离的传输，或在同一通信介质上同时传输多路信号。</li>
+</ul>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%BC%96%E7%A0%81%E4%B8%8E%E8%B0%83%E5%88%B6%EF%BC%88%E5%9F%BA%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%9F%BA%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BF%A1%E5%8F%B7%E3%80%81%E5%AE%BD%E5%B8%A6%E4%BC%A0%E8%BE%93%E3%80%81%E7%BC%96%E7%A0%81%E3%80%81%E8%B0%83%E5%88%B6%EF%BC%89/assets/csdn-135852023/image-013-e4b4fc2dd7.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/"><span class="l">下一篇</span>计算机网络 - 奈奎斯特准则与香农定理（码间串扰，两者的区别）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

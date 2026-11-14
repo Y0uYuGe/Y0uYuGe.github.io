@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PWN 前置知识 · Y0uYuGe</title>
+<meta name="description" content="这说明字符串是按从左到右、地址从低到高的顺序存储的；gdb 显示的是经过小端序转换后的编码。字符串 \&quot;\\x41\&quot; 会直接以 41 存储在对应位置，即该位置的内容编码为 41。2f：是 / 的 ASCII 码。62：是 b 的 ASCII 码。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/fundamentals/PWN%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/fundamentals">基础</a></nav>
+    <h1>PWN 前置知识</h1>
+    <div class="meta"><time>2023-10-19</time><span class="tag">#网络安全</span><span class="tag">#安全</span><span class="tag">#系统安全</span><span class="tag">#学习</span><span class="tag">#Pwn</span></div>
+    <article class="post-body">
+<h1 id="发送后编码的存储方式">发送后编码的存储方式</h1>
+<blockquote>
+<p>对于某个地址
+在 gdb 中执行：
+x/30xg 0x603290
+0x6032c0：0x0068732f6e69622f   /bin/sh
+2f：是 / 的 ASCII 码
+然后执行：
+x/30xg 0x6032c1
+0x6032c1:	0x000068732f6e6962  bin/sh
+62：是 b 的 ASCII 码</p>
+</blockquote>
+<blockquote>
+<p>这说明字符串是按从左到右、地址从低到高的顺序存储的；gdb 显示的是经过小端序转换后的编码</p>
+</blockquote>
+<blockquote>
+<p>字符串 &quot;\x41&quot; 会直接以 41 存储在对应位置，即该位置的内容编码为 41</p>
+</blockquote>
+<h1 id="exp-脚本">exp 脚本</h1>
+<pre><code class="language-python"> 导入模块
+ 根据个人情况
+ 
+ context(os=&#39;linux&#39;, arch=&#39;amd64&#39;, log_level=&#39;debug&#39;)
+ 即设置运行该脚本的操作系统为linux，架构为64为，log_level设置日志输出的等级为debug,会显示交互中的输入与输出
+ 
+ 连接
+ remote(&quot;主机名&quot;,端口号)远程
+ process(&quot;文件位置&quot;)本地
+ 
+ elf文件
+ e=ELF（文件位置）
+ e.address 
+ e,symbols[]
+ e.got[]
+ e.plt[]
+ e.search()._next_()
+ 搜索一个字符串并返回其所在地址 python3里字符串前面必须加上b&#39;&#39;
+ 
+ 数据处理
+ p32/p64: 处理一个整数,将其转变为十六进制 为32或64位 
+ u32/u64: 处理字节为32位或64位,将其转变为整数
+ 
+ u64(data.split(b&quot;\n&quot;)[0].ljust(8, b&quot;\x00&quot;))
+ ljust是左对齐，shellcode后面用A来填充垃圾数据，记得如果ljust是对字节操作记得加 b
+ 发送接受
+ send sendline sendafter sendlineafter 
+ recv recvline recvuntilb 都是先用字符串做参数吧(字符串&quot;\x41&quot;直接41存储在对应的位置，即该位置的内容编码位41)
+
+ cyclic 
+ 生成字符串 查找得位置
+
+ shellcraft.sh() shellcode的汇编形式
+ asm(shellcraft.sh()) shellcode的二进制码
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/fundamentals/CTF-PWN%E3%80%90%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E3%80%91/"><span class="l">上一篇</span>CTF-PWN【格式化字符串】</a><span></span></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

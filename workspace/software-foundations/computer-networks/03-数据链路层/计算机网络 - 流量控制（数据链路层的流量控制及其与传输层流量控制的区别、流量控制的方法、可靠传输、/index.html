@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 流量控制（数据链路层的流量控制及其与传输层流量控制的区别、流量控制的方法、可靠传输、滑动窗口与流量控制的关系） · Y0uYuGe</title>
+<meta name="description" content="滑动窗口协议：帧序号是循环使用的；收到一个确认帧后，发送窗口向前移动一格。在数据链路层的流量控制中，三种协议的接收窗口和发送窗口大小都是固定值。停止-等待协议：可以理解为发送窗口和接收窗口大小都为一。窗口公告：告诉对方自己这边的接收情况。流量控制可以比作猫主人喂猫。端到端：两台主机之间。点对点：两个结点之间。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%EF%BC%88%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E7%9A%84%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%8F%8A%E5%85%B6%E4%B8%8E%E4%BC%A0%E8%BE%93%E5%B1%82%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%8C%BA%E5%88%AB%E3%80%81%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E6%96%B9%E6%B3%95%E3%80%81%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93%E3%80%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82">数据链路层</a></nav>
+    <h1>计算机网络 - 流量控制（数据链路层的流量控制及其与传输层流量控制的区别、流量控制的方法、可靠传输、滑动窗口与流量控制的关系）</h1>
+    <div class="meta"><time>2024-02-06</time><span class="tag">#计算机网络</span><span class="tag">#服务器</span><span class="tag">#运维</span></div>
+    <article class="post-body">
+<h1 id="数据链路层的流量控制及其与传输层流量控制的区别">数据链路层的流量控制及其与传输层流量控制的区别</h1>
+<p>端到端：两台主机之间。
+点对点：两个结点之间。</p>
+<p>窗口公告：告诉对方自己这边的接收情况。</p>
+<p>流量控制可以比作猫主人喂猫。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%EF%BC%88%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E7%9A%84%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%8F%8A%E5%85%B6%E4%B8%8E%E4%BC%A0%E8%BE%93%E5%B1%82%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%8C%BA%E5%88%AB%E3%80%81%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E6%96%B9%E6%B3%95%E3%80%81%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93%E3%80%81/assets/csdn-136063112/image-001-c1250f9292.png" alt="图片"></p>
+<h1 id="流量控制的方法">流量控制的方法</h1>
+<p>停止-等待协议：可以理解为发送窗口和接收窗口大小都为一。
+滑动窗口协议：帧序号是循环使用的；收到一个确认帧后，发送窗口向前移动一格。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%EF%BC%88%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E7%9A%84%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%8F%8A%E5%85%B6%E4%B8%8E%E4%BC%A0%E8%BE%93%E5%B1%82%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%8C%BA%E5%88%AB%E3%80%81%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E6%96%B9%E6%B3%95%E3%80%81%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93%E3%80%81/assets/csdn-136063112/image-002-7546aefb0d.png" alt="图片"></p>
+<h2 id="各方法对应的发送窗口和接收窗口大小">各方法对应的发送窗口和接收窗口大小</h2>
+<p>在数据链路层的流量控制中，三种协议的接收窗口和发送窗口大小都是固定值。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%EF%BC%88%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E7%9A%84%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%8F%8A%E5%85%B6%E4%B8%8E%E4%BC%A0%E8%BE%93%E5%B1%82%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%8C%BA%E5%88%AB%E3%80%81%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E6%96%B9%E6%B3%95%E3%80%81%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93%E3%80%81/assets/csdn-136063112/image-003-d2b63eaf90.png" alt="图片"></p>
+<h1 id="可靠传输滑动窗口与流量控制的关系">可靠传输、滑动窗口与流量控制的关系</h1>
+<p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%EF%BC%88%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E7%9A%84%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%8F%8A%E5%85%B6%E4%B8%8E%E4%BC%A0%E8%BE%93%E5%B1%82%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%8C%BA%E5%88%AB%E3%80%81%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E6%96%B9%E6%B3%95%E3%80%81%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93%E3%80%81/assets/csdn-136063112/image-004-a2ff5232c8.png" alt="图片"></p>
+<h1 id="小结">小结</h1>
+<p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%EF%BC%88%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E7%9A%84%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%8F%8A%E5%85%B6%E4%B8%8E%E4%BC%A0%E8%BE%93%E5%B1%82%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%8C%BA%E5%88%AB%E3%80%81%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E6%96%B9%E6%B3%95%E3%80%81%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93%E3%80%81/assets/csdn-136063112/image-005-53080fa654.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/"><span class="l">上一篇</span>计算机网络 - 回退 N 帧协议（缺点、滑动窗口、GBN 的运行、滑动窗口大小习题、GBN 协议性能分析）</a><a href="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/"><span class="l">下一篇</span>计算机网络 - 数据链路层概述（功能概述、链路、数据链路、物理信道、逻辑信道）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

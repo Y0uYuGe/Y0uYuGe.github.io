@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密码学原理技术——第六章——公钥密码学简介 · Y0uYuGe</title>
+<meta name="description" content="使用 AES 作为对称加密的混合加密协议。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/security-foundations">安全基础</a><span class="sep">›</span><a href="/#/security-foundations/cryptography">密码学</a><span class="sep">›</span><a href="/#/security-foundations/cryptography/textbook-notes">教材笔记</a></nav>
+    <h1>密码学原理技术——第六章——公钥密码学简介</h1>
+    <div class="meta"><time>2024-12-30</time><span class="tag">#密码学</span><span class="tag">#AES</span></div>
+    <article class="post-body">
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-001-a924f4d170.png" alt="图片"></p>
+<h1 id="再谈对称密码学">再谈对称密码学</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-002-9d7b3084d1.png" alt="图片"></p>
+<h2 id="对称密码学类比">对称密码学：类比</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-003-34cba90d9a.png" alt="图片"></p>
+<h2 id="对称密码学缺点">对称密码学：缺点</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-004-1e8219dad8.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-005-0ab814e3e4.png" alt="图片"></p>
+<h1 id="非对称密码学的原理">非对称密码学的原理</h1>
+<h2 id="非对称密码学背后的思想">非对称密码学背后的思想</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-006-a21461f161.png" alt="图片"></p>
+<h2 id="非对称公钥密码学">非对称（公钥）密码学</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-007-969ce9111a.png" alt="图片"></p>
+<h2 id="非对称密码学类比">非对称密码学：类比</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-008-7c4dc68f7b.png" alt="图片"></p>
+<h1 id="公钥密码学的实际应用">公钥密码学的实际应用</h1>
+<h2 id="公钥加密的基本协议">公钥加密的基本协议</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-009-7035ac797a.png" alt="图片"></p>
+<h2 id="公钥密码学的安全机制">公钥密码学的安全机制</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-010-9399fa8ee1.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-011-9d5d6eca25.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-012-7403eb1b96.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-013-6ca3ee2645.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-014-242c3ca187.png" alt="图片"></p>
+<h2 id="基本的密钥传输协议">基本的密钥传输协议</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-015-735be2b4bc.png" alt="图片">
+使用 AES 作为对称加密的混合加密协议
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-016-711e0bf8ab.png" alt="图片"></p>
+<h1 id="重要的公钥算法">重要的公钥算法</h1>
+<h2 id="如何构建公钥算法">如何构建公钥算法</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-017-cc84b8d701.png" alt="图片"></p>
+<h2 id="密钥长度与安全级别">密钥长度与安全级别</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-018-021a7c9615.png" alt="图片"></p>
+<h1 id="公钥算法必备的数论知识">公钥算法必备的数论知识</h1>
+<h2 id="欧几里得算法">欧几里得算法</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-019-394c300370.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-020-97bc2e6542.png" alt="图片">
+原理证明
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-021-805d8b2ed8.png" alt="图片"></p>
+<h2 id="扩展欧几里得算法">扩展欧几里得算法</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-022-dc43ed50ff.png" alt="图片">
+先列出普通欧几里得算法的表，然后逐步回代（把上一步余数的等式代入当前等式）</p>
+<p>证明
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-023-571c9c2b60.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-024-d2c9f5d87f.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-025-7dcf237115.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-026-8912e6a3df.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-027-efb96466f4.png" alt="图片">
+12mod67 和 67mod12 最终得到的等式是一样的，所以不如直接用 67mod12，因为 12mod67 会被转换成 67mod12，其中 67 是 r0，12 是 r1
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-028-a20c85482c.png" alt="图片"></p>
+<h3 id="欧拉函数">欧拉函数</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-029-4babd2d584.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-030-8071923562.png" alt="图片">
+计算欧拉函数的高效方法</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-031-636ccb2567.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-032-ddc24ee120.png" alt="图片"></p>
+<h3 id="费马小定理">费马小定理</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-033-b5b136f755.png" alt="图片"></p>
+<h3 id="欧拉定理">欧拉定理</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-034-6840b515c4.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/assets/csdn-144820113/image-035-5402351d8b.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AB%E7%AB%A0%E2%80%94%E2%80%94%E5%9F%BA%E4%BA%8E%E7%A6%BB%E6%95%A3%E5%AF%B9%E6%95%B0%E9%97%AE%E9%A2%98%E7%9A%84%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E4%BD%93%E5%88%B6/"><span class="l">上一篇</span>密码学原理技术——第八章——基于离散对数问题的公钥密码体制</a><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/"><span class="l">下一篇</span>密码学原理与技术 - 第 2 章 - 流密码</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#对称密码学类比">对称密码学：类比</a><a class="d2" href="#对称密码学缺点">对称密码学：缺点</a><a class="d2" href="#非对称密码学背后的思想">非对称密码学背后的思想</a><a class="d2" href="#非对称公钥密码学">非对称（公钥）密码学</a><a class="d2" href="#非对称密码学类比">非对称密码学：类比</a><a class="d2" href="#公钥加密的基本协议">公钥加密的基本协议</a><a class="d2" href="#公钥密码学的安全机制">公钥密码学的安全机制</a><a class="d2" href="#基本的密钥传输协议">基本的密钥传输协议</a><a class="d2" href="#如何构建公钥算法">如何构建公钥算法</a><a class="d2" href="#密钥长度与安全级别">密钥长度与安全级别</a><a class="d2" href="#欧几里得算法">欧几里得算法</a><a class="d2" href="#扩展欧几里得算法">扩展欧几里得算法</a><a class="d3" href="#欧拉函数">欧拉函数</a><a class="d3" href="#费马小定理">费马小定理</a><a class="d3" href="#欧拉定理">欧拉定理</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

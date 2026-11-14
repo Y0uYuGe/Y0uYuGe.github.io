@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cs408-computer-organization · Y0uYuGe</title>
+<meta name="description" content="AtlasMachine connects computer-organization concepts through an assembler, instruction execution, a five-stage pipeline, caches, and device models.">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/cs408-computer-organization" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a></nav>
+    <h1>cs408-computer-organization</h1>
+    <div class="meta"><time>2026-10-20</time><span class="tag">#Computer Organization</span><span class="tag">#CS408</span></div>
+    <article class="post-body">
+<h2 id="overview">Overview</h2>
+<p>AtlasMachine is a Python teaching computer built around an assembler, executable instruction bytes, RAM, caches, a five-stage pipeline, and memory-mapped devices. Its statistics program reads input, computes results, and transfers them to a disk-image file, connecting data representation and CPU execution to observable outputs.</p>
+<h2 id="try-the-machine">Try the machine</h2>
+<p>Using Python 3.11+, run this command from the repository directory:</p>
+<pre><code class="language-console">python -m atlas run examples/statistics.s --input examples/numbers.txt --pipeline
+</code></pre>
+<p>The <a href="https://github.com/Y0uYuGe/cs408-computer-organization#readme">README and course</a> explain debugging, pipeline traces, numeric experiments, and original assessment questions. Source and tests expose the mechanisms behind the output.</p>
+<h2 id="current-scope">Current scope</h2>
+<p>The execution environment uses a documented subset of RISC-V instruction encodings with custom teaching devices. Pipeline timing treats cache accesses as one cycle. The topic map distinguishes implemented mechanisms from theory material.</p>
+<h2 id="source">Source</h2>
+<p><a href="https://github.com/Y0uYuGe/cs408-computer-organization">GitHub repository</a></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/software-foundations/computer-organization/%E7%94%A8%20C%2B%2B%20%E4%BB%8E%200%20%E5%88%B0%201%20%E6%9E%84%E5%BB%BA%E6%A8%A1%E6%8B%9F%E5%99%A8%20-%20%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%9C%80%E7%AE%80%20CPU%E3%80%91/"><span class="l">下一篇</span>用 C++ 从 0 到 1 构建模拟器 - 第一部分 - 【实现一个最简 CPU】</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#overview">Overview</a><a class="d2" href="#try-the-machine">Try the machine</a><a class="d2" href="#current-scope">Current scope</a><a class="d2" href="#source">Source</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

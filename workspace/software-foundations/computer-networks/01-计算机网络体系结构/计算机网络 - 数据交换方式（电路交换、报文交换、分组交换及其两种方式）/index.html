@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 数据交换方式（电路交换、报文交换、分组交换及其两种方式） · Y0uYuGe</title>
+<meta name="description" content="在分组交换中，由于分组长度固定，交换节点的内存管理可以简化为缓冲区管理：在分组交换网络中，分组长度通常是固定的，这意味着每个分组所需的缓冲区大小也是固定的。可以看出，报文交换需要整个报文到达下一个节点后该节点才能进行处理，而分组交换则不需要：当前节点在发送下一个分组时，接收到上一个分组的节点已经可以把该分组转发给下一个节点。综上所述，通过把数据拆分成小的单元进行传输，分组交换不仅提高了网络传输效率，还降低了传输延迟，使其成为现代通信网络中广泛采用的数据传输方式。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84">计算机网络体系结构</a></nav>
+    <h1>计算机网络 - 数据交换方式（电路交换、报文交换、分组交换及其两种方式）</h1>
+    <div class="meta"><time>2024-01-30</time><span class="tag">#计算机网络</span></div>
+    <article class="post-body">
+<h1 id="为什么需要数据交换">为什么需要数据交换？</h1>
+<p>如果每两台计算机之间都直接相连，链路数量会太多。所以要使用交换设备</p>
+<p>把交换设备用链路互连起来，就能让更多计算机之间互相通信
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-001-7d9667595e.png" alt="图片"></p>
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-002-57adaf01d2.png" alt="图片"></p>
+<h1 id="电路交换">电路交换</h1>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-003-ba0e826ef4.png" alt="图片"></p>
+<h2 id="电路交换的各个阶段">电路交换的各个阶段</h2>
+<h3 id="建立连接">建立连接</h3>
+<p>首先，A 向与其相连的交换设备 A 发出呼叫请求；请求中包含源主机 A 和目的主机 B 的地址
+然后交换设备 A 使用路由算法选择下一跳，把 A 的呼叫请求转发给下一个节点交换设备 B
+然后交换设备 B 使用路由算法选择下一跳，把 A 的呼叫请求转发给下一个节点交换设备 C
+然后交换设备 C 使用路由算法选择下一跳，把 A 的呼叫请求转发给下一个节点交换设备 D
+然后交换设备 D 直接把呼叫请求转发给 B</p>
+<p>如果 B 能接受 A 的连接请求，就沿原路径返回一个呼叫应答</p>
+<p>A 收到后，A 和 B 之间的连接线路就成功建立了
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-004-34b78fc1d8.png" alt="图片"></p>
+<h3 id="数据传输">数据传输</h3>
+<p>此时 A 和 B 以全双工方式进行通信
+链路就是之前确定的那条线路</p>
+<h3 id="释放连接">释放连接</h3>
+<p>A 沿之前建立的线路发出释放请求
+B 收到释放请求后返回释放应答，同样沿原路径返回给 A，连接的每一段依次被拆除（例如，释放请求到达 D 时，D 和 B 之间的连接就被拆除）
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-005-96a9b4ac37.png" alt="图片"></p>
+<h2 id="电路交换的特点">电路交换的特点</h2>
+<p>电路交换是通信网络中使用的一种交换技术，具有以下显著特点：</p>
+<ol>
+<li>建立专用路径：在通信双方之间建立一条专用的通信路径，并保持开通直到通信结束。</li>
+<li>信息传输单位：在电路交换中，信息传输的最小单位是时隙，也就是数据在预先分配好的时隙内传输。</li>
+<li>端到端通信：电路交换提供端到端通信，这意味着一旦电路建立，数据就可以在两个端点之间直接传输。</li>
+<li>资源分配：电路交换以某种方式动态分配传输线路的资源；一旦电路建立，这些资源就被通信双方独占。</li>
+<li>应用场景：电路交换主要用于电话网络中完成电话通话，已有超过100年的历史。它也是最早出现的交换方式，使用非常广泛。</li>
+</ol>
+<p>综上所述，电路交换的特点是为通信双方提供一条专用的、连续的通信路径；这种方式适合需要持续、稳定通信的场景，例如传统的电话通话</p>
+<p>独占资源：已建立的链路不能被其他用户使用
+适合大批量数据传输：因为建立连接需要一定时间，传输太少数据不划算
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-006-9bc4c2f01c.png" alt="图片"></p>
+<h2 id="电路交换的优缺点">电路交换的优缺点</h2>
+<p>线路被独占，所以传输直接沿线路进行，延迟较低
+按序到达，无需重排：就像一条传送带——传送带就是线路，一旦数据放上去，就会一直运行到目的主机（先放的先到）。因此按序到达，不存在重排问题</p>
+<p>电路交换主要使用交换机（交换局）作为其交换设备</p>
+<ul>
+<li>没有数据存储能力：因为电路交换是实时建立连接的，所以没有存储数据的能力。这意味着如果通信过程中发生中断或错误，数据可能会丢失，且无法像分组交换那样重传或纠正。</li>
+<li>难以平滑流量：电路交换的资源被通信双方独占，即使线路空闲，其他用户也不能使用，导致信道利用率低。因此，当流量波动很大时，电路交换很难动态分配和优化资源，这一点不如分组交换，后者可以有效平滑流量。</li>
+</ul>
+<p>数据直接传输，所以如果设备类型不同，数据可能无法被识别或处理
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-007-b0ca694d2a.png" alt="图片"></p>
+<h1 id="报文交换">报文交换</h1>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-008-b4b8e8a3d3.png" alt="图片">
+报文就是你一次性发给对方的任何内容（例如，发送一段语音——这段语音就是报文；发送一段文字——这段文字就是报文；发送一个文件——这个文件就是报文）
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-009-415313be0c.png" alt="图片"></p>
+<h2 id="报文交换的过程">报文交换的过程</h2>
+<p>要传输的信息 + 首部 = 报文
+ <img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-010-456e7e4ebd.png" alt="图片">
+  首先到达交换设备 A
+当外出电路空闲时：这应该意味着可以开始寻找下一个节点并把报文发出去
+路由信息：交换设备有一张路由表，并用它来决定哪个节点离目的主机更近。这里发现经过交换设备 B 更短
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-011-e11f6ab826.png" alt="图片">
+到达交换设备 B
+注意在报文交换中，每条线路都可以承载其他用户的报文——没有哪条线路是专门为某个用户保留的。线路唯一的限制是其带宽。如果一条线路上所有用户报文的总数据量超过了带宽，这条线路就被认为是繁忙的。此时交换设备必须暂时存储该报文，等线路不那么繁忙时再转发出去（存储转发）</p>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-012-a23a1eb301.png" alt="图片">
+到达 B
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-013-9373250f5b.png" alt="图片"></p>
+<h2 id="报文交换的优缺点">报文交换的优缺点</h2>
+<p>用户可以随时发送报文：无需等待连接建立就可以发送
+动态分配路由：平滑流量。假设 A 到 B 的流量很大，而 A 到 C 的流量较小，并且 C 也可以到达目的主机；那么交换设备 A 就可以动态选择把报文发送给交换设备 C</p>
+<p>注意第四个优点中，占用信道同样不是独占的</p>
+<p>报文交换可以一次发送给多个目的地址，主要是因为它提供了多目的地服务。这种能力使报文可以被复制并发送给多个预定接收方，这在电路交换中很难实现——电路交换就像传递一封信，所以最终只能有一个人收到。报文交换就像可以把信复制后再传给其他人，所以最终可以有很多人收到。</p>
+<p>具体来说，有以下一些详细说明：</p>
+<ol>
+<li>存储转发机制：报文交换网络中的每个节点都具有存储能力，可以暂时保存经过的报文。当报文到达一个节点时，先被存储下来，然后根据报文中的目的地址进行转发。这种机制使得报文可以在某个节点被复制，并发送给不同的目的地。</li>
+<li>灵活的路由：报文交换允许动态路由——报文在传输过程中可以根据网络状况选择最佳路径。这种灵活性使报文可以根据需要发送给多个目的地，而不受固定路径的限制。</li>
+<li>无需建立连接：与电路交换不同，报文交换无需事先建立固定的通信路径。这意味着报文可以直接发送给多个目的地，而不需要事先建立多条连接。</li>
+</ol>
+<p>实时性：可以理解为反应迅速</p>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-014-6cf8a716ee.png" alt="图片"></p>
+<h1 id="分组交换">分组交换</h1>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-015-4eefda0d3e.png" alt="图片"></p>
+<h2 id="分组交换的过程">分组交换的过程</h2>
+<p>如果大的数据块不被拆分，那就是报文交换
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-016-1b64c93125.png" alt="图片">
+分组化之后
+编号是分组编号，供目的主机重新组装分组时使用
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-017-94a2cb30cb.png" alt="图片">
+收到第一个分组后，进行差错检测和路由选择；假设这里选择了上方路径
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-018-0ae8908140.png" alt="图片">
+收到第二个分组后，进行差错检测和路由选择；假设这次仍然选择上方路径
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-019-110ad8be4e.png" alt="图片">
+收到第三个分组后，进行差错检测和路由选择；由于前两个分组都走了上方路径，上方路径有些拥堵，所以选择下方路径
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-020-165c42a28f.png" alt="图片">
+最后按照这个逻辑，分组到达目的主机，目的主机根据编号重新组装它们</p>
+<h2 id="分组交换的优缺点">分组交换的优缺点</h2>
+<p>在分组交换中，由于分组长度固定，交换节点的内存管理可以简化为缓冲区管理：在分组交换网络中，分组长度通常是固定的，这意味着每个分组所需的缓冲区大小也是固定的。这种固定大小使交换节点可以为每个到达的分组预先分配一个固定大小的缓冲区，从而简化内存管理。</p>
+<p>减少等待发送的时间：分组在缓冲区中等待前一个分组发送完毕的时间相对较短
+分组较小：差错概率自然更小，需要重传的数据也更少</p>
+<p>分组交换适合突发性数据通信。</p>
+<p>分组交换把数据分成多个长度相等的小段，并在每个小段前加上必要的控制信息作为首部，构成分组。这种机制使分组交换网络能够高效处理突发性数据流量。分组交换适合突发性数据通信的原因包括：</p>
+<ol>
+<li>资源利用率高：分组交换不会预先占用整条通信链路的资源；链路某一段的资源只在传输该段上的分组时被占用。这意味着在没有数据传输时，链路资源可以被其他通信使用，提高了资源利用率。</li>
+<li>灵活性强：分组交换采用存储转发方式，使交换机可以暂存收到的分组，在朝目的地的路由上排队，稍后再转发。这种机制使网络能够更好地适应流量波动，即使在突发流量下也能保持较高的传输效率。</li>
+<li>适应性好：由于分组较短，分组交换特别适合计算机之间的突发性数据通信。在突发通信中，数据往往是不连续的，分组交换可以快速响应这种不连续性，实现快速的数据传输。</li>
+<li>容错性强：分组交换网络中的每个分组都携带完整的地址和控制信息，因此即使部分分组在传输过程中丢失或损坏，也可以独立地重传或纠正，而不会影响数据流的其他部分。</li>
+<li>优先级管理：分组交换网络可以根据紧急程度为不同分组分配不同的优先级；紧急数据可以立即传输，非常适合突发的紧急数据。</li>
+</ol>
+<p>尽管分组交换在处理突发性数据通信方面具有优势，但也存在一些缺点，比如存储转发延迟，以及需要性能更强的节点交换机。然而，这些缺点并不妨碍分组交换成为现代通信网络中处理突发性数据通信的一种有效方式。</p>
+<p>分组交换的传输延迟小于报文交换，主要是因为分组交换使用更小的数据单元进行传输。具体来说，分组交换的优势体现在：</p>
+<ol>
+<li>更小的传输单元：分组交换把数据拆分成更小的分组，比完整的报文更短，因此传输更快。</li>
+<li>并行处理能力：由于各个分组是独立的，它们可以在网络中的不同路径上并行传输，而不需要等待整个报文传输完成，从而降低传输延迟。</li>
+<li>缓冲区管理效率：在分组交换中，分组长度是固定的，使缓冲区更容易管理；交换机可以快速处理和转发分组，减少节点的处理时间。</li>
+<li>更低的排队延迟：在分组交换中，由于分组较小，即使网络流量很大，一个分组在队列中的等待时间也相对较短，降低了排队延迟。</li>
+<li>容错性：分组交换对每个分组独立处理；如果发生错误，只需重传出错的分组，而不是整个报文，这也有助于降低总体传输延迟。</li>
+</ol>
+<p>综上所述，通过把数据拆分成小的单元进行传输，分组交换不仅提高了网络传输效率，还降低了传输延迟，使其成为现代通信网络中广泛采用的数据传输方式。</p>
+<p>当分组交换使用数据报服务时：具体来说，数据报服务是分组交换的一种形式，在数据传输前不需要建立固定的通信路径。在这种服务中，每个分组独立选择自己的路由，可能经由不同的路径到达目的地。这种方式的优点是灵活、快速，因为无需事先建立和维护固定的通信路径。但它也带来一些挑战：分组可能会乱序到达、丢失或重复，必须在目的节点重新组装成原始报文。</p>
+<p>   <img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-021-39951b8c8f.png" alt="图片"></p>
+<h1 id="数据交换方式的选择">数据交换方式的选择</h1>
+<p>可以看出，报文交换需要整个报文到达下一个节点后该节点才能进行处理，而分组交换则不需要：当前节点在发送下一个分组时，接收到上一个分组的节点已经可以把该分组转发给下一个节点。所以分组交换的延迟比报文交换低</p>
+<p>低延迟：因此适合快速处理突发性数据通信
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-022-c42c0086d6.png" alt="图片"></p>
+<h1 id="分组交换的两种方式">分组交换的两种方式</h1>
+<h2 id="数据报方式">数据报方式</h2>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-023-4b7ea1fce3.png" alt="图片"></p>
+<h3 id="数据报方式的特点">数据报方式的特点</h3>
+<p>前面讨论的分组交换都是数据报方式
+属于同一报文的分组可能乱序、重复或丢失地到达目的地，因此需要分组编号来处理这种情况</p>
+<p>在网络通信中，交换节点可能会丢弃一些分组；这通常发生在网络拥塞或故障期间。当交换节点的缓冲区空间不足以存储更多分组时，它可能会按照某种策略丢弃部分分组，以保证网络正常运行。</p>
+<p>丢弃分组会影响数据传输，造成数据丢失、传输延迟增加等问题。因此在设计网络系统时，必须考虑这种情况并采取适当的措施来处理。</p>
+<p>一种常见的方法是在分组中包含序号、校验和等信息，以便接收方检测并修复丢失的分组。此外，一些网络协议还提供重传机制，允许发送方在未收到确认时重新发送分组。
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-024-0de1408b94.png" alt="图片"></p>
+<h2 id="虚电路方式">虚电路方式</h2>
+<p>与电路交换的方法非常相似
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-025-4c250f6707.png" alt="图片"></p>
+<h3 id="建立连接与电路交换类似">建立连接（与电路交换类似）</h3>
+<p>呼叫请求和呼叫应答都是分组
+转发给下一个节点；下一个节点再根据其路由算法继续转发
+主机 B 收到后，呼叫应答沿原路径返回
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-026-9fec0922d5.png" alt="图片">
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-027-59a7827ccb.png" alt="图片"></p>
+<h3 id="数据传输与电路交换类似">数据传输（与电路交换类似）</h3>
+<p>传输的是分组；每个分组不需要携带目的地址等信息，因为一旦连接建立，路由就已固定，分组只能沿此路径传输</p>
+<p>每个分组在数据传输过程中携带的虚电路号：用来标识它属于哪条电路</p>
+<h3 id="数据传输与电路交换类似-1">数据传输（与电路交换类似）</h3>
+<p> 主机 A 发出释放请求；主机 B 返回释放应答，虚电路逐段被释放</p>
+<h3 id="虚电路方式的特点">虚电路方式的特点</h3>
+<p>电路交换是物理连接，而虚电路是逻辑连接。详细分析如下：</p>
+<ul>
+<li>电路交换：一种在通信双方之间建立专用物理路径的通信方式。这种连接是物理的，因为它涉及在通信期间直至结束都被独占的实际物理线路。电路交换是面向连接的：数据传输之前必须建立固定的物理路径，并且该路径在整个通信过程中保持开通且不变。</li>
+<li>虚电路：在网络中建立的一种虚拟连接，不涉及对物理线路的独占。虚电路是通过在网络中的多个节点之间建立一系列逻辑关联来实现的；这些逻辑关联可以看作是在物理网络之上的一条&quot;虚拟&quot;路径。虚电路连接是临时的——会话结束时就会被释放——并且一条物理线路可以支持多条虚电路的逻辑连接。</li>
+</ul>
+<p>链路仍然是共享的；虚电路不是独占的，这与电路交换不同
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-028-e67a770e87.png" alt="图片"> </p>
+<h2 id="数据报与虚电路">数据报与虚电路</h2>
+<p>数据报和虚电路有不同的可靠性保证机制，具体如下：</p>
+<p>数据报的可靠性保证：</p>
+<ul>
+<li>由用户主机保证：在数据报服务中，网络层提供尽力而为的传递，不保证分组的可靠传输。因此，可靠性通常由用户主机来保证。这意味着用户必须自行处理分组的错误、丢失、重复和乱序问题。例如，可靠性和顺序性通过在更高层协议（如 TCP）中实现确认、重传和排序机制来保证。</li>
+<li>完整地址：每个数据报分组都包含目的地的完整地址，这使每个分组可以独立路由，提高了网络的灵活性。但这也意味着每个分组都必须携带额外的路由信息，增加了开销。</li>
+</ul>
+<p>虚电路的可靠性保证：</p>
+<ul>
+<li>由网络保证：虚电路服务是面向连接的；网络维护这条逻辑连接，通常可以提供相当可靠的数据传输。一旦连接建立，所有分组都沿同一路由传输，网络中的节点维护这条连接的状态，从而保证可靠性和顺序性。</li>
+<li>较短的虚电路号：在虚电路中，一旦连接建立，每个分组只需要用</li>
+<li>一个较短的虚电路号来标识自己，减少了首部开销。同时，因为分组沿同一路径传输，网络可以提供流量控制和差错控制，进一步提高通信的可靠性。</li>
+</ul>
+<p>综上所述，数据报服务的可靠性主要取决于用户主机的处理，而虚电路服务的可靠性则由网络本身来保证。</p>
+<p>数据报和虚电路在差错处理和流量控制方面有不同的机制和策略。</p>
+<p>数据报的差错处理和流量控制：</p>
+<ul>
+<li>差错处理：在数据报服务中，每个分组独立传输，所以差错处理通常由目的主机负责。目的主机必须对每个收到的数据报进行差错检测，通常使用校验和或 CRC 校验。如果发现错误，就丢弃该数据报，并可能请求重传。重传策略取决于更高层协议；例如，TCP 使用确认和超时机制来实现可靠传输。</li>
+<li>流量控制：数据报服务本身不提供流量控制。流量控制通常由更高层协议实现；例如，TCP 通过滑动窗口机制来控制发送速率，以适应网络拥塞和接收方的处理能力。</li>
+</ul>
+<p>虚电路的差错处理和流量控制：</p>
+<ul>
+<li>差错处理：虚电路服务提供更可靠的通信方式。一旦连接建立，所有分组都沿同一路由传输；网络中的节点维护这条连接的状态并进行差错检测。如果某个分组出现错误，网络可以采取适当的措施，比如请求重传或报告错误。这种机制保证了数据传输的可靠性和完整性。</li>
+<li>流量控制：虚电路服务通常提供流量控制机制，以确保发送方不会超出接收方的处理能力或网络的容量。这可以通过缓冲区管理和窗口机制等技术来实现。例如，发送方可以根据从接收方收到的反馈来调整数据发送速率。</li>
+</ul>
+<p>综上所述，数据报和虚电路在差错处理和流量控制方面采用了不同的策略和机制。数据报依靠目的主机和更高层协议来处理差错和流量控制，而虚电路的这些功能则由网络本身提供。</p>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-029-49585df3d9.png" alt="图片"></p>
+<h1 id="小结">小结</h1>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/assets/csdn-135920188/image-030-87338a5623.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/"><span class="l">上一篇</span>计算机网络 - 计算机网络的概念、功能、发展阶段、组成与分类</a><a href="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20OSI%20%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%B1%E6%9D%A5%E3%80%81%E9%80%9A%E4%BF%A1%E8%BF%87%E7%A8%8B%E3%80%81%E9%80%90%E5%B1%82%E5%88%86%E6%9E%90%EF%BC%89/"><span class="l">下一篇</span>计算机网络 - OSI 参考模型（由来、通信过程、逐层分析）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#电路交换的各个阶段">电路交换的各个阶段</a><a class="d3" href="#建立连接">建立连接</a><a class="d3" href="#数据传输">数据传输</a><a class="d3" href="#释放连接">释放连接</a><a class="d2" href="#电路交换的特点">电路交换的特点</a><a class="d2" href="#电路交换的优缺点">电路交换的优缺点</a><a class="d2" href="#报文交换的过程">报文交换的过程</a><a class="d2" href="#报文交换的优缺点">报文交换的优缺点</a><a class="d2" href="#分组交换的过程">分组交换的过程</a><a class="d2" href="#分组交换的优缺点">分组交换的优缺点</a><a class="d2" href="#数据报方式">数据报方式</a><a class="d3" href="#数据报方式的特点">数据报方式的特点</a><a class="d2" href="#虚电路方式">虚电路方式</a><a class="d3" href="#建立连接与电路交换类似">建立连接（与电路交换类似）</a><a class="d3" href="#数据传输与电路交换类似">数据传输（与电路交换类似）</a><a class="d3" href="#数据传输与电路交换类似-1">数据传输（与电路交换类似）</a><a class="d3" href="#虚电路方式的特点">虚电路方式的特点</a><a class="d2" href="#数据报与虚电路">数据报与虚电路</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

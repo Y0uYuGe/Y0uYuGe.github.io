@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零开始自己动手写 Docker（八）——［构建实现 run 命令的容器］ · Y0uYuGe</title>
+<meta name="description" content="可选的额外挂载选项，通常是一个字符串，其格式取决于所使用的文件系统类型；对某些文件系统来说，它可能包含挂载选项列表或其他特定信息，对于不需要额外数据的文件系统，可以传入空字符串。如果失败（例如找不到要执行的程序或权限问题），它会返回一个错误，但这种情况下的返回实际上是当前进程内的应急错误处理逻辑，而不是原 Go 程序的逻辑继续执行。可执行程序的包编译后生成可执行文件；静态库的包编译后生成以 .a 为后缀的文件（位于 $GOPATH/pkg/），它本身不能运行，只能被可执行程序的包引用。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99%20Docker%EF%BC%88%E5%85%AB%EF%BC%89%E2%80%94%E2%80%94%EF%BC%BB%E6%9E%84%E5%BB%BA%E5%AE%9E%E7%8E%B0%20run%20%E5%91%BD%E4%BB%A4%E7%9A%84%E5%AE%B9%E5%99%A8%EF%BC%BD" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization">容器与虚拟化</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization/docker-internals">Docker 原理</a></nav>
+    <h1>从零开始自己动手写 Docker（八）——［构建实现 run 命令的容器］</h1>
+    <div class="meta"><time>2024-04-08</time><span class="tag">#docker</span><span class="tag">#容器</span><span class="tag">#运维</span></div>
+    <article class="post-body">
+<h1 id="log-githubcomsirupsenlogrus">log &quot;github.com/sirupsen/logrus&quot;</h1>
+<p>log &quot;github.com/sirupsen/logrus&quot;：导入 github.com/sirupsen/logrus 包并将其重命名为 log</p>
+<h1 id="args"><code>args...</code></h1>
+<p>假设我们有一个切片 <code>myArgs := []string{&quot;arg1&quot;, &quot;arg2&quot;, &quot;arg3&quot;}</code>，想把这个切片作为参数传给 <code>exec.Command()</code> 函数。</p>
+<p>如果直接把 <code>myArgs</code> 作为参数传入，<code>exec.Command()</code> 函数会把整个切片当作一个参数：</p>
+<pre><code class="language-go">cmd := exec.Command(&quot;/path/to/executable&quot;, myArgs)
+</code></pre>
+<p>这相当于执行命令 <code>/path/to/executable [&quot;arg1&quot; &quot;arg2&quot; &quot;arg3&quot;]</code>。</p>
+<p>但如果使用 <code>args...</code> 语法，切片中的每个元素都可以作为独立参数传给 <code>exec.Command()</code> 函数：</p>
+<pre><code class="language-go">cmd := exec.Command(&quot;/path/to/executable&quot;, myArgs...)
+</code></pre>
+<p>这相当于执行命令 <code>/path/to/executable &quot;arg1&quot; &quot;arg2&quot; &quot;arg3&quot;</code>。</p>
+<p><code>args...</code> 语法会把 <code>myArgs</code> 切片中的每个元素作为独立参数传给 <code>exec.Command()</code> 函数。这种方式更灵活，可以方便地把任意长度的参数列表传给外部命令。</p>
+<p>另一个例子是：</p>
+<pre><code class="language-go">args := []string{&quot;-flag1&quot;, &quot;value1&quot;, &quot;-flag2&quot;, &quot;value2&quot;}
+cmd := exec.Command(&quot;/path/to/executable&quot;, args...)
+</code></pre>
+<p>这会把 <code>args</code> 切片的全部 6 个元素作为独立参数传给 <code>/path/to/executable</code> 命令。</p>
+<p>总之，<code>args...</code> 语法可以把切片展开为多个独立参数，传给接受多个参数的函数，这在处理命令行参数时非常有用。</p>
+<h1 id="go-module">go module</h1>
+<p><a href="https://www.cnblogs.com/pass-ion/p/16527005.html">三种包管理方式参考链接</a></p>
+<p><a href="https://blog.csdn.net/qq_24433609/article/details/127325302">go get 下载的第三方包在哪里</a></p>
+<p>在 GOMODULE 模式下，go get 命令会把依赖包下载到 $GOPATH/pkg/mod 目录</p>
+<p><strong>go module 包管理方式（推荐）</strong></p>
+<p><code>GO111MODULE</code> 是一个用来控制 Go Modules 行为的环境变量。Go 1.11 之后，Go 引入了 Go Modules 来管理依赖和版本控制。<code>GO111MODULE</code> 环境变量可以设置为以下值：</p>
+<ol>
+<li><p><code>GO111MODULE=on</code>：启用 Go Modules 的模式。设置为 <code>on</code> 时，Go 将使用 Go Modules 管理依赖，不再依赖 GOPATH。</p>
+</li>
+<li><p><code>GO111MODULE=off</code>：禁用 Go Modules 的模式。设置为 <code>off</code> 时，Go 将使用传统的 GOPATH 模式管理依赖。</p>
+</li>
+<li><p><code>GO111MODULE=auto</code>：自动模式。在自动模式下，Go 根据当前目录是否包含 go.mod 文件来决定是否启用 Go Modules。如果项目根目录下存在 go.mod 文件，就启用 Go Modules；否则使用 GOPATH 模式。</p>
+</li>
+</ol>
+<p>因此，当设置 <code>GO111MODULE=&#39;&#39;</code>（即空字符串）时，表示没有显式设置 GO111MODULE 环境变量，Go 会按自动模式决定是否启用 Go Modules，具体行为取决于当前项目的目录结构以及是否存在 go.mod 文件。</p>
+<pre><code class="language-bash">go mod tidy:检测该文件夹目录下所有引入的依赖,写入 go.mod 文件。删除错误或者不使用的modules，下载没download的package（下载到$GOPATH/pkg/mod）
+</code></pre>
+<h1 id="导入第三方包失败">导入第三方包失败</h1>
+<pre><code class="language-bash">go env -w GOPROXY=https://goproxy.cn,direct
+</code></pre>
+<p>然后再试一次</p>
+<h1 id="package-与-go-import">package 与 go import</h1>
+<p><a href="https://blog.51cto.com/ghostwritten/5345281#7__81">go 包导入详解</a></p>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99%20Docker%EF%BC%88%E5%85%AB%EF%BC%89%E2%80%94%E2%80%94%EF%BC%BB%E6%9E%84%E5%BB%BA%E5%AE%9E%E7%8E%B0%20run%20%E5%91%BD%E4%BB%A4%E7%9A%84%E5%AE%B9%E5%99%A8%EF%BC%BD/assets/csdn-137376995/image-001-fb0d8831cc.png" alt="图片"></p>
+<p><a href="https://www.jianshu.com/p/c78fb21d07d6">golang 中使用同一目录下的文件，简单介绍 golang 中 package 的用法</a></p>
+<p>在 golang 中，一个目录就是一个包。包级别的 func、type、变量和常量可以被该包下所有文件中的代码随意访问，不需要首字母大写。
+要引用当前目录下其他子目录中的文件，可以导入该文件所在文件夹的相对位置，或导入 当前目录/子目录 中的包</p>
+<p><a href="https://m.jb51.net/article/255681.htm">Go 语言中包的详解</a></p>
+<p>包分为两种：一种是 main 函数包（可执行文件），另一种是库函数包
+可执行程序的包编译后生成可执行文件；静态库的包编译后生成以 .a 为后缀的文件（位于 $GOPATH/pkg/），它本身不能运行，只能被可执行程序的包引用。</p>
+<p>可执行程序的包必须以 main 作为包名；静态库的包名没有这个要求</p>
+<p><strong>main 包与其他库是静态链接的，因此生成的可执行文件没有外部依赖。</strong></p>
+<h1 id="go-build-与-go-run">go build . 与 go run</h1>
+<p>go build . 编译当前目录下的所有文件，生成一个可执行程序
+go run 编译并运行单个程序；这种情况下，如果多个 package 为 main 的程序相互依赖，对其中一个执行 go run 会报错，因为它用到了另一个 package 为 main 的程序</p>
+<h1 id="cli-库">cli 库</h1>
+<p><a href="https://darjun.github.io/2020/06/22/godailylib/cli/">Go 每日一库之 cli</a></p>
+<h1 id="logsetformatterlogjsonformatter"><code>log.SetFormatter(&amp;log.JSONFormatter{})</code></h1>
+<p>假设我们有一个记录一些基本信息的简单 Go 程序：</p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;log&quot;
+)
+
+func main() {
+    // 设置日志输出格式为 JSON 格式
+    log.SetFormatter(&amp;log.JSONFormatter{})
+
+    // 记录一些日志信息
+    log.Println(&quot;This is an informational message&quot;)
+    log.Printf(&quot;User %s logged in&quot;, &quot;John Doe&quot;)
+    log.Fatalf(&quot;Failed to connect to database: %s&quot;, &quot;connection refused&quot;)
+}
+</code></pre>
+<p>在这个例子中，我们首先用 <code>log.SetFormatter(&amp;log.JSONFormatter{})</code> 把日志输出格式设置为 JSON。</p>
+<p>然后，分别用 <code>log.Println()</code>、<code>log.Printf()</code> 和 <code>log.Fatalf()</code> 记录三条不同级别的日志。</p>
+<p>运行这个程序时，日志输出将是 JSON 格式，类似下面这样：</p>
+<pre><code class="language-json">{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;This is an informational message&quot;,&quot;time&quot;:&quot;2024-04-07T12:34:56Z&quot;}
+{&quot;level&quot;:&quot;info&quot;,&quot;msg&quot;:&quot;User John Doe logged in&quot;,&quot;time&quot;:&quot;2024-04-07T12:34:56Z&quot;}
+{&quot;level&quot;:&quot;error&quot;,&quot;msg&quot;:&quot;Failed to connect to database: connection refused&quot;,&quot;time&quot;:&quot;2024-04-07T12:34:56Z&quot;}
+</code></pre>
+<p>与默认的文本格式相比，JSON 格式的日志输出包含更多元数据，例如日志级别（<code>level</code>）、消息内容（<code>msg</code>）和时间戳（<code>time</code>）。这种结构化的日志格式更便于后续处理和分析，尤其是在需要由机器解析日志的场景中。</p>
+<p>总之，<code>log.SetFormatter(&amp;log.JSONFormatter{})</code> 是一个非常实用的方法，可以帮助我们在 Go 程序中更好地管理和处理日志信息。</p>
+<h1 id="error-与-nil-的关系">error 与 nil 的关系</h1>
+<p><code>error</code> 类型与 <code>nil</code> 的关系如下：</p>
+<ul>
+<li><code>error</code> 类型是 Go 中用来表示错误状态的接口。实现了 <code>Error()</code> 方法的值称为 <code>error</code> 值，即使它没有实现任何具体行为。</li>
+<li><code>nil</code> 是 Go 中的一个特殊值，表示空值或不存在的值；对于 <code>error</code> 类型的值，<code>nil</code> 表示没有发生错误。</li>
+</ul>
+<p>在函数返回值中，当函数正确执行、没有遇到错误时，我们通常用 <code>nil</code> 来表示。例如：</p>
+<pre><code class="language-go">func someFunction() error {
+    // 函数执行成功，没有错误
+    return nil
+}
+</code></pre>
+<p>当函数执行过程中遇到错误时，我们返回一个非 <code>nil</code> 的 <code>error</code> 值，例如：</p>
+<pre><code class="language-go">func someFunction() error {
+    // 函数执行失败，返回一个错误
+    return errors.New(&quot;Some error occurred.&quot;)
+}
+</code></pre>
+<p>所以 <code>error</code> 类型与 <code>nil</code> 的关系是：<code>nil</code> 表示 <code>error</code> 值处于无错误状态，非 <code>nil</code> 的 <code>error</code> 表示存在错误。函数返回时，如果 <code>error</code> 值为 <code>nil</code>，说明函数执行成功；否则说明发生了错误。</p>
+<h1 id="cmdwait-与-cmdstart">cmd.Wait() 与 cmd.Start()</h1>
+<p>err 变量在调用 cmd.Wait() 方法后获得返回值。调用 cmd.Start() 时，该方法会启动命令并在后台执行。如果启动命令时发生错误（例如命令不存在、权限不足等），cmd.Start() 会立即返回一个非 nil 的错误值。</p>
+<p>cmd.Wait() 方法的作用是等待命令执行结束。命令结束时，该方法返回。返回值有两种含义：</p>
+<p>如果命令成功结束，err 为 nil。
+如果命令执行过程中发生任何错误（例如命令被信号终止、超时等），err 会包含相应的错误信息。
+因此，在你的代码片段中，err = cmd.Wait() 这一行会阻塞，直到外部命令执行完毕，然后返回一个表示命令执行结果（成功或失败以及退出状态）的错误值。</p>
+<h1 id="args-1">args...</h1>
+<p>在 Go 中，<code>os/exec</code> 包提供了执行外部命令的能力。这里的代码片段用于创建一个可执行命令的实例。</p>
+<p><code>args := []string{&quot;init&quot;, cmd}</code> 定义了一个字符串切片，存放要执行的命令及其参数。在这个例子中：</p>
+<ul>
+<li><code>&quot;init&quot;</code>：是一个命令参数，表示要执行的子命令是 &quot;init&quot;。</li>
+<li><code>cmd</code>：是一个变量，通常表示另一个命令参数。它的具体值取决于程序上下文中的赋值。</li>
+</ul>
+<p>接着，<code>command := exec.Command(&quot;/proc/self/exe&quot;, args...)</code> 这一行用于创建一个新的 <code>*Cmd</code> 结构体实例，它表示一条待执行的命令。</p>
+<p><code>&quot;/proc/self/exe&quot;</code> 是一个特殊路径，在 Linux 系统中指向当前正在运行的可执行文件。换句话说，这实际上是要执行一个与当前进程相同的新进程，并传入参数 <code>args</code>。</p>
+<p><code>args...</code> 是 Go 的可变参数语法，它把字符串切片 <code>args</code> 展开为多个单独的参数传给 <code>exec.Command</code> 函数。</p>
+<p>所以整条语句的作用是：根据给定的参数列表 <code>args</code>，执行一个与当前进程相同的新命令行程序，其中第一个参数是 &quot;init&quot;，第二个参数是变量 <code>cmd</code> 的值。</p>
+<h1 id="contextargsget0">context.Args().Get(0)</h1>
+<p>在 Go 中，这段代码基于第三方命令行工具库（如 <code>urfave/cli</code> 或 <code>cobra</code>）定义了一个命令行命令 <code>init</code> 的结构体。在这些库中，<code>cli.Context</code> 对象包含从命令行输入中解析出的全部信息。</p>
+<p><code>context.Args().Get(0)</code> 这一行用于在用户调用 <code>init</code> 命令并附带一个或多个额外参数时，获取命令行上紧跟在命令名 <code>init</code> 之后的第一个参数。</p>
+<p>例如，假设用户在命令行执行以下命令：</p>
+<pre><code class="language-sh">./myapp init mycontainer
+</code></pre>
+<p>在上面的代码片段中，<code>context.Args().Get(0)</code> 会返回字符串 <code>&quot;mycontainer&quot;</code>。这是因为 <code>context.Args()</code> 返回一个包含所有非命令名参数的字符串切片，下标为 0 的元素就是第一个参数。</p>
+<p>不过，从这段代码的具体上下文来看，开发者似乎并没有真正使用 <code>cmd</code> 变量（它保存着第一个参数的值），而是直接调用 <code>contain.init()</code> 方法来初始化容器。如果本意是用第一个参数来定制初始化行为，那么应该在调用 <code>contain.init()</code> 时使用 <code>cmd</code> 变量。</p>
+<h1 id="syscallexec-与-osexeccommand">syscall.Exec 与 os/exec.Command</h1>
+<p>在 Go 中，<code>syscall.Exec</code> 和 <code>os/exec.Command</code> 都用于执行外部程序，但它们在用途和机制上有显著区别：</p>
+<ol>
+<li><p><strong>syscall.Exec</strong>：</p>
+<ul>
+<li><code>syscall.Exec</code> 是一个底层系统调用，它直接在当前进程中替换当前程序的映像和数据，以执行新程序。</li>
+<li><code>syscall.Exec</code> 执行成功后，原程序的内存空间、文件描述符等资源由新程序接管；原程序不会恢复执行，因为它已被完全替换。</li>
+<li>通常用于想要彻底转换当前进程上下文且不再返回的情况。</li>
+</ul>
+</li>
+<li><p><strong>os/exec.Command</strong>：</p>
+<ul>
+<li><code>os/exec.Command</code> 提供了更高层、更易用的 API 来执行外部程序，它不会替换当前进程的内容。</li>
+<li><code>exec.Command</code> 创建并返回一个 <code>*Cmd</code> 结构体；调用其 <code>Run()</code> 方法即可执行外部程序，执行完成后，当前 Go 程序继续执行后续代码。</li>
+<li>可以通过 <code>Output()</code>、<code>CombinedOutput()</code> 等方法获取子进程的输出，还可以控制子进程的标准输入、输出和错误流。</li>
+<li>如果需要在同一个进程中连续执行多个外部命令，或者需要处理子进程的输出，<code>os/exec</code> 库非常合适。</li>
+</ul>
+</li>
+</ol>
+<p>简而言之，<code>syscall.Exec</code> 更像是进程自身的变身，而 <code>os/exec.Command</code> 是在当前进程中启动一个新的子进程来执行任务，并允许对子进程进行更多控制和通信。</p>
+<h1 id="syscallexec"><code>syscall.Exec</code></h1>
+<p>在 Go 中，当程序执行到 <code>syscall.Exec</code> 函数时，会发生以下事情：</p>
+<ol>
+<li><p><strong>替换当前进程</strong>：
+<code>syscall.Exec</code> 函数负责执行新程序，同时替换当前进程的映像和内存空间。这意味着当前正在执行的 Go 程序的所有代码和数据都会被新程序替换，没有机会再回到原 Go 程序的执行流程。</p>
+</li>
+<li><p><strong>资源继承</strong>：
+新程序继承当前进程的 PID（进程 ID）、已打开的文件描述符以及其他与进程相关的资源。这意味着新程序可以从原进程接管控制权，例如继续监听同一组网络端口或读写已打开的文件。</p>
+</li>
+<li><p><strong>程序执行</strong>：
+<code>syscall.Exec</code> 函数接受一系列参数，包括要执行的程序路径、命令行参数和环境变量。新程序会按指定方式执行，就像是由 shell 或其他启动器直接启动的一样。</p>
+</li>
+<li><p><strong>永不返回</strong>：
+一旦 <code>syscall.Exec</code> 成功执行新程序，原 Go 程序的代码将不再执行，<code>syscall.Exec</code> 函数本身也不会返回——因为它已经不再是该进程的一部分。如果 <code>syscall.Exec</code> 失败（例如找不到要执行的程序或权限问题），它会返回一个错误，但这种情况下的“返回”实际上是当前进程内的应急错误处理逻辑，而不是原 Go 程序的逻辑继续执行。</p>
+</li>
+<li><p><strong>使用场景</strong>：
+<code>syscall.Exec</code> 通常用于服务程序升级、执行子进程并替换自身以进入不同的执行环境，或者原程序不需要继续运行的场景。相比之下，如果想在当前进程中启动子进程并与之交互，或在子进程结束后继续执行，就应该使用 <code>os/exec</code> 包中的 <code>Command</code>、<code>Run</code> 等方法。</p>
+</li>
+</ol>
+<ul>
+<li><p><code>syscall.Exec(command, argv, os.Environ())</code> 的作用是：</p>
+<ul>
+<li><code>command</code>：要执行的新程序的路径或可执行文件名。</li>
+<li><code>argv</code>：一个字符串切片，包含传给新程序的命令行参数。在这个例子中只有一个参数 <code>command</code>，但实际上可以有多个，例如 <code>argv := []string{command, arg1, arg2, ...}</code>。</li>
+<li><code>os.Environ()</code>：该函数以 <code>key=value</code> 格式的字符串切片返回当前进程的环境变量列表。在 <code>syscall.Exec</code> 中，这个参数被传给新程序，使其继承当前进程的环境变量。</li>
+</ul>
+</li>
+</ul>
+<h1 id="mountflags">mountflags</h1>
+<ol>
+<li><p><strong>syscall.MS_NOEXEC</strong>：
+设置该标志后，挂载的文件系统上的任何文件都不能被执行，即使是可执行文件。这是一项重要的安全措施，可以防止恶意或意外地执行存放在特定文件系统分区上的程序。例如，在仅用于存储数据的分区上启用此选项可以增强安全性，确保潜在的恶意脚本或程序无法运行。</p>
+</li>
+<li><p><strong>syscall.MS_NOSUID</strong>：
+使用该标志挂载文件系统时，系统会忽略文件上 Set-User-ID（SUID）和 Set-Group-ID（SGID）位的作用。在 Linux 中，SUID 和 SGID 权限通常允许用户在执行文件时临时获得文件所有者的权限或所属组的权限。禁用 SUID 和 SGID 意味着无论文件有什么特殊权限设置，进程在执行该文件时都不会继承文件所有者的用户 ID 或组 ID，从而限制权限滥用可能带来的安全风险。</p>
+</li>
+<li><p><strong>syscall.MS_NODEV</strong>：
+使用该标志挂载文件系统时，系统不允许任何设备特殊文件在该文件系统上起作用。设备文件是用来访问硬件设备（如硬盘、终端、打印机等）的接口。禁止设备文件意味着无法在该挂载点上创建或访问设备节点，这对于防止未经授权的设备访问、增强隔离环境的安全性非常有用，例如在沙箱环境中或在安全要求较高的文件系统分区上。</p>
+</li>
+</ol>
+<h1 id="syscallmount">syscall.Mount</h1>
+<p><code>syscall.Mount</code> 是 Go 标准库 <code>syscall</code> 包提供的一个函数，用于直接调用操作系统的系统调用来执行文件系统挂载操作。在 Linux 环境下，该函数对应 Linux 内核提供的 <code>mount(2)</code> 系统调用接口。</p>
+<p>函数签名大致如下（不同 Go 版本可能有所不同）：</p>
+<pre><code class="language-go">func Mount(source string, target string, fstype string, flags int, data string) error
+</code></pre>
+<p>参数含义：</p>
+<ul>
+<li><p><code>source</code>：要挂载的文件系统源，可以是设备名（如 <code>/dev/sda1</code>）、网络共享路径或其他形式；对于 <code>proc</code> 这样的虚拟文件系统，它是一个标识字符串。</p>
+</li>
+<li><p><code>target</code>：挂载点，即目标挂载路径，通常是一个已存在的目录。</p>
+</li>
+<li><p><code>fstype</code>：文件系统类型的名称，例如 <code>ext4</code>、<code>ntfs</code>，或上面提到的 <code>proc</code> 这类特殊文件系统类型。</p>
+</li>
+<li><p><code>flags</code>：挂载标志，由多个标志位组成的整数值，例如 <code>syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV</code>；这些标志位控制挂载行为的不同属性。</p>
+</li>
+<li><p><code>data</code>：可选的额外挂载选项，通常是一个字符串，其格式取决于所使用的文件系统类型；对某些文件系统来说，它可能包含挂载选项列表或其他特定信息；对于不需要额外数据的文件系统，可以传入空字符串 <code>&quot;&quot;</code>。</p>
+</li>
+</ul>
+<p>函数执行的结果是成功或失败；如果失败，会返回一个错误对象。</p>
+<p>在给出的例子中：</p>
+<pre><code class="language-go">syscall.Mount(&quot;proc&quot;, &quot;/proc&quot;, &quot;proc&quot;, uintptr(defaultMountFlags), &quot;&quot;)
+</code></pre>
+<p>这会把 Linux 的虚拟文件系统 <code>/proc</code> 挂载到 <code>/proc</code> 目录，并使用 <code>defaultMountFlags</code> 中定义的一系列与安全相关的挂载标志。</p>
+<h1 id="请注意只有包中首字母大写的函数公有函数才能被其他包调用首字母小写的函数私有函数只能在包内使用">请注意，只有包中首字母大写的函数（公有函数）才能被其他包调用。首字母小写的函数（私有函数）只能在包内使用</h1>
+<h1 id="代码">代码</h1>
+<p><a href="https://github.com/FULLK/llkdocker/tree/main/run_docker">https://github.com/FULLK/llkdocker/tree/main/run_docker</a></p>
+<h1 id="最终效果">最终效果</h1>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99%20Docker%EF%BC%88%E5%85%AB%EF%BC%89%E2%80%94%E2%80%94%EF%BC%BB%E6%9E%84%E5%BB%BA%E5%AE%9E%E7%8E%B0%20run%20%E5%91%BD%E4%BB%A4%E7%9A%84%E5%AE%B9%E5%99%A8%EF%BC%BD/assets/csdn-137376995/image-002-0f79081108.png" alt="图片">
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99%20Docker%EF%BC%88%E5%85%AB%EF%BC%89%E2%80%94%E2%80%94%EF%BC%BB%E6%9E%84%E5%BB%BA%E5%AE%9E%E7%8E%B0%20run%20%E5%91%BD%E4%BB%A4%E7%9A%84%E5%AE%B9%E5%99%A8%EF%BC%BD/assets/csdn-137376995/image-003-3c645f2dea.png" alt="图片"></p>
+<h1 id="问题">问题</h1>
+<p>发现只能运行一次，下一次就会出现这种情况：<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99%20Docker%EF%BC%88%E5%85%AB%EF%BC%89%E2%80%94%E2%80%94%EF%BC%BB%E6%9E%84%E5%BB%BA%E5%AE%9E%E7%8E%B0%20run%20%E5%91%BD%E4%BB%A4%E7%9A%84%E5%AE%B9%E5%99%A8%EF%BC%BD/assets/csdn-137376995/image-004-a998712ad5.png" alt="图片">
+待解决</p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/"><span class="l">上一篇</span>从零开始写 Docker 10 - [用 cgroup 实现容器资源限制]</a><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20-%200%20-%20%5B%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%9AGo%20%E8%AF%AD%E8%A8%80%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%5D%EF%BC%88package%20main%E3%80%81%E5%8F%98%E9%87%8F/"><span class="l">下一篇</span>从零实现 Docker - 0 - [前置知识：Go 语言快速入门]（package main、变量、运算符、分支、循环、函数、数组、slice、map、结构体、指针、方法、接口、错误处理、并发）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

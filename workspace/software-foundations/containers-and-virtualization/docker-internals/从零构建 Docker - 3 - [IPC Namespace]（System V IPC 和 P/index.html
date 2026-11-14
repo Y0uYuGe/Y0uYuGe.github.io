@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建 Docker - 3 - [IPC Namespace]（System V IPC 和 POSIX、IPC Namespace、cmd.Run()、什么是消息队列、消息队列相关结构、ipcs -q、ipc） · Y0uYuGe</title>
+<meta name="description" content="当你创建一个新的 IPC namespace 时，实际上是在现有操作系统中创建了一个隔离的小社区，进程可以在这个社区内部自由传递消息，而外部进程无法干扰。此时，学校的信息发布部门就可以用这个邮箱号码（msqid）发送通知，知道这个邮箱号码的其他学校部门或服务也可以拿着这个邮箱号码去“邮局”接收通知。为了完成这项任务，他们使用邮局提供的服务，例如邮箱、包裹传送带或邮递员（这些对应于消息队列、信号量、共享内存等 IPC 通信方式）。这样，每个社区内部的通信都是独立且私密的。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%203%20-%20%5BIPC%20Namespace%5D%EF%BC%88System%20V%20IPC%20%E5%92%8C%20P" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization">容器与虚拟化</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization/docker-internals">Docker 原理</a></nav>
+    <h1>从零构建 Docker - 3 - [IPC Namespace]（System V IPC 和 POSIX、IPC Namespace、cmd.Run()、什么是消息队列、消息队列相关结构、ipcs -q、ipc）</h1>
+    <div class="meta"><time>2024-03-06</time><span class="tag">#docker</span><span class="tag">#容器</span><span class="tag">#运维</span></div>
+    <article class="post-body">
+<h1 id="system-v-ipc-和-posix">System V IPC 和 POSIX</h1>
+<p>我们通过一个简单的餐厅订单处理的类比，来理解 System V IPC 和 POSIX 消息队列以及它们之间的区别。</p>
+<p>假设一家餐厅有前厨和后厨。前厨负责接收顾客的订单，然后需要把订单传给后厨去烹饪。</p>
+<p><strong>System V IPC 消息队列</strong></p>
+<p>System V IPC 就像使用一套特殊的点餐系统。在这套系统中：</p>
+<ul>
+<li>前厨写下订单，并给每个订单贴上指定的类型标签，例如“开胃菜”“主菜”“甜点”等。</li>
+<li>后厨有一份包含所有订单类型的清单。
+后厨可以选择查看特定类型的订单；例如，现在后厨只想看“主菜”订单。</li>
+<li>这些订单被放在一个特殊的柜台上，后厨人员必须遵循特定的规则查看柜台，例如使用一把特殊的钥匙。（这里的“钥匙”指的是 System V IPC 消息队列中的键值 key_t。）</li>
+<li>订单一旦写下，即使前厨人员离开，订单也会留在柜台上，直到后厨有人明确处理它。</li>
+</ul>
+<p><strong>POSIX 消息队列</strong></p>
+<p>而如果这家餐厅使用 POSIX 消息队列来处理订单：</p>
+<ul>
+<li>前厨使用更现代的系统写订单，每个订单都可以标注紧急程度。</li>
+<li>后厨有一块显示屏，会自动把最紧急的订单排在前面。</li>
+<li>后厨可以一直查看这块显示屏，按紧急程度依次取订单。</li>
+<li>显示屏还有一个指示灯；如果后厨太忙没空看，指示灯会告诉他们是否有新订单等待处理。（这里的“指示灯”可以看作 POSIX 消息队列的非阻塞特性。）</li>
+<li>订单完成后，显示屏会自动更新，不需要特殊的钥匙或操作。
+区别</li>
+</ul>
+<p>现在总结一下它们之间的主要区别：</p>
+<ul>
+<li>命名和访问方式：SysV IPC 使用一个整数键值（key_t）访问消息队列，需要用特殊的方法生成和获取键值。而 POSIX 消息队列像文件一样通过字符串名称访问，这使它看起来更像操作系统的一部分，而不是一个独立的服务。</li>
+<li>消息优先级：POSIX 允许为消息设置优先级，确保最重要的消息最先被处理。SysV 消息队列也能实现类似的功能，但通常没有那么直观或简单。</li>
+<li>接口和功能：POSIX API 通常被认为更现代、更一致，具有更好的错误处理和更完整的功能集。SysV IPC 在某些操作系统的某些版本中可能不够直观或不够可靠。</li>
+</ul>
+<p>这些区别使得在新系统或需要更多功能的场景中，POSIX 消息队列可能是更好的选择，而 SysV IPC 可能出于兼容性考虑在旧系统中使用。</p>
+<h1 id="ipc-namespace">IPC Namespace</h1>
+<p>想象一下，进程间通信（IPC）就像一个邮局系统。在这个系统中，一座城市的居民（各个进程）想要相互寄送信件或包裹（数据）。为了完成这项任务，他们使用邮局提供的服务，例如邮箱、包裹传送带或邮递员（这些对应于消息队列、信号量、共享内存等 IPC 通信方式）。</p>
+<p>现在来说说“ipcnamespace”。这个术语可以理解为一个独立的小社区或小区。在每个小社区内，居民有自己的小邮局、自己的邮箱和包裹传送带。社区外的人不能直接使用其他社区的邮箱和邮局服务。这样，每个社区内部的通信都是独立且私密的。</p>
+<p>在计算机中，IPC namespace 的作用类似。当你创建一个新的 IPC namespace 时，实际上是在现有操作系统中创建了一个隔离的小社区，进程可以在这个社区内部自由传递消息，而外部进程无法干扰。当你不希望某些程序受到外界影响时，这一点特别有用，例如使用 Docker 等容器技术隔离和管理不同的应用程序时。每个容器都运行在自己的 IPC namespace 中，保证了内部进程通信的独立性和安全性。这就像给应用程序一个只为容器内部服务的“私人邮局”，彼此互不干扰。</p>
+<h1 id="cmdrun">cmd.Run()</h1>
+<p>cmd.Run() 方法在命令执行成功时返回 nil（没有错误）；如果发生错误（例如找不到命令或执行过程中出错），则返回一个 error 类型的值。</p>
+<h1 id="什么是消息队列">什么是消息队列</h1>
+<p>消息队列是一种进程间通信（IPC）或应用间通信（不同应用程序或服务之间）的方法，它允许进程通过读写队列进行通信，而无需直接了解彼此。队列是消息的有序集合，消息可以是数据、命令，或任何可以转换为字节串的信息。</p>
+<p>消息队列的工作方式类似于现实生活中的邮局系统：</p>
+<ul>
+<li><p>发送消息（寄信）：一个进程（或线程）作为消息的发送方（就像寄信的人），把消息放入消息队列。</p>
+</li>
+<li><p>存储消息（邮局保管信件）：队列临时存储这些消息，直到接收方准备好接收。消息队列可以保证消息的顺序，并确保消息不会丢失。</p>
+</li>
+<li><p>接收消息（取信）：另一个进程（或线程）作为消息的接收方，按顺序从队列中取出消息进行处理。</p>
+</li>
+</ul>
+<h1 id="消息队列相关结构">消息队列相关结构</h1>
+<p>消息队列的基本结构简单但至关重要，能够有效协调消息的生产者（发送方）和消费者（接收方）。以下是消息队列的一些主要组成部分：</p>
+<ul>
+<li><p>消息：消息是消息队列结构中的基本数据单元。它可以包含任何形式的数据，例如字符串、对象或字节流。通常，一条消息由两部分组成：消息头（包含消息 ID、时间戳、优先级等元数据）和消息体（包含实际发送的数据）。</p>
+</li>
+<li><p>队列：队列是消息的有序集合，按照先进先出（FIFO）原则运作。也就是说，最先发送到队列的消息会最先被接收和处理。队列在消息生产者和消费者之间提供了一个缓冲区，使它们可以以不同的速率工作。</p>
+</li>
+<li><p>生产者（发送方）：生产者是创建消息并将其发送到队列的实体。生产者把消息发送到队列，发送完成后通常不再关心消息是否被消费。</p>
+</li>
+<li><p>消费者（接收方）：消费者从队列中读取并处理消息。消费者可以是直接监听队列、在消息到达时立即处理的进程，也可以是定期检查新消息的进程。在某些情况下，消费者处理完消息后会发送响应或结果。</p>
+</li>
+</ul>
+<h1 id="ipcs--q">ipcs -q</h1>
+<p>ipcs 命令是 Linux 操作系统中用于报告进程间通信（IPC）设施状态的工具。ipc 是进程间通信的缩写，可以包括消息队列、信号量和共享内存段。ipcs 命令可以显示每种 IPC 对象的当前状态，这对于诊断或系统监控很有用。</p>
+<p>当 ipcs 命令与 -q 选项一起使用时（即 ipcs -q），它专门报告消息队列的信息。输出将包括每个消息队列的 key、msqid 以及其他附加信息。</p>
+<p>下面是 ipcs -q 命令的一个典型输出示例：</p>
+<pre><code class="language-bash">------ Message Queues --------
+key        msqid      owner      perms      used-bytes   messages    
+0x12345678 0          myuser     644        0            0           
+0xaabbccdd 1          anotherusr 644        16384        4
+ 
+</code></pre>
+<p>上述示例中各列的含义解释：</p>
+<ul>
+<li>key：用于唯一标识消息队列的键值。</li>
+<li>msqid：消息队列在内核内部的唯一标识符。</li>
+<li>owner：创建该消息队列的用户。</li>
+<li>perms：消息队列的权限，通常以八进制形式显示。</li>
+<li>used-bytes：队列中当前所有消息占用的总字节数。</li>
+<li>messages：队列中当前的消息数量。</li>
+</ul>
+<h1 id="ipcmk--q">ipcmk -Q</h1>
+<p>ipcmk 是 Linux 上用于创建 IPC（进程间通信）资源的命令，可以创建消息队列、共享内存和信号量。使用 ipcmk -Q（注意参数 Q 是大写）时，它会创建一个新的消息队列。</p>
+<p>下面是 ipcmk -Q 的简单用法和输出：</p>
+<pre><code class="language-bash">$ ipcmk -Q
+Message queue id: 32768
+ 
+</code></pre>
+<p>在这个示例中，ipcmk -Q 命令创建了一个新的消息队列，并输出了它的消息队列 ID（msqid）。这个 ID 是访问和管理该消息队列的关键标识符。如果需要在程序中使用这个消息队列，就需要用到这个 ID。</p>
+<h1 id="msqid-和-key-的区别">msqid 和 key 的区别</h1>
+<p>想象我们有一个邮局，里面有很多邮箱，每个邮箱都有一个唯一的邮箱号码（这就像 msqid）。如果你想把一封信放进某个邮箱，就需要知道这个邮箱的号码。</p>
+<p>然而，要获得一个邮箱号码，你首先需要告诉邮局一个口令或代码，这样他们才能根据这个口令为你分配一个邮箱（这个口令就像 key）。这个口令可能是共享的，也就是说其他人也可能知道这个口令，并用它申请到同一个邮箱号码。</p>
+<p>例如，假设一所学校想搭建一个信息发布系统。他们决定使用消息队列来发布通知，并选择使用学校的识别码“123”和一个特定的项目标识符 &#39;A&#39; 来生成这个 key。</p>
+<p>首先，他们为此生成一个 key：</p>
+<pre><code class="language-go">// 学校使用识别码（例如123）和项目标识符（例如 &#39;A&#39;）生成key
+key_t key = ftok(&quot;/path/to/somefile&quot;, &#39;A&#39;);  
+</code></pre>
+<p>得到这个 key 之后，学校就可以用它来获取自己的邮箱号码（msqid）：</p>
+<pre><code class="language-go">
+// 学校通过提供key来请求（如果不存在，则创建）一个邮箱号码（msqid）
+int msqid = msgget(key, IPC_CREAT | 0666); 
+ 
+</code></pre>
+<p>如果请求成功，邮局（操作系统）就会为学校的信息发布系统分配一个唯一的邮箱号码（msqid）。</p>
+<p>此时，学校的信息发布部门就可以用这个邮箱号码（msqid）发送通知，知道这个邮箱号码的其他学校部门或服务也可以拿着这个邮箱号码去“邮局”接收通知。他们不需要知道原来的口令（key），只要有邮箱号码（msqid），就能访问那个邮箱（消息队列）。</p>
+<h1 id="代码">代码</h1>
+<p>与之前相比，唯一的区别是 <strong>Cloneflags:CLONE_NEWUTS|CLONE_NEWIPC</strong></p>
+<pre><code class="language-go">package main
+
+import
+(
+	
+	&quot;os/exec&quot;
+	&quot;syscall&quot;
+	&quot;os&quot;
+	&quot;log&quot;
+)
+func main(){
+	cmd:=exec.Command(&quot;sh&quot;)
+	cmd.SysProcAttr = &amp;syscall.SysProcAttr{
+		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWIPC ,
+	}
+	cmd.Stdin=os.Stdin
+	cmd.Stdout=os.Stdout
+	cmd.Stderr=os.Stderr
+
+	if err:=cmd.Run();err!=nil{
+		log.Fatal(err)
+	}
+}
+</code></pre>
+<h1 id="演示">演示</h1>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%203%20-%20%5BIPC%20Namespace%5D%EF%BC%88System%20V%20IPC%20%E5%92%8C%20P/assets/csdn-136510661/image-001-4a8ccd1c76.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%202%20-%20%EF%BC%BBUTS%20Namespace%EF%BC%BD%EF%BC%88UTS%20Namespace%E3%80%81un/"><span class="l">上一篇</span>从零构建 Docker - 2 - ［UTS Namespace］（UTS Namespace、unshare 命令与 unshare 系统调用、修复 root 用户缺少普通用户 go 命令的问题、使用 sudo go、代码分析）</a><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2014%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20commit%20%E5%B0%86%E5%AE%B9%E5%99%A8%E6%89%93%E5%8C%85%E6%88%90%E9%95%9C%E5%83%8F%5D/"><span class="l">下一篇</span>从零构建 Docker - 14 - [实现 mydocker commit 将容器打包成镜像]</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

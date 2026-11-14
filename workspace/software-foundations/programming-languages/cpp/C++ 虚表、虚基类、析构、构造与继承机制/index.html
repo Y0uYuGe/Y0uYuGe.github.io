@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++ 虚表、虚基类、析构、构造与继承机制 · Y0uYuGe</title>
+<meta name="description" content="抽象类是一种不能直接实例化的类；它的作用是作为基类，为派生类提供统一的接口。抽象类可以包含具体方法（即有实现的方法）和抽象方法（即没有实现的方法）。抽象类通常用来定义接口规范，强制继承它的子类实现某些方法。在 C++ 中，只要一个类包含至少一个纯虚函数，它就是抽象类。抽象类不允许被实例化，也就是说不能直接创建抽象类的对象。抽象类：不能直接实例化，至少包含一个纯虚函数，为派生类提供接口规范。纯虚函数：没有具体实现的虚函数，强制派生类实现它，使一个类成为抽象类。虚函数。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/programming-languages">编程语言</a><span class="sep">›</span><a href="/#/software-foundations/programming-languages/cpp">C++</a></nav>
+    <h1>C++ 虚表、虚基类、析构、构造与继承机制</h1>
+    <div class="meta"><time>2024-05-20</time><span class="tag">#c++</span><span class="tag">#编程语言</span></div>
+    <article class="post-body">
+<h1 id="抽象类虚函数与纯虚函数">抽象类、虚函数与纯虚函数</h1>
+<h3 id="抽象类">抽象类</h3>
+<p>抽象类是一种不能直接实例化的类；它的作用是作为基类，为派生类提供统一的接口。抽象类可以包含具体方法（即有实现的方法）和抽象方法（即没有实现的方法）。抽象类通常用来定义接口规范，强制继承它的子类实现某些方法。</p>
+<p>在 C++ 中，只要一个类包含至少一个纯虚函数，它就是抽象类。抽象类不允许被实例化，也就是说不能直接创建抽象类的对象。</p>
+<h3 id="纯虚函数">纯虚函数</h3>
+<p>纯虚函数是在基类中声明、但在基类中没有具体实现的虚函数；它留给派生类去实现。纯虚函数的声明语法是在函数声明后面加上 <code>= 0</code>，例如：</p>
+<pre><code class="language-cpp">virtual void func() = 0;
+</code></pre>
+<p>包含纯虚函数的类称为抽象类。派生类必须实现所有的纯虚函数，否则该派生类也会变成抽象类。</p>
+<h3 id="虚函数">虚函数</h3>
+<p>虚函数是一种特殊的成员函数，它允许基类中的函数在派生类中被重写，从而实现动态多态。当通过基类指针或引用调用虚函数时，实际调用的是指针或引用所指向的具体对象所属类的那个版本的函数。</p>
+<p>虚函数的声明不需要 <code>= 0</code>，例如：</p>
+<pre><code class="language-cpp">virtual void func();
+</code></pre>
+<p>使用虚函数的主要目的是实现多态，使基类指针或引用能够调用派生类中的函数，从而在运行时决定调用哪个函数，提高程序的灵活性和可扩展性。</p>
+<h3 id="总结">总结</h3>
+<ul>
+<li><strong>抽象类</strong>：不能直接实例化；至少包含一个纯虚函数；为派生类提供接口规范。</li>
+<li><strong>纯虚函数</strong>：没有具体实现的虚函数；强制派生类实现它；使一个类成为抽象类。</li>
+<li><strong>虚函数</strong>：可以在派生类中被重写，以实现动态多态，使得通过基类指针或引用调用时，能根据对象的实际类型执行相应的函数。</li>
+</ul>
+<h1 id="c-虚函数与继承的补充说明-httpswsxkgithubiocreverse">C++ 虚函数与继承的补充说明 <a href="https://wsxk.github.io/c++reverse/">https://wsxk.github.io/c++reverse/</a></h1>
+<h1 id="带虚函数的析构与构造">带虚函数的析构与构造</h1>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-001-c99611772d.png" alt="图片"></p>
+<h2 id="调用析构函数时切换虚表的原因构造函数同理">调用析构函数时切换虚表的原因（构造函数同理）</h2>
+<blockquote>
+<p>在子类构造函数中，首先调用的是父类构造函数。父类构造函数首先会把子类对象中的虚表填充为父类虚表的地址。在父类构造函数内部，如果存在虚函数调用，那么就能成功调用父类的函数，而不是子类的函数。</p>
+</blockquote>
+<pre><code class="language-cpp">class Base {
+public:
+    Base() { initTable(); }
+    virtual ~Base() {
+        std::cout &lt;&lt; &quot;Before sayHello in Base destructor&quot; &lt;&lt; std::endl;
+        sayHello(); // 假设这里有个逻辑错误，实际上不应直接调用虚函数
+        std::cout &lt;&lt; &quot;After sayHello in Base destructor&quot; &lt;&lt; std::endl;
+    }
+    virtual void sayHello() { std::cout &lt;&lt; &quot;Hello from Base&quot; &lt;&lt; std::endl; }
+
+private:
+    void initTable() { /* 假设这里有初始化虚表的操作 */ }
+};
+
+class Derived : public Base {
+public:
+    Derived() { initTable(); }
+    ~Derived() override { std::cout &lt;&lt; &quot;Derived destructor&quot; &lt;&lt; std::endl; }
+    void sayHello() override { std::cout &lt;&lt; &quot;Hello from Derived&quot; &lt;&lt; std::endl; }
+
+private:
+    void initTable() { /* 初始化包含 Derived 版本 sayHello 的虚表 */ }
+};
+</code></pre>
+<p>现在，如果我们创建一个 <code>Derived</code> 对象，并通过基类指针删除它，会发生什么？</p>
+<pre><code class="language-cpp">int main() {
+    Base* ptr = new Derived();
+    delete ptr;
+    return 0;
+}
+</code></pre>
+<h3 id="预期行为">预期行为</h3>
+<ul>
+<li>首先，调用 <code>Derived</code> 的析构函数，清理 <code>Derived</code> 特有的资源。</li>
+<li>接下来，控制权转到 <code>Base</code> 的析构函数，因为在 <code>Derived</code> 被销毁之后，基类部分仍需要被销毁。</li>
+</ul>
+<h3 id="问题所在">问题所在</h3>
+<p>在 <code>Base</code> 的析构函数中，假设存在一个逻辑错误，直接调用了 <code>sayHello()</code>。如果虚表没有被切换，按照对象原本的类型（即 <code>Derived</code>），将会调用 <code>Derived</code> 版本的 <code>sayHello()</code>，这与我们的预期相矛盾——在销毁 <code>Base</code> 部分时，应当只表现出 <code>Base</code> 的行为。</p>
+<h3 id="解决方案临时切换虚表">解决方案：临时切换虚表</h3>
+<p>为了确保在执行 <code>Base</code> 的析构函数时，即使发生虚函数调用，也能体现出 <code>Base</code> 的行为，编译器会在进入 <code>Base</code> 的析构函数之前，把对象的虚表指针临时切换为 <code>Base</code> 类的虚表。这样，当 <code>Base</code> 的析构函数内部调用 <code>sayHello()</code> 时，调用的是 <code>Base</code> 版本的 <code>sayHello()</code>，而不是 <code>Derived</code> 版本，从而保证了行为的正确性。</p>
+<h1 id="全局变量构造函数和析构函数的执行">全局变量构造函数和析构函数的执行</h1>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-002-d6b2485fa4.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-003-15280627ec.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-004-9a6fed9375.png" alt="图片"></p>
+<p>这段代码是 C++ 程序编译后，在启动和关闭阶段处理全局构造函数和析构函数的一个简化示例。它通常由编译器自动生成，用于管理全局对象的构造和析构顺序。这里涉及几个关键概念和变量，下面逐一说明，并给出一个概念性的示例帮助理解。</p>
+<h3 id="关键概念与变量说明">关键概念与变量说明</h3>
+<ul>
+<li><code>_do_global_ctors</code>：这个函数负责调用全局对象的构造函数。它在程序启动时由编译器/链接器自动调用。</li>
+<li><code>_do_global_dtors</code>：对应的函数，负责调用全局对象的析构函数，在程序结束时调用。</li>
+<li><code>refptr___CTOR_LIST__</code>：这是一个指向编译器维护的全局构造函数指针数组的指针。数组的每个元素都是一个指向某个全局对象构造函数的函数指针。</li>
+<li><code>refptr___DTOR_LIST__</code>：类似地，它指向一个析构函数指针数组，但这段代码没有直接展示它。</li>
+<li><code>eax</code>、<code>ebx</code>、<code>rsi</code>：这些是 x86-64 架构下的寄存器名称，用于存储临时变量或指针。</li>
+</ul>
+<h3 id="函数流程">函数流程</h3>
+<ol>
+<li><p><strong>初始化检查</strong>：首先检查 <code>refptr___CTOR_LIST__[0]</code>（即 <code>i</code>）是否等于 -1。这个值通常表示构造函数列表未初始化或为空。如果是 -1，则跳过后续的构造函数调用步骤。</p>
+</li>
+<li><p><strong>遍历构造函数列表</strong>：如果构造函数列表非空，计算列表的实际长度（即构造函数的数量），然后用双指针技巧（一个指针前移，另一个保持不动，直到第一个指针到达末尾）依次调用每个构造函数。</p>
+</li>
+<li><p><strong>注册析构函数</strong>：最后，使用 <code>atexit</code> 函数注册 <code>_do_global_dtors</code>，确保程序正常退出时调用全局对象的析构函数。</p>
+</li>
+</ol>
+<h3 id="示例说明">示例说明</h3>
+<p>假设我们有以下两个全局对象，各自有自己的构造函数和析构函数：</p>
+<pre><code class="language-cpp">class ObjA {
+public:
+    ObjA() { std::cout &lt;&lt; &quot;ObjA constructed&quot; &lt;&lt; std::endl; }
+    ~ObjA() { std::cout &lt;&lt; &quot;ObjA destructed&quot; &lt;&lt; std::endl; }
+};
+
+class ObjB {
+public:
+    ObjB() { std::cout &lt;&lt; &quot;ObjB constructed&quot; &lt;&lt; std::endl; }
+    ~ObjB() { std::cout &lt;&lt; &quot;ObjB destructed&quot; &lt;&lt; std::endl; }
+};
+
+ObjA globalA;
+ObjB globalB;
+</code></pre>
+<p>程序启动时，<code>_do_global_ctors</code> 被调用，按编译器决定的顺序依次调用 <code>ObjA</code> 和 <code>ObjB</code> 的构造函数。输出可能是：</p>
+<pre><code>ObjA constructed
+ObjB constructed
+</code></pre>
+<p>当程序正常结束时，<code>_do_global_dtors</code> 被调用，按相反的顺序调用析构函数。输出可能是：</p>
+<pre><code>ObjB destructed
+ObjA destructed
+</code></pre>
+<p>通过这种方式，C++ 保证了全局对象的构造和析构是有序进行的，即使对象之间存在依赖关系。</p>
+<h1 id="继承">继承</h1>
+<p>在构造函数中：
+构造顺序：先构造父类，再按声明顺序构造初始化列表中指定的成员对象和成员，最后执行自身的构造函数代码
+析构顺序：先调用自身的析构函数，再调用成员对象的析构函数，最后调用父类的析构函数</p>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-005-e12b9923f2.png" alt="图片">
+<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-006-78b94f99a6.png" alt="图片">
+按照继承关系的顺序，先调用父类 Sofa 的构造函数。在调用另一个父类 Bed 时，并不是直接把对象的起始地址作为 this 指针传入，而是把地址向后调整父类 Sofa 的长度，用调整后的地址值作为 this 指针传入；只有这样才调用父类 Bed 的构造函数。因为有两个父类，子类在继承时也继承了它们各自的虚表指针，所以子类拥有两个虚表指针。可以看出，在多继承中，子类中虚表指针的数量取决于所继承父类的数量，父类有几个，虚表指针就有几个。
+在进行多态操作时，会把指针向前或向后移动，使其指向那个位置。</p>
+<h1 id="继承抽象类">继承抽象类</h1>
+<pre><code class="language-cpp">// C++ 源码
+#include &lt;stdio.h&gt;
+class AbstractBase {
+public:
+AbstractBase() {
+printf(&quot;AbstractBase()&quot;);
+}
+virtual void show() = 0; //定义纯虚函数
+};
+class VirtualChild : public AbstractBase { //定义继承抽象类的子类
+public:
+virtual void show() { //实现纯虚函数
+printf(&quot;抽象类分析\n&quot;);
+}
+};
+int main(int argc, char* argv[]) {
+VirtualChild obj;
+obj.show();
+return 0;
+}
+</code></pre>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-007-073a953df1.png" alt="图片">
+<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-008-fb82dbf9b3.png" alt="图片">
+<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-009-e3962954db.png" alt="图片">
+可以发现，虚表中函数指针所指向的位置并没有具体实现。
+<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-010-c0d6088718.png" alt="图片">
+而子类虚表函数指针所指向的位置则有具体实现。
+<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-011-9e28430980.png" alt="图片">
+<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-012-436f4289a1.png" alt="图片"></p>
+<h1 id="虚继承">虚继承</h1>
+<h3 id="基本设定">基本设定</h3>
+<p>假设我们有以下四个类：</p>
+<ol>
+<li><p><strong>Vehicle</strong>：一个基类，有一个成员变量 <code>color</code> 表示颜色。</p>
+<pre><code class="language-cpp">class Vehicle {
+public:
+    std::string color;
+    Vehicle(std::string c) : color(c) {}
+};
+</code></pre>
+</li>
+<li><p><strong>Car</strong> 和 <strong>Motorcycle</strong>：两个继承自 <code>Vehicle</code> 的类，没有新增成员，直接继承。</p>
+<pre><code class="language-cpp">class Car : public Vehicle {
+public:
+    Car(std::string c) : Vehicle(c) {}
+};
+
+class Motorcycle : public Vehicle {
+public:
+    Motorcycle(std::string c) : Vehicle(c) {}
+};
+</code></pre>
+</li>
+<li><p><strong>ConvertibleCar</strong>：一种特殊的车，它同时也是一种摩托车（想象一个非常科幻的场景），直接继承自 <code>Car</code> 和 <code>Motorcycle</code>。</p>
+<p>如果不使用虚继承，按照常规方式继承，<code>ConvertibleCar</code> 将拥有两个 <code>color</code> 成员，分别来自 <code>Car</code> 和 <code>Motorcycle</code>。</p>
+</li>
+</ol>
+<h3 id="不使用虚继承时的问题">不使用虚继承时的问题</h3>
+<pre><code class="language-cpp">class ConvertibleCar : public Car, public Motorcycle {
+public:
+    ConvertibleCar(std::string c) : Car(c), Motorcycle(c) {}
+    
+    // 这里访问color就会有二义性，因为不清楚是Car的color还是Motorcycle的color
+    // std::cout &lt;&lt; color; // 错误，编译时会报错
+};
+</code></pre>
+<h3 id="使用虚继承解决问题">使用虚继承解决问题</h3>
+<p>为了让 <code>ConvertibleCar</code> 只有一个 <code>color</code> 成员，我们需要让 <code>Car</code> 和 <code>Motorcycle</code> 虚继承自 <code>Vehicle</code>。</p>
+<pre><code class="language-cpp">class Car : virtual public Vehicle { ... };
+class Motorcycle : virtual public Vehicle { ... };
+
+class ConvertibleCar : public Car, public Motorcycle {
+public:
+    ConvertibleCar(std::string c) : Car(c), Motorcycle(c) {}
+    
+    // 现在访问color是明确的，因为只有一个实例
+    std::cout &lt;&lt; color; // 正确，输出ConvertibleCar的颜色
+};
+</code></pre>
+<p>通过虚继承，<code>ConvertibleCar</code> 实例只有一份共享的 <code>Vehicle</code> 基类部分，从而避免了数据冗余和访问歧义的问题。</p>
+<h1 id="虚基类偏移表vbtable">虚基类偏移表（vbtable）</h1>
+<p>下面通过一个具体的例子来解释虚基类偏移表（vbtable）的概念。假设我们有如下的类结构：</p>
+<pre><code class="language-cpp">class Vehicle {
+public:
+    int wheels;
+    virtual void drive() { std::cout &lt;&lt; &quot;Driving a vehicle.&quot; &lt;&lt; std::endl; }
+};
+
+class Car : virtual public Vehicle {
+public:
+    int doors;
+    virtual void drive() override { std::cout &lt;&lt; &quot;Driving a car.&quot; &lt;&lt; std::endl; }
+    virtual void honk() { std::cout &lt;&lt; &quot;Honking the horn.&quot; &lt;&lt; std::endl; }
+};
+
+class Truck : virtual public Vehicle {
+public:
+    int payloadCapacity;
+    virtual void drive() override { std::cout &lt;&lt; &quot;Driving a truck.&quot; &lt;&lt; std::endl; }
+    virtual void loadCargo() { std::cout &lt;&lt; &quot;Loading cargo.&quot; &lt;&lt; std::endl; }
+};
+
+class SUV : public Car, public Truck {
+public:
+    int seatingCapacity;
+    virtual void drive() override { std::cout &lt;&lt; &quot;Driving an SUV.&quot; &lt;&lt; std::endl; }
+};
+</code></pre>
+<p>在这个例子中，<code>Vehicle</code> 是一个虚基类，被 <code>Car</code> 和 <code>Truck</code> 这两个类虚继承。然后，<code>SUV</code> 类同时继承自 <code>Car</code> 和 <code>Truck</code>，形成了菱形继承结构。</p>
+<h3 id="内存布局与虚基类偏移表">内存布局与虚基类偏移表</h3>
+<p>在 <code>SUV</code> 类的对象中，内存布局会包含：</p>
+<ol>
+<li><p><strong>虚函数指针（vptr）</strong>：对于 <code>SUV</code>、<code>Car</code>、<code>Truck</code> 以及从 <code>Vehicle</code> 继承来的虚函数，每个含有虚函数的类都有一个指向自己虚函数表的 vptr。</p>
+</li>
+<li><p><strong>虚基类指针（vbptr）</strong>：由于 <code>Vehicle</code> 是被虚继承的，<code>SUV</code> 对象会有一个指向虚基类偏移表（vbtable）的 vbptr。</p>
+</li>
+<li><p><strong>数据成员</strong>：<code>SUV</code>、<code>Car</code>、<code>Truck</code> 和 <code>Vehicle</code> 的数据成员按各自的顺序存储。</p>
+</li>
+</ol>
+<h3 id="虚基类偏移表的作用">虚基类偏移表的作用</h3>
+<p>虚基类偏移表（vbtable）中的条目记录的是从 <code>SUV</code> 对象起始地址到 <code>Vehicle</code> 子对象实际起始地址之间的偏移量。当需要访问 <code>Vehicle</code> 类的某个成员（例如 <code>wheels</code>）时，编译器会按以下步骤进行：</p>
+<ol>
+<li><p><strong>获取 vbptr</strong>：首先通过 <code>SUV</code> 对象中的 vbptr 找到虚基类偏移表。</p>
+</li>
+<li><p><strong>计算偏移量</strong>：从虚基类偏移表中读取 <code>Vehicle</code> 子对象相对于 vbptr 的偏移量。</p>
+</li>
+<li><p><strong>访问成员</strong>：用这个偏移量加上 vbptr 的地址，就能得到 <code>Vehicle</code> 子对象的起始地址，从而正确地访问 <code>wheels</code> 成员。</p>
+</li>
+</ol>
+<h3 id="访问示例">访问示例</h3>
+<p>如果我们想访问一个 <code>SUV</code> 对象的 <code>wheels</code> 成员，尽管它是直接继承自 <code>Car</code> 和 <code>Truck</code>，编译器实际上会通过 vbptr 和 vbtable 找到正确的 <code>Vehicle</code> 实例，然后计算出 <code>wheels</code> 的地址并访问它。</p>
+<p>通过这种方式，虚基类偏移表确保了在复杂继承结构中对虚基类成员的访问是准确的，避免了多继承导致同一个基类数据重复的问题。</p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/"><span class="l">上一篇</span>C++ 类、new 与 delete 以及菱形继承机制</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d3" href="#抽象类">抽象类</a><a class="d3" href="#纯虚函数">纯虚函数</a><a class="d3" href="#虚函数">虚函数</a><a class="d3" href="#总结">总结</a><a class="d2" href="#调用析构函数时切换虚表的原因构造函数同理">调用析构函数时切换虚表的原因（构造函数同理）</a><a class="d3" href="#预期行为">预期行为</a><a class="d3" href="#问题所在">问题所在</a><a class="d3" href="#解决方案临时切换虚表">解决方案：临时切换虚表</a><a class="d3" href="#关键概念与变量说明">关键概念与变量说明</a><a class="d3" href="#函数流程">函数流程</a><a class="d3" href="#示例说明">示例说明</a><a class="d3" href="#基本设定">基本设定</a><a class="d3" href="#不使用虚继承时的问题">不使用虚继承时的问题</a><a class="d3" href="#使用虚继承解决问题">使用虚继承解决问题</a><a class="d3" href="#内存布局与虚基类偏移表">内存布局与虚基类偏移表</a><a class="d3" href="#虚基类偏移表的作用">虚基类偏移表的作用</a><a class="d3" href="#访问示例">访问示例</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

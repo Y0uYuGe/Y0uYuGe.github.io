@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 计算机网络的概念、功能、发展阶段、组成与分类 · Y0uYuGe</title>
+<meta name="description" content="Hadoop 的核心是 HDFS（Hadoop 分布式文件系统）和 MapReduce。HDFS 是一个运行在标准或低端硬件上的分布式文件系统，除了具有高容错性、原生支持大型数据集之外，还能提供比传统文件系统更好的数据吞吐量。此外，Hadoop 还包括 Yet Another Resource Negotiator（YARN），这是一个负责管理和监控集群节点及资源使用的工具，用于调度作业和任务。IXP：即把地区 ISP 与地区 ISP 直接相连。网络提供商变成了 ISP。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84">计算机网络体系结构</a></nav>
+    <h1>计算机网络 - 计算机网络的概念、功能、发展阶段、组成与分类</h1>
+    <div class="meta"><time>2024-01-17</time><span class="tag">#计算机网络</span></div>
+    <article class="post-body">
+<h1 id="计算机网络的概念功能与发展阶段">计算机网络的概念、功能与发展阶段</h1>
+<h2 id="概览">概览</h2>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-001-19e5d2a364.png" alt="图片"></p>
+<h2 id="计算机网络的概念">计算机网络的概念</h2>
+<p>  <img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-002-c7ea63252e.png" alt="图片">
+具体理解
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-003-22af41c110.png" alt="图片"></p>
+<h2 id="计算机网络的功能">计算机网络的功能</h2>
+<ol>
+<li>数据通信，即传输数据</li>
+<li>资源共享：硬件方面可以想想网络打印机（打印机有 IP 地址，可以通过网络连接到打印机，然后发出打印请求）；软件共享是指通过远程网络访问使用别人电脑上的软件；数据共享可以举百度文库之类的例子</li>
+<li>分布式处理（Hadoop）
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-004-b5e5564564.png" alt="图片"></li>
+</ol>
+<blockquote>
+<p>Hadoop 是由 Apache 基金会开发的分布式系统基础架构，是一个由存储系统和计算框架组成的软件框架。它主要用于解决海量数据的存储和计算问题，是大数据技术的基石。Hadoop 的核心是 HDFS（Hadoop 分布式文件系统）和 MapReduce。HDFS 是一个运行在标准或低端硬件上的分布式文件系统，除了具有高容错性、原生支持大型数据集之外，还能提供比传统文件系统更好的数据吞吐量。MapReduce 是一个帮助规划数据并行计算的框架。此外，Hadoop 还包括 Yet Another Resource Negotiator（YARN），这是一个负责管理和监控集群节点及资源使用的工具，用于调度作业和任务。</p>
+</blockquote>
+<ol start="4">
+<li>提高可靠性：在分布式处理下，即使一台机器宕机，其他机器也可以顶替它——只是整体速度相对慢一些</li>
+<li>负载均衡：分布式处理使各台计算机承担的任务不至于失衡</li>
+</ol>
+<h2 id="计算机网络的发展">计算机网络的发展</h2>
+<h3 id="计算机网络的发展---第一阶段">计算机网络的发展 - 第一阶段</h3>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-005-83177b283c.png" alt="图片">
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-006-d7710ebc4e.png" alt="图片"></p>
+<h3 id="计算机网络的发展---第二阶段---第三阶段">计算机网络的发展 - 第二阶段 - 第三阶段</h3>
+<p>发展为三级结构
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-007-fb9f56412c.png" alt="图片"></p>
+<h3 id="计算机网络的发展---第三阶段---多层次-isp-结构">计算机网络的发展 - 第三阶段 - 多层次 ISP 结构</h3>
+<p>网络提供商变成了 ISP
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-008-29663edf82.png" alt="图片">
+IXP：即把地区 ISP 与地区 ISP 直接相连</p>
+<h2 id="小结">小结</h2>
+<p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-009-45adede483.png" alt="图片"></p>
+<h1 id="计算机网络的组成与分类">计算机网络的组成与分类</h1>
+<h2 id="计算机网络的组成">计算机网络的组成</h2>
+<p>软件部署在相应的硬件上
+主机之间的通信实际上是进程之间的通信</p>
+<p> 服务器收到的请求越多，客户端得到响应就越慢
+B/S：只不过客户端是浏览器
+P2P：peer to peer，所有主机同时既是客户端又是服务器（这里主机越多，下载速度越快。比如 A 同时向 B 和 C 传输数据，而 B 也向 C 传输数据，那么 C 需要的数据就可以分成两部分——一部分从 B 获取，另一部分从 C 获取）
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-010-5e0d672548.png" alt="图片">
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-011-bf02df2b4e.png" alt="图片"></p>
+<h2 id="计算机网络的分类">计算机网络的分类</h2>
+<p>广域网：国与国之间、省与省之间——总之比城市范围大
+局域网：像学校、公司、单位这样的网络
+最初是按分布范围分类的，但归根结底还是看使用了什么类型的技术——这决定了它属于哪种范围的网络</p>
+<p>电路交换：占用链路资源，别人无法使用（类似电话）</p>
+<p>报文：要传输的一个文件或一个单独的条目
+报文交换和分组交换：存储转发</p>
+<p>广播式网络大多采用总线型拓扑
+点对点网络大多采用网状拓扑
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-012-9cc997c888.png" alt="图片"></p>
+<h2 id="小结-1">小结</h2>
+<p>局域网：大多是总线型
+广域网：大多是网状型
+广播式与点对点的区别主要在于是否有存储转发和路由选择
+<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E5%8A%9F%E8%83%BD%E3%80%81%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5%E3%80%81%E7%BB%84%E6%88%90%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135638813/image-013-87c410aaff.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%E3%80%81%E5%8D%8F%E8%AE%AE%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%9C%8D%E5%8A%A1/"><span class="l">上一篇</span>计算机网络 - 分层结构、协议、接口与服务</a><a href="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E3%80%81%E6%8A%A5%E6%96%87%E4%BA%A4%E6%8D%A2%E3%80%81%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2%E5%8F%8A%E5%85%B6%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%89/"><span class="l">下一篇</span>计算机网络 - 数据交换方式（电路交换、报文交换、分组交换及其两种方式）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#概览">概览</a><a class="d2" href="#计算机网络的概念">计算机网络的概念</a><a class="d2" href="#计算机网络的功能">计算机网络的功能</a><a class="d2" href="#计算机网络的发展">计算机网络的发展</a><a class="d3" href="#计算机网络的发展---第一阶段">计算机网络的发展 - 第一阶段</a><a class="d3" href="#计算机网络的发展---第二阶段---第三阶段">计算机网络的发展 - 第二阶段 - 第三阶段</a><a class="d3" href="#计算机网络的发展---第三阶段---多层次-isp-结构">计算机网络的发展 - 第三阶段 - 多层次 ISP 结构</a><a class="d2" href="#小结">小结</a><a class="d2" href="#计算机网络的组成">计算机网络的组成</a><a class="d2" href="#计算机网络的分类">计算机网络的分类</a><a class="d2" href="#小结-1">小结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

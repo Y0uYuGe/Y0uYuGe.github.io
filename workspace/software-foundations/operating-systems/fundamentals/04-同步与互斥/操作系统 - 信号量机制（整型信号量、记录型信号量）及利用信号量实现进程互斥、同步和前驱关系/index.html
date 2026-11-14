@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统 - 信号量机制（整型信号量、记录型信号量）及利用信号量实现进程互斥、同步和前驱关系 · Y0uYuGe</title>
+<meta name="description" content="接下来 CPU 为 P0 服务。假设进程 P0 已经用完打印机并执行 signal 原语，value 加一。如果 value 仍然小于等于 0，就执行 wakeup，唤醒等待队列队首的进程。此时，由于进程 P2 已进入阻塞状态，CPU 切换去为进程 P3 服务；wait 之后 value 为 -2，小于零，因此同样执行 block，将 P3 追加到等待队列的队尾。wait 之后 value 变为 -1；由于小于 0，此时资源无法使用，于是用 block 函数将进程 P2 挂起到该信号量的等待队列中。首先，进程 P0 执行 wait；value 的初始值为 2。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5">同步与互斥</a></nav>
+    <h1>操作系统 - 信号量机制（整型信号量、记录型信号量）及利用信号量实现进程互斥、同步和前驱关系</h1>
+    <div class="meta"><time>2024-02-07</time><span class="tag">#服务器</span><span class="tag">#linux</span><span class="tag">#运维</span></div>
+    <article class="post-body">
+<h1 id="信号量机制">信号量机制</h1>
+<h2 id="概述">概述</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-001-7c561e2807.png" alt="图片"></p>
+<h2 id="信号量机制-1">信号量机制</h2>
+<p>wait：进入区操作
+signal：退出区操作
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-002-8f5a2b2c34.png" alt="图片"></p>
+<h3 id="整型信号量">整型信号量</h3>
+<p>wait：检查当前资源是否充足；如果不足，就循环忙等；如果充足，则信号量减一
+signal：信号量加一</p>
+<p>检查和加锁是在一个原子操作中完成的，因此不会出现在加锁之前发生进程切换，使另一个进程通过检查并进入临界区的情况</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-003-90d27e7dab.png" alt="图片"></p>
+<h3 id="记录型信号量">记录型信号量</h3>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-004-1419a3cf99.png" alt="图片"></p>
+<h4 id="示例">示例</h4>
+<p>首先，进程 P0 执行 wait；value 的初始值为 2<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-005-66c823c458.png" alt="图片">
+wait 之后 value 变为 1，进程 P0 开始使用它获得的打印机资源。随后进程切换到 P1，P1 即将执行 wait
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-006-a4786a3ce6.png" alt="图片">
+wait 之后 value 变为 0，进程 P1 开始使用它获得的打印机资源。此时 value 为 0，所有资源都已分配出去；随后进程切换到 P2，它准备执行 wait
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-007-db463b5ee9.png" alt="图片">
+wait 之后 value 变为 -1。由于小于 0，此时资源无法使用，于是用 block 函数将进程 P2 挂起到该信号量的等待队列中
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-008-ad030f586f.png" alt="图片">
+由于进程 P2 已进入阻塞状态，CPU 切换去为进程 P3 服务。wait 之后 value 为 -2，小于零，因此同样执行 block，将 P3 追加到等待队列的队尾
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-009-d72cacad08.png" alt="图片">
+接下来 CPU 为 P0 服务。假设进程 P0 已经用完打印机并执行 signal 原语，value 加一。如果 value 仍然小于等于 0，就执行 wakeup，唤醒等待队列队首的进程。之后在下一次进程切换时，CPU 切换到 P2
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-010-2f7e7f8e3a.png" alt="图片">
+现在 P2 可以开始使用打印机资源。用完之后，它执行 signal；value 加 1，并唤醒等待队列队首的进程——进程 P3 从阻塞态变为就绪态</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-011-753e1e470a.png" alt="图片"></p>
+<p>如果此时进程切换到 P1，P1 用完打印机后执行 signal；由于此时 value 已大于 0，不会发生唤醒</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-012-4125edbd2c.png" alt="图片">
+然后进程切换到 P3；它用完打印机后，value 加 1，不会发生唤醒
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-013-b5c0b5acd1.png" alt="图片"></p>
+<h4 id="记录型信号量小结">记录型信号量小结</h4>
+<p>自我阻塞：主动放弃 CPU 的使用权
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-014-ad489644e0.png" alt="图片">
+记录型信号量通过 P 操作（wait/申请）和 V 操作（signal/释放）来实现系统资源的申请和释放。这两种操作的具体机制如下：</p>
+<ul>
+<li>资源申请（P 操作 / Wait 操作）：当进程需要使用某个资源时，执行 P 操作来申请。在 P 操作中，进程检查信号量的值。如果信号量的值大于 0，说明有可用资源：进程进入临界区，并将信号量减 1。如果信号量的值为 0，说明没有可用资源：进程不能立即进入临界区，而是被阻塞并放入等待队列，直到信号量的值变为正数。</li>
+<li>资源释放（V 操作 / Signal 操作）：当进程用完资源、即将离开临界区时，执行 V 操作来释放资源。该操作将信号量的值加 1，表示多了一个可用资源。同时，如果有其他进程因资源不足而阻塞在等待队列中，系统会从中选择一个或多个进程将其唤醒，使它们得以继续执行。</li>
+</ul>
+<h2 id="小结">小结</h2>
+<p>block：value&lt;0
+wakeup：value&lt;=0</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-015-71b2b48739.png" alt="图片"></p>
+<h1 id="利用信号量实现进程互斥同步和前驱关系">利用信号量实现进程互斥、同步和前驱关系</h1>
+<h2 id="概述-1">概述</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-016-9b8346e1ae.png" alt="图片"></p>
+<h2 id="利用信号量实现进程互斥">利用信号量实现进程互斥</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-017-23412e4e3e.png" alt="图片">
+缺少 P：没有 P 就没有限制，因此访问不会互斥</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-018-408b4d7ece.png" alt="图片"></p>
+<h2 id="利用信号量实现进程同步">利用信号量实现进程同步</h2>
+<h3 id="进程同步">进程同步</h3>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-019-88b324de92.png" alt="图片"></p>
+<h3 id="利用信号量实现进程同步-1">利用信号量实现进程同步</h3>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-020-b7f675ca30.png" alt="图片"></p>
+<h2 id="利用信号量实现前驱关系">利用信号量实现前驱关系</h2>
+<p>前驱关系：当前事件的发生，要求所有指向它的事件都已经发生</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-021-d7e0bce9b0.png" alt="图片"></p>
+<h2 id="小结-1">小结</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%EF%BC%88%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F%EF%BC%89%E5%8F%8A%E5%88%A9%E7%94%A8%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E5%92%8C%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB/assets/csdn-136073106/image-022-8404008936.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5%E4%B8%8E%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%EF%BC%88%E4%B8%B4%E7%95%8C%E8%B5%84%E6%BA%90%E4%BA%92%E6%96%A5%E8%AE%BF%E9%97%AE%E7%9A%84%E9%80%BB%E8%BE%91%E3%80%81%E4%BA%92%E6%96%A5%E8%AE%BF%E9%97%AE%E7%9A%84%E5%8E%9F%E5%88%99%EF%BC%89/"><span class="l">上一篇</span>操作系统 - 进程同步与进程互斥（临界资源互斥访问的逻辑、互斥访问的原则）</a><a href="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%88%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5%E6%B3%95%E3%80%81Peterson%20%E7%AE%97%E6%B3%95/"><span class="l">下一篇</span>操作系统——进程互斥的软件实现方法（单标志法、双标志先检查法、双标志后检查法、Peterson 算法）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#概述">概述</a><a class="d2" href="#信号量机制-1">信号量机制</a><a class="d3" href="#整型信号量">整型信号量</a><a class="d3" href="#记录型信号量">记录型信号量</a><a class="d2" href="#小结">小结</a><a class="d2" href="#概述-1">概述</a><a class="d2" href="#利用信号量实现进程互斥">利用信号量实现进程互斥</a><a class="d2" href="#利用信号量实现进程同步">利用信号量实现进程同步</a><a class="d3" href="#进程同步">进程同步</a><a class="d3" href="#利用信号量实现进程同步-1">利用信号量实现进程同步</a><a class="d2" href="#利用信号量实现前驱关系">利用信号量实现前驱关系</a><a class="d2" href="#小结-1">小结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

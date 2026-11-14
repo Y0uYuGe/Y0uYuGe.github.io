@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GraphRAG + Llama 3.2 · Y0uYuGe</title>
+<meta name="description" content="一个将 GraphRAG 检索与本地语言模型连接起来的课程项目。FastAPI 服务通过聊天 API 提供局部搜索、全局搜索以及组合搜索。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-infrastructure/graphrag-llama3-2-class-project/GraphRAG%20%2B%20Llama%203.2" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-infrastructure">AI 基础设施</a><span class="sep">›</span><a href="/#/ai-infrastructure/graphrag-llama3-2-class-project">GraphRAG 课程项目</a></nav>
+    <h1>GraphRAG + Llama 3.2</h1>
+    <div class="meta"><time>2026-10-20</time><span class="tag">#Python</span><span class="tag">#GraphRAG</span><span class="tag">#Ollama</span><span class="tag">#FastAPI</span><span class="tag">#LanceDB</span></div>
+    <article class="post-body">
+<h2 id="背景">背景</h2>
+<p>针对一个文档集合提出的问题，可能需要不同范围的上下文。有些问题关注某个特定实体及其关系；另一些则询问贯穿整个集合的主题。这个课程项目利用 GraphRAG 产物和本地部署的语言模型，探索了这两种检索形式。</p>
+<p>仓库记录了索引流程、提示词调优、CSV 输入配置，以及一个用于查询所生成知识图谱的 Python 应用。其 README 还列出了参考资料以及作为起点的上游 GraphRAG 示例。</p>
+<h2 id="实现">实现</h2>
+<p><code>class_project/utils/main.py</code> 中的应用连接了以下几个组件：</p>
+<ul>
+<li><strong>上下文加载：</strong> pandas 从 Parquet 文件中读取已索引的实体、关系、文本单元、声明（claims）和社区报告。</li>
+<li><strong>语义检索：</strong> 实体描述的嵌入向量存储在 LanceDB 中，供局部上下文构建器使用。</li>
+<li><strong>搜索模式：</strong> 局部搜索结合实体上下文和源文本；全局搜索使用社区报告。组合模式会同时运行两者，并将答案分节呈现。</li>
+<li><strong>模型服务：</strong> Ollama 提供 OpenAI 风格的接口。已提交的配置选用 <code>llama3.2-vision</code> 进行生成，选用 <code>nomic-embed-text:latest</code> 生成嵌入。</li>
+<li><strong>应用接口：</strong> FastAPI 提供 <code>/v1/chat/completions</code>、<code>/v1/models</code> 以及一个基于模板的主页。</li>
+</ul>
+<p>响应处理器既支持普通的 JSON 响应，也支持事件流响应，后者会将完成的检索答案逐行发送。这为研究如何将检索结果适配到聊天客户端提供了一个具体的切入点。</p>
+<h2 id="查看成果">查看成果</h2>
+<ul>
+<li><a href="https://github.com/Y0uYuGe/Graphrag_LLama3.2-class-project/blob/master/class_project/utils/main.py">应用源码</a>：模型配置、产物加载、上下文构建器和 API 路由。</li>
+<li><a href="https://github.com/Y0uYuGe/Graphrag_LLama3.2-class-project/blob/master/Readme.md">流程笔记</a>：索引命令、提示词调优和检索示例。</li>
+<li><a href="https://github.com/Y0uYuGe/Graphrag_LLama3.2-class-project/commits/master/">开发历史</a>：公开的实现记录。</li>
+</ul>
+<h2 id="运行项目">运行项目</h2>
+<p>复现需要已索引的 GraphRAG 产物、与所导入 GraphRAG 模块兼容的 Python 依赖，以及一个已准备好所配置模型的 Ollama 服务。启动应用前，请将 <code>INPUT_DIR</code> 更新为本地产物目录；其配置的服务端口为 <code>8012</code>。</p>
+<p>代码导入了 GraphRAG 的内部查询模块，因此依赖版本和产物结构需要与实现相匹配。本项目展示的是一个集成流程；检索质量仍取决于输入文档、图谱构建和模型配置。</p>
+
+    </article>
+    
+    <nav class="pn"><span></span><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#背景">背景</a><a class="d2" href="#实现">实现</a><a class="d2" href="#查看成果">查看成果</a><a class="d2" href="#运行项目">运行项目</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

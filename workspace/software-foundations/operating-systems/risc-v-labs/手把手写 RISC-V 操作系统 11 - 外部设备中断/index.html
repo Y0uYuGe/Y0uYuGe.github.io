@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>手把手写 RISC-V 操作系统 11 - 外部设备中断 · Y0uYuGe</title>
+<meta name="description" content="这个链接错误表明项目中的两个目标文件（plic.o 和 Trap.o）都在尝试定义相同的函数 read_mie 和 write_mie，而这些函数定义位于头文件的第 14 行和第 19 行。在 C/C++ 中，不应该直接在头文件中定义函数，而只应声明函数原型。否则，在编译包含该头文件的源文件时，每个源文件都会生成该函数的一份定义，导致链接时出现重复定义错误。解决方法如下：将 read_mie 和 write_mie 的定义移到单独的源文件中（如 trap.c 或 trap.s）。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/risc-v-labs">RISC-V 实验</a></nav>
+    <h1>手把手写 RISC-V 操作系统 11 - 外部设备中断</h1>
+    <div class="meta"><time>2024-04-17</time><span class="tag">#risc-v</span><span class="tag">#单片机</span><span class="tag">#嵌入式硬件</span></div>
+    <article class="post-body">
+<h1 id="中断分类">中断分类</h1>
+<p>本地中断：软件中断（0-3）和定时器中断（4-7）
+全局中断：外部中断（8-10）</p>
+<p>这三类中断对应 CPU 上的三个引脚
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-001-40731b9e39.png" alt="图片"></p>
+<h1 id="mie-mip">mie mip</h1>
+<p>mstatus 中的中断寄存器是全局的，而 mie 中断寄存器处于第二级，相当于一种细化</p>
+<p>mie：在某个模式下使能某一类中断
+mip：表示在某个模式下某一类中断当前是否正在发生
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-002-b880fcebc5.png" alt="图片"></p>
+<h1 id="中断处理流程">中断处理流程</h1>
+<p>与异常处理流程类似，区别在于 mepc 被设置为保存当前 pc 的下一条指令的地址。因为中断被认为是在当前指令执行完之后才响应的，所以中断处理完毕后，应当返回到前一条指令的下一条指令继续执行。</p>
+<h1 id="外部中断">外部中断</h1>
+<p>外设向 CPU 产生中断，CPU 响应并处理该中断
+每个 CPU 只有一个引脚对应外部中断，但外设有很多
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-003-fba636b273.png" alt="图片">
+通过 PLIC 中断控制器来管理：外设产生中断源之后，由 PLIC 处理，再交给某个 CPU 来处理
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-004-42b982d52e.png" alt="图片"></p>
+<h1 id="中断源">中断源</h1>
+<p>0 没有固定对应的中断源，是保留的
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-005-f2b92b9053.png" alt="图片"></p>
+<h1 id="plic">PLIC</h1>
+<p>PLIC 本身也是一个外设。CPU 通过将其映射到内存来访问 PLIC，这样访问内存就相当于访问 PLIC 的寄存器
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-006-60004cc117.png" alt="图片"></p>
+<h1 id="priority优先级">Priority（优先级）</h1>
+<p>每个中断源根据其中断源 ID 对应各自的 Priority 寄存器。每个寄存器的取值范围为 0 到 7，其中 0 表示该中断源的最低优先级
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-007-ae772d7e9a.png" alt="图片"></p>
+<h1 id="pending挂起">Pending（挂起）</h1>
+<p>PLIC 可读可写，用于表示某个中断源是否已经发生。每个 PLIC 有两个这样的寄存器，因为需要 64 位才能表示所有的中断源
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-008-e64bb00893.png" alt="图片"></p>
+<h1 id="enable使能">Enable（使能）</h1>
+<p>与 hart 对应；同样也有两个，同样是因为需要 64 位才能表示所有的中断源
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-009-c402a10f01.png" alt="图片"></p>
+<h1 id="threshold">Threshold</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-010-55c7fe53ad.png" alt="图片"></p>
+<h1 id="claimcomplete">Claim/Complete</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-011-b7c6fbf7fb.png" alt="图片"></p>
+<h1 id="plic-工作流程">PLIC 工作流程</h1>
+<p> 中断源 1 和 2 的优先级分别为 1 和 2。hart0 对所有设备的 Enable 打开，hart1 的则关闭。hart0 的 threshold 设为零</p>
+<ol>
+<li>当中断源 1 和 2 同时发生时，首先在各中断源之间比较中断优先级，优先级高的先进入</li>
+<li>此时 hart0 的 Enable 允许进入，而 hart1 不允许</li>
+<li>然后，由于 hart0 的 threshold 为零，允许进入</li>
+<li>该中断源对应的 pending 位被置为 1，此时将其传递给 CPU，CPU 就知道发生了某个中断</li>
+<li>然后通过 Claim 可以得知当前中断源的 ID 号，并清除 pending 位，接着进入中断处理函数</li>
+<li>然后执行 complete，通知 PLIC 当前中断已处理完毕，接着处理中断源 1，过程与上述相同
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-012-0026132600.png" alt="图片"></li>
+</ol>
+<h1 id="设置-uart-寄存器-ier">设置 uart 寄存器 IER</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-013-1814404a51.png" alt="图片"></p>
+<h1 id="设置-uart-寄存器-lsr">设置 uart 寄存器 LSR</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-014-2b42c85846.png" alt="图片"></p>
+<h1 id="asm-volatilemv-0-tp-r-x-">asm volatile(&quot;mv %0, tp&quot; : &quot;=r&quot; (x) );</h1>
+<p>这段代码是 RISC-V 架构上的一条内联汇编语句，用于 C 或 C++ 编程环境中。它的含义如下：</p>
+<pre><code class="language-c">asm volatile(&quot;mv %0, tp&quot; : &quot;=r&quot; (x) );
+</code></pre>
+<ol>
+<li><p><code>asm volatile</code>：表示这是一条内联汇编指令，并被标记为 <code>volatile</code>。这意味着编译器不会优化这段代码；每次都会按字面执行，执行结果可能会影响程序的状态。</p>
+</li>
+<li><p><code>&quot;mv %0, tp&quot;</code>：这是 RISC-V 架构的一条汇编指令。<code>mv</code> 是移动指令，用于把源寄存器的值复制到目的寄存器。这里 <code>tp</code> 表示线程指针寄存器，<code>%0</code> 是占位符，代表输出约束中指定的 C/C++ 变量。</p>
+</li>
+<li><p><code>: &quot;=r&quot; (x)</code>：这是输出约束，描述汇编指令如何与 C/C++ 变量交互。<code>=r</code> 表示需要一个寄存器作为输出，该寄存器的值会被赋给变量 <code>x</code>。</p>
+</li>
+</ol>
+<h1 id="头文件中不能定义函数否则每次引入都会定义一次">头文件中不能定义函数，否则每次引入都会定义一次</h1>
+<pre><code class="language-bash">/usr/lib/riscv64-unknown-elf/bin/ld: plic.o: in function read_mie&#39;: /home/llk/Desktop/risllkos/github/Fullkenerl6/trap.h:14: multiple definition of read_mie&#39;; Trap.o:/home/llk/Desktop/risllkos/github/Fullkenerl6/trap.h:14: first defined here /usr/lib/riscv64-unknown-elf/bin/ld: plic.o: in function write_mie&#39;: /home/llk/Desktop/risllkos/github/Fullkenerl6/trap.h:19: multiple definition of write_mie&#39;; Trap.o:/home/llk/Desktop/risllkos/github/Fullkenerl6/trap.h:19: first defined here 
+</code></pre>
+<p>这个链接错误表明项目中的两个目标文件（<code>plic.o</code> 和 <code>Trap.o</code>）都在尝试定义相同的函数 <code>read_mie</code> 和 <code>write_mie</code>，而这些函数定义位于头文件 <code>/home/llk/Desktop/risllkos/github/Fullkenerl6/trap.h</code> 的第 14 行和第 19 行。</p>
+<p>在 C/C++ 中，不应该直接在头文件中定义函数，而只应声明函数原型。否则，在编译包含该头文件的源文件时，每个源文件都会生成该函数的一份定义，导致链接时出现重复定义错误。</p>
+<p>解决方法如下：</p>
+<ol>
+<li><p>将 <code>read_mie</code> 和 <code>write_mie</code> 函数的定义移到单独的源文件中（如 <code>trap.c</code> 或 <code>trap.s</code>，取决于它们是 C 函数还是汇编函数）。</p>
+</li>
+<li><p>在头文件 <code>trap.h</code> 中只保留函数声明（原型）：</p>
+</li>
+</ol>
+<pre><code class="language-c">#ifndef _TRAP_H_
+#define _TRAP_H_
+
+// 声明函数，而不是定义
+extern uint32_t read_mie(void);
+extern void write_mie(uint32_t value);
+
+#endif // _TRAP_H_
+</code></pre>
+<ol start="3">
+<li><p>确保这两个函数的实际实现只在项目中的一个源文件里定义，然后正常编译并链接项目的所有源文件。</p>
+</li>
+<li><p>如果这些函数是非常底层的汇编函数，并且你确实想把定义放在头文件中，那么需要确保用 <code>static inline</code> 关键字声明它们，以避免链接时出现重复定义错误。但要注意，这种做法适用于非常小、适合内联的函数。对于较大的函数或涉及特殊寄存器访问的函数，一般不推荐这样做。</p>
+</li>
+</ol>
+<h1 id="static-inline">static inline</h1>
+<p>在 C 或 C++ 中，如果你在头文件里定义了一个普通（非内联）函数，并在多个源文件（.c 或 .cpp）中包含该头文件，编译器会在每个包含该头文件的源文件中为这个函数生成机器码。当链接器尝试把所有目标文件链接成可执行文件时，会发现同一个函数在多处被定义，从而触发重复定义的链接错误。</p>
+<p>但是对于 <code>static inline</code> 函数，情况就不同了：</p>
+<ol>
+<li><p><strong>Static</strong>：这里的 <code>static</code> 关键字用于限制函数的作用域。对函数而言，这意味着该函数具有“内部链接”，即只在包含它的编译单元（通常是包含该函数定义的源文件）内可见。虽然这里函数是定义在头文件中的，但由于它是 <code>static</code> 的，每个包含该头文件的源文件都会得到该函数的一份独立副本。这些副本互不影响，各自在自己的作用域内有效。</p>
+</li>
+<li><p><strong>Inline</strong>：<code>inline</code> 关键字用于请求编译器尝试把函数体像宏一样直接嵌入到每个调用该函数的地方，而不是生成单独的函数调用。这样一来，理论上链接时就不需要处理对该函数的外部引用。</p>
+</li>
+</ol>
+<p>两者结合起来，<code>static inline</code> 函数既限制了作用域（每个源文件都被视为独立的作用域），又要求编译器尽可能将其内联。即使编译器由于某种原因无法内联，由于 <code>static</code> 的作用，每个源文件中生成的函数副本仍然是独立的，只在各自的编译单元内有效，因此链接时不会出现重复定义错误。</p>
+<p>例如：</p>
+<pre><code class="language-c">// trap.h
+#ifndef TRAP_H
+#define TRAP_H
+
+static inline void handle_trap() {
+    // 函数体...
+}
+
+#endif // TRAP_H
+
+// file1.c
+#include &quot;trap.h&quot;
+void some_function() {
+    handle_trap(); // 调用
+}
+
+// file2.c
+#include &quot;trap.h&quot;
+void another_function() {
+    handle_trap(); // 另一处调用
+}
+</code></pre>
+<p>在这个例子中，虽然 <code>handle_trap()</code> 函数的定义被同时包含进了 <code>file1.c</code> 和 <code>file2.c</code>，但由于它是 <code>static inline</code> 的，每个源文件都有一个独立的内联版本（理想情况下编译器会将其内联；如果不能，每个编译单元也会有一份独立的非内联副本），最终在链接时不会出现重复定义的问题。</p>
+<h1 id="代码">代码</h1>
+<p>外设通过 uart 接口连接到 PLIC，PLIC 再连接到 CPU。当外设输入一个字符时，会产生中断，并通过 PLIC 通知 CPU 去处理该中断。
+输出则是 CPU 与 uart 直接相连：CPU 把字符传给 uart，uart 再传给外设，因此显示器自然就能显示出来</p>
+<h2 id="初始化-plic">初始化 plic</h2>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-015-2d2c789bc6.png" alt="图片"></p>
+<h2 id="中断处理">中断处理</h2>
+<p>根据发出的中断进入相应的 uart 中断处理函数
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-016-3329696512.png" alt="图片"></p>
+<h1 id="代码-1">代码</h1>
+<p><a href="https://github.com/FULLK/risllkos/tree/main/Fullkenerl6">https://github.com/FULLK/risllkos/tree/main/Fullkenerl6</a></p>
+<h1 id="待解决">待解决</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-017-2ad22fddcf.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/"><span class="l">上一篇</span>从零构建 RISC-V 操作系统（一）- 计算机系统巡礼</a><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/"><span class="l">下一篇</span>手把手写 RISC-V 操作系统 13 - 抢占式多任务与协作式多任务的兼容</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

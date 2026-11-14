@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-虚拟机-QEMU-前置知识-内存管理与 IO 处理 · Y0uYuGe</title>
+<meta name="description" content="当虚拟机访问虚拟设备的物理内存/端口时，控制权会从 VM 转移到 VMM；此时 QEMU 会根据触发 VM-exit 的事件类型，即 MMIO 或 PMIO，做出不同的处理。端口映射 IO：内存和 IO 设备各自拥有独立的地址空间，CPU 需要特殊的指令来访问它们。PCI 设备也分为发起设备和目标设备；发起设备是发起访问操作的一方，目标设备是被访问的一方。lspci -v 可以显示当前 PCI 设备的详细信息，例如 MMIO 地址和 PMIO 端口号。/sys/bus/pci/devices 中包含与 PCI 设备相关的文件。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-%E8%99%9A%E6%8B%9F%E6%9C%BA-QEMU-%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8E%20IO%20%E5%A4%84%E7%90%86" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/virtualization-security">虚拟化安全</a><span class="sep">›</span><a href="/#/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86">QEMU 前置知识</a></nav>
+    <h1>CTF-虚拟机-QEMU-前置知识-内存管理与 IO 处理</h1>
+    <div class="meta"><time>2023-11-24</time><span class="tag">#网络</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<h1 id="qemu-内存管理qemu-如何管理某个具体-vm-的内存">QEMU 内存管理（QEMU 如何管理某个具体 VM 的内存）</h1>
+<p>QEMU：能够完成 gva-gpa-hva-hpa 的地址转换</p>
+<h2 id="memoryregion-gpa-hpa">MemoryRegion gpa-&gt;hpa</h2>
+<p>QEMU 通过 MemoryRegion 来管理虚拟机的内存；每个 MemoryRegion 对应 VM 内存的一部分，以及对应 Host 虚拟内存的信息。不同的 MemoryRegion 以树的形式组织在某个根 MemoryRegion 之下；不同的 MemoryRegion 树代表着承担不同角色的内存，例如系统内存空间（system_memory）或 IO 内存空间（system_io）</p>
+<p>MemoryRegion 可以分为以下三种类型</p>
+<ul>
+<li>根级 MemoryRegion：通过 memory_region_init 初始化；它只用于管理（例如 system_memory），本身没有对应的内存</li>
+<li>具体 MemoryRegion：通过 memory_region_init_ram 初始化；它拥有大小为 size 的对应内存</li>
+<li>别名 MemoryRegion：通过 memory_region_init_alias 初始化；它本身没有对应的内存，作为某个具体 region 的别名存在，通过 alias 成员指向对应的具体 region；alias_offset 表示该别名 MemoryRegion 所代表内存的起始 GPA 相对于其所对应具体 MemoryRegion 所代表内存起始 GPA 的偏移量</li>
+</ul>
+<h2 id="flatview表示-mr-树所对应的地址空间">FlatView：表示 MR 树所对应的地址空间</h2>
+<pre><code class="language-c">struct FlatView {
+    struct rcu_head rcu;
+    unsigned ref;
+    FlatRange *ranges;
+    unsigned nr;
+    unsigned nr_allocated;
+    struct AddressSpaceDispatch *dispatch;
+    MemoryRegion *root;
+};
+</code></pre>
+<h2 id="flatrange存放不同-mr-对应的地址信息">FlatRange：存放不同 MR 对应的地址信息</h2>
+<pre><code class="language-c">struct FlatRange {
+    MemoryRegion *mr;
+    hwaddr offset_in_region;
+    AddrRange addr;
+    uint8_t dirty_log_mask;
+    bool romd_mode;
+    bool readonly;
+    bool nonvolatile;
+};
+</code></pre>
+<h2 id="addressspace不同类型的-memoryregion-树">AddressSpace：不同类型的 MemoryRegion 树</h2>
+<p>一共有两种：address_space_memory 和 address_space_io</p>
+<pre><code class="language-c">/**
+ * struct AddressSpace: describes a mapping of addresses to #MemoryRegion objects
+ */
+struct AddressSpace {
+    /* private: */
+    struct rcu_head rcu;
+    char *name;
+    MemoryRegion *root; //是对应树的根
+
+    /* Accessed via RCU.  */
+    struct FlatView *current_map; //对对应树的地址空间表示
+
+    int ioeventfd_nb;
+    struct MemoryRegionIoeventfd *ioeventfds;
+    QTAILQ_HEAD(, MemoryListener) listeners;
+    QTAILQ_ENTRY(AddressSpace) address_spaces_link;
+};
+</code></pre>
+<h2 id="ramblock">RAMBlock</h2>
+<p>MR 所对应的 Host 虚拟内存；每个 RAMBlock 代表单个具体 MemoryRegion 所占用的 Host 虚拟内存信息，多个 RAMBlock 组成一个 RAMList
+每个 RAMBlock 都唯一对应一个 MemoryRegion</p>
+<h2 id="整体简化示意图">整体简化示意图</h2>
+<p>大佬们轻喷，后面深入学习了会再完善
+<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-%E8%99%9A%E6%8B%9F%E6%9C%BA-QEMU-%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8E%20IO%20%E5%A4%84%E7%90%86/assets/csdn-134528138/image-001-3237e2bc67.png" alt="图片"></p>
+<h1 id="qemu-设备模拟qemu-模拟的-io-设备如何与-vm-交互">QEMU 设备模拟（QEMU 模拟的 IO 设备如何与 VM 交互）</h1>
+<p>QEMU 在用户空间独立完成设备模拟；虚拟设备通过 VMM 提供的接口被其他 VM 调用。并且设备模拟独立于 VMM</p>
+<h2 id="qemu-设备-io-处理">QEMU 设备 IO 处理</h2>
+<p>当虚拟机访问虚拟设备的物理内存/端口时，控制权会从 VM 转移到 VMM；此时 QEMU 会根据触发 VM-exit 的事件类型，即 MMIO 或 PMIO，做出不同的处理。
+MMIO：读写 address_space_memory 类型的地址空间
+PMIO：读写 address_space_io 类型的地址空间</p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF%20-%20%E8%99%9A%E6%8B%9F%E6%9C%BA%20-%20QEMU%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%20-%20%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B%E4%B8%8E%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/"><span class="l">上一篇</span>CTF - 虚拟机 - QEMU - 前置知识 - 工作流程与源码阅读</a><a href="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AQEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/"><span class="l">下一篇</span>CTF-PWN-虚拟化：QEMU 前置知识</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#memoryregion-gpa-hpa">MemoryRegion gpa-&amp;gt;hpa</a><a class="d2" href="#flatview表示-mr-树所对应的地址空间">FlatView：表示 MR 树所对应的地址空间</a><a class="d2" href="#flatrange存放不同-mr-对应的地址信息">FlatRange：存放不同 MR 对应的地址信息</a><a class="d2" href="#addressspace不同类型的-memoryregion-树">AddressSpace：不同类型的 MemoryRegion 树</a><a class="d2" href="#ramblock">RAMBlock</a><a class="d2" href="#整体简化示意图">整体简化示意图</a><a class="d2" href="#qemu-设备-io-处理">QEMU 设备 IO 处理</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

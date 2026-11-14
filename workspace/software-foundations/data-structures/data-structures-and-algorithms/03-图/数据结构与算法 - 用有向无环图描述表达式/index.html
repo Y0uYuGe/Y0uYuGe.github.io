@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据结构与算法 - 用有向无环图描述表达式 · Y0uYuGe</title>
+<meta name="description" content="只有同一层的结点才能合并；不同层之间存在包含关系，不可能相同。如果任意两个结点可以互相到达，则该图是有环的。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/data-structures">数据结构</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms">数据结构与算法</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE">图</a></nav>
+    <h1>数据结构与算法 - 用有向无环图描述表达式</h1>
+    <div class="meta"><time>2023-12-17</time><span class="tag">#数据结构与算法</span></div>
+    <article class="post-body">
+<h1 id="有向无环图dag">有向无环图（DAG）</h1>
+<p>如果任意两个结点可以互相到达，则该图是有环的
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-001-0219ef0a0c.png" alt="图片"></p>
+<h2 id="用-dag-描述表达式">用 DAG 描述表达式</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-002-42ddb864cd.png" alt="图片">
+合并一次
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-003-a702dcc089.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-004-c63e0e8b8b.png" alt="图片">
+再次合并
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-005-4d4b83d95e.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-006-2b1fa2e8f1.png" alt="图片">
+再次合并
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-007-f9e6f1f608.png" alt="图片"></p>
+<h1 id="例题">例题</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-008-e493ed34c2.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-009-0a8d7e92b4.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-010-ec78374c38.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-011-f5f43825c9.png" alt="图片">
+所以答案是 A</p>
+<h2 id="解答">解答</h2>
+<p>把相同的结点合并
+只有同一层的结点才能合并；不同层之间存在包含关系，不可能相同
+处于不同层就意味着存在包含关系
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-012-b637d52ffe.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-013-f08b9248ee.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-014-72d4149bb3.png" alt="图片"></p>
+<h1 id="练习">练习</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-015-c39b20df32.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%94%A8%E6%9C%89%E5%90%91%E6%97%A0%E7%8E%AF%E5%9B%BE%E6%8F%8F%E8%BF%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/assets/csdn-135044655/image-016-c25471be0a.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%9B%BE%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%E4%BB%A5%E5%8F%8A%E9%82%BB%E6%8E%A5%E7%9F%A9%E9%98%B5%E6%B3%95%E3%80%81%E9%82%BB%E6%8E%A5%E8%A1%A8%E6%B3%95%E3%80%81%E5%8D%81%E5%AD%97%E9%93%BE%E8%A1%A8%E6%B3%95%E3%80%81%E9%82%BB%E6%8E%A5%E5%A4%9A%E9%87%8D%E8%A1%A8%E6%B3%95/"><span class="l">上一篇</span>数据结构与算法 - 图的基本概念以及邻接矩阵法、邻接表法、十字链表法、邻接多重表法</a><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/03-%E5%9B%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%EF%BC%88Prim%20%E5%92%8C%20Kruskal%EF%BC%89%E4%B8%8E%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98%EF%BC%88BFS%E3%80%81Dijkstr/"><span class="l">下一篇</span>数据结构与算法 - 最小生成树（Prim 和 Kruskal）与最短路径问题（BFS、Dijkstra 和 Floyd）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

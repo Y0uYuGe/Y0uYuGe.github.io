@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零开始写 Docker 5 - [USER Namespace NETWORK Namespace] · Y0uYuGe</title>
+<meta name="description" content="即进程运行在新的 namespace 中，该 namespace 中的 User ID 和 Group ID 在 namespace 内外可以不同，因此用户可以在 namespace 中是 root，而在宿主机上不是 root。即进程在 namespace 中拥有独立的（虚拟）网络设备。我发现 network namespace 中的进程没有网络设备（可能默认就没有，需要进行相关初始化），而宿主机仍然有网络设备。只需在 Cloneflags 中加上 syscall.CLONE_NEWUSER 即可。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%205%20-%20%5BUSER%20Namespace%20NETWORK%20Namespace" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization">容器与虚拟化</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization/docker-internals">Docker 原理</a></nav>
+    <h1>从零开始写 Docker 5 - [USER Namespace NETWORK Namespace]</h1>
+    <div class="meta"><time>2024-03-26</time><span class="tag">#docker</span><span class="tag">#容器</span><span class="tag">#运维</span></div>
+    <article class="post-body">
+<h1 id="user-namespace">USER Namespace</h1>
+<p>即进程运行在新的 namespace 中，该 namespace 中的 User ID 和 Group ID 在 namespace 内外可以不同，因此用户可以在 namespace 中是 root，而在宿主机上不是 root</p>
+<p>只需在 Cloneflags 中加上 syscall.CLONE_NEWUSER 即可
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%205%20-%20%5BUSER%20Namespace%20NETWORK%20Namespace/assets/csdn-137033230/image-001-46fb32ea4b.png" alt="图片"></p>
+<h1 id="代码">代码</h1>
+<pre><code class="language-go">package main
+
+import (
+	&quot;os/exec&quot;
+	&quot;os&quot;
+	&quot;syscall&quot;
+	&quot;log&quot;
+)
+
+func main(){
+	cmd:=exec.Command(&quot;sh&quot;)
+	cmd.SysProcAttr=&amp;syscall.SysProcAttr{
+		Cloneflags: syscall.CLONE_NEWIPC|syscall.CLONE_NEWPID|syscall.CLONE_NEWUTS|syscall.CLONE_NEWNS|syscall.CLONE_NEWUSER,}
+	cmd.Stdin=os.Stdin
+	cmd.Stdout=os.Stdout
+	cmd.Stderr=os.Stderr
+
+	if err:=cmd.Run();err!=nil{
+		log.Fatal(err)
+	}
+}
+</code></pre>
+<h1 id="network-namespace">NETWORK Namespace</h1>
+<p>Network Namespace 是用来隔离网络设备、IP 地址、端口等网络资源的 namespace</p>
+<p>即进程在 namespace 中拥有独立的（虚拟）网络设备。而且在宿主机上搭建网桥后，就能很方便地实现容器之间的通信，不同容器上的应用也可以使用相同的端口</p>
+<p>只需在 Cloneflags 中加上 syscall.CLONE_ NEWNET 即可</p>
+<p>我发现 network namespace 中的进程没有网络设备（可能默认就没有，需要进行相关初始化），而宿主机仍然有网络设备
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%205%20-%20%5BUSER%20Namespace%20NETWORK%20Namespace/assets/csdn-137033230/image-002-ae7822873e.png" alt="图片"></p>
+<h1 id="代码块">代码块</h1>
+<pre><code class="language-go">package main
+
+import (
+	&quot;os/exec&quot;
+	&quot;os&quot;
+	&quot;syscall&quot;
+	&quot;log&quot;
+)
+
+func main(){
+	cmd:=exec.Command(&quot;sh&quot;)
+	cmd.SysProcAttr=&amp;syscall.SysProcAttr{
+		Cloneflags: syscall.CLONE_NEWIPC|syscall.CLONE_NEWPID|syscall.CLONE_NEWUTS|syscall.CLONE_NEWNS|syscall.CLONE_NEWUSER|syscall.CLONE_NEWUSER|syscall.CLONE_NEWNET,}
+	cmd.Stdin=os.Stdin
+	cmd.Stdout=os.Stdout
+	cmd.Stderr=os.Stderr
+
+	if err:=cmd.Run();err!=nil{
+		log.Fatal(err)
+	}
+}
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/"><span class="l">上一篇</span>从零开始写 Docker - 13 - [实现 mydocker run -v 数据卷挂载]</a><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/"><span class="l">下一篇</span>从零开始写 Docker 10 - [用 cgroup 实现容器资源限制]</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

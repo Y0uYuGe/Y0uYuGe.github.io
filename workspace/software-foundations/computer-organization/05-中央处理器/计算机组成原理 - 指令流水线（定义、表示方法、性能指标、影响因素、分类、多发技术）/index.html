@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - 指令流水线（定义、表示方法、性能指标、影响因素、分类、多发技术） · Y0uYuGe</title>
+<meta name="description" content="取指阶段可能从 Cache 中取指令。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8">中央处理器</a></nav>
+    <h1>计算机组成原理 - 指令流水线（定义、表示方法、性能指标、影响因素、分类、多发技术）</h1>
+    <div class="meta"><time>2023-12-22</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-001-aba50bf5dd.png" alt="图片"></p>
+<h1 id="指令流水线的定义">指令流水线的定义</h1>
+<p>取指阶段可能从 Cache 中取指令
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-002-785a46150f.png" alt="图片"></p>
+<h2 id="指令执行方式">指令执行方式</h2>
+<p>假设每条指令分为三个阶段，每个阶段耗时相同
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-003-30e65bc986.png" alt="图片"></p>
+<h1 id="流水线的表示方法">流水线的表示方法</h1>
+<p>时空图和指令执行过程图的区别在于纵轴
+时空图的纵轴是不同阶段的指令处理过程
+指令执行过程图的纵轴是各条指令
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-004-63e4c5382f.png" alt="图片"></p>
+<h1 id="流水线的性能指标">流水线的性能指标</h1>
+<p>k 是一条指令的 k 个阶段</p>
+<h2 id="吞吐率">吞吐率</h2>
+<p>单位时间内完成的指令数</p>
+<p>装入时间：直到所有硬件部件陆续开始工作所经过的时间
+排出时间：直到所有硬件部件陆续停止工作所经过的时间
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-005-af9536d1e8.png" alt="图片"></p>
+<h2 id="加速比">加速比</h2>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-006-5fc8720c37.png" alt="图片"></p>
+<h2 id="效率">效率</h2>
+<p>空闲时间不会随着任务数的增加而增加
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-007-46f0af5b76.png" alt="图片"></p>
+<h2 id="总结">总结</h2>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-008-c9bce8e690.png" alt="图片"></p>
+<h1 id="影响指令流水线的因素">影响指令流水线的因素</h1>
+<h2 id="设置机器周期">设置机器周期</h2>
+<p>在 RISC 中，操作数直接来自通用寄存器</p>
+<p>M：访存阶段
+WB：写回通用寄存器组的阶段
+五级指令流水线
+大多数情况下指令可以从 Cache 中取出
+大多数情况下主存访问也可以由 Cache 来完成
+指令和数据可以分别存放在两个独立的 Cache 中
+ID：从通用寄存器中取操作数
+Imm：存放指令中的立即数
+ALU 计算出的结果既可以写回主存，也可以直接写回通用寄存器
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-009-373a2d829f.png" alt="图片"></p>
+<h2 id="影响流水线的因素">影响流水线的因素</h2>
+<h3 id="结构相关资源冲突">结构相关（资源冲突）</h3>
+<p>资源重复是指把原本在一处访问的资源拆分成两处，这样就不再产生冲突</p>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-010-6bb31c53e9.png" alt="图片"></p>
+<h3 id="数据相关数据冲突">数据相关（数据冲突）</h3>
+<p>这是因为后面的指令在计算时依赖于前面指令产生的结果；如果按理想化的顺序执行，后面指令所用的 r1 数据此时还没有被第一条指令修改
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-011-c92c831533.png" alt="图片">
+气泡可以理解为什么都不做，相当于让一些时间流逝之后再开始第二条指令
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-012-c948b40333.png" alt="图片">
+用 nop 来等待
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-013-4610d1cd32.png" alt="图片">
+数据旁路是把 ALU 结果的数据线接回到 ALU 的某个输入端，这样就不需要等待写回操作
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-014-e653617da9.png" alt="图片">
+编译器优化
+也就是通过调整指令顺序，把不依赖前面指令结果的指令移到更靠前的位置执行
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-015-a7dca93691.png" alt="图片"></p>
+<h3 id="控制相关控制冲突">控制相关（控制冲突）</h3>
+<p>在流水线执行方式下，等到 PC 被修改时，后面的指令已经部分开始执行了，但接下来应该运行的指令并不是已经部分执行的那一条——于是产生了冲突
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-016-ad602b21a7.png" alt="图片">
+简单预测是直接把某种情况对应的指令放到跳转指令之后立即进入流水线
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-017-c5f397da47.png" alt="图片">
+预取时，两种结果对应的指令流水线都存在，但仍需要在执行方式上做出选择
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-018-fc0496f132.png" alt="图片">
+也就是提前做出决定，以便后续的指令流水线能相应地安排
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-019-5101f16723.png" alt="图片">
+只是提高猜测正确的概率</p>
+<h3 id="总结-1">总结</h3>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-020-101587d3ef.png" alt="图片"></p>
+<h1 id="指令流水线的分类">指令流水线的分类</h1>
+<p>部件功能级流水线是指一个很小的操作可以再分为若干部分，而多个操作又可以再组成流水线
+就像俄罗斯套娃一样
+处理器间：每个处理器处于流水线上（第一行的处理器依次排列，第二行同样如此，以此类推）
+处理器级：处理器内部的功能部件处于流水线上
+部件功能级：某个部件内部的子功能部件处于流水线上
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-021-61e96e20ff.png" alt="图片">
+单功能流水线是指其各部分均为完成单一功能而构建的流水线
+多功能流水线通过各部分之间多种组合方式的连接，实现一条可以完成多种功能的流水线
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-022-5351fd94d7.png" alt="图片">
+静态流水线的连接方式是固定的
+动态流水线的连接方式是可变的，能够实现复杂的功能
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-023-ec2b7ad7c2.png" alt="图片"></p>
+<p>线性流水线是指没有反馈回路的流水线
+非线性流水线则与之相反
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-024-35e54a60e4.png" alt="图片"></p>
+<h1 id="流水线的多发技术">流水线的多发技术</h1>
+<p>无法调整的指令执行顺序，受到指令之间相互依赖关系的约束</p>
+<h2 id="超标量技术">超标量技术</h2>
+<p>这里是多个具有多个指令寄存器的 CPU 并发执行多条指令
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-025-54c93655b5.png" alt="图片"></p>
+<h2 id="超流水线技术">超(流水)线技术</h2>
+<p>也就是充分利用一个机器周期内部的时间，当后一条指令能在一个机器周期内启动，或某些部件空闲下来时，就进一步细分，使指令的某些部分能够开始运行——类似于部件功能级流水线
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-026-b6f576bd70.png" alt="图片"></p>
+<h2 id="超长指令字">超长指令字</h2>
+<p>由于一个 CPU 只能执行一个操作码对应的功能，这里要把它们组合起来，就需要多个 CPU 分别执行各个操作码
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-027-ea16070511.png" alt="图片"></p>
+<h2 id="总结-2">总结</h2>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/assets/csdn-135087850/image-028-d7fb285069.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A1%AC%E4%BB%B6%E5%A4%9A%E7%BA%BF%E7%A8%8B/"><span class="l">上一篇</span>计算机组成原理 - 硬件多线程</a><a href="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/"><span class="l">下一篇</span>计算机组成原理 - 指令周期的数据流</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#指令执行方式">指令执行方式</a><a class="d2" href="#吞吐率">吞吐率</a><a class="d2" href="#加速比">加速比</a><a class="d2" href="#效率">效率</a><a class="d2" href="#总结">总结</a><a class="d2" href="#设置机器周期">设置机器周期</a><a class="d2" href="#影响流水线的因素">影响流水线的因素</a><a class="d3" href="#结构相关资源冲突">结构相关（资源冲突）</a><a class="d3" href="#数据相关数据冲突">数据相关（数据冲突）</a><a class="d3" href="#控制相关控制冲突">控制相关（控制冲突）</a><a class="d3" href="#总结-1">总结</a><a class="d2" href="#超标量技术">超标量技术</a><a class="d2" href="#超流水线技术">超(流水)线技术</a><a class="d2" href="#超长指令字">超长指令字</a><a class="d2" href="#总结-2">总结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

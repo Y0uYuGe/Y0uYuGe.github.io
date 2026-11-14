@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 数据通信基础（数据通信模型、相关术语、单工／半双工／全双工、串行／并行、同步／异步、码元、数据传输速率、带宽） · Y0uYuGe</title>
+<meta name="description" content="异步通信：发送方会加上一个起始位和一个终止位。假设起始位为 0，终止位为 1；当起始位为 0 时，接收方的电平跳变为 0，告诉接收方可以开始接收数据，当终止位为 1 时，接收方的电平跳变为 1，告诉它停止接收数据。数据从计算机的网卡发出时是数字信号，经调制器转换为模拟信号后在广域网的模拟信道上传输，再经解调器转换回数字信号，只有计算机处理完数字信号后数据才会被呈现出来。两个宽度相同的码元即使波形看起来一样，也是两个不同的码元；想想发送的内容是什么：虽然对应的波形相同，但它们并不是同一件事。码元长度就是一个码元所占的持续时间或宽度。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82">物理层</a></nav>
+    <h1>计算机网络 - 数据通信基础（数据通信模型、相关术语、单工／半双工／全双工、串行／并行、同步／异步、码元、数据传输速率、带宽）</h1>
+    <div class="meta"><time>2024-01-24</time><span class="tag">#计算机网络</span><span class="tag">#网络</span></div>
+    <article class="post-body">
+<h1 id="一个典型的数据通信模型">一个典型的数据通信模型</h1>
+<p>广域网中包含模拟信道；模拟信道可以传输模拟信号，但不能传输数字信号</p>
+<p>数据从计算机的网卡发出时是数字信号，经调制器转换为模拟信号后在广域网的模拟信道上传输，再经解调器转换回数字信号，只有计算机处理完数字信号后数据才会被呈现出来</p>
+<p>发送端的调制器：发射器
+接收端的调制器：接收器
+中间的广域网称为传输系统
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-001-3e203b2a12.png" alt="图片"></p>
+<h1 id="数据通信的相关术语">数据通信的相关术语</h1>
+<p>码元序列：可以理解为一个 0/1 序列
+数据可以看作是待传输消息的 0/1 比特序列表示
+信号是数据在传输过程中呈现的形式
+信道是有方向的
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-002-40d8a93824.png" alt="图片"></p>
+<h1 id="设计数据通信系统时要考虑的三个问题">设计数据通信系统时要考虑的三个问题</h1>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-003-0bbc6cfd74.png" alt="图片"></p>
+<h2 id="单工半双工全双工">单工／半双工／全双工</h2>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-004-f886834f61.png" alt="图片"></p>
+<h1 id="串行并行">串行／并行</h1>
+<p>&quot;速度更慢&quot;是指所有数据从发送方传到接收方所需的时间更长
+&quot;成本更高&quot;是指需要更多的信道，因此花费更多</p>
+<p>计算机内部使用并行传输
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-005-679d267464.png" alt="图片"></p>
+<h1 id="同步异步">同步／异步</h1>
+<p>同步通信：最后四个块是要传输的数据；会先发送一个同步字符，就像通知对方准备接收，然后两端的时钟进行同步（发送间隔是相同的）
+异步通信：发送方会加上一个起始位和一个终止位。假设起始位为 0，终止位为 1；当起始位为 0 时，接收方的电平跳变为 0，告诉接收方可以开始接收数据，当终止位为 1 时，接收方的电平跳变为 1，告诉它停止接收数据。这种状态会一直持续，直到下一个起始位到来并改变电平（发送间隔不同，就像键盘一样）</p>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-006-72dfcb5e1b.png" alt="图片"></p>
+<h1 id="小结">小结</h1>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-007-87fe9cdf38.png" alt="图片"></p>
+<h1 id="码元">码元</h1>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-008-eb877947fd.png" alt="图片"></p>
+<h1 id="表示数据传输速率的两种方式">表示数据传输速率的两种方式</h1>
+<p>   一个二元码元 = 每个二进制位对应一个码元，换句话说，码元的数量等于一个二进制数可能取值的数量，即 2</p>
+<p> 码元长度就是一个码元所占的持续时间或宽度
+ 码元速率只取决于码元长度
+两个宽度相同的码元即使波形看起来一样，也是两个不同的码元；想想发送的内容是什么：虽然对应的波形相同，但它们并不是同一件事
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-009-c3c55d28e3.png" alt="图片"></p>
+<h2 id="思考题-1">思考题 1</h2>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-010-bb1f124332.png" alt="图片"></p>
+<h2 id="思考题-2">思考题 2</h2>
+<p><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-011-76ebe5815d.png" alt="图片"></p>
+<h1 id="带宽">带宽</h1>
+<p>观察某个端口或某个截面，单位时间内通过的车辆数量就是带宽
+<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E5%9F%BA%E7%A1%80%EF%BC%88%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B%E3%80%81%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD%E3%80%81%E5%8D%95%E5%B7%A5%EF%BC%8F%E5%8D%8A%E5%8F%8C%E5%B7%A5%EF%BC%8F%E5%85%A8%E5%8F%8C%E5%B7%A5%E3%80%81%E4%B8%B2%E8%A1%8C%EF%BC%8F%E5%B9%B6%E8%A1%8C%E3%80%81%E5%90%8C%E6%AD%A5%EF%BC%8F%E5%BC%82%E6%AD%A5%E3%80%81/assets/csdn-135783832/image-012-fb4e3a4265.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%A5%88%E5%A5%8E%E6%96%AF%E7%89%B9%E5%87%86%E5%88%99%E4%B8%8E%E9%A6%99%E5%86%9C%E5%AE%9A%E7%90%86%EF%BC%88%E7%A0%81%E9%97%B4%E4%B8%B2%E6%89%B0%EF%BC%8C%E4%B8%A4%E8%80%85%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%89/"><span class="l">上一篇</span>计算机网络 - 奈奎斯特准则与香农定理（码间串扰，两者的区别）</a><a href="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%89%A9%E7%90%86%E5%B1%82%E4%BC%A0%E8%BE%93%E5%AA%92%E4%BD%93%EF%BC%88%E5%AF%BC%E5%90%91%E4%BC%A0%E8%BE%93%E5%AA%92%E4%BD%93%EF%BC%9A%E5%8F%8C%E7%BB%9E%E7%BA%BF%E3%80%81%E5%90%8C%E8%BD%B4%E7%94%B5%E7%BC%86%E3%80%81%E5%85%89%E7%BA%A4%EF%BC%9B%E9%9D%9E%E5%AF%BC%E5%90%91%E4%BC%A0%E8%BE%93%E5%AA%92%E4%BD%93%EF%BC%9A%E6%97%A0%E7%BA%BF%E7%94%B5%E6%B3%A2%E3%80%81%E5%BE%AE%E6%B3%A2/"><span class="l">下一篇</span>计算机网络 - 物理层传输媒体（导向传输媒体：双绞线、同轴电缆、光纤；非导向传输媒体：无线电波、微波、红外线、激光）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#单工半双工全双工">单工／半双工／全双工</a><a class="d2" href="#思考题-1">思考题 1</a><a class="d2" href="#思考题-2">思考题 2</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

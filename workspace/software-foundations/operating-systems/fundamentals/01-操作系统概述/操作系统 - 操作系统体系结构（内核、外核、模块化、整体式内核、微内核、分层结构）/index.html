@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统 - 操作系统体系结构（内核、外核、模块化、整体式内核、微内核、分层结构） · Y0uYuGe</title>
+<meta name="description" content="外核直接把未经抽象的硬件资源分配给用户进程。当用户进程频繁随机访问其被分配的虚拟外存空间时，由于实际对应的物理空间是离散的，随机访问各个位置可能需要大量的磁头移动。在普通操作系统中，进程申请内存空间时得到的是一个（连续的）虚拟地址空间，其中虚拟页对应实际的物理页框，而这些物理页框在内存中实际上是离散的。各模块之间可以相互调用，所以如果某个模块出现问题，问题可能出在被调用的模块中，也可能出在该模块本身。使用微内核时，进程管理、存储管理和设备管理都涉及需要向内核请求的工作，这需要进行一次模式切换。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0">操作系统概述</a></nav>
+    <h1>操作系统 - 操作系统体系结构（内核、外核、模块化、整体式内核、微内核、分层结构）</h1>
+    <div class="meta"><time>2024-01-21</time><span class="tag">#linux</span><span class="tag">#运维</span><span class="tag">#服务器</span></div>
+    <article class="post-body">
+<h1 id="整体式内核与微内核">整体式内核与微内核</h1>
+<h2 id="概述">概述</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-001-137114d5cc.png" alt="图片"></p>
+<h2 id="操作系统内核">操作系统内核</h2>
+<p>操作系统的核心功能都在内核中
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-002-3eb62c4cf2.png" alt="图片">
+按照程序与硬件联系的紧密程度分类
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-003-18266ff309.png" alt="图片">
+由于进程管理、内存管理、设备管理等工作与硬件的联系较少，有时它们不会被放进内核中
+所以有些操作系统不把这些功能放进内核，只保留与硬件联系最紧密的部分</p>
+<p>因此，这里就产生了两种内核设计方案</p>
+<p>属于内核的功能需要在内核态下运行；不属于内核的功能在用户态下运行
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-004-f994de8536.png" alt="图片"></p>
+<h2 id="整体式内核与微内核的性能差异">整体式内核与微内核的性能差异</h2>
+<p>使用微内核时，进程管理、存储管理和设备管理都涉及需要向内核请求的工作，这需要进行一次模式切换</p>
+<p>整体式内核只需要两次模式切换</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-005-ae04fd8843.png" alt="图片"></p>
+<h2 id="小结">小结</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-006-84681d6dcc.png" alt="图片"></p>
+<h1 id="分层结构模块化与外核">分层结构、模块化与外核</h1>
+<h2 id="概述-1">概述</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-007-430dbdaac4.png" alt="图片">
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-008-2a79e6ece4.png" alt="图片"></p>
+<h2 id="分层结构">分层结构</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-009-1af514e339.png" alt="图片"></p>
+<p>每一层只使用其下一层的接口</p>
+<p>调试从最底层开始，保证上一层对下一层的接口调用没有问题后，只需专注于调试当前层即可</p>
+<p>容易扩充：只需提供层与层之间的接口</p>
+<p>有时底层可能需要用到上层的功能，这与&quot;上层只能调用下层&quot;的规则相冲突，所以很难合理界定各层的边界</p>
+<p>不允许跨层调用，所以请求需要逐层向下传递
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-010-5eaeaad558.png" alt="图片"></p>
+<h2 id="模块化">模块化</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-011-b85e1fef9f.png" alt="图片"></p>
+<p>模块之间的调用很多，所以接口的定义与实现有时不够完善，难以让每个模块都完全契合</p>
+<p>各模块之间可以相互调用，所以如果某个模块出现问题，问题可能出在被调用的模块中，也可能出在该模块本身</p>
+<p>接口确定后即可并行开发，意味着接口定义完成后，各接口的代码实现可以同时进行
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-012-347887fb42.png" alt="图片"></p>
+<h2 id="整体式内核微内核">整体式内核、微内核</h2>
+<p>内核中各模块之间的依赖关系非常强，所以当内核的某个模块出现问题时，可能会导致整个系统出现问题</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-013-95e76129ca.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-014-03a3ffc3a8.png" alt="图片"></p>
+<h2 id="外核">外核</h2>
+<p>外核
+外核分配和回收未经抽象（非虚拟化，即物理地址）的硬件资源</p>
+<p>程序通过库函数调用普通内核的一些内核功能，也可以调用外核的一些功能</p>
+<p>在普通操作系统中，进程申请内存空间时得到的是一个（连续的）虚拟地址空间，其中虚拟页对应实际的物理页框，而这些物理页框在内存中实际上是离散的。分配给进程的外存空间（通常用于存储文件）同样是一个（连续的）虚拟地址空间，而对应的物理磁盘存储空间也可能是离散的</p>
+<p>外核直接把未经抽象的硬件资源分配给用户进程。当用户进程频繁随机访问其被分配的虚拟外存空间时，由于实际对应的物理空间是离散的，随机访问各个位置可能需要大量的磁头移动。使用外核分配时，进程直接得到一块连续的物理外存空间，因此随机访问各个地址时磁头移动的距离会减少，从而提高性能</p>
+<p>外核也可以分配连续的物理内存空间，这种情况下用户看到的就是实际的物理内存地址空间</p>
+<p>外核需要保证硬件资源使用的安全性，即一个进程不能访问其他进程的空间，其他进程也不能访问该进程的空间
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-015-c0382441a8.png" alt="图片">
+ 一致性：每个进程申请的地址类型不同（物理地址 vs 虚拟地址），这要求后续管理需要做不同的处理，因此也更为复杂</p>
+<p>使用虚拟地址分配时，进程访问自己的地址空间时，需要查询页表把虚拟地址转换为实际的物理地址
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%EF%BC%88%E5%86%85%E6%A0%B8%E3%80%81%E5%A4%96%E6%A0%B8%E3%80%81%E6%A8%A1%E5%9D%97%E5%8C%96%E3%80%81%E6%95%B4%E4%BD%93%E5%BC%8F%E5%86%85%E6%A0%B8%E3%80%81%E5%BE%AE%E5%86%85%E6%A0%B8%E3%80%81%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%EF%BC%89/assets/csdn-135725503/image-016-c59ccccf4d.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6%EF%BC%88%E5%86%85%E6%A0%B8%E7%A8%8B%E5%BA%8F%E3%80%81%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E3%80%81%E7%89%B9%E6%9D%83%E6%8C%87%E4%BB%A4%E3%80%81%E9%9D%9E%E7%89%B9%E6%9D%83%E6%8C%87%E4%BB%A4%E3%80%81%E5%86%85%E6%A0%B8%E6%80%81%E3%80%81%E7%94%A8%E6%88%B7%E6%80%81%E3%80%81%E7%8A%B6%E6%80%81%E5%88%87%E6%8D%A2/"><span class="l">上一篇</span>操作系统 - 操作系统的运行机制（内核程序、应用程序、特权指令、非特权指令、内核态、用户态、状态切换）</a><a href="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E4%B8%8E%E5%BA%93%E5%87%BD%E6%95%B0%E7%9A%84%E5%8C%BA%E5%88%AB%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E8%BF%87%E7%A8%8B%EF%BC%89/"><span class="l">下一篇</span>操作系统 - 系统调用（定义、与库函数的区别、为什么需要系统调用、分类、过程）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#概述">概述</a><a class="d2" href="#操作系统内核">操作系统内核</a><a class="d2" href="#整体式内核与微内核的性能差异">整体式内核与微内核的性能差异</a><a class="d2" href="#小结">小结</a><a class="d2" href="#概述-1">概述</a><a class="d2" href="#分层结构">分层结构</a><a class="d2" href="#模块化">模块化</a><a class="d2" href="#整体式内核微内核">整体式内核、微内核</a><a class="d2" href="#外核">外核</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

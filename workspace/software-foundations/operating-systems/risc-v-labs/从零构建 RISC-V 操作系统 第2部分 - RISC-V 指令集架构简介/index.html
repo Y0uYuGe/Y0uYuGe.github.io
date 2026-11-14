@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建 RISC-V 操作系统 第2部分 - RISC-V 指令集架构简介 · Y0uYuGe</title>
+<meta name="description" content="接口规范：可以理解为一种标准。微架构：指令集架构的一种硬件实现；例如，如果两种硬件架构都能实现 x86，那么这两种硬件架构都可以称为微架构。CISC：X86。RISC：图中除此之外的全部。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/risc-v-labs">RISC-V 实验</a></nav>
+    <h1>从零构建 RISC-V 操作系统 第2部分 - RISC-V 指令集架构简介</h1>
+    <div class="meta"><time>2023-12-02</time><span class="tag">#risc-v</span></div>
+    <article class="post-body">
+<h1 id="isa-基础介绍">ISA 基础介绍</h1>
+<h2 id="什么是-isa">什么是 ISA</h2>
+<p>接口规范：可以理解为一种标准
+微架构：指令集架构的一种硬件实现；例如，如果两种硬件架构都能实现 x86，那么这两种硬件架构都可以称为微架构
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-001-633860245e.png" alt="图片"></p>
+<h2 id="为什么要设计-isa">为什么要设计 ISA</h2>
+<p>为上层软件提供一种抽象，建立规则与约束，使程序员不必关心具体的电路结构，也不必担心引发硬件故障</p>
+<h2 id="cisc-与-risc">CISC 与 RISC</h2>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-002-f5338e49f3.png" alt="图片"></p>
+<h2 id="isa-的位宽">ISA 的位宽</h2>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-003-b528816910.png" alt="图片">
+ISA 的位宽与指令的位宽无关（即不能说 32 位机器的指令必然是 32 位的）</p>
+<h2 id="知名-isa-简介">知名 ISA 简介</h2>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-004-579dd5ea11.png" alt="图片">
+CISC：X86
+RISC：图中除此之外的全部</p>
+<h1 id="risc-v-的历史与特点">RISC-V 的历史与特点</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-005-7980018494.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-006-a9d8a248d7.png" alt="图片"><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-007-31ab825d49.png" alt="图片"></p>
+<h1 id="risc-v-的发展">RISC-V 的发展</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-008-7b0028ee2d.png" alt="图片">
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-009-fde31c808d.png" alt="图片"></p>
+<h1 id="risc-v-isa-命名规则">RISC-V ISA 命名规则</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-010-ac71522707.png" alt="图片">
+RV32IMA：32 位，I 模块，M 模块，A 模块</p>
+<h1 id="模块化-isa">模块化 ISA</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-011-8b1ed699e7.png" alt="图片">
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-012-dde93b2895.png" alt="图片">
+无论是 32 位还是 64 位 RISC-V，指令都是 32 位的，而使用压缩指令集时指令为 16 位
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-013-7a0c51f0f8.png" alt="图片"></p>
+<h1 id="通用寄存器">通用寄存器</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-014-9a601a9792.png" alt="图片"></p>
+<h1 id="hart">Hart</h1>
+<p>一个 CU：一条指令流
+一个 Hart 相当于一条指令流
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-015-69d9e641d4.png" alt="图片"></p>
+<h1 id="特权级别">特权级别</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-016-cd0666211c.png" alt="图片"></p>
+<h1 id="控制状态寄存器csr">控制状态寄存器（CSR）</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-017-629fd0b34a.png" alt="图片"></p>
+<h1 id="内存管理与保护">内存管理与保护</h1>
+<p>Lock：无法使用
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-018-b072a9f8bf.png" alt="图片"></p>
+<h1 id="异常与中断">异常与中断</h1>
+<p>异常会跳转到异常处理程序，执行结束后返回继续执行原来的指令
+中断同样会跳转到中断处理程序，执行结束后返回执行原指令的下一条指令
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/assets/csdn-134757050/image-019-15bde5bfbf.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/"><span class="l">上一篇</span>从零构建 RISC-V 操作系统 16 - 系统调用</a><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/"><span class="l">下一篇</span>从零构建 RISC-V 操作系统 第8部分 - 内存管理（内存管理分类、链接脚本、ld 脚本语法、从 ld 脚本获取符号值、页级动态分配、管理 heap 区域每个页的状态、动态分配（页级）、代码）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#什么是-isa">什么是 ISA</a><a class="d2" href="#为什么要设计-isa">为什么要设计 ISA</a><a class="d2" href="#cisc-与-risc">CISC 与 RISC</a><a class="d2" href="#isa-的位宽">ISA 的位宽</a><a class="d2" href="#知名-isa-简介">知名 ISA 简介</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

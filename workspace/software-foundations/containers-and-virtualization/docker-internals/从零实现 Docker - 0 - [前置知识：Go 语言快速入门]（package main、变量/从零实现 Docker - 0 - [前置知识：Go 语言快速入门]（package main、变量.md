@@ -1,0 +1,734 @@
+---
+title: "从零实现 Docker - 0 - [前置知识：Go 语言快速入门]（package main、变量、运算符、分支、循环、函数、数组、slice、map、结构体、指针、方法、接口、错误处理、并发）"
+date: "2024-03-04 23:58:46 +0800"
+categories:
+  - "操作系统与体系结构"
+tags:
+  - "docker"
+  - "golang"
+  - "容器"
+excerpt: "在上面的示例中，我们定义了一个 squareRoot 函数，它接收一个 float64 参数，返回一个 float64 平方根值以及一个 error 对象。switch 语句自动 break：在 Go 中，switch 语句的每个 case 都会自动带上 break，因此不需要显式使用 break 来阻止下一个 case 执行。而在 C 中，switch 语句的条件表达式只能是整数或字符值。注意，通过在 if 语句的条件部分赋值一个变量，可以限制该变量的作用域，使其只在 if 语句块内有效。"
+source: "CSDN"
+original_url: "https://blog.csdn.net/llovewuzhengzi/article/details/136441069"
+csdn_article_id: "136441069"
+migrated: true
+---
+
+{% raw %}
+# package main
+package main 是 Go 编程语言中的一个关键表达式。它出现在每个 Go 源文件的开头，定义了该 Go 源代码所属的包。
+
+在 Go 中，package 关键字用于声明一个文件属于哪个包，这对于代码组织和复用至关重要。
+
+具体来说，package main 表示该源文件是 Go 程序的入口。Go 程序的执行从 main 包中的 main 函数开始。因此，如果你在编写一个可执行程序，就需要定义一个 main 包和一个 main 函数。如果某个文件声明了 package main，编译器会在编译时寻找 main 函数作为程序的起始执行点。
+
+下面是一个简单的 Go 程序示例：
+
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, World!")
+}
+```
+
+ 
+在这个例子中，第一行 package main 表明这是主包。在 import 语句之后定义了 main 函数；程序运行时，会执行它并打印出 "Hello, World!"。
+
+除了标记该文件是 Go 程序的启动入口之外，main 包还意味着编译该包会生成一个可执行文件，而不是库文件。在 Go 中，非 main 包通常用于创建可被其他包导入使用的库。
+# 变量
+
+```go
+在Go语言中，定义变量需要使用关键字 var，然后是变量的名称和类型。下面是一个示例：
+
+var x int
+var y float64
+var z string
+ 
+这段代码定义了三个变量：x 是一个整数类型的变量，y 是一个浮点数类型的变量，z 是一个字符串类型的变量。
+
+除了使用关键字 var，Go语言还提供了一种更简洁的方式来定义和初始化变量，称为短变量声明。使用短变量声明，可以省略 var 关键字，并且可以在同一行同时定义和初始化变量。示例如下：
+
+x := 10
+y := 3.14
+z := "Hello, World!"
+ 
+这里的 := 符号表示进行变量声明和初始化操作。根据右侧的值的类型，Go语言会自动推断出变量的类型。
+
+需要注意的是，一旦变量被声明并赋值，在同一个作用域内不能再次对其进行声明，只能对其进行赋值操作。如果需要重新赋值，可以直接使用变量名进行赋值操作，不需要再次使用 var 关键字。例如：
+
+x = 20
+y = 6.28
+z = "Hello, Go!"
+ 
+这段代码将新的值赋给了已经存在的变量。
+```
+
+![图片](./assets/csdn-136441069/image-001-2ba8f334cd.png)
+![图片](./assets/csdn-136441069/image-002-a52a21eacb.png)
+
+![图片](./assets/csdn-136441069/image-003-843c62b538.png)
+![图片](./assets/csdn-136441069/image-004-dd86943442.png)
+![图片](./assets/csdn-136441069/image-005-e60ebc0f4a.png)
+![图片](./assets/csdn-136441069/image-006-761f609834.png)
+
+![图片](./assets/csdn-136441069/image-007-57d47ffd89.png)
+
+```go
+在Go语言中，复数类型被定义为 complex64 和 complex128。complex64 是由 float32 的实部和虚部组成的复数类型，而 complex128 则是由 float64 组成。
+
+下面是一个示例，展示了如何声明和使用复数类型：
+
+package main
+
+import "fmt"
+
+func main() {
+    // 使用内置的 complex 函数来创建复数
+    c1 := complex(5, 2)
+    c2 := complex(3.2, 4.7)
+
+    // 直接声明复数变量并赋值
+    var c3 complex64 = 4.2 + 1.8i
+    var c4 complex128 = 9.6 + 5.3i
+
+    // 打印复数变量的实部和虚部
+    fmt.Println(real(c1), imag(c1))
+    fmt.Println(real(c2), imag(c2))
+    fmt.Println(real(c3), imag(c3))
+    fmt.Println(real(c4), imag(c4))
+
+    // 进行复数运算
+    sum := c1 + c2
+    diff := c1 - c2
+    prod := c1 * c2
+    quot := c1 / c2
+
+    // 打印运算结果
+    fmt.Println(sum)
+    fmt.Println(diff)
+    fmt.Println(prod)
+    fmt.Println(quot)
+}
+ 
+运行以上代码，你将看到复数的实部和虚部以及复数的运算结果。
+
+需要注意的是，Go语言中的复数类型并没有提供类似获取模（绝对值）和辐角（angle）的内置函数，但你可以使用 math 包中的函数来进行相关的运算。例如，要获取复数的模和辐角，可以使用 math.Abs 和 math.Atan2。
+```
+
+![图片](./assets/csdn-136441069/image-008-ec8d658bdc.png)
+![图片](./assets/csdn-136441069/image-009-8d3cf38afc.png)
+![图片](./assets/csdn-136441069/image-010-017d781057.png)
+# 运算符
+![图片](./assets/csdn-136441069/image-011-e8dc32ca07.png)
+# 分支
+Go 的分支结构与 C 有一些不同之处。以下是 Go 和 C 的分支结构之间的一些区别：
+
+1. 无需括号：在 Go 中，if 语句和 switch 语句的条件部分不需要用括号括起来。这与 C 不同，C 中条件部分必须用括号括起来。
+
+2. switch 语句自动 break：在 Go 中，switch 语句的每个 case 都自动带有 break，因此不需要显式使用 break 来阻止下一个 case 执行。这与 C 中的 switch 语句不同，C 中需要 break 关键字来阻止下一个 case 执行。
+
+3. 带多条件的 switch 语句：在 Go 中，switch 语句可以省略条件，而在每个 case 后面使用条件表达式。这样就可以在一个 switch 语句中判断多个条件。而在 C 中，switch 语句的条件表达式只能是整数或字符值。
+
+4. switch 语句的默认行为：在 Go 的 switch 语句中，当没有 case 匹配时，不会自动执行下一个 case，而是直接执行 default case（如果有的话）。在 C 中，如果没有 case 匹配，会执行下一条 case 语句。
+![图片](./assets/csdn-136441069/image-012-a2c416ebfb.png)
+
+在 Go 中，if 语句的条件部分可以包含一个短变量声明，新声明的变量只在 if 语句的作用域内有效。这意味着你可以在 if 语句的条件部分进行变量赋值。
+
+下面是一个在 if 语句中进行变量赋值的示例：
+
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    if x := 5; x > 3 {
+        fmt.Println("x is greater than 3")
+    } else {
+        fmt.Println("x is less than or equal to 3")
+    }
+}
+```
+
+ 
+在示例代码中，条件部分 x := 5 给变量 x 赋值，并将其作为条件判断的一部分。在 if 语句的作用域内，x 的值为 5。
+
+输出为：
+
+```go
+x is greater than 3
+```
+
+ 
+注意，通过在 if 语句的条件部分赋值一个变量，可以限制该变量的作用域，使其只在 if 语句块内有效。这有效地控制了变量的可见性和使用范围，防止该变量在其他地方被错误引用。
+
+![图片](./assets/csdn-136441069/image-013-ee6787a7ce.png)
+Go 中的 switch 语句相比其他语言的 switch 语句有一些特殊之处。
+
+- case 自动终止：在其他语言中，每个 case 语句都需要显式的 break 语句来终止该代码块。在 Go 中，case 代码块会自动终止，无需 break 语句。这避免了因忘记添加 break 而导致的错误。
+
+- 变量作用域：在 Go 中，每个 case 语句块都有自己独立的作用域。这意味着你可以在同一个 switch 语句的不同 case 代码块中定义并使用同名的变量，而不会引发变量重定义错误。
+
+- fallthrough 语句：在 Go 中，可以使用 fallthrough 关键字让某个 case “贯穿”到下一个，也就是说，一个 case 语句执行完之后，会继续执行下一个 case 语句。这在某些特定场景中非常有用，但应谨慎使用，以避免逻辑错误。
+![图片](./assets/csdn-136441069/image-014-3dc8fd87d9.png)
+# 循环
+
+```go
+Go语言中的循环有三种形式: for循环、range循环和无限循环。
+
+for循环: for循环是Go语言中最常用的循环形式，它具有初始化语句、条件判断和后续语句。语法如下:
+
+for 初始化语句; 条件判断; 后续语句 {
+    // 循环体
+}
+ 
+示例:
+for i := 0; i < 5; i++ {
+    fmt.Println(i)
+}
+ 
+range循环: range循环用于遍历数组、切片、映射、字符串等数据结构。它会返回索引和对应的值。语法如下:
+
+for 索引, 值 := range 遍历对象 {
+    // 循环体
+}
+ 
+示例:
+arr := []int{1, 2, 3, 4, 5}
+for index, value := range arr {
+    fmt.Println(index, value)
+}
+ 
+无限循环: Go语言中的无限循环可以通过for循环结构模拟，也可以使用for{}方式。示例:
+
+// 使用for循环模拟无限循环
+for {
+    // 无限循环体
+}
+
+
+```
+
+![图片](./assets/csdn-136441069/image-015-c4680d756b.png)
+![图片](./assets/csdn-136441069/image-016-39438d5414.png)
+
+# 函数
+![图片](./assets/csdn-136441069/image-017-4783e6ac2c.png)
+
+
+
+ ![图片](./assets/csdn-136441069/image-018-06bfa22013.png)
+![图片](./assets/csdn-136441069/image-019-135b7c0f01.png)
+![图片](./assets/csdn-136441069/image-020-233f1ac65d.png)
+![图片](./assets/csdn-136441069/image-021-52d32a933a.png)
+
+```go
+在 Go 语言中，可以使用匿名函数来创建没有函数名的函数。这是通过使用 func 关键字以及不带函数名的函数字面量来实现的。匿名函数可以直接赋值给变量，或者作为参数传递给其他函数。以下是匿名函数的基本定义形式：
+
+func(parameters) returnType {
+    // 函数体
+}
+ 
+匿名函数可以直接在声明后调用，也可以赋值给变量后再进行调用。例如：
+
+package main
+
+import "fmt"
+
+func main() {
+    // 直接调用匿名函数
+    func(s string) {
+        fmt.Println(s)
+    }("Hello, anonymous function!")
+
+    // 将匿名函数赋值给变量后调用
+    myFunc := func(x, y int) int {
+        return x + y
+    }
+    result := myFunc(3, 4)
+    fmt.Println(result)
+}
+ 
+
+```
+
+![图片](./assets/csdn-136441069/image-022-1905215010.png)
+# 数组
+
+```go
+在Go语言中，数组的定义方式如下：
+
+var arrayName [size]dataType
+ 
+其中： - arrayName 表示数组的变量名 - size 表示数组的大小 - dataType 表示数组中元素的数据类型
+
+例如，定义一个包含5个整数的数组：
+
+var numbers [5]int
+ 
+另外，还可以使用数组字面量的方式进行数组定义和初始化：
+
+var numbers = [5]int{1, 2, 3, 4, 5}
+ 
+还可以使用:=操作符进行数组的定义和初始化：
+
+numbers := [5]int{1, 2, 3, 4, 5}
+ 
+需要注意的是，Go语言中数组的大小是数组类型的一部分，因此不同大小的数组被视为不同的类型。
+```
+
+![图片](./assets/csdn-136441069/image-023-a784f807cd.png)
+# slice
+
+```go
+在Go语言中，Slice是一种动态数组的抽象，可以按需自动增长或缩小。Slice的定义方式如下:
+
+var sliceName []dataType
+ 
+其中： - sliceName 表示Slice的变量名 - dataType 表示Slice中元素的数据类型
+
+另外，可以使用make函数创建一个指定长度和容量的Slice：
+
+sliceName := make([]dataType, length, capacity)
+ 
+其中： - length 表示Slice的初始长度 - capacity 表示Slice的初始容量
+
+例如，创建一个初始长度和容量为5的整数Slice：
+
+sliceName := make([]int, 5, 5)
+ 
+在实际使用中，一般使用Slice的字面量方式进行定义和初始化，例如：
+
+sliceName := []dataType{value1, value2, value3}
+ 
+例如，创建一个包含整数的Slice并初始化：
+
+numbers := []int{1, 2, 3, 4, 5}
+ 
+需要注意的是，Slice是引用类型，它指向底层数组。因此，在函数传递Slice时，实际上传递的是Slice的引用，对Slice的操作会影响到底层数组。
+```
+
+```go
+在Go语言中，Slice的初始长度（length）表示Slice中初始包含元素的个数，而容量（capacity）表示Slice可以容纳的元素个数的上限。在使用make函数创建Slice时，可以指定Slice的初始长度和容量。
+
+初始化Slice时，如果未指定容量，则Slice的容量会和长度相同。当Slice中的元素个数超过了初始容量时，Slice会自动扩容，新的容量一般是原容量的两倍。这种自动扩容的特性使得Slice成为了一个非常灵活的数据结构。
+
+举个例子，创建一个长度和容量为5的整数Slice：
+
+sliceName := make([]int, 5, 5)
+ 
+这里的5表示Slice的初始长度，即Slice中包含5个元素；而第二个5表示Slice的初始容量，即Slice可以容纳的元素个数的上限为5。
+
+需要注意的是，当Slice的长度超过了初始容量时，会触发自动扩容，这可能会导致底层数组的重新分配和拷贝，因此如果预先知道Slice的最大容量，最好在初始化的时候就指定好容量，以避免频繁的扩容操作。
+
+```
+
+```go
+在Go语言中，append是一个内置的函数，用于向切片追加元素。它的定义如下：
+
+func append(slice []Type, elems ...Type) []Type
+ 
+其中，slice是切片类型的参数，elems是要追加到切片的元素。append函数会返回一个新的切片，其中包含原始切片的元素以及追加的新元素。
+例如：
+
+slice := []int{1, 2, 3}
+slice = append(slice, 4, 5)
+// 现在slice中包含了1, 2, 3, 4, 5
+ 
+需要注意的是，如果追加的元素个数超过了原始切片的容量，append函数会自动分配一个新的底层数组来存储更多的元素，并返回新的切片。
+```
+
+![图片](./assets/csdn-136441069/image-024-387d9ac062.png)
+![图片](./assets/csdn-136441069/image-025-be86f4092e.png)
+![图片](./assets/csdn-136441069/image-026-f077b10209.png)
+# map
+
+```go
+map[类型]类型=一个类型
+
+在Go语言中，map是一种集合类型，用于存储键-值对。每个键在map中必须是唯一的，并且与每个键关联的值可以是任何类型。map是一种引用类型，因此在函数参数中传递map时，不需要显式使用指针。以下是一些map的基本特性：
+
+声明和初始化：map可以使用make函数来初始化，也可以使用map字面值进行初始化。下面是几种示例：
+
+var m map[string]int  // 声明一个map
+m = make(map[string]int)  // 使用make函数初始化
+m := map[string]int{"a": 1, "b": 2}  // 使用map字面值初始化
+ 
+添加和获取键-值对：可以使用下标操作符[]来添加、修改和获取map中的键-值对。例如：
+
+m["c"] = 3  // 添加键-值对
+value := m["a"]  // 获取键为"a"的值
+ 
+删除键-值对：使用delete函数可以删除map中的键-值对。例如：
+
+delete(m, "b")  // 删除键为"b"的键-值对
+ 
+遍历：可以使用range关键字来遍历map中的所有键-值对。每次迭代，range返回键和对应的值。例如：
+
+for key, value := range m {
+    fmt.Println(key, value)
+}
+```
+
+![图片](./assets/csdn-136441069/image-027-b206b414d6.png)
+![图片](./assets/csdn-136441069/image-028-f176168f28.png)
+
+# 结构体
+
+```go
+当你在Go语言中定义结构体时，你可以使用关键字 type 和 struct。语法如下：
+
+type MyStruct struct {
+    Field1 type1
+    Field2 type2
+    // ...
+}
+ 
+type 关键字用于声明新的类型。
+MyStruct 是你创建的结构体的名称。
+struct 关键字用于定义结构体的开始。
+Field1 和 Field2 是结构体中的字段（也称为成员或属性）。
+type1 和 type2 是字段的类型。
+例如，这是一个表示用户的结构体示例：
+
+type User struct {
+    ID       int
+    Name     string
+    Email    string
+    Age      int
+    IsActive bool
+}
+ 
+在这个示例中，User 是结构体的名称，而 ID、Name、Email、Age 和 IsActive 是结构体的字段，它们分别具有不同的类型。
+```
+
+![图片](./assets/csdn-136441069/image-029-244a760bb6.png)
+
+```go
+使用键值对初始化 可以通过指定结构体字段名和对应的值来初始化结构体实例。例如：
+type Person struct {
+    Name string
+    Age  int
+}
+
+func main() {
+    p := Person{Name: "Alice", Age: 25}
+    fmt.Println(p) // 输出：{Alice 25}
+}
+ 
+使用零值初始化 可以直接初始化为结构体类型的零值（即各字段被初始化为其类型的零值）。例如：
+type Point struct {
+    X int
+    Y int
+}
+
+func main() {
+    p := Point{} // 结构体Point的字段X和Y被初始化为0
+    fmt.Println(p) // 输出：{0 0}
+}
+ 
+使用new函数创建指针 可以使用内置的new函数创建结构体实例的指针。例如：
+type Circle struct {
+    Radius float64
+}
+
+func main() {
+    c := new(Circle) // c是指向Circle类型的指针
+    c.Radius = 5.0
+    fmt.Println(*c) // 输出：{5}
+}
+```
+
+![图片](./assets/csdn-136441069/image-030-cf88dd0b92.png)
+# 指针
+如果传递的不是结构体指针，那么只是一份拷贝，不会影响原结构体实例的数据。
+![图片](./assets/csdn-136441069/image-031-0847c36d22.png)
+![图片](./assets/csdn-136441069/image-032-6d3b571daf.png)
+当 q 是结构体指针时，引用其内部变量时可以省略 *。
+![图片](./assets/csdn-136441069/image-033-c1fd5bb65b.png)
+# 方法
+
+```go
+Go语言中的方法是在特定类型上定义的函数。方法定义的一般形式如下：
+
+func (receiver Type) methodName(parameters) returnType {
+    // 方法实现
+}
+ 
+其中，receiver是方法的接收者，Type是接收者的类型，methodName是方法的名称，parameters是方法的参数列表，returnType是方法的返回类型。
+
+下面是一个简单的方法示例：
+
+package main
+
+import "fmt"
+
+type Circle struct {
+    radius float64
+}
+
+func (c Circle) area() float64 {
+    return 3.14 * c.radius * c.radius
+}
+
+func main() {
+    c := Circle{radius: 5}
+    fmt.Println("Circle Area:", c.area())
+}
+ 
+在上面的示例中，Circle类型定义了一个area方法，它接收一个Circle类型的接收者，并返回一个float64类型的值。在main函数中，我们创建了一个Circle实例并调用了area方法来计算其面积。
+```
+
+![图片](./assets/csdn-136441069/image-034-b648df35af.png)
+同样地，在方法中，只有传递指针才会修改原始元素。
+![图片](./assets/csdn-136441069/image-035-7ba75cfb02.png)
+![图片](./assets/csdn-136441069/image-036-ff7df894cd.png)
+# 接口
+
+在 Go 中，接口是一种抽象类型，它定义了对象的行为规范，但不包含具体实现。接口由一组方法签名定义，任何实现了这些方法的类型都被称为实现了该接口。
+
+接口的定义方式如下：
+
+```go
+type InterfaceName interface {
+    Method1(parameters) returnType
+    Method2(parameters) returnType
+    // ...
+}
+```
+
+ 
+这里，InterfaceName 是接口的名称，Method1 等是接口中定义的方法。
+
+下面是一个简单的接口示例：
+
+
+```go
+package main
+
+import "fmt"
+
+// 定义一个接口
+type Shape interface {
+    area() float64
+}
+
+// 定义一个矩形结构体
+type Rectangle struct {
+    width  float64
+    height float64
+}
+
+// 矩形结构体实现了Shape接口
+func (r Rectangle) area() float64 {
+    return r.width * r.height
+}
+
+// 定义一个圆形结构体
+type Circle struct {
+    radius float64
+}
+
+// 圆形结构体实现了Shape接口
+func (c Circle) area() float64 {
+    return 3.14 * c.radius * c.radius
+}
+
+func getArea(shape Shape) {
+    fmt.Println("Area:", shape.area())
+}
+
+func main() {
+    rect := Rectangle{width: 10, height: 5}
+    circle := Circle{radius: 5}
+
+    getArea(rect)
+    getArea(circle)
+}
+```
+
+ 
+在上面的示例中，我们定义了一个 Shape 接口，其中包含一个名为 area 的方法。然后我们定义了两个结构体，Rectangle 和 Circle，并分别为它们实现了 area 方法。最后，在 getArea 函数中，我们接收一个 Shape 类型的参数，并调用 area 方法来计算各种形状的面积。
+
+这个示例展示了接口的概念：通过接口，我们可以对不同类型的对象执行通用的操作。
+![图片](./assets/csdn-136441069/image-037-f0a92bb374.png)
+![图片](./assets/csdn-136441069/image-038-fae9446216.png)
+![图片](./assets/csdn-136441069/image-039-d463c06017.png)
+
+# 错误处理
+在 Go 中，错误处理是通过返回 error 对象来实现的。标准库中的 error 接口定义如下：
+
+```go
+type error interface {
+    Error() string
+}
+ 
+```
+
+这意味着任何实现了 Error 方法并返回字符串的类型都可以被当作一个 error。在函数或方法中，通常会把一个 error 对象作为额外的返回值返回，这样调用者就可以判断函数是否执行成功，并获取具体的失败原因。
+
+下面是一个简单的错误处理示例：
+
+
+```go
+package main
+
+import (
+    "errors"
+    "fmt"
+    "math"
+)
+
+func main() {
+    result, err := squareRoot(9)
+    if err != nil {
+        fmt.Println("Error:", err)
+    } else {
+        fmt.Println("Square root:", result)
+    }
+
+    result, err = squareRoot(-9)
+    if err != nil {
+        fmt.Println("Error:", err)
+    } else {
+        fmt.Println("Square root:", result)
+    }
+}
+
+func squareRoot(x float64) (float64, error) {
+    if x < 0 {
+        return 0, errors.New("Cannot take square root of a negative number")
+    }
+    return math.Sqrt(x), nil
+}
+```
+
+ 
+在上面的示例中，我们定义了一个 squareRoot 函数，它接收一个 float64 参数，返回一个 float64 平方根值以及一个 error 对象。这样，调用 squareRoot 函数时，我们就可以检查返回的 error 对象是否为 nil；如果不是 nil，就说明发生了错误，我们可以从 error 对象中获取具体的错误信息。
+![图片](./assets/csdn-136441069/image-040-2bddd5797e.png)
+# 并发
+Go 中的并发是指能够同时执行多个独立的任务，这可以通过 goroutine 来实现。下面是一个简单的示例，演示如何使用 goroutine 进行并发执行：
+
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    // 同时启动两个 goroutine 来执行不同的任务
+    go printNumbers("goroutine 1", 5)
+    go printNumbers("goroutine 2", 5)
+
+    // 等待一段时间以确保 goroutine 有足够的时间执行
+    time.Sleep(2 * time.Second)
+}
+
+func printNumbers(name string, count int) {
+    for i := 1; i <= count; i++ {
+        fmt.Printf("%s: %d\n", name, i)
+        time.Sleep(500 * time.Millisecond) // 模拟一些耗时的工作
+    }
+}
+ 
+```
+
+在这个示例中，main 函数同时启动了两个 goroutine，每个都执行 printNumbers 函数，并在一段时间后结束。在 printNumbers 函数内部，每个 goroutine 打印一系列数字，并模拟一些耗时的工作。由于这两个 goroutine 是并发执行的，它们的输出是交错的。
+
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func hello() {
+    for i := 0; i < 3; i++ {
+        fmt.Println("Hello Goroutine")
+        time.Sleep(1 * time.Second)
+    }
+}
+
+func main() {
+    go hello() // 启动一个goroutine
+    time.Sleep(2 * time.Second)
+    fmt.Println("Main function")
+}
+```
+
+ 
+在这个示例中，hello() 函数作为一个 goroutine 启动，同时 main 函数本身也在执行。由于 goroutine 和 main 函数是并发运行的，你可以看到它们的输出消息是交错出现的。
+![图片](./assets/csdn-136441069/image-041-2e2ae7af19.png)
+在 Go 中，chan 是用于 goroutine 之间通信的关键字；它用于创建通道（channel），通过通道可以实现 goroutine 之间的数据传递和协调。下面是 chan 的用法：
+
+创建一个通道：
+
+```go
+// 创建一个通道，用于传递整数类型数据
+ch := make(chan int)
+// 创建一个缓冲通道，缓冲大小为10
+ch := make(chan int, 10)
+ 
+```
+
+向通道发送数据：
+
+```go
+// 向通道发送数据
+ch <- 42
+```
+
+ 
+从通道接收数据：
+
+```go
+// 从通道接收数据
+value := <-ch
+```
+
+ 
+关闭一个通道：
+
+```go
+// 关闭通道
+close(ch)
+```
+
+ 
+使用通道进行同步与通信：
+
+```go
+package main
+
+import "fmt"
+
+func worker(ch chan string) {
+    fmt.Println("Worker: Working...")
+    ch <- "Work is done!"
+}
+
+func main() {
+    ch := make(chan string)
+
+    go worker(ch)//先建立一个线程来运行该函数一段时间后再来运行主函数线程一段时间
+
+    // 从通道接收数据
+    msg := <-ch
+    fmt.Println(msg)
+}
+```
+
+ 
+在上面的示例中，我们创建了一个通道 ch，用于 worker 函数与 main 函数之间的通信。worker 函数把消息 "Work is done!" 发送到通道，而 main 函数从通道接收消息并打印出来。通过通道，可以实现 goroutine 之间的数据交换和同步。
+![图片](./assets/csdn-136441069/image-042-c4e1f984db.png)
+{% endraw %}

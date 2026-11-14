@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - 总线操作和定时（同步定时、异步定时、半同步通信、分离式通信） · Y0uYuGe</title>
+<meta name="description" content="在 T2 结束时，从设备本应已经准备好要放到数据线上的数据，但由于设备之间存在差异，它可能需要更多的准备时间。这时它会向总线控制器发送反馈信号 WAT，总线控制器随即多延长几个时钟节拍来等待从设备。下图中的“同步”是指在一个时钟周期内，主设备在时钟前沿发送，从设备在时钟后沿接收并处理。主设备先申请总线使用权并发送请求信号，然后释放总线使用权；从设备等到自己准备好后再申请总线使用权，并把数据传送到总线上。在 T2 阶段 CPU 发出读命令，读命令线变为低电平，对应地址的设备收到命令后开始做准备。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF">总线</a></nav>
+    <h1>计算机组成原理 - 总线操作和定时（同步定时、异步定时、半同步通信、分离式通信）</h1>
+    <div class="meta"><time>2024-01-03</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/assets/csdn-135374293/image-001-ad520c2713.png" alt="图片"></p>
+<h1 id="总线传输的四个阶段">总线传输的四个阶段</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/assets/csdn-135374293/image-002-06f7c63ae7.png" alt="图片"></p>
+<h1 id="同步定时">同步定时</h1>
+<h2 id="读命令">读命令</h2>
+<p>一次总线传输被划分为多个时钟周期
+首先 CPU 在 T1 阶段送出地址信息，此时地址线上的信号发生变化
+CPU 在 T2 阶段发出读命令，读命令线变为低电平，对应地址的设备收到命令后开始做准备
+在 T3 阶段，CPU 接收从设备放到数据线上的数据
+在 T4 阶段，CPU 已经收到数据，撤销读命令和地址信号
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/assets/csdn-135374293/image-003-0f635d34d6.png" alt="图片"></p>
+<h2 id="小结">小结</h2>
+<p>若干个时间段构成一个总线周期，下图有一处错误
+一切都按一个个时钟周期进行，因此控制逻辑实现简单——只需要安排好每个时钟即可
+但比较死板：遇到意外情况时没有多余的时间去做别的事情
+总线较短时，比长线路更不容易出问题
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/assets/csdn-135374293/image-004-c75a2bfd10.png" alt="图片"></p>
+<h1 id="异步定时">异步定时</h1>
+<p>规则更灵活多样，实现上不死板，因此实现更复杂
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/assets/csdn-135374293/image-005-0373521f8a.png" alt="图片"></p>
+<p>主设备获得总线控制权后，通过地址总线发送地址信息，通过控制总线发送读命令。这就是请求信息；回答信息则是从设备放到数据线上传给主设备的数据</p>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/assets/csdn-135374293/image-006-921a24c5e4.png" alt="图片"></p>
+<h1 id="半同步通信">半同步通信</h1>
+<p>增加了一个反馈信号 WAT
+同样以读命令为例
+在 T2 结束时，从设备本应已经准备好要放到数据线上的数据，但由于设备之间存在差异，它可能需要更多的准备时间。这时它会向总线控制器发送反馈信号 WAT，总线控制器随即多延长几个时钟节拍来等待从设备。准备好之后，再按照之前的同步方式继续通信</p>
+<p>下图中的“同步”是指在一个时钟周期内，主设备在时钟前沿发送，从设备在时钟后沿接收并处理——也就是说，主从设备在每个时钟周期内完成一次信息传输
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/assets/csdn-135374293/image-007-9bf0bc38c9.png" alt="图片"></p>
+<h1 id="分离式通信">分离式通信</h1>
+<p>这里从模块也可以申请占用总线
+总线传输周期被分成两个独立的子周期
+主设备先申请总线使用权并发送请求信号，然后释放总线使用权；从设备等到自己准备好后再申请总线使用权，并把数据传送到总线上。
+这样就充分利用了从设备的准备时间，在此期间总线可以空出来做别的事情</p>
+<p>这里的同步通信是指在规定的节拍内发出请求，并在规定的节拍内释放总线使用权
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/assets/csdn-135374293/image-008-8a29e8f2f7.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/assets/csdn-135374293/image-009-0206792799.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/"><span class="l">上一篇</span>计算机组成原理 - 总线标准（系统总线、局部总线、设备总线）</a><a href="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/"><span class="l">下一篇</span>计算机组成原理 - 总线性能指标</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

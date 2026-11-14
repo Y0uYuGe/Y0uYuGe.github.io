@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统 - 进程的状态、转换与组织 · Y0uYuGe</title>
+<meta name="description" content="此时，由于进程 2 必须等待操作系统把打印机资源分配给它这一事件，CPU 就把进程 2 从 CPU 上换下，让进程 1 在 CPU 上运行。当打印机完成上一个任务变为空闲时，操作系统把打印机资源分配给进程 2；进程 2 所等待的事件已经发生，OS 便把进程 2 从阻塞态转为就绪态。在运行内存中某个程序的一段指令序列时，执行到系统调用，发现 I/O 设备忙，其资源暂时不可用。主动行为：进程主动请求等待某个事件，或主动发起系统调用；条件不满足时主动进入阻塞态。此时正在运行的进程 1 已经运行结束，结束时发出 exit 系统调用，进入终止态。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B">进程与线程</a></nav>
+    <h1>操作系统 - 进程的状态、转换与组织</h1>
+    <div class="meta"><time>2024-01-23</time><span class="tag">#linux</span><span class="tag">#服务器</span><span class="tag">#运维</span><span class="tag">#操作系统</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-001-5401dfbda4.png" alt="图片"></p>
+<h2 id="进程状态---创建态就绪态">进程状态 - 创建态、就绪态</h2>
+<p>进程正在被创建时：创建态
+创建完成后：就绪态
+<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-002-16271e25bb.png" alt="图片"></p>
+<h2 id="进程状态---运行态">进程状态 - 运行态</h2>
+<p>在运行内存中某个程序的一段指令序列时，执行到系统调用，发现 I/O 设备忙，其资源暂时不可用
+<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-003-7ab80a11b4.png" alt="图片"></p>
+<h2 id="进程状态---阻塞态">进程状态 - 阻塞态</h2>
+<p>此时，由于进程 2 必须等待操作系统把打印机资源分配给它这一事件，CPU 就把进程 2 从 CPU 上换下，让进程 1 在 CPU 上运行。当打印机完成上一个任务变为空闲时，操作系统把打印机资源分配给进程 2；进程 2 所等待的事件已经发生，OS 便把进程 2 从阻塞态转为就绪态。
+<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-004-0054326272.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-005-67d9c070ec.png" alt="图片"></p>
+<h2 id="进程状态---终止态">进程状态 - 终止态</h2>
+<p>此时正在运行的进程 1 已经运行结束，结束时发出 exit 系统调用，进入终止态。
+<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-006-8b2b559158.png" alt="图片"></p>
+<h2 id="进程状态的转换">进程状态的转换</h2>
+<p>就绪态只缺处理机
+阻塞态：“其他”是指在等待某个事件，而该事件的发生条件同样尚未满足
+主动行为：进程主动请求等待某个事件，或主动发起系统调用；条件不满足时主动进入阻塞态
+被动行为：只能等待某个事件发生，不受进程自身控制，因此是被动的</p>
+<p>运行态可以回到就绪态：时间片用完，发生进程切换（并发）</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-007-6f50012052.png" alt="图片"></p>
+<h1 id="进程状态---总结">进程状态 - 总结</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-008-36b041af85.png" alt="图片"></p>
+<h2 id="进程的组织---链接方式">进程的组织 - 链接方式</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-009-33e5c91c1c.png" alt="图片">PCB 会根据阻塞原因被放入不同的阻塞队列
+<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-010-4060b61037.png" alt="图片"></p>
+<h2 id="进程的组织---索引方式">进程的组织 - 索引方式</h2>
+<p>通过索引找到对应的 PCB
+ <img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-011-b3a734a38c.png" alt="图片"></p>
+<h1 id="进程的组织---总结">进程的组织 - 总结</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-012-59d62afdaa.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E4%B8%8E%E7%BB%84%E7%BB%87/assets/csdn-135775719/image-013-aeb5e6e82d.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/"><span class="l">上一篇</span>操作系统 - 进程的概念、组成和特征（PCB、程序是如何运行的）</a><a href="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%EF%BC%88%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98%E3%80%81%E6%B6%88%E6%81%AF%E4%BC%A0%E9%80%92%E3%80%81%E7%AE%A1%E9%81%93%E9%80%9A%E4%BF%A1%E3%80%81%E7%AE%A1%E9%81%93%E8%AF%BB%E5%86%99%E6%9D%A1%E4%BB%B6%EF%BC%89/"><span class="l">下一篇</span>操作系统 - 进程间通信（共享内存、消息传递、管道通信、管道读写条件）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#进程状态---创建态就绪态">进程状态 - 创建态、就绪态</a><a class="d2" href="#进程状态---运行态">进程状态 - 运行态</a><a class="d2" href="#进程状态---阻塞态">进程状态 - 阻塞态</a><a class="d2" href="#进程状态---终止态">进程状态 - 终止态</a><a class="d2" href="#进程状态的转换">进程状态的转换</a><a class="d2" href="#进程的组织---链接方式">进程的组织 - 链接方式</a><a class="d2" href="#进程的组织---索引方式">进程的组织 - 索引方式</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

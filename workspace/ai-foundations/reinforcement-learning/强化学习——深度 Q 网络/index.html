@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>强化学习——深度 Q 网络 · Y0uYuGe</title>
+<meta name="description" content="因为网格游戏中的每个格子都是一个状态，是离散的，但现实生活中很多状态不是离散的而是连续的。所以我们可以用神经网络来处理离散状态的任务：输入是状态，输出是每个动作对应的 Q 值（也可以理解为概率）。这样，输入就可以是连续的——也就是说状态可以是连续的。Q learning 和 DQN 之间没有本质区别。它返回一个迭代器，产生一个包含四个元组的列表（假设……是一个包含多条经验的列表，其中每条经验是一个四元组（……中的每个四元组被解包成四个不同的列表或元组，分别对应……这里的 Q 值就是神经网络最后输出的不同动作的概率。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/reinforcement-learning">强化学习</a></nav>
+    <h1>强化学习——深度 Q 网络</h1>
+    <div class="meta"><time>2025-01-24</time><span class="tag">#强化学习</span><span class="tag">#DQN</span></div>
+    <article class="post-body">
+<h1 id="深度-q-网络">深度 Q 网络</h1>
+<p><img src="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C/assets/csdn-145337075/image-001-b5d8ee3fe1.png" alt="图片">
+这种方法很适合网格游戏。因为网格游戏中的每个格子都是一个状态，是离散的，但现实生活中很多状态不是离散的而是连续的。所以我们可以用神经网络来处理离散状态的任务：输入是状态，输出是每个动作对应的 Q 值（也可以理解为概率）。这样，输入就可以是连续的——也就是说状态可以是连续的</p>
+<p>Q learning 和 DQN 之间没有本质区别。DQN 只是用神经网络——也就是一个函数（神经网络）——来代替原来的 Q 表。深度网络 + Q learning = DQN
+<img src="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C/assets/csdn-145337075/image-002-6713cb107d.png" alt="图片"></p>
+<p>这里的 Q 值就是神经网络最后输出的不同动作的概率
+<img src="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C/assets/csdn-145337075/image-003-69c0a117de.png" alt="图片"></p>
+<h1 id="zipbatch-的内部实现">zip(*batch) 的内部实现</h1>
+<p>首先，我们来看 <code>batch</code> 是如何构造的：</p>
+<pre><code class="language-python">batch = sample(history_memory, min(len(history_memory), args.batch_size))
+</code></pre>
+<p><code>batch</code> 是从 <code>history_memory</code> 中采样得到的。假设 <code>history_memory</code> 是一个包含多条经验的列表，其中每条经验是一个四元组（<code>state, reward, next_state, terminal</code>）。每个元素如下所示：</p>
+<pre><code class="language-python">[state, reward, next_state, terminal]
+</code></pre>
+<p>当你调用 <code>zip(*batch)</code> 时，<code>*batch</code> 会把 <code>batch</code> 中的每个四元组解包成四个不同的列表或元组，分别对应 <code>state</code>、<code>reward</code>、<code>next_state</code> 和 <code>terminal</code>。</p>
+<h2 id="假设">假设：</h2>
+<pre><code class="language-python">batch = [
+    (state_1, reward_1, next_state_1, terminal_1),
+    (state_2, reward_2, next_state_2, terminal_2),
+    (state_3, reward_3, next_state_3, terminal_3)
+]
+</code></pre>
+<p>当你执行 <code>zip(*batch)</code> 时，<code>*batch</code> 会被解包为以下四个参数传给 <code>zip()</code>：</p>
+<pre><code class="language-python">zip((state_1, reward_1, next_state_1, terminal_1), 
+    (state_2, reward_2, next_state_2, terminal_2), 
+    (state_3, reward_3, next_state_3, terminal_3))
+</code></pre>
+<p>然后，<code>zip()</code> 函数会把这些元组的元素按位置“对齐”，得到如下结果：</p>
+<pre><code class="language-python">[(state_1, state_2, state_3), 
+ (reward_1, reward_2, reward_3), 
+ (next_state_1, next_state_2, next_state_3), 
+ (terminal_1, terminal_2, terminal_3)]
+</code></pre>
+<h2 id="结果">结果：</h2>
+<p><code>zip(*batch)</code> 返回一个迭代器，产生一个包含四个元组的列表（假设 <code>batch</code> 中有三条经验）：</p>
+<pre><code class="language-python">(state_batch, action_batch, reward_batch, next_state_batch, terminal_batch)
+</code></pre>
+<p>这四个元组分别对应：</p>
+<ul>
+<li><code>state_batch</code>：包含所有的 <code>state</code> 值（<code>state_1, state_2, state_3</code>）</li>
+<li><code>reward_batch</code>：包含所有的 <code>reward</code> 值（<code>reward_1, reward_2, reward_3</code>）</li>
+<li><code>next_state_batch</code>：包含所有的 <code>next_state</code> 值（<code>next_state_1, next_state_2, next_state_3</code>）</li>
+<li><code>terminal_batch</code>：包含所有的 <code>terminal</code> 值（<code>terminal_1, terminal_2, terminal_3</code>）</li>
+</ul>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%20-%20Q-Learning%20-%20Q%20%E8%A1%A8%20-%20%E8%B4%9D%E5%B0%94%E6%9B%BC%E6%96%B9%E7%A8%8B/"><span class="l">上一篇</span>强化学习 - Q-Learning - Q 表 - 贝尔曼方程</a><span></span></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

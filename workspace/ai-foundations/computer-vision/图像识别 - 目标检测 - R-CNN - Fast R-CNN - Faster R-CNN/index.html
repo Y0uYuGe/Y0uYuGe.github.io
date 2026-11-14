@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图像识别 - 目标检测 - R-CNN - Fast R-CNN - Faster R-CNN - YOLO（You Only Look Once）- YOLO 的统一模型 · Y0uYuGe</title>
+<meta name="description" content="这种方法的核心是。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/computer-vision">计算机视觉</a></nav>
+    <h1>图像识别 - 目标检测 - R-CNN - Fast R-CNN - Faster R-CNN - YOLO（You Only Look Once）- YOLO 的统一模型</h1>
+    <div class="meta"><time>2025-01-13</time><span class="tag">#目标检测</span><span class="tag">#R语言</span><span class="tag">#cnn</span><span class="tag">#YOLO</span></div>
+    <article class="post-body">
+<h1 id="目标检测">目标检测</h1>
+<p>找出图像中的物体，用矩形框标出，并给出类别和相应的概率。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-001-d9475b216f.png" alt="图片"></p>
+<h2 id="早期目标检测流程">早期目标检测流程</h2>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-002-4bd1493e6e.png" alt="图片"></p>
+<hr>
+<h3 id="阶段-1用计算机图像处理生成大量候选框"><strong>阶段 1：用计算机图像处理生成大量候选框</strong></h3>
+<ul>
+<li>左边的原图包含目标（一只狗和一只猫）以及背景。</li>
+<li>系统首先使用传统的图像处理技术（如滑动窗口、选择性搜索、边缘检测等）生成<strong>大量候选框</strong>。</li>
+<li>候选框是覆盖图像中潜在目标区域的矩形框；图中右侧的绿色矩形就代表这些候选框。</li>
+<li>生成候选框是目标检测的第一步，目的是减少需要分析的区域。</li>
+</ul>
+<hr>
+<h3 id="阶段-2把每个框送入机器学习分类模型进行判断"><strong>阶段 2：把每个框送入机器学习分类模型进行判断</strong></h3>
+<ul>
+<li>生成候选框后，把每个候选框逐一送入<strong>分类器</strong>（如支持向量机或简单的神经网络）。</li>
+<li>分类器的任务是判断每个候选框是否包含目标物体，以及目标的类别（如狗或猫）。</li>
+<li>如果某个候选框被分类器判定为包含目标，就保留下来；否则丢弃。</li>
+<li>在右图中，保留下来的候选框可能覆盖了狗和猫等目标。</li>
+</ul>
+<hr>
+<h3 id="小结"><strong>小结</strong></h3>
+<p>这种方法的核心是<strong>两步法</strong>：</p>
+<ol>
+<li>先生成尽可能多的候选框，确保不漏掉目标区域。</li>
+<li>再用分类模型逐个判断每个框，确定是否存在目标及其类别。</li>
+</ol>
+<hr>
+<h3 id="局限性"><strong>局限性</strong></h3>
+<p>这种早期方法的主要问题是：</p>
+<ul>
+<li>候选框数量多，计算开销大（尤其是对于大图像）。</li>
+<li>分类器需要对每个候选框单独运行，导致效率低下。</li>
+<li>候选框可能包含大量重叠区域，进一步增加了计算复杂度。</li>
+</ul>
+<p>现代目标检测算法（如 YOLO 和 Faster R-CNN）通过引入<strong>端到端检测</strong>的思想解决了这些问题，能够直接、高效地预测整张图像中的物体及其位置。</p>
+<h2 id="选择性搜索">选择性搜索</h2>
+<h2 id="section"> <img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-003-83d0993f3c.png" alt=" "></h2>
+<h3 id="选择性搜索简介"><strong>选择性搜索简介</strong></h3>
+<ol>
+<li><p><strong>背景：</strong></p>
+<ul>
+<li>选择性搜索（Selective Search）是一种生成候选框的方法，主要用于目标检测。</li>
+<li>它由 <strong>Koen E.A</strong> 于 2011 年提出，是一种经典的候选区域生成算法。</li>
+</ul>
+</li>
+<li><p><strong>核心思想：</strong></p>
+<ul>
+<li>图像中可能存在物体的区域，往往是具有相似性（如颜色、纹理等）或连续性的区域。</li>
+<li>选择性搜索基于<strong>区域合并</strong>的思想，结合图像分割技术，逐步合并具有相似特征的区域，从而生成一系列候选框。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="选择性搜索的主要流程"><strong>选择性搜索的主要流程</strong></h3>
+<ol>
+<li><p><strong>图像分割：</strong></p>
+<ul>
+<li>首先对输入图像进行<strong>初步分割</strong>，把它划分为多个较小的子区域。</li>
+<li><strong>图中上方第一行的彩色分割图</strong>展示了不同分割阶段的结果，每种颜色代表一个分割区域。</li>
+</ul>
+</li>
+<li><p><strong>区域合并：</strong></p>
+<ul>
+<li>根据相似性度量（如颜色、纹理、大小等）不断合并相邻的子区域，逐渐形成更大的区域。</li>
+<li>每次合并后，在这些区域上生成候选框（边界框），即<strong>图中下方第二行的蓝色矩形</strong>。</li>
+</ul>
+</li>
+<li><p><strong>候选框生成：</strong></p>
+<ul>
+<li>最终输出一组包含潜在目标的矩形候选框，供后续的分类器判断是否存在目标。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="选择性搜索的特点"><strong>选择性搜索的特点</strong></h3>
+<ol>
+<li><p><strong>优点：</strong></p>
+<ul>
+<li>不依赖滑动窗口法，因此比传统的滑动窗口更高效、更灵活。</li>
+<li>利用图像自身的特征（颜色、纹理等）生成候选区域，降低了计算开销。</li>
+</ul>
+</li>
+<li><p><strong>缺点：</strong></p>
+<ul>
+<li>生成的候选框数量仍然很多，可能包含冗余信息（大量重叠的框）。</li>
+<li>对于高分辨率图像，分割和区域合并过程的计算速度较慢。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="小结-1"><strong>小结</strong></h3>
+<p>选择性搜索的核心是利用图像中层次聚类的思想，逐步合并相似区域，生成候选目标区域（候选框）。<br>它的主要优点是结合了图像分割技术，比滑动窗口法更高效；但在速度和框的数量上仍有改进空间，因此在现代目标检测方法（如 Faster R-CNN）中逐渐被更高效的算法所取代。</p>
+<h1 id="r-cnn">R-CNN</h1>
+<h3 id="r-cnn-简介"><strong>R-CNN 简介</strong></h3>
+<p>R-CNN（Regions with Convolutional Neural Networks）是目标检测领域的里程碑式方法，由 Ross Girshick 于 2014 年提出。R-CNN 的核心思想是把图像目标检测问题分解为两步：</p>
+<ol>
+<li><strong>候选区域生成</strong>：用传统算法（如 Selective Search）生成可能包含目标的候选框。</li>
+<li><strong>目标分类</strong>：用卷积神经网络（CNN）逐个提取每个候选框的特征，用分类器（如 SVM）进行分类，并用回归器调整候选框的位置。</li>
+</ol>
+<p>R-CNN 虽然检测精度高，但由于必须对每个候选框单独运行 CNN，速度很慢。</p>
+<hr>
+<h3 id="r-cnn-的主要步骤"><strong>R-CNN 的主要步骤</strong></h3>
+<ol>
+<li><p><strong>输入图像：</strong></p>
+<ul>
+<li>输入原始图像。</li>
+</ul>
+</li>
+<li><p><strong>生成候选区域：</strong></p>
+<ul>
+<li>使用 Selective Search 等方法生成约 2000 个候选框（Regions of Interest，RoI）。</li>
+</ul>
+</li>
+<li><p><strong>特征提取：</strong></p>
+<ul>
+<li>单独裁剪出每个候选框并调整大小（例如 (224 \times 224)），然后通过 CNN 提取特征。</li>
+</ul>
+</li>
+<li><p><strong>分类与边界框调整：</strong></p>
+<ul>
+<li>对每个候选框提取出的特征，用分类器（如 SVM）判断目标类别。</li>
+<li>用回归器微调候选框的边界，生成更精确的目标框。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h1 id="fast-r-cnn">Fast R-CNN</h1>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-004-114e3437a7.png" alt="图片">
+在最后端，用 Softmax 分类器取代了 SVM。
+它采用了 SPP-net 的做法：把整张图像送入 ConvNet，然后从特征图中映射出 proposals 对应的位置。
+它借鉴了 SPP-net，只不过 RoI Pooling 层是 SPP 层的一个特例。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-005-5441a8ab7e.png" alt="图片">
+虽然它仍然是两阶段框架，
+但在反向传播时整个网络可以一个阶段完成训练。
+但要注意，提出候选框的算法仍然是 Selective Search，它基于原图提取 proposals，是不可训练的。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-006-27f1455d30.png" alt="图片">
+多任务损失：使用多任务损失函数，包括分类损失（Log loss）和回归损失（Smooth L1 loss）。</p>
+<ul>
+<li>Log loss（分类损失）：</li>
+</ul>
+<p>用于分类任务，衡量模型对目标类别预测的误差。
+例如，如果某个候选框的标签是“猫”，但模型预测为“狗”，就会产生分类损失。</p>
+<ul>
+<li>Smooth L1 loss（边界框回归损失）：</li>
+</ul>
+<p>用于回归任务，衡量预测边界框与真实边界框之间的误差。
+使用 Smooth L1 函数而不是普通的 L2 损失，是为了降低对离群值的敏感度。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-007-9fe2058e9c.png" alt="图片"></p>
+<h2 id="spp-net空间金字塔池化网络">SPP-net（空间金字塔池化网络）</h2>
+<p>SPP-net 是一种用于图像分类和目标检测的深度学习网络，由何恺明等人于 2014 年提出。它的核心是引入了 SPP 层（Spatial Pyramid Pooling Layer，空间金字塔池化层），解决了传统 CNN 模型对输入图像尺寸固定的要求。</p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-008-23ee4a8e89.png" alt="图片"></p>
+<h1 id="faster-r-cnn">Faster R-CNN</h1>
+<p>最重要的是引入了 RPN 网络，取代 SS 来提取候选框！！！（SS 即 Selective Search）</p>
+<p>原来是一开始就用原图来寻找候选框；现在是图像先经过 CNN 得到特征图，再经过 RPN 得到候选框（proposals）。</p>
+<p>共有四个损失函数。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-009-d09488f6d5.png" alt="图片">
+选择性搜索方法速度很慢；取代 SS 之后，速度提高到 1/0.2 = 5 FPS（每秒帧数）。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-010-3c4507d6ee.png" alt="图片"></p>
+<h1 id="yoloyou-only-look-once">YOLO（You Only Look Once）</h1>
+<p>把目标检测任务当作一个简单的回归问题。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-011-c6b349be96.png" alt="图片">
+分类器输出类别概率，回归器输出候选框。</p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-012-b7713d8376.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-013-d6ae20f8d3.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-014-9dcc5a7027.png" alt="图片"></p>
+<h1 id="yolo-的统一模型">YOLO 的统一模型</h1>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-015-b3cb5bb9b8.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-016-fb020ca247.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-017-03920843ac.png" alt="图片">
+YOLO 把输入图像看作由网格单元组成。例如在上图中，人（蓝色框）的中心落在黄色网格单元内，因此由黄色网格单元负责预测这个人。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-018-d21cf6cca3.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-019-46c05e6c92.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-020-31c5f574b2.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-021-25431ee2d5.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-022-ebb2b80c99.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/"><span class="l">下一篇</span>图像识别 - 迁移学习 - AlexNet - AlexNet 源码</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#早期目标检测流程">早期目标检测流程</a><a class="d3" href="#阶段-1用计算机图像处理生成大量候选框">阶段 1：用计算机图像处理生成大量候选框</a><a class="d3" href="#阶段-2把每个框送入机器学习分类模型进行判断">阶段 2：把每个框送入机器学习分类模型进行判断</a><a class="d3" href="#小结">小结</a><a class="d3" href="#局限性">局限性</a><a class="d2" href="#选择性搜索">选择性搜索</a><a class="d3" href="#选择性搜索简介">选择性搜索简介</a><a class="d3" href="#选择性搜索的主要流程">选择性搜索的主要流程</a><a class="d3" href="#选择性搜索的特点">选择性搜索的特点</a><a class="d3" href="#小结-1">小结</a><a class="d3" href="#r-cnn-简介">R-CNN 简介</a><a class="d3" href="#r-cnn-的主要步骤">R-CNN 的主要步骤</a><a class="d2" href="#spp-net空间金字塔池化网络">SPP-net（空间金字塔池化网络）</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

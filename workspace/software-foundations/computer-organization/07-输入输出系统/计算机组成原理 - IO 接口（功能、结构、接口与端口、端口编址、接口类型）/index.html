@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - IO 接口（功能、结构、接口与端口、端口编址、接口类型） · Y0uYuGe</title>
+<meta name="description" content="错误或状态监测：IO 接口需要向 CPU 报告外设的状态。IO 接口检测与其相连的外设状态，一旦外设状态发生变化，就修改状态寄存器；CPU 通过读取 IO 接口的状态寄存器就能得知外设的状态。数据缓冲：CPU 与外设之间的速度差距非常大。有了数据缓冲寄存器，例如外设可以慢慢地向数据缓冲寄存器写入，写满之后，CPU 再快速把数据取走。要操作的设备可以通过发送设备号来确定，也可以让每个设备对应一组寄存器，这样直接操作这些寄存器就是在操作该设备。采用统一编址时，用主存空间来存放原本存放在 IO 端口中的内容。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F">输入/输出系统</a></nav>
+    <h1>计算机组成原理 - IO 接口（功能、结构、接口与端口、端口编址、接口类型）</h1>
+    <div class="meta"><time>2024-01-05</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-001-0ed5f119df.png" alt="图片"></p>
+<h1 id="主机如何与-io-设备交互">主机如何与 IO 设备交互</h1>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-002-fb9681a048.png" alt="图片"></p>
+<h1 id="io-接口的功能">IO 接口的功能</h1>
+<p>数据缓冲：CPU 与外设之间的速度差距非常大。有了数据缓冲寄存器，例如外设可以慢慢地向数据缓冲寄存器写入，写满之后，CPU 再快速把数据取走</p>
+<p>错误或状态监测：IO 接口需要向 CPU 报告外设的状态。IO 接口检测与其相连的外设状态，一旦外设状态发生变化，就修改状态寄存器；CPU 通过读取 IO 接口的状态寄存器就能得知外设的状态</p>
+<p>数据格式转换：有时外设与 IO 接口之间是串行传输，而 CPU 与 IO 接口之间是并行传输</p>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-003-8443f474c9.png" alt="图片"></p>
+<h1 id="io-接口的详细结构">IO 接口的详细结构</h1>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-004-b4b38f54bd.png" alt="图片">  一个 IO 接口有时可以连接多个外设<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-005-cb8b4eeb45.png" alt="图片">
+由于中断类型不同，中断类型号也需要通过数据线传送
+地址线除了用来指明 IO 端口之外，有时还可以指明设备号，但这两者需要分两次传送
+要操作的设备可以通过发送设备号来确定，也可以让每个设备对应一组寄存器，这样直接操作这些寄存器就是在操作该设备
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-006-0d5e1b3a3f.png" alt="图片"></p>
+<h1 id="接口与端口">接口与端口</h1>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-007-1dc13a413b.png" alt="图片"></p>
+<h1 id="统一编址与独立编址">统一编址与独立编址</h1>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-008-fcfe50ba43.png" alt="图片">
+采用统一编址时，用主存空间来存放原本存放在 IO 端口中的内容。IO 端口的地址可以自由分布在内存地址之间
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-009-9489110deb.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-010-613b46c648.png" alt="图片"></p>
+<h1 id="io-接口的类型">IO 接口的类型</h1>
+<p>USB 是串行接口
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-011-d48929d482.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20IO%20%E6%8E%A5%E5%8F%A3%EF%BC%88%E5%8A%9F%E8%83%BD%E3%80%81%E7%BB%93%E6%9E%84%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E7%AB%AF%E5%8F%A3%E3%80%81%E7%AB%AF%E5%8F%A3%E7%BC%96%E5%9D%80%E3%80%81%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B%EF%BC%89/assets/csdn-135409589/image-012-25799a34ae.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%EF%BC%88%E8%BE%93%E5%85%A5%E3%80%81%E8%BE%93%E5%87%BA%E3%80%81%E6%98%BE%E7%A4%BA%E5%99%A8%EF%BC%89/"><span class="l">上一篇</span>计算机组成原理 - 外部设备（输入、输出、显示器）</a><span></span></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

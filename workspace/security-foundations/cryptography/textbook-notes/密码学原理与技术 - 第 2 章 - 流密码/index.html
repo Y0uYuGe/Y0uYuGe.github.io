@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密码学原理与技术 - 第 2 章 - 流密码 · Y0uYuGe</title>
+<meta name="description" content="计算安全：如果破解某个密码系统的已知最佳算法至少需要 t 次运算，则称该密码系统是计算安全的。这意味着对于当今的计算机而言，执行 t 次运算在计算上是不可行的。换句话说，计算安全是指：密码系统的安全性建立在当前技术无法在合理时间内完成所需的海量运算这一事实之上。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/security-foundations">安全基础</a><span class="sep">›</span><a href="/#/security-foundations/cryptography">密码学</a><span class="sep">›</span><a href="/#/security-foundations/cryptography/textbook-notes">教材笔记</a></nav>
+    <h1>密码学原理与技术 - 第 2 章 - 流密码</h1>
+    <div class="meta"><time>2024-12-25</time><span class="tag">#密码学</span><span class="tag">#服务器</span><span class="tag">#网络</span></div>
+    <article class="post-body">
+<p>流密码属于同步加密。</p>
+<p>在互联网安全等大多数领域，流密码不如分组密码流行。但也有例外，例如流行的流密码 RC4。</p>
+<p>流密码的实现有时比分组密码所需的资源更少，例如代码量或芯片面积，因此适用于手机等资源受限的环境。</p>
+<h1 id="流密码的加密与解密过程">流密码的加密与解密过程</h1>
+<p>加密是逐比特进行的。</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-001-8a128e5c2d.png" alt="图片"></p>
+<h1 id="流密码与分组密码的对比">流密码与分组密码的对比</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-002-b191fc6796.png" alt="图片"></p>
+<p>流密码通常比分组密码更快，因为它们是逐比特处理数据，而不必等待整个分组准备好。
+这种快速处理能力对实时通信非常重要，尤其是在移动设备和无线通信中。</p>
+<h1 id="同步流密码与异步流密码">同步流密码与异步流密码</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-003-5a99da6ca3.png" alt="图片">
+可重现：发送方和接收方都能生成相同的密钥流。</p>
+<h1 id="随机数生成器rng">随机数生成器（RNG）</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-004-3847a7ef0f.png" alt="图片"></p>
+<h2 id="真随机数生成器trng">真随机数生成器（TRNG）</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-005-30f3e457d4.png" alt="图片"></p>
+<h2 id="伪随机数生成器prng">伪随机数生成器（PRNG）</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-006-be41e0d034.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-007-09efc3e64f.png" alt="图片"></p>
+<h2 id="密码学安全伪随机数生成器csprng">密码学安全伪随机数生成器（CSPRNG）</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-008-650a8885af.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-009-7024e961df.png" alt="图片"></p>
+<h1 id="一次一密otp">一次一密（OTP）</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-010-83b1781fa9.png" alt="图片"></p>
+<p>一次一密（OTP）的无条件安全性依赖于一个关键条件：每个密钥流比特只能使用一次。这是保证 OTP 无条件安全的核心原则。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-011-2e80942684.png" alt="图片"></p>
+<h2 id="为什么-otp-是无条件安全的">为什么 OTP 是无条件安全的</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-012-5c7079743f.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-013-ff918c99c6.png" alt="图片"></p>
+<h1 id="迈向实用的流密码">迈向实用的流密码</h1>
+<h4 id="定义">定义</h4>
+<ul>
+<li><strong>计算安全</strong>：如果破解某个密码系统的已知最佳算法至少需要 t 次运算，则称该密码系统是计算安全的。这意味着对于当今的计算机而言，执行 t 次运算在计算上是不可行的。</li>
+<li>换句话说，<strong>计算安全</strong>是指：密码系统的安全性建立在当前技术无法在合理时间内完成所需的海量运算这一事实之上。</li>
+</ul>
+<h4 id="问题">问题</h4>
+<p>这个定义存在几个问题：</p>
+<ol>
+<li><p><strong>最佳算法的问题</strong>：</p>
+<ul>
+<li>对于给定的攻击，最佳算法是什么？换句话说，我们如何确定哪种攻击方法最有效？</li>
+</ul>
+</li>
+<li><p><strong>复杂度下界的问题</strong>：</p>
+<ul>
+<li>即使我们知道某种攻击的复杂度下界，是否可能存在更强大的攻击？也就是说，即使我们知道某种攻击需要 ( t ) 次运算，是否可能存在其他未知的、复杂度更低的攻击方法？</li>
+</ul>
+</li>
+</ol>
+<h4 id="对称加密方案">对称加密方案</h4>
+<ul>
+<li>对于对称加密方案，我们希望不存在复杂度低于穷举密钥搜索的攻击方法。这意味着在最坏情况下，攻击者只能通过尝试所有可能的密钥来破解加密。</li>
+</ul>
+<p>大多数伪随机数生成器的线性特性会带来不良的密码学性质。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-014-73b401f918.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-015-98e1f509d3.png" alt="图片"></p>
+<h1 id="线性反馈移位寄存器lfsr">线性反馈移位寄存器（LFSR）</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-016-8823abb2e9.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-017-7700399652.png" alt="图片"></p>
+<h2 id="示例">示例</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-018-c0c9d1b7cd.png" alt="图片"><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-019-6f1c7e3ffc.png" alt="图片">
+最大长度之所以出现，是因为这些比特只有 7 种可能的状态，所以经过七个状态之后必然出现重复，此后的一切都相同。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-020-28cb8a9df9.png" alt="图片"></p>
+<h2 id="lfsr-多项式">LFSR 多项式</h2>
+<p>能够生成足够长的密钥序列的多项式是本原多项式。</p>
+<p>本原多项式是不可约多项式的一种特殊情况。</p>
+<p>如何判断一个多项式是否是本原多项式
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-021-78aea1ff25.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-022-3e816c6855.png" alt="图片"></p>
+<p>本原多项式很容易获得，因此最大长度的 LFSR 也很容易找到。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-023-b80fd8d22c.png" alt="图片">
+示例<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-024-5dcb5cfad1.png" alt="图片"></p>
+<h1 id="lfsr-的安全性">LFSR 的安全性</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-025-5cfc88aebc.png" alt="图片"></p>
+<p>为什么需要 2m 个输出比特才能确定 LFSR 的反馈系数</p>
+<p>示例：
+假设有一个 3 阶（m=3）的 LFSR，其特征多项式为：
+x³ + p₁x² + p₂x + p₃</p>
+<p>逐步分析：</p>
+<ol>
+<li><p>设初始状态为 (s₀,s₁,s₂)；我们需要求解未知的反馈系数 p₁,p₂,p₃</p>
+</li>
+<li><p>LFSR 的递推关系为：
+sₙ₊₃ = p₁sₙ₊₂ + p₂sₙ₊₁ + p₃sₙ</p>
+</li>
+<li><p>写出前几个方程：
+s₃ = p₁s₂ + p₂s₁ + p₃s₀  （方程 1）
+s₄ = p₁s₃ + p₂s₂ + p₃s₁  （方程 2）
+s₅ = p₁s₄ + p₂s₃ + p₃s₂  （方程 3）</p>
+</li>
+<li><p>为什么需要 2m（=6）个输出比特：</p>
+</li>
+</ol>
+<ul>
+<li>我们有 3 个未知数（p₁,p₂,p₃）需要求解</li>
+<li>每个方程需要知道 4 个连续的输出比特</li>
+<li>要建立 3 个独立的方程，需要知道从 s₀ 到 s₅ 的 6 个输出比特</li>
+</ul>
+<ol start="5">
+<li><p>写成矩阵形式：
+[s₂ s₁ s₀] [p₁]   [s₃]
+[s₃ s₂ s₁] [p₂] = [s₄]
+[s₄ s₃ s₂] [p₃]   [s₅]</p>
+</li>
+<li><p>只有知道从 s₀ 到 s₅ 的 6 个输出比特（2m=6）时，我们才能：</p>
+</li>
+</ol>
+<ul>
+<li>构造完整的系数矩阵</li>
+<li>保证方程组有唯一解</li>
+<li>求解出 p₁,p₂,p₃ 的值</li>
+</ul>
+<p>总结：</p>
+<ul>
+<li>之所以需要 2m 个比特，是因为必须建立 m 个独立的线性方程</li>
+<li>每个方程需要 m+1 个连续的输出比特</li>
+<li>总共需要 m+(m-1)=2m 个输出比特才能构建完整的方程组</li>
+</ul>
+<p>这就解释了为什么确定 m 阶 LFSR 的反馈系数需要 2m 个输出比特。</p>
+<h1 id="实用流密码-estream-项目">实用流密码 – eSTREAM 项目</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-026-9cf6e664c1.png" alt="图片"></p>
+<h2 id="salsa20">Salsa20</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-027-d9552c6129.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-028-6375812814.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-029-1dd8d255b3.png" alt="图片"></p>
+<h3 id="qr">QR</h3>
+<p>四分之一轮函数（quarter-round）：四个输入，四个输出。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-030-3c8d34d414.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-031-c00d9c8d4f.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-032-bf89206f21.png" alt="图片"></p>
+<h2 id="salsa20-算法的完整流程">Salsa20 算法的完整流程</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-033-d5efd5e4af.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-034-7f370a399b.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-035-c1805ac3f1.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-036-0403b0d8f5.png" alt="图片">
+最后一步，将混合后的数组与原始数组逐字相加，得到其 64 字节的密钥流块。这一步很重要，因为混合轮本身是可逆的。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-037-7f3c056ab2.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-038-042f77e775.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-039-82ef91ffe2.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-040-039ccba543.png" alt="图片"></p>
+<h1 id="一种实用的流密码trivium">一种实用的流密码：Trivium</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-041-c745ac80dc.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-042-cf6e9e15e5.png" alt="图片">
+更正：A 是 IV，B 是密钥。
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-043-22c810064b.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-044-7ee143cbad.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%202%20%E7%AB%A0%20-%20%E6%B5%81%E5%AF%86%E7%A0%81/assets/csdn-144665283/image-045-0a87cf0cc0.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%E5%85%AD%E7%AB%A0%E2%80%94%E2%80%94%E5%85%AC%E9%92%A5%E5%AF%86%E7%A0%81%E5%AD%A6%E7%AE%80%E4%BB%8B/"><span class="l">上一篇</span>密码学原理技术——第六章——公钥密码学简介</a><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%207%20%E7%AB%A0%20-%20RSA%20%E5%AF%86%E7%A0%81%E4%BD%93%E5%88%B6/"><span class="l">下一篇</span>密码学原理与技术 - 第 7 章 - RSA 密码体制</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#真随机数生成器trng">真随机数生成器（TRNG）</a><a class="d2" href="#伪随机数生成器prng">伪随机数生成器（PRNG）</a><a class="d2" href="#密码学安全伪随机数生成器csprng">密码学安全伪随机数生成器（CSPRNG）</a><a class="d2" href="#为什么-otp-是无条件安全的">为什么 OTP 是无条件安全的</a><a class="d2" href="#示例">示例</a><a class="d2" href="#lfsr-多项式">LFSR 多项式</a><a class="d2" href="#salsa20">Salsa20</a><a class="d3" href="#qr">QR</a><a class="d2" href="#salsa20-算法的完整流程">Salsa20 算法的完整流程</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

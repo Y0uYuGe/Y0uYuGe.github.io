@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - 总线标准（系统总线、局部总线、设备总线） · Y0uYuGe</title>
+<meta name="description" content="目录：概述、示例、总线标准的基本概念、系统总线标准、局部总线标准、设备总线标准、对比、总结、为什么串行总线取代了并行总线。概述。示例。总线标准的基本概念：北桥芯片比南桥芯片更快。系统总线标准：ISA 和 EISA 都是并行总线。Intel 提出了 FSB 总线标准，比 EISA 和 ISA 更快，后来又提出了 QPI 总线标准，比 FSB 还要快。局部总线标准：传输图像数据需要更大的带宽。VESA 也是并行总线；由于 VESA 的工作频率有固定上限（并行总线的频率不能太高），而局部总线由 CPU 控制，随着 CPU 工作频率越来越高，VESA 已经跟不上了。英特">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF">总线</a></nav>
+    <h1>计算机组成原理 - 总线标准（系统总线、局部总线、设备总线）</h1>
+    <div class="meta"><time>2024-01-04</time><span class="tag">#网络</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-001-f801df90d1.png" alt="图片"></p>
+<h1 id="示例">示例</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-002-5b74aabe97.png" alt="图片"></p>
+<h1 id="总线标准的基本概念">总线标准的基本概念</h1>
+<p>北桥芯片比南桥芯片更快
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-003-5682fc08af.png" alt="图片"></p>
+<h1 id="系统总线标准">系统总线标准</h1>
+<p>ISA 和 EISA 都是并行总线
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-004-b6f8d31a38.png" alt="图片">
+Intel 提出了 FSB 总线标准，比 EISA 和 ISA 更快，后来又提出了 QPI 总线标准，比 FSB 还要快</p>
+<h1 id="局部总线标准">局部总线标准</h1>
+<p>传输图像数据需要更大的带宽
+VESA 也是并行总线。由于 VESA 的工作频率有固定上限（并行总线的频率不能太高），而局部总线由 CPU 控制，随着 CPU 工作频率越来越高，VESA 已经跟不上了
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-005-883c05e0d1.png" alt="图片">
+Intel 提出了 PCI，它比 VESA 快得多。它由北桥芯片控制，不挂在 CPU 上，也不受 CPU 控制，因此更能适应 CPU 的发展
+PCI 也曾被用作系统总线，所以把它称为系统总线也可以
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-006-181701fe47.png" alt="图片">
+Intel 提出了 AGP，同样是为了适应图像传输；它分为 X1 和 X8 等级
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-007-e25181108b.png" alt="图片">
+Intel 提出了 PCI-E，这是一种串行总线，工作频率高，因此带宽大
+单条 PCI-E 通道就可以充当一条总线；与之前的并行总线不同，它不需要很多根线，节省空间。既然一条 PCI-E 通道就能当作一条总线，那么给每个设备提供各自独立的总线来传输数据，也不会占用太多空间</p>
+<p>全双工：双方可以同时向对方发送数据</p>
+<p>可热插拔：只要遵循标准，就可以直接插到端口上使用
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-008-d162ae5db0.png" alt="图片"></p>
+<h1 id="设备总线标准">设备总线标准</h1>
+<p>这里连接的设备是针式打印机，它对速度的要求比较低
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-009-d01e040026.png" alt="图片">
+速度更高的 IO 设备需要非常高速的设备总线
+SCSI 是并行总线
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-010-866bdf3bb5.png" alt="图片">
+PCMCIA（并行总线）用于与计算机内部的存储芯片传输数据，并且可以拿到另一台计算机上使用。类似于 U 盘。即插即用
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-011-2fe5abc16d.png" alt="图片">USB 串行总线
+菊花链指的是扩展坞那样的连接形式
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-012-9c9cf63ee6.png" alt="图片">
+USB 包含很多种类型；现在的 type c 也是 USB，也叫 USB-C
+差分信号是指：如果线 2 为高电平、线 3 为低电平，就传输 1；线 2 为低电平、线 3 为高电平，就传输 0；它的抗干扰能力很强。即使电平发生变化，它们的差值也不一定改变。两根线绞在一起（双绞线）
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-013-99bbdbc7ca.png" alt="图片">
+IDE 是并行总线，也叫 PATA
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-014-57d4914bd0.png" alt="图片">
+SATA 是串行的
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-015-04be70dcd6.png" alt="图片"></p>
+<h1 id="对比">对比</h1>
+<p>只要能分辨出每种总线标准属于哪一类——串行还是并行——就可以了
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-016-5e59a9516c.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p>串行取代并行
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-017-54ffdd9f36.png" alt="图片"></p>
+<h1 id="为什么串行总线取代了并行总线">为什么串行总线取代了并行总线</h1>
+<p>因为并行总线通常采用同步时序，如果各根线之间存在长度差异，信号就不会同时到达；而同步时序要求数据必须在规定的时钟周期内被接收，所以本该接收为 1 的位，可能因为没有及时到达而被读成 0</p>
+<p>串行总线在一根线上传输的那一组数据，对应并行总线在所有线上同时传输的那一组数据
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86%EF%BC%88%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E3%80%81%E5%B1%80%E9%83%A8%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E6%80%BB%E7%BA%BF%EF%BC%89/assets/csdn-135375407/image-018-079335dd6d.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6%EF%BC%88%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E3%80%81%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1%E3%80%81%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1%EF%BC%89/"><span class="l">下一篇</span>计算机组成原理 - 总线操作和定时（同步定时、异步定时、半同步通信、分离式通信）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

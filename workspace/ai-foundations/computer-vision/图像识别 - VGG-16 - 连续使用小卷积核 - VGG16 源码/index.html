@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图像识别 - VGG-16 - 连续使用小卷积核 - VGG16 源码 · Y0uYuGe</title>
+<meta name="description" content="-&gt; None: features：卷积特征提取部分的网络结构（通常由某个函数生成）。num_classes：分类任务的类别数，默认 1000（例如 ImageNet 数据集的分类任务）。init_weights：是否初始化权重，默认 True。dropout：Dropout 概率，默认 0.5。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20VGG-16%20-%20%E8%BF%9E%E7%BB%AD%E4%BD%BF%E7%94%A8%E5%B0%8F%E5%8D%B7%E7%A7%AF%E6%A0%B8%20-%20VGG16%20%E6%BA%90%E7%A0%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/computer-vision">计算机视觉</a></nav>
+    <h1>图像识别 - VGG-16 - 连续使用小卷积核 - VGG16 源码</h1>
+    <div class="meta"><time>2025-01-11</time><span class="tag">#VGG16</span><span class="tag">#VGG</span><span class="tag">#AlexNet</span></div>
+    <article class="post-body">
+<h1 id="vgg-16">VGG-16</h1>
+<p>最初两次 3<em>3 卷积之后尺寸仍为 224</em>224 的原因是使用了 padding，使得卷积后尺寸保持不变。
+最后，fc6 和 fc7 都是有 4096 个神经元的全连接层。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20VGG-16%20-%20%E8%BF%9E%E7%BB%AD%E4%BD%BF%E7%94%A8%E5%B0%8F%E5%8D%B7%E7%A7%AF%E6%A0%B8%20-%20VGG16%20%E6%BA%90%E7%A0%81/assets/csdn-145066254/image-001-b408451177.png" alt="图片">
+AlexNet 模型通过构建多层网络取得了不错的效果，但它没有为设计深层神经网络提供方向。VGG 通过使用一系列 3x3 的小卷积核和池化层来构建深层卷积神经网络，并取得了良好的效果。VGG 模型因其结构简单、适用性强而在研究者中广受欢迎；尤其是它的网络结构设计方法为构建深层神经网络提供了方向。</p>
+<p>D 就是 VGG-16。</p>
+<p>conv3-64 表示卷积核为 3*3，有 64 个卷积核通道。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20VGG-16%20-%20%E8%BF%9E%E7%BB%AD%E4%BD%BF%E7%94%A8%E5%B0%8F%E5%8D%B7%E7%A7%AF%E6%A0%B8%20-%20VGG16%20%E6%BA%90%E7%A0%81/assets/csdn-145066254/image-002-9ce4b27f2d.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20VGG-16%20-%20%E8%BF%9E%E7%BB%AD%E4%BD%BF%E7%94%A8%E5%B0%8F%E5%8D%B7%E7%A7%AF%E6%A0%B8%20-%20VGG16%20%E6%BA%90%E7%A0%81/assets/csdn-145066254/image-003-3869de7c36.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20VGG-16%20-%20%E8%BF%9E%E7%BB%AD%E4%BD%BF%E7%94%A8%E5%B0%8F%E5%8D%B7%E7%A7%AF%E6%A0%B8%20-%20VGG16%20%E6%BA%90%E7%A0%81/assets/csdn-145066254/image-004-714155ab3b.png" alt="图片">
+这里的&quot;简化&quot;并不是指网络本身更简单，而是指这种设计理念避免了复杂的结构变化。通过增加网络深度，并采用统一的卷积核在更多层次上提取特征，最终取得了更好的性能。</p>
+<h1 id="连续使用小卷积核">连续使用小卷积核</h1>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20VGG-16%20-%20%E8%BF%9E%E7%BB%AD%E4%BD%BF%E7%94%A8%E5%B0%8F%E5%8D%B7%E7%A7%AF%E6%A0%B8%20-%20VGG16%20%E6%BA%90%E7%A0%81/assets/csdn-145066254/image-005-c3fa2cd988.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20VGG-16%20-%20%E8%BF%9E%E7%BB%AD%E4%BD%BF%E7%94%A8%E5%B0%8F%E5%8D%B7%E7%A7%AF%E6%A0%B8%20-%20VGG16%20%E6%BA%90%E7%A0%81/assets/csdn-145066254/image-006-26f8dad531.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20VGG-16%20-%20%E8%BF%9E%E7%BB%AD%E4%BD%BF%E7%94%A8%E5%B0%8F%E5%8D%B7%E7%A7%AF%E6%A0%B8%20-%20VGG16%20%E6%BA%90%E7%A0%81/assets/csdn-145066254/image-007-7bcee1492a.png" alt="图片"></p>
+<p>卷积后面通常会接非线性变换；由于小卷积核被多次应用，自然也就有了多次非线性变换。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20VGG-16%20-%20%E8%BF%9E%E7%BB%AD%E4%BD%BF%E7%94%A8%E5%B0%8F%E5%8D%B7%E7%A7%AF%E6%A0%B8%20-%20VGG16%20%E6%BA%90%E7%A0%81/assets/csdn-145066254/image-008-6a6e9d5de6.png" alt="图片"></p>
+<pre><code class="language-bash">C:\Users\35925\anaconda3\envs\AI_Study\lib\site-packages\torchvision\models\_utils.py:208: UserWarning: The parameter &#39;pretrained&#39; is deprecated since 0.13 and may be removed in the future, please use &#39;weights&#39; instead.
+  warnings.warn(
+C:\Users\35925\anaconda3\envs\AI_Study\lib\site-packages\torchvision\models\_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for &#39;weights&#39; are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=VGG16_Weights.IMAGENET1K_V1`. You can also use `weights=VGG16_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+</code></pre>
+<ol>
+<li><p><strong><code>pretrained</code> 参数已被弃用</strong>：从 <code>torchvision</code> 0.13 版本开始，<code>pretrained</code> 参数已被弃用，应改用 <code>weights</code> 参数。该库推荐传入 <code>weights=VGG16_Weights.IMAGENET1K_V1</code> 或 <code>weights=VGG16_Weights.DEFAULT</code> 来加载预训练权重。</p>
+</li>
+<li><p><strong><code>weights</code> 参数的其他用法也已被弃用</strong>：除了 <code>pretrained</code> 之外，向 <code>weights</code> 传入其他参数的方式也已被弃用，未来版本中可能会被移除。建议改用 <code>weights</code> 枚举类型。</p>
+</li>
+</ol>
+<p>要解决这些警告，可以按如下方式修改代码：</p>
+<pre><code class="language-python">from torchvision.models import vgg16, VGG16_Weights
+
+# 将弃用的 &#39;pretrained&#39; 参数替换为 &#39;weights&#39;
+model = vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+</code></pre>
+<p>修改之后，代码就符合新的 API，警告也就消失了。</p>
+<h1 id="动手实践">动手实践</h1>
+<p><a href="https://www.kaggle.com/datasets/khoongweihao/covid19-xray-dataset-train-test-sets">数据集链接</a></p>
+<h1 id="vgg16-源码">VGG16 源码</h1>
+<h2 id="vgg16">vgg16</h2>
+<pre><code class="language-python">
+@register_model()
+@handle_legacy_interface(weights=(&quot;pretrained&quot;, VGG16_Weights.IMAGENET1K_V1))
+def vgg16(*, weights: Optional[VGG16_Weights] = None, progress: bool = True, **kwargs: Any) -&gt; VGG:
+    &quot;&quot;&quot;VGG-16 from `Very Deep Convolutional Networks for Large-Scale Image Recognition &lt;https://arxiv.org/abs/1409.1556&gt;`__.
+
+    Args:
+        weights (:class:`~torchvision.models.VGG16_Weights`, optional): The
+            pretrained weights to use. See
+            :class:`~torchvision.models.VGG16_Weights` below for
+            more details, and possible values. By default, no pre-trained
+            weights are used.
+        progress (bool, optional): If True, displays a progress bar of the
+            download to stderr. Default is True.
+        **kwargs: parameters passed to the ``torchvision.models.vgg.VGG``
+            base class. Please refer to the `source code
+            &lt;https://github.com/pytorch/vision/blob/main/torchvision/models/vgg.py&gt;`_
+            for more details about this class.
+
+    .. autoclass:: torchvision.models.VGG16_Weights
+        :members:
+    &quot;&quot;&quot;
+    weights = VGG16_Weights.verify(weights)
+
+    return _vgg(&quot;D&quot;, False, weights, progress, **kwargs)
+</code></pre>
+<ul>
+<li>VGG16_Weights.verify(weights) 验证 weights 参数的合法性。如果传入的值不是合法的 VGG16_Weights 枚举值，就会抛出错误。</li>
+<li>&quot;D&quot;：表示使用 VGG 的 D 配置（也就是 VGG-16）。</li>
+<li>False：表示不启用批归一化（batch normalization）。</li>
+<li>weights：指定要加载的权重。</li>
+</ul>
+<h2 id="_vgg">_vgg</h2>
+<pre><code class="language-python">cfgs: Dict[str, List[Union[str, int]]] = {
+    &quot;A&quot;: [64, &quot;M&quot;, 128, &quot;M&quot;, 256, 256, &quot;M&quot;, 512, 512, &quot;M&quot;, 512, 512, &quot;M&quot;],
+    &quot;B&quot;: [64, 64, &quot;M&quot;, 128, 128, &quot;M&quot;, 256, 256, &quot;M&quot;, 512, 512, &quot;M&quot;, 512, 512, &quot;M&quot;],
+    &quot;D&quot;: [64, 64, &quot;M&quot;, 128, 128, &quot;M&quot;, 256, 256, 256, &quot;M&quot;, 512, 512, 512, &quot;M&quot;, 512, 512, 512, &quot;M&quot;],
+    &quot;E&quot;: [64, 64, &quot;M&quot;, 128, 128, &quot;M&quot;, 256, 256, 256, 256, &quot;M&quot;, 512, 512, 512, 512, &quot;M&quot;, 512, 512, 512, 512, &quot;M&quot;],
+}
+
+def _vgg(cfg: str, batch_norm: bool, weights: Optional[WeightsEnum], progress: bool, **kwargs: Any) -&gt; VGG:
+    if weights is not None:
+        kwargs[&quot;init_weights&quot;] = False
+        if weights.meta[&quot;categories&quot;] is not None:
+            _ovewrite_named_param(kwargs, &quot;num_classes&quot;, len(weights.meta[&quot;categories&quot;]))
+    model = VGG(make_layers(cfgs[cfg], batch_norm=batch_norm), **kwargs)
+    if weights is not None:
+        model.load_state_dict(weights.get_state_dict(progress=progress, check_hash=True))
+    return model
+</code></pre>
+<ul>
+<li>cfgs 是一个字典，定义了不同 VGG 版本的网络配置。</li>
+<li>键（如 &quot;A&quot;、&quot;B&quot;、&quot;D&quot;、&quot;E&quot;）表示网络配置。</li>
+<li>值是描述网络中每一层结构的列表：</li>
+<li>数字（如 64、128）：表示某个卷积层的输出通道数。</li>
+<li>&quot;M&quot;：表示一个池化层（MaxPooling）。</li>
+</ul>
+<p>最后，通过 load_state_dict 加载模型参数。</p>
+<h2 id="make_layers">make_layers</h2>
+<pre><code class="language-python">def make_layers(cfg: List[Union[str, int]], batch_norm: bool = False) -&gt; nn.Sequential:
+    layers: List[nn.Module] = []
+    in_channels = 3
+    for v in cfg:
+        if v == &quot;M&quot;:
+            layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+        else:
+            v = cast(int, v)
+            conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
+            if batch_norm:
+                layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
+            else:
+                layers += [conv2d, nn.ReLU(inplace=True)]
+            in_channels = v
+    return nn.Sequential(*layers)
+</code></pre>
+<h3 id="代码分析">代码分析</h3>
+<p><code>make_layers</code> 函数的主要目的是根据指定的配置 <code>cfg</code> 动态构建一系列卷积层和池化层，并返回一个 <code>nn.Sequential</code> 容器。</p>
+<hr>
+<h3 id="参数分析">参数分析</h3>
+<pre><code class="language-python">def make_layers(cfg: List[Union[str, int]], batch_norm: bool = False) -&gt; nn.Sequential:
+</code></pre>
+<ol>
+<li><p><strong><code>cfg</code></strong>：  </p>
+<ul>
+<li>这是一个用于定义网络结构的列表。  </li>
+<li>列表中的元素可以是整数或字符串：<ul>
+<li><strong>整数</strong>：表示某个卷积层的输出通道数。</li>
+<li><strong>字符串 <code>&quot;M&quot;</code></strong>：表示一个池化层（MaxPooling）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong><code>batch_norm</code></strong>：  </p>
+<ul>
+<li>一个布尔值，决定是否在每个卷积层后添加批归一化（Batch Normalization）。</li>
+</ul>
+</li>
+<li><p>返回值：</p>
+<ul>
+<li>返回一个 <code>nn.Sequential</code> 对象，包含 <code>cfg</code> 定义的所有层。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="工作流程">工作流程</h3>
+<ol>
+<li><p>初始化一个空列表 <code>layers</code>，用于存储网络的层模块：</p>
+<pre><code class="language-python">layers: List[nn.Module] = []
+in_channels = 3  # 初始输入通道数为3（RGB图像）
+</code></pre>
+</li>
+<li><p>遍历配置列表 <code>cfg</code>，根据元素类型（整数或 <code>&quot;M&quot;</code>）构建对应的层：</p>
+<pre><code class="language-python">for v in cfg:
+    if v == &quot;M&quot;:
+        layers += [nn.MaxPool2d(kernel_size=2, stride=2)]  # 添加池化层
+    else:
+        v = cast(int, v)  # 将当前元素转换为整数（如果是整数，则不变）
+        conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)  # 定义卷积层
+        if batch_norm:
+            layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]  # 带 BatchNorm
+        else:
+            layers += [conv2d, nn.ReLU(inplace=True)]  # 不带 BatchNorm
+        in_channels = v  # 更新输入通道数
+</code></pre>
+</li>
+<li><p>把 <code>layers</code> 列表中的所有层包装成一个 <code>nn.Sequential</code> 模块并返回：</p>
+<pre><code class="language-python">return nn.Sequential(*layers)
+</code></pre>
+</li>
+</ol>
+<hr>
+<h3 id="各部分的作用">各部分的作用</h3>
+<ol>
+<li><p><strong>池化层（<code>&quot;M&quot;</code>）</strong>：</p>
+<pre><code class="language-python">layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+</code></pre>
+<ul>
+<li>当配置中出现 <code>&quot;M&quot;</code> 时，会添加一个 <code>MaxPool2d</code> 层。</li>
+<li>该层使用 2×2 的窗口，以步长 2 进行下采样，从而缩小特征图的尺寸。</li>
+</ul>
+</li>
+<li><p><strong>卷积层</strong>：</p>
+<pre><code class="language-python">conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
+</code></pre>
+<ul>
+<li>添加一个 3×3 的卷积层，<code>padding=1</code> 使特征图尺寸保持不变。</li>
+<li><code>in_channels</code>：输入特征图的通道数。</li>
+<li><code>v</code>：卷积层的输出通道数（由配置定义）。</li>
+</ul>
+</li>
+<li><p><strong>批归一化与激活函数</strong>：</p>
+<ul>
+<li>如果 <code>batch_norm=True</code>，则在卷积层后添加 <code>BatchNorm2d</code> 和 <code>ReLU</code> 激活函数：<pre><code class="language-python">layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
+</code></pre>
+</li>
+<li>如果 <code>batch_norm=False</code>，则只添加 <code>ReLU</code> 激活函数：<pre><code class="language-python">layers += [conv2d, nn.ReLU(inplace=True)]
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>更新输入通道数</strong>：</p>
+<pre><code class="language-python">in_channels = v
+</code></pre>
+<ul>
+<li>更新 <code>in_channels</code>，作为下一个卷积层的输入通道数。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="输出结果">输出结果</h3>
+<p>该函数返回一个包含由卷积层和池化层组成的网络的 <code>nn.Sequential</code> 对象。例如：</p>
+<h4 id="示例-1配置-cfg-64-m-128-m不带-batchnorm">示例 1：配置 <code>cfg = [64, &quot;M&quot;, 128, &quot;M&quot;]</code>（不带 BatchNorm）</h4>
+<pre><code class="language-python">model = make_layers([64, &quot;M&quot;, 128, &quot;M&quot;], batch_norm=False)
+</code></pre>
+<p>输出的网络结构为：</p>
+<pre><code>Sequential(
+  (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (1): ReLU(inplace=True)
+  (2): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  (3): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (4): ReLU(inplace=True)
+  (5): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+)
+</code></pre>
+<h4 id="示例-2配置-cfg-64-m-128-m带-batchnorm">示例 2：配置 <code>cfg = [64, &quot;M&quot;, 128, &quot;M&quot;]</code>（带 BatchNorm）</h4>
+<pre><code class="language-python">model = make_layers([64, &quot;M&quot;, 128, &quot;M&quot;], batch_norm=True)
+</code></pre>
+<p>输出的网络结构为：</p>
+<pre><code>Sequential(
+  (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (2): ReLU(inplace=True)
+  (3): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  (4): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (5): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (6): ReLU(inplace=True)
+  (7): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+)
+</code></pre>
+<hr>
+<h2 id="vgg">VGG</h2>
+<pre><code class="language-python">
+class VGG(nn.Module):
+    def __init__(
+        self, features: nn.Module, num_classes: int = 1000, init_weights: bool = True, dropout: float = 0.5
+    ) -&gt; None:
+        super().__init__()
+        _log_api_usage_once(self)
+        self.features = features
+        self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(p=dropout),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(p=dropout),
+            nn.Linear(4096, num_classes),
+        )
+        if init_weights:
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d):
+                    nn.init.kaiming_normal_(m.weight, mode=&quot;fan_out&quot;, nonlinearity=&quot;relu&quot;)
+                    if m.bias is not None:
+                        nn.init.constant_(m.bias, 0)
+                elif isinstance(m, nn.BatchNorm2d):
+                    nn.init.constant_(m.weight, 1)
+                    nn.init.constant_(m.bias, 0)
+                elif isinstance(m, nn.Linear):
+                    nn.init.normal_(m.weight, 0, 0.01)
+                    nn.init.constant_(m.bias, 0)
+
+    def forward(self, x: torch.Tensor) -&gt; torch.Tensor:
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        return x
+</code></pre>
+<p>这段代码定义了一个 VGG 网络类（<code>VGG</code>），基于 PyTorch 的神经网络模块 <code>nn.Module</code> 实现。该类实现了 VGG 网络的基本结构，包括卷积特征提取部分、全连接分类部分以及权重初始化方法。</p>
+<hr>
+<h3 id="1-构造函数__init__">1. <strong>构造函数（<code>__init__</code>）</strong></h3>
+<h4 id="定义">定义</h4>
+<pre><code class="language-python">def __init__(
+    self, features: nn.Module, num_classes: int = 1000, init_weights: bool = True, dropout: float = 0.5
+) -&gt; None:
+</code></pre>
+<ul>
+<li><strong><code>features</code></strong>：卷积特征提取部分的网络结构（通常由 <code>make_layers</code> 函数生成）。</li>
+<li><strong><code>num_classes</code></strong>：分类任务的类别数，默认 1000（例如 ImageNet 数据集的分类任务）。</li>
+<li><strong><code>init_weights</code></strong>：是否初始化权重，默认 <code>True</code>。</li>
+<li><strong><code>dropout</code></strong>：Dropout 概率，默认 0.5。</li>
+</ul>
+<h4 id="初始化">初始化</h4>
+<pre><code class="language-python">super().__init__()
+_log_api_usage_once(self)
+</code></pre>
+<ul>
+<li>调用父类的初始化方法，以确保继承 <code>nn.Module</code> 的功能。</li>
+<li><code>_log_api_usage_once(self)</code> 用于记录模型 API 的使用情况（大概是用于统计）。</li>
+</ul>
+<hr>
+<h4 id="模型组成部分">模型组成部分</h4>
+<ol>
+<li><p><strong>卷积特征提取部分</strong>：</p>
+<pre><code class="language-python">self.features = features
+</code></pre>
+<ul>
+<li><code>features</code> 是由 <code>make_layers</code> 动态生成的卷积层序列，用于从输入图像中提取特征。</li>
+</ul>
+</li>
+<li><p><strong>自适应平均池化</strong>：</p>
+<pre><code class="language-python">self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+</code></pre>
+<ul>
+<li>把特征图调整为固定大小 <code>7×7</code>，无论输入图像尺寸是多少。</li>
+</ul>
+</li>
+<li><p><strong>全连接分类部分</strong>：</p>
+<pre><code class="language-python">self.classifier = nn.Sequential(
+    nn.Linear(512 * 7 * 7, 4096),
+    nn.ReLU(True),
+    nn.Dropout(p=dropout),
+    nn.Linear(4096, 4096),
+    nn.ReLU(True),
+    nn.Dropout(p=dropout),
+    nn.Linear(4096, num_classes),
+)
+</code></pre>
+<ul>
+<li><code>512 * 7 * 7</code> 是卷积层输出特征图展平后的大小。</li>
+<li>三个全连接层：<ul>
+<li>第一层：<code>512 * 7 * 7</code> → <code>4096</code></li>
+<li>第二层：<code>4096</code> → <code>4096</code></li>
+<li>第三层：<code>4096</code> → <code>num_classes</code>（类别数）。</li>
+</ul>
+</li>
+<li>各层之间使用了 <code>ReLU</code> 激活函数和 <code>Dropout</code> 正则化。</li>
+</ul>
+</li>
+<li><p><strong>权重初始化</strong>：</p>
+<pre><code class="language-python">if init_weights:
+    for m in self.modules():
+        if isinstance(m, nn.Conv2d):
+            nn.init.kaiming_normal_(m.weight, mode=&quot;fan_out&quot;, nonlinearity=&quot;relu&quot;)
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.BatchNorm2d):
+            nn.init.constant_(m.weight, 1)
+            nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.Linear):
+            nn.init.normal_(m.weight, 0, 0.01)
+            nn.init.constant_(m.bias, 0)
+</code></pre>
+<ul>
+<li>根据模块类型初始化权重：<ul>
+<li><strong>卷积层（<code>nn.Conv2d</code>）</strong>：<ul>
+<li>使用 <code>kaiming_normal_</code> 初始化权重（适用于 ReLU 激活函数）。</li>
+<li>把偏置初始化为 0。</li>
+</ul>
+</li>
+<li><strong>批归一化层（<code>nn.BatchNorm2d</code>）</strong>：<ul>
+<li>权重初始化为 1，偏置初始化为 0。</li>
+</ul>
+</li>
+<li><strong>全连接层（<code>nn.Linear</code>）</strong>：<ul>
+<li>权重从均值为 0、标准差为 0.01 的正态分布中初始化。</li>
+<li>偏置初始化为 0。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="2-前向传播forward">2. <strong>前向传播（<code>forward</code>）</strong></h3>
+<pre><code class="language-python">def forward(self, x: torch.Tensor) -&gt; torch.Tensor:
+    x = self.features(x)  # 卷积特征提取
+    x = self.avgpool(x)   # 自适应平均池化
+    x = torch.flatten(x, 1)  # 展平为 (batch_size, 512*7*7)
+    x = self.classifier(x)   # 全连接分类
+    return x
+</code></pre>
+<ul>
+<li>输入 <code>x</code> 经过以下步骤：<ol>
+<li><strong>卷积特征提取部分</strong>：<ul>
+<li><code>self.features(x)</code> 提取卷积特征。</li>
+</ul>
+</li>
+<li><strong>自适应平均池化</strong>：<ul>
+<li>把卷积特征图调整为固定大小 <code>7×7</code>。</li>
+</ul>
+</li>
+<li><strong>展平</strong>：<ul>
+<li>使用 <code>torch.flatten</code> 把张量展平为二维形状：<code>(batch_size, 512*7*7)</code>。</li>
+</ul>
+</li>
+<li><strong>全连接分类部分</strong>：<ul>
+<li>展平后的张量输入到 <code>self.classifier</code> 的全连接层中进行分类。</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<hr>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20LeNet5/"><span class="l">上一篇</span>图像识别 - LeNet5</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#vgg16">vgg16</a><a class="d2" href="#_vgg">_vgg</a><a class="d2" href="#make_layers">make_layers</a><a class="d3" href="#代码分析">代码分析</a><a class="d3" href="#参数分析">参数分析</a><a class="d3" href="#工作流程">工作流程</a><a class="d3" href="#各部分的作用">各部分的作用</a><a class="d3" href="#输出结果">输出结果</a><a class="d2" href="#vgg">VGG</a><a class="d3" href="#1-构造函数__init__">1. 构造函数（__init__）</a><a class="d3" href="#2-前向传播forward">2. 前向传播（forward）</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

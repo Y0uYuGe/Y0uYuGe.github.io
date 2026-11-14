@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密码学原理与技术 - 第九章 - 椭圆曲线密码 · Y0uYuGe</title>
+<meta name="description" content="RSA 和 ElGamal 等非对称加密方案需要在整数环和域上进行指数运算，参数通常超过 1000 位。这带来了如下问题：我们希望找到能提供同等安全性的更小的域，以降低计算和存储需求。椭圆曲线密码（ECC）使用点的集合（而非整数）进行加密运算，系数大小为 160-256 位，大大降低了计算开销。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/security-foundations">安全基础</a><span class="sep">›</span><a href="/#/security-foundations/cryptography">密码学</a><span class="sep">›</span><a href="/#/security-foundations/cryptography/textbook-notes">教材笔记</a></nav>
+    <h1>密码学原理与技术 - 第九章 - 椭圆曲线密码</h1>
+    <div class="meta"><time>2024-12-18</time><span class="tag">#密码学</span><span class="tag">#RSA</span></div>
+    <article class="post-body">
+<blockquote>
+<p>本笔记部分内容参考了张思莹同学的笔记，非常感谢。</p>
+</blockquote>
+<h1 id="背景">背景</h1>
+<h3 id="问题">问题：</h3>
+<p>RSA 和 ElGamal 等非对称加密方案需要在整数环和域上进行指数运算，参数通常超过 1000 位。这带来了如下问题：</p>
+<ul>
+<li><strong>计算开销大</strong>：在 32 位或 64 位运算的 CPU 上，这些运算非常耗时。</li>
+<li><strong>参数规模大</strong>：对于小型设备和嵌入式系统，存储这些大参数是一个挑战。</li>
+</ul>
+<h3 id="动机">动机：</h3>
+<p>我们希望找到能提供同等安全性的更小的域，以降低计算和存储需求。</p>
+<h3 id="解决方案">解决方案：</h3>
+<p>椭圆曲线密码（ECC）使用点的集合（而非整数）进行加密运算，系数大小为 160-256 位，大大降低了计算开销。</p>
+<h1 id="椭圆曲线的定义">椭圆曲线的定义</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-001-af434cd768.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-002-0ef0cb6c14.png" alt="图片"></p>
+<h1 id="素域上的椭圆曲线">素域上的椭圆曲线</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-003-368505e791.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-004-181810d96e.png" alt="图片"></p>
+<h1 id="不同的域">不同的域</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-005-a1644f399b.png" alt="图片"></p>
+<h1 id="相关性质">相关性质</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-006-5cf2bf3bad.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-007-800beef806.png" alt="图片"></p>
+<h1 id="相关计算">相关计算</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-008-4c0535a63e.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-009-7574dffd4c.png" alt="图片"></p>
+<h2 id="例子">例子</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-010-8ada53b3be.png" alt="图片"></p>
+<h1 id="循环群">循环群</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-011-a0a124f6b5.png" alt="图片"></p>
+<h1 id="点的个数">点的个数</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-012-0c5273d5e1.png" alt="图片"></p>
+<h1 id="椭圆曲线离散对数问题">椭圆曲线离散对数问题</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-013-7c64a57c56.png" alt="图片"></p>
+<h1 id="计算点乘倍点-加法">计算点乘（倍点-加法）</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-014-327a1e20e3.png" alt="图片"></p>
+<h1 id="椭圆曲线-diffie-hellman-密钥交换ecdh">椭圆曲线 Diffie-Hellman 密钥交换（ECDH）</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-015-a630fcfcec.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-016-5b6cf43cba.png" alt="图片"></p>
+<h1 id="安全性">安全性</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-017-9b8f3a30c5.png" alt="图片"></p>
+<h2 id="大步小步法">大步小步法</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-018-052c1dfae6.png" alt="图片"></p>
+<h2 id="pollard-rho-方法">Pollard-Rho 方法</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/assets/csdn-144551233/image-019-24d6bfe450.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/"><span class="l">上一篇</span>密码学原理与技术 - 第13章 - 消息认证码（MAC）</a><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/"><span class="l">下一篇</span>密码学原理与技术 - 第三章 - 数据加密标准（DES）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d3" href="#问题">问题：</a><a class="d3" href="#动机">动机：</a><a class="d3" href="#解决方案">解决方案：</a><a class="d2" href="#例子">例子</a><a class="d2" href="#大步小步法">大步小步法</a><a class="d2" href="#pollard-rho-方法">Pollard-Rho 方法</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

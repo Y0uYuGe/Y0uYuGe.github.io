@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-PWN-kernel - 前置知识 · Y0uYuGe</title>
+<meta name="description" content="操作数顺序：目的操作数在前、源操作数在后，与源操作数在前、目的操作数在后。寄存器表示：无前缀，与百分号前缀。立即数标记：通常无特殊标记，与显式标明，例如 $1 表示立即数 1。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/kernel-security">内核安全</a><span class="sep">›</span><a href="/#/endpoint-security/kernel-security/study-notes">学习笔记</a></nav>
+    <h1>CTF-PWN-kernel - 前置知识</h1>
+    <div class="meta"><time>2024-07-09</time><span class="tag">#java</span><span class="tag">#编程语言</span><span class="tag">#Pwn</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<h1 id="打包上传测试脚本">打包上传测试脚本</h1>
+<pre><code class="language-bash">#!/bin/sh
+gcc expolit.c -static -masm=intel -g -o expolit
+mv expolit fs/
+cd core
+find . | cpio -o --format=newc &gt; core.cpio
+mv core.cpio ..
+cd ..
+./start.sh
+</code></pre>
+<h1 id="查看保护">查看保护</h1>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-001-388ed19dc7.png" alt="图片"></p>
+<h1 id="调试">调试</h1>
+<p>记得设置为 root，否则看不到
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-002-887ad87f38.png" alt="图片">
+然后关闭 kaslr，方便下断点
+<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-003-974d6d1758.png" alt="图片">
+查看模块相关的段以及内核中存在的符号函数</p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-004-53bf92289a.png" alt="图片"></p>
+<pre><code class="language-bash">gdb ./vmlinux -q
+set architecture i386:x86-64
+
+target remote 127.0.0.1:1234
+
+# 先 continue， 在 insmod 之后手动 Ctrl+C 再设置断点，免得断点处于 pending 状态
+add-symbol-file /home/llk/Desktop/pwn/kernel/babydriver/lib/modules/4.4.72/babydriver.ko 0xffffffffc0000000
+
+b babyread
+b babywrite
+b babyioctl
+b babyopen
+b babyrelease
+
+c
+</code></pre>
+<h1 id="脚本编写">脚本编写</h1>
+<p>Intel 和 AT&amp;T 是两种不同的汇编语言语法风格，主要用于 x86 架构的处理器。虽然两者都用于编写底层机器代码，但它们在语法上有显著差异，尤其是在操作数顺序和某些细节的表达方式上。下面详细说明两者的区别：</p>
+<h3 id="intel-语法">Intel 语法</h3>
+<p>Intel 语法是最常见的 x86 汇编语言语法，也是 Intel 官方文档推荐的语法。它的特点是操作数出现在指令之前……更准确地说，通常把“目的操作数”放在前面，“源操作数”放在后面。</p>
+<h4 id="特点">特点：</h4>
+<ul>
+<li>目的操作数在前，源操作数在后。</li>
+<li>寄存器名没有前缀。</li>
+<li>用花括号 <code>{}</code> 表示立即数的范围，例如 <code>mov eax, {0x1234}</code>（不过这并不是最常见的写法，我们通常写成 <code>mov eax, 0x1234</code>）。</li>
+</ul>
+<h4 id="示例">示例：</h4>
+<pre><code class="language-assembly">; Intel Syntax
+mov eax, ebx    ; 将ebx的值移动到eax
+add eax, 1      ; 将eax的值加1
+</code></pre>
+<h3 id="att-语法">AT&amp;T 语法</h3>
+<p>AT&amp;T 语法起源于 UNIX 系统，由 AT&amp;T 开发。它与 Intel 语法的主要区别是操作数顺序相反，以及寄存器名前要加百分号 <code>%</code>。</p>
+<h4 id="特点-1">特点：</h4>
+<ul>
+<li>源操作数在前，目的操作数在后。</li>
+<li>寄存器名前加百分号 <code>%</code>。</li>
+<li>立即数通常在操作数中显式标明，没有特殊的花括号表示法。</li>
+</ul>
+<h4 id="示例-1">示例：</h4>
+<pre><code class="language-assembly"># AT&amp;T Syntax
+movl %ebx, %eax    # 将ebx的值移动到eax
+addl $1, %eax      # 将eax的值加1
+</code></pre>
+<h3 id="对比总结">对比总结</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Intel 语法</th>
+<th>AT&amp;T 语法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>操作数顺序</td>
+<td>目的操作数在前，源操作数在后</td>
+<td>源操作数在前，目的操作数在后</td>
+</tr>
+<tr>
+<td>寄存器表示</td>
+<td>无前缀</td>
+<td>百分号 <code>%</code> 前缀</td>
+</tr>
+<tr>
+<td>立即数标记</td>
+<td>通常无特殊标记</td>
+<td>显式标明，例如 <code>$1</code> 表示立即数 1</td>
+</tr>
+</tbody></table>
+<h2 id="c-库中的-asm-汇编">C 库中的 asm 汇编</h2>
+<p>默认遵循 AT&amp;T 语法。如果想使用</p>
+<pre><code class="language-c">  __asm__(&quot;mov user_cs, cs;&quot;
+            &quot;mov user_ss, ss;&quot;
+            &quot;mov user_sp, rsp;&quot;
+            &quot;pushf;&quot;
+            &quot;pop user_rflags;&quot;);
+</code></pre>
+<p>需要加上 <code>-masm=intel</code>，否则就要按照</p>
+<pre><code class="language-c">  asm(
+            &quot;movq %%cs, %0\n\t&quot;
+            &quot;movq %%ss, %1\n\t&quot;
+            &quot;movq %%rsp, %2\n\t&quot;
+            &quot;pushfq\n\t&quot;
+            &quot;popq %3\n\t&quot;
+            : &quot;=r&quot; (user_cs), &quot;=r&quot; (user_ss), &quot;=r&quot; (user_sp), &quot;=r&quot; (user_rflags)
+            :
+            : &quot;memory&quot;);
+</code></pre>
+<h1 id="需要什么就更新什么持续更新中">需要什么就更新什么，持续更新中</h1>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/"><span class="l">上一篇</span>CTF-PWN 内核堆利用（UAF、heap_overflow、freelist 劫持、offbynull、arbitrary_heap_free、unlink、页级利用）</a><a href="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/"><span class="l">下一篇</span>CTF-PWN-kernel-栈溢出（retuser、ROP、pt_regs、ret2dir）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d3" href="#intel-语法">Intel 语法</a><a class="d3" href="#att-语法">AT&amp;T 语法</a><a class="d3" href="#对比总结">对比总结</a><a class="d2" href="#c-库中的-asm-汇编">C 库中的 asm 汇编</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密码学原理与技术 - 第三章 - 数据加密标准（DES） · Y0uYuGe</title>
+<meta name="description" content="从 20 世纪 70 年代中期到 90 年代中期，DES 一直是主流的对称加密算法。由于 DES 使用的 56 位密钥已不再安全，后来研发出了高级加密标准（AES）来取代它。AES 使用更长的密钥（128、192、256 位），安全性更高。使用 56 位密钥的标准 DES 现在可以很容易地被“穷举密钥搜索”破解。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/security-foundations">安全基础</a><span class="sep">›</span><a href="/#/security-foundations/cryptography">密码学</a><span class="sep">›</span><a href="/#/security-foundations/cryptography/textbook-notes">教材笔记</a></nav>
+    <h1>密码学原理与技术 - 第三章 - 数据加密标准（DES）</h1>
+    <div class="meta"><time>2024-12-27</time><span class="tag">#密码学</span><span class="tag">#AES</span></div>
+    <article class="post-body">
+<h1 id="des-的基本信息">DES 的基本信息</h1>
+<p>DES 是一种对称分组密码
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-001-8789bc2b16.png" alt="图片"></p>
+<h1 id="分组密码的基本原理混淆与扩散">分组密码的基本原理：混淆与扩散</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-002-f0a1c85c5a.png" alt="图片"></p>
+<h1 id="乘积密码">乘积密码</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-003-a88c77a17c.png" alt="图片"></p>
+<h1 id="des-算法">DES 算法</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-004-d337342b9c.png" alt="图片"></p>
+<h2 id="des-的-feistel-网络">DES 的 Feistel 网络</h2>
+<p>加密和解密的代码大部分相同；只需要把密钥编排中子密钥的顺序反过来即可
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-005-86018f97ee.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-006-86ba2e8b7a.png" alt="图片"></p>
+<p>在加密的最后阶段，第 16 轮结束后，左右两半（L16 和 R16）会再交换一次，交换后的结果再送入末置换（FP）
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-007-093c3230cf.png" alt="图片"></p>
+<h1 id="内部结构">内部结构</h1>
+<h2 id="初始置换与末置换">初始置换与末置换</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-008-ab79398ed2.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-009-63f57c3dba.png" alt="图片"></p>
+<h2 id="f-函数">f 函数</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-010-a64c3a42c3.png" alt="图片"></p>
+<h3 id="扩展函数-e">扩展函数 E</h3>
+<p>增强扩散性，因为单个比特的值可能出现在多个位置，对后续阶段的影响更大
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-011-7990a95ed5.png" alt="图片"></p>
+<h3 id="轮密钥加">轮密钥加</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-012-cce876bb6a.png" alt="图片"></p>
+<h3 id="des-的-s-盒">DES 的 S 盒</h3>
+<p>非线性，并且能抵抗差分密码分析
+非线性，并且能强力抵抗差分密码分析。无法分析明文与密文之间的关系，因为非线性的东西很难分析</p>
+<p>这是一个增强混淆性的操作，使得明文与密文之间的关系无法被分析
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-013-047a650295.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-014-72c81b328b.png" alt="图片"></p>
+<h3 id="置换-p">置换 P</h3>
+<p>这同样增强了扩散性
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-015-acdfd7514c.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-016-9604863bc0.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-017-2c70a752b5.png" alt="图片"></p>
+<h2 id="密钥生成">密钥生成</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-018-956a6c4683.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-019-f7f1b295df.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-020-0ce9a765a5.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-021-78eaa14732.png" alt="图片"></p>
+<h1 id="解密">解密</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-022-6497cc1d81.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-023-0feb153f09.png" alt="图片"></p>
+<p>DES 的核心是 Feistel 网络</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-024-773a656fdb.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-025-15b3867771.png" alt="图片">
+在加密结束时，R 和 L 会在应用置换之前交换，所以再次加密时，此时进入 f 函数的是 L
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-026-f2afc90ff4.png" alt="图片"></p>
+<h1 id="des-的安全性">DES 的安全性</h1>
+<p>2 的 56 次方</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-027-440e877e3b.png" alt="图片"></p>
+<h2 id="三重-des">三重 DES</h2>
+<p>遗留应用
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-028-1da09add9b.png" alt="图片"></p>
+<h2 id="des-的替代方案">DES 的替代方案</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/assets/csdn-144753308/image-029-52281f9877.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<ul>
+<li>从 20 世纪 70 年代中期到 90 年代中期，DES 一直是主流的对称加密算法。
+由于 DES 使用的 56 位密钥已不再安全，后来研发出了高级加密标准（AES）来取代它。AES 使用更长的密钥（128、192、256 位），安全性更高。</li>
+<li>使用 56 位密钥的标准 DES 现在可以很容易地被“穷举密钥搜索”破解</li>
+<li>DES 对已知的分析攻击（如差分密码分析和线性密码分析）有相当强的抵抗力</li>
+<li>为了增强 DES 的安全性，可以对数据连续应用三次 DES 加密，这被称为三重 DES（3DES）
+3DES 提供了更高的安全性，目前尚没有已知的实用攻击能够有效破解 3DES。3DES 仍在某些对安全性要求很高的系统中使用，但它比 AES 慢</li>
+<li>默认的对称加密算法：AES
+ 如今，“默认”的对称加密算法通常是 AES，因为它更安全、更高效
+除了 AES 之外，当年进入 AES 评选最后一轮的其他几种候选算法（如 Serpent、Twofish 等）也被认为非常安全和高效</li>
+</ul>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/"><span class="l">上一篇</span>密码学原理与技术 - 第九章 - 椭圆曲线密码</a><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/"><span class="l">下一篇</span>密码学原理与技术 - 第五章 - 分组密码进阶</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#des-的-feistel-网络">DES 的 Feistel 网络</a><a class="d2" href="#初始置换与末置换">初始置换与末置换</a><a class="d2" href="#f-函数">f 函数</a><a class="d3" href="#扩展函数-e">扩展函数 E</a><a class="d3" href="#轮密钥加">轮密钥加</a><a class="d3" href="#des-的-s-盒">DES 的 S 盒</a><a class="d3" href="#置换-p">置换 P</a><a class="d2" href="#密钥生成">密钥生成</a><a class="d2" href="#三重-des">三重 DES</a><a class="d2" href="#des-的替代方案">DES 的替代方案</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cs408-computer-networks · Y0uYuGe</title>
+<meta name="description" content="AtlasNet teaches computer networking through a persistent file service, reliable UDP transfers, packet encoding, and routing experiments.">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/cs408-computer-networks" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a></nav>
+    <h1>cs408-computer-networks</h1>
+    <div class="meta"><time>2026-10-20</time><span class="tag">#Computer Networks</span><span class="tag">#CS408</span></div>
+    <article class="post-body">
+<h2 id="overview">Overview</h2>
+<p>AtlasNet connects 408 networking concepts to a working file-transfer system. Its Python implementation includes a TCP file service, authenticated uploads, persistent storage, and a custom reliable UDP protocol with retransmission, reordering, and whole-file integrity checks. Packet encoders produce standard-format PCAP files, while routing and transport models make protocol decisions inspectable.</p>
+<h2 id="start-learning">Start learning</h2>
+<p>With Python 3.11+, follow the <a href="https://github.com/Y0uYuGe/cs408-computer-networks#readme">README</a> to run the server and client in separate terminals. Start with a real upload/download, then introduce packet loss and compare the recovered file. The repository includes a staged Chinese course, original questions, and tests for protocol behavior and failure handling.</p>
+<h2 id="current-scope">Current scope</h2>
+<p>The file transfers use real sockets. Packet captures are synthesized, while routing, TCP control, and congestion behavior are explored through teaching models. The course maps these mechanisms to source files, experiments, and tests.</p>
+<h2 id="source">Source</h2>
+<p><a href="https://github.com/Y0uYuGe/cs408-computer-networks">GitHub repository</a></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#overview">Overview</a><a class="d2" href="#start-learning">Start learning</a><a class="d2" href="#current-scope">Current scope</a><a class="d2" href="#source">Source</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

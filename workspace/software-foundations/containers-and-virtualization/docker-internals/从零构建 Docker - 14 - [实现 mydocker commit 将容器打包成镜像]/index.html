@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建 Docker - 14 - [实现 mydocker commit 将容器打包成镜像] · Y0uYuGe</title>
+<meta name="description" content="这个归档文件内的所有文件和目录结构，每行一项，但并不会展开或解压该归档文件的实际内容。返回的是一个字节切片，包含命令执行后的输出文本。pivot_root 将工作目录切换到 /merged 之后，通过 docker commit 保存此时工作目录的文件系统，用 tar 包把这个文件系统打包成一个 tar 文件。它接受可变数量的字符串参数，第一个参数是命令名，后面的参数是传给该命令的选项和参数。：这是一个变量，表示要创建的归档文件的名称（包含路径）。综上，这段代码的作用是：在 Go 程序中执行一条命令，使用。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2014%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20commit%20%E5%B0%86%E5%AE%B9%E5%99%A8%E6%89%93%E5%8C%85%E6%88%90%E9%95%9C%E5%83%8F%5D" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization">容器与虚拟化</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization/docker-internals">Docker 原理</a></nav>
+    <h1>从零构建 Docker - 14 - [实现 mydocker commit 将容器打包成镜像]</h1>
+    <div class="meta"><time>2024-05-25</time><span class="tag">#docker</span><span class="tag">#java</span><span class="tag">#容器</span></div>
+    <article class="post-body">
+<h1 id="目标">目标</h1>
+<p>pivot_root 将工作目录切换到 /merged 之后，通过 docker commit 保存此时工作目录的文件系统，用 tar 包把这个文件系统打包成一个 tar 文件
+命令类似 <code> ./mydocker commit myimage</code>，然后会在当前目录下得到 myimage.tar</p>
+<h1 id="注意">注意</h1>
+<ul>
+<li>commit 操作是在另一个终端中执行的，也就是说容器已经启动并正在运行。此时在另一个终端执行 commit 操作，不需要再挂载或再启动子进程——直接设定一个存放东西的位置即可，而不是像之前那样在联合挂载之后获取具体的工作目录地址</li>
+</ul>
+<h1 id="execcommand">exec.Command</h1>
+<pre><code class="language-python">exec.Command(&quot;tar&quot;, &quot;-czf&quot;, imageTar, &quot;-C&quot;, mntPath, &quot;.&quot;).CombinedOutput()
+</code></pre>
+<p>这段代码使用 Go 标准库 <code>os/exec</code> 来执行一条外部命令——具体来说，是调用 <code>tar</code> 命令来创建一个压缩归档文件。下面逐部分解释：</p>
+<ul>
+<li><p><code>exec.Command</code>：这是 Go 中用来创建并运行外部命令的对象。它接受可变数量的字符串参数，第一个参数是命令名，后面的参数是传给该命令的选项和参数。</p>
+</li>
+<li><p><code>&quot;tar&quot;</code>：这是命令本身。<code>tar</code> 是一个用于创建、读取、更新和管理归档文件的工具。</p>
+</li>
+<li><p><code>&quot;-czf&quot;</code>：这些是传给 <code>tar</code> 命令的选项。</p>
+<ul>
+<li><code>-c</code> 表示创建一个新的归档文件。也就是用 tar 命令把当前目录中的一系列文件和目录打包成一个归档文件（通常以 .tar 结尾）。这个过程不会压缩文件，只是把它们收集到一个归档文件中，便于管理和传输。</li>
+<li><code>-z</code> 表示在创建归档文件时进行 gzip 压缩。与 <code>-c</code> 结合使用，会创建 <code>.tar.gz</code> 格式的压缩归档文件。</li>
+<li><code>-f</code> 后面跟归档文件的名称。注意，由于 <code>-f</code> 后面需要直接跟文件名，在参数列表中，<code>imageTar</code> 变量将作为这个选项的值。</li>
+</ul>
+</li>
+<li><p><code>imageTar</code>：这是一个变量，表示要创建的归档文件的名称（包含路径）。例如，如果 <code>imageTar</code> 的值是 <code>/path/to/image.tar.gz</code>，那么这个归档文件会在指定路径下创建，并命名为 <code>image.tar.gz</code>。</p>
+</li>
+<li><p><code>&quot;-C&quot;</code>：这个选项告诉 <code>tar</code> 在执行操作之前先切换到指定目录。这里指定的目录由后面的参数决定。</p>
+</li>
+<li><p><code>mntPath</code>：这也是一个变量，表示一个目录路径。与 <code>-C</code> 选项结合，它指定了 <code>tar</code> 在执行操作前应切换到的目录。例如，如果 <code>mntPath</code> 的值是 <code>/mnt/mydir</code>，那么在执行打包操作之前会先进入该目录。</p>
+</li>
+<li><p><code>&quot;.&quot;</code>：这是一个点字符，表示当前目录。在 <code>tar</code> 命令的语境中，它表示打包当前目录下的所有内容。由于之前已经用 <code>-C</code> 指定了目录，这里的“当前目录”就是 <code>mntPath</code> 所指向的目录。</p>
+</li>
+<li><p><code>.CombinedOutput()</code>：这个方法执行上面构造好的命令，并捕获其标准输出和标准错误的合并输出。返回的是一个字节切片，包含命令执行后的输出文本。这在调试或需要处理命令输出的场景中非常有用。</p>
+</li>
+</ul>
+<p>综上，这段代码的作用是：在 Go 程序中执行一条命令，使用 <code>tar</code> 工具把 <code>mntPath</code> 目录下的所有内容打包成一个 gzip 压缩的归档文件，保存在 <code>imageTar</code> 变量指定的路径和文件名下。</p>
+<h1 id="tar">tar</h1>
+<ul>
+<li><code>tar</code>：tape archive（磁带归档）的缩写，是一个用于创建、解压和查看 tarball（.tar 文件）的工具。</li>
+<li><code>-t</code> 选项：表示列出 tar 文件中的内容。对一个 .tar 文件使用 <code>-t</code> 选项时，tar 命令会输出该归档文件中所有文件和目录的列表，但不会解压或提取它们。</li>
+<li><code>-f</code> 选项：后面跟要操作的 tar 文件名。<code>-f</code> 是 file 的缩写，用于指定要处理的归档文件。</li>
+</ul>
+<p>所以，当你运行 <code>tar -tf somefile.tar</code> 命令时，它会列出 <code>somefile.tar</code> 归档中的所有文件和目录结构，每行一项，但不会展开或解压该归档文件的实际内容。这对于在不真正解压的情况下快速查看 tar 文件包含哪些内容非常有用。</p>
+<h1 id="代码">代码</h1>
+<p><a href="https://github.com/FULLK/llkdocker/tree/main/commit_docker">https://github.com/FULLK/llkdocker/tree/main/commit_docker</a>
+添加一个命令</p>
+<pre><code class="language-go">func main(){
+	//定义相关命令
+	app:=cli.NewApp()
+	app.Name=&quot;llkdocker&quot;
+	app.Usage=&quot;my simple docker -llkdocker &quot;
+	app.Commands=[]cli.Command{
+		runcommand,
+		initcommand,
+		commitcommand,
+	}//Commands 属性是一个 []cli.Command 类型的切片
+
+	app.Before=func(context *cli.Context)error{
+
+	log.SetFormatter(&amp;log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	return nil
+	} //在处理命令参数之前先进行的函数
+
+	if err:=app.Run(os.Args);err!=nil{
+		log.Fatal(err)
+	}
+}
+</code></pre>
+<p>检查参数个数，最后执行相应的操作</p>
+<pre><code class="language-go">var commitcommand = cli.Command{
+	Name:  &quot;commit&quot;,
+	Usage: &quot;commit  image&quot;,
+	Action: func(context *cli.Context)error {
+		args := context.Args()//commit后参数的作为这里
+		if len(args)&lt;1 {
+			log.Fatal(&quot;missing the image name you want to save &quot;)
+		}
+
+		log.Info(args)
+		contain.Contain_commit(args)
+		return nil
+	},
+}
+</code></pre>
+<p>这里要注意，tar 打包好像最终只能生成一个 tar 文件</p>
+<pre><code class="language-go">func Contain_commit(imagename []string){
+	mnturl:=&quot;/home/llk/Desktop/llkdocker/commit_docker/merged&quot;
+	rooturl:=&quot;/home/llk/Desktop/llkdocker/commit_docker&quot;
+	/*
+	var params string
+	for i := 0; i &lt; len(imagename); i++ {
+	param := rooturl+&quot;/&quot;+imagename[i]+&quot;.tar &quot;
+	params =params+param   
+	}	 //得到参数
+	log.Info(params) //类似 路径/1.tar 路径/2.tar 但一次只能生成一个镜像
+	*/
+	imagetar:=rooturl+&quot;/&quot;+imagename[0]+&quot;.tar&quot;
+	log.Info(imagetar)
+
+	if len(imagename)&gt;1{
+		log.Infof(&quot;too many image name ,we only can tar the first&quot;)
+
+	}
+	if _,err:=exec.Command(&quot;tar&quot;,&quot;-czf&quot;,imagetar,&quot;-C&quot;,mnturl,&quot;.&quot;).CombinedOutput();err!=nil{
+		log.Info(err)
+		log.Fatal(&quot;tar error !!!&quot;)  //好像一次只能生成一个tar包 
+	}
+	log.Info(&quot;commit finish&quot;) //tar需要一定时间，这里做最后结束的回现
+
+}
+</code></pre>
+<h1 id="结果">结果</h1>
+<p>先在一个终端中启动
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2014%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20commit%20%E5%B0%86%E5%AE%B9%E5%99%A8%E6%89%93%E5%8C%85%E6%88%90%E9%95%9C%E5%83%8F%5D/assets/csdn-139076758/image-001-51e57b0a81.png" alt="图片">
+然后再开一个终端执行 commit
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2014%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20commit%20%E5%B0%86%E5%AE%B9%E5%99%A8%E6%89%93%E5%8C%85%E6%88%90%E9%95%9C%E5%83%8F%5D/assets/csdn-139076758/image-002-8d8246e9c9.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%203%20-%20%5BIPC%20Namespace%5D%EF%BC%88System%20V%20IPC%20%E5%92%8C%20P/"><span class="l">上一篇</span>从零构建 Docker - 3 - [IPC Namespace]（System V IPC 和 POSIX、IPC Namespace、cmd.Run()、什么是消息队列、消息队列相关结构、ipcs -q、ipc）</a><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/"><span class="l">下一篇</span>从零构建 Docker - 15 - 【实现 mydocker run -d 支持容器后台运行】</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据结构与算法 - 二叉排序树（定义、查找、插入、删除、时间复杂度） · Y0uYuGe</title>
+<meta name="description" content="也可以用递归实现，但最坏情况下递归可能需要 h 个函数调用栈帧，或者说同时有 h 个函数在执行，而循环实现始终只有一个函数在执行。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/data-structures">数据结构</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms">数据结构与算法</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE">查找</a></nav>
+    <h1>数据结构与算法 - 二叉排序树（定义、查找、插入、删除、时间复杂度）</h1>
+    <div class="meta"><time>2023-12-21</time><span class="tag">#算法</span><span class="tag">#数据结构</span></div>
+    <article class="post-body">
+<h1 id="二叉排序树">二叉排序树</h1>
+<h2 id="概览">概览</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-001-249af3a9aa.png" alt="图片"></p>
+<h2 id="二叉排序树的定义">二叉排序树的定义</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-002-2768e2ceb0.png" alt="图片"></p>
+<h2 id="二叉排序树的查找">二叉排序树的查找</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-003-e418c22e2f.png" alt="图片">
+也可以用递归实现
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-004-542dd8d917.png" alt="图片">
+但最坏情况下递归可能需要 h 个函数调用栈帧，或者说同时有 h 个函数在执行
+而循环实现始终只有一个函数在执行</p>
+<h2 id="二叉排序树的插入">二叉排序树的插入</h2>
+<p>先查找到插入位置，再 malloc 一块新空间；如果遇到与插入值相等的元素，则插入失败
+函数参数用引用类型，以便修改其值
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-005-e1f0075e93.png" alt="图片"></p>
+<h2 id="二叉排序树的构造">二叉排序树的构造</h2>
+<p>一开始 T 为空，创建一个值等于插入值的结点，由此开始形成一棵树，之后的插入过程与前面相同
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-006-b10acba2b6.png" alt="图片">
+不同序列对应的二叉排序树不一定相同，也不一定不同
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-007-99e27e61b7.png" alt="图片"></p>
+<h2 id="二叉排序树的删除">二叉排序树的删除</h2>
+<h3 id="删除叶子结点">删除叶子结点</h3>
+<p>直接删除，仍然保持二叉树的性质
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-008-d288ff607b.png" alt="图片"></p>
+<h3 id="删除只有左子树或只有右子树的结点">删除只有左子树或只有右子树的结点</h3>
+<p>直接替代即可，性质仍然成立，因为替代后子树相对于其祖父树，必然满足父树相对于其祖父树所具有的同样性质
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-009-9a4ac7e66d.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-010-9437f95d57.png" alt="图片"></p>
+<h3 id="删除既有左子树又有右子树的结点">删除既有左子树又有右子树的结点</h3>
+<p>这里可以找右子树的最小结点来替代它（右子树最左下的结点）
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-011-6884715b61.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-012-6d96373769.png" alt="图片">
+也可以找左子树的最大结点来替代它（左子树最右下的结点）
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-013-24aeb929e8.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-014-9bb460a83d.png" alt="图片"></p>
+<h2 id="查找效率分析">查找效率分析</h2>
+<h3 id="查找成功">查找成功</h3>
+<p>最坏情况下的查找长度也与这棵树的高度相同
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-015-1bb25b7c0f.png" alt="图片">
+如果二叉树尽可能保持平衡，其高度就会更低
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-016-89cab7ab7f.png" alt="图片"></p>
+<h3 id="查找失败">查找失败</h3>
+<p>查找失败会落到空结点的位置，先把空结点补上
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-017-d5daaeee84.png" alt="图片"></p>
+<h2 id="总结">总结</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E4%BA%8C%E5%8F%89%E6%8E%92%E5%BA%8F%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%89/assets/csdn-135065725/image-018-743036ab99.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%9F%A5%E6%89%BE%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%E3%80%81%E9%A1%BA%E5%BA%8F%E6%9F%A5%E6%89%BE%E3%80%81%E6%8A%98%E5%8D%8A%E6%9F%A5%E6%89%BE%E4%B8%8E%E5%88%86%E5%9D%97%E6%9F%A5%E6%89%BE/"><span class="l">上一篇</span>数据结构与算法 - 查找的基本概念、顺序查找、折半查找与分块查找</a><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%BA%A2%E9%BB%91%E6%A0%91%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E6%80%A7%E8%B4%A8%E3%80%81%E6%9F%A5%E6%89%BE%E3%80%81%E6%8F%92%E5%85%A5%E3%80%81%E5%88%A0%E9%99%A4%EF%BC%89/"><span class="l">下一篇</span>数据结构与算法 - 红黑树（定义、性质、查找、插入、删除）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#概览">概览</a><a class="d2" href="#二叉排序树的定义">二叉排序树的定义</a><a class="d2" href="#二叉排序树的查找">二叉排序树的查找</a><a class="d2" href="#二叉排序树的插入">二叉排序树的插入</a><a class="d2" href="#二叉排序树的构造">二叉排序树的构造</a><a class="d2" href="#二叉排序树的删除">二叉排序树的删除</a><a class="d3" href="#删除叶子结点">删除叶子结点</a><a class="d3" href="#删除只有左子树或只有右子树的结点">删除只有左子树或只有右子树的结点</a><a class="d3" href="#删除既有左子树又有右子树的结点">删除既有左子树又有右子树的结点</a><a class="d2" href="#查找效率分析">查找效率分析</a><a class="d3" href="#查找成功">查找成功</a><a class="d3" href="#查找失败">查找失败</a><a class="d2" href="#总结">总结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

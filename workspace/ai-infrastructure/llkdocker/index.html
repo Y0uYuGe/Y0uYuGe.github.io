@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llkdocker · Y0uYuGe</title>
+<meta name="description" content="A Go implementation that explores container isolation, resource controls, layered filesystems, and bind-mounted volumes through separate Linux exercises.">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-infrastructure/llkdocker" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-infrastructure">AI 基础设施</a></nav>
+    <h1>llkdocker</h1>
+    <div class="meta"><time>2026-10-20</time><span class="tag">#Go</span><span class="tag">#Linux namespaces</span><span class="tag">#cgroups</span><span class="tag">#OverlayFS</span></div>
+    <article class="post-body">
+<h2 id="background">Background</h2>
+<p>What happens between a container command and the process running inside it? llkdocker studies that path in Go, following the <em>Write Your Own Docker</em> learning approach on Ubuntu 22.04. Separate directories preserve successive exercises, making it possible to examine isolation, filesystems, and resource controls without navigating a full container engine.</p>
+<h2 id="implementation">Implementation</h2>
+<p>The <a href="https://github.com/Y0uYuGe/llkdocker/tree/main/volume_docker"><code>volume_docker</code> exercise</a> brings several mechanisms together:</p>
+<ul>
+<li><strong>Process isolation:</strong> the parent starts an <code>init</code> child using UTS, PID, mount, network, and IPC namespace flags.</li>
+<li><strong>Parent–child coordination:</strong> an inherited pipe carries the requested command after the parent assigns the child to a cgroup.</li>
+<li><strong>Root filesystem:</strong> BusyBox supplies the lower filesystem; OverlayFS combines lower, upper, work, and merged directories. The child changes its root with <code>pivot_root</code> and mounts <code>/proc</code> and <code>/dev</code>.</li>
+<li><strong>Resources and storage:</strong> command options feed memory, CPU, and cpuset settings into cgroup handlers; <code>-v</code> maps a host directory through a bind mount.</li>
+<li><strong>Lifecycle:</strong> the parent waits for the child, then calls volume, overlay, and cgroup cleanup routines.</li>
+</ul>
+<figure>
+  <a href="/workspace/ai-infrastructure/llkdocker/assets/llkdocker-flow.svg" title="Open full-size diagram"><img class="portfolio-diagram--compact" src="/workspace/ai-infrastructure/llkdocker/assets/llkdocker-flow.svg" alt="Execution flow through the CLI, container setup, resource controls, child process, and cleanup."></a>
+  <figcaption>Execution flow of the volume_docker exercise, based on its command, container, and cgroups packages.</figcaption>
+</figure>
+
+<h2 id="design-and-learning-scope">Design and learning scope</h2>
+<p>The progression from <code>namespace</code> and <code>run_docker</code> to <code>pipe_docker</code>, <code>pivotroot_docker</code>, <code>overlayfs_docker</code>, and <code>volume_docker</code> exposes how the pieces fit together. Isolation and resource allocation remain visible as separate mechanisms. The code also makes filesystem preparation and process cleanup explicit, useful places to study failure paths and ownership of host resources.</p>
+<h2 id="environment-and-use">Environment and use</h2>
+<p>The module declares Go 1.18 and uses <code>urfave/cli</code> and Logrus. Execution requires Linux features, mount permissions, a suitable cgroup configuration, and the BusyBox root filesystem. Paths under <code>/home/llk/Desktop/docker/src/volume_docker</code> are embedded in the source and must be adapted to the local workspace.</p>
+<p>Start by reading <a href="https://github.com/Y0uYuGe/llkdocker/blob/main/volume_docker/command.go"><code>command.go</code></a> for supported flags, then follow <a href="https://github.com/Y0uYuGe/llkdocker/blob/main/volume_docker/container/run.go"><code>container/run.go</code></a> and <a href="https://github.com/Y0uYuGe/llkdocker/blob/main/volume_docker/container/init.go"><code>container/init.go</code></a>.</p>
+<h2 id="development-history">Development history</h2>
+<p><a href="https://github.com/Y0uYuGe/llkdocker/tree/main">Browse the staged exercises</a> · <a href="https://github.com/Y0uYuGe/llkdocker/commits/main/">View repository commits</a></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-infrastructure/learning-cxx/"><span class="l">上一篇</span>learning-cxx</a><a href="/workspace/ai-infrastructure/magicskills/"><span class="l">下一篇</span>MagicSkills</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#background">Background</a><a class="d2" href="#implementation">Implementation</a><a class="d2" href="#design-and-learning-scope">Design and learning scope</a><a class="d2" href="#environment-and-use">Environment and use</a><a class="d2" href="#development-history">Development history</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

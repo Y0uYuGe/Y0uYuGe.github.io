@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据结构与算法 - 树和二叉树的定义、基本术语与性质 · Y0uYuGe</title>
+<meta name="description" content="这里先假设最小高度为 h，那么对应的结点数应该大于前 h-1 层的最大结点数，否则根本不会有第 h 层；同时 n 不能超过 h 层的最大结点数，否则就会有 h+1 层。列出不等式化简即可。有四层时，第一到四层的度之和等于第二到四层的结点数（第四层的度之和为零），但树的结点数还包括根结点，而第一到四层的度之和不包括第一层的结点数 1。完全二叉树最多只有一个度为 1 的结点；如果有两个，就说明这两个度为 1 的结点的孩子之间空了一个结点，这就违背了与对应满二叉树结点一一对应的要求。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/data-structures">数据结构</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms">数据结构与算法</a><span class="sep">›</span><a href="/#/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91">树与二叉树</a></nav>
+    <h1>数据结构与算法 - 树和二叉树的定义、基本术语与性质</h1>
+    <div class="meta"><time>2023-11-27</time><span class="tag">#数据结构</span><span class="tag">#算法</span></div>
+    <article class="post-body">
+<h1 id="树的基本概念和相关术语">树的基本概念和相关术语</h1>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-001-6953aa21cb.png" alt="图片"></p>
+<p><strong>当非根结点有两个前驱或没有前驱时，就不构成树</strong></p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-002-2acbfec2a1.png" alt="图片">
+任何非空树都可以看作一个根结点加上互不相交的子树（子树可以是空树）</p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-003-173545414c.png" alt="图片"></p>
+<h2 id="相关应用">相关应用</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-004-34571daf8c.png" alt="图片"></p>
+<h2 id="描述结点之间的关系">描述结点之间的关系</h2>
+<ul>
+<li>祖先结点：一个结点上面的所有结点都是它的祖先结点</li>
+<li>子孙结点：一个结点下面的所有结点都是它的子孙结点</li>
+<li>双亲结点：一个结点直接上面的那个结点是它的双亲结点</li>
+<li>兄弟结点：拥有同一个双亲结点的子孙结点</li>
+<li>堂兄弟结点：emmm，有点难描述——同一层但不包括兄弟的结点，比如图中标着“你”的结点和 G H I J 结点</li>
+</ul>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-005-e8cd89ac2b.png" alt="图片"></p>
+<p>结点的深度（层次）可以从零开始，也可以从一开始，默认从一开始（高度同理）
+高度与深度相反，从字面意思应该就能理解</p>
+<h2 id="描述结点和树的属性">描述结点和树的属性</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-006-bdcd75b185.png" alt="图片"></p>
+<h2 id="有序树-vs-无序树">有序树 vs 无序树</h2>
+<p>有序还是无序取决于你存的是什么——取决于你是否想用左右位置来体现某种关系
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-007-088f054a4e.png" alt="图片"></p>
+<h2 id="树-vs-森林">树 vs 森林</h2>
+<p>树可以有 0 个结点，即空树；森林也可以由 0 棵树组成，即空森林
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-008-3543a84902.png" alt="图片"></p>
+<h2 id="总结">总结</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-009-c8e3e979d9.png" alt="图片"></p>
+<h1 id="树的相关性质">树的相关性质</h1>
+<p>树的结点数 = 所有结点的度之和 + 1
+可以这样理解：
+某一层结点的度之和等于下一层的结点数，如下所示
+有四层时，第一到四层的度之和等于第二到四层的结点数（第四层的度之和为零），但树的结点数还包括根结点，而第一到四层的度之和不包括第一层的结点数 1。
+所以树的结点数 = 所有结点的度之和 + 1</p>
+<h2 id="考点一">考点一</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-010-9a28fcc213.png" alt="图片"></p>
+<h2 id="考点二">考点二</h2>
+<p>m 叉树可以是空树
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-011-8821408593.png" alt="图片"></p>
+<h2 id="考点三">考点三</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-012-5107880e6a.png" alt="图片"></p>
+<h2 id="考点四">考点四</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-013-4401ceb11c.png" alt="图片"></p>
+<h2 id="考点五">考点五</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-014-8c8a6b416c.png" alt="图片">
+这里先假设最小高度为 h，那么对应的结点数应该大于前 h-1 层的最大结点数，否则根本不会有第 h 层；同时 n 不能超过 h 层的最大结点数，否则就会有 h+1 层。列出不等式化简即可。</p>
+<p>最后，由于 h 是整数，h 必须大于图中那个 log 什么的，又要求 h 最小，所以那个 log 什么的向上取整就是 h 的最小值</p>
+<h2 id="考点六">考点六</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-015-7bb9337369.png" alt="图片"></p>
+<h2 id="总结-1">总结</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-016-d9e1ea9220.png" alt="图片"></p>
+<h1 id="二叉树的相关概念和基本术语">二叉树的相关概念和基本术语</h1>
+<p>二叉树是有序的，每个结点最多有两棵子树（可以是空子树）
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-017-d3530dda26.png" alt="图片"></p>
+<h2 id="重要五种状态">重要（五种状态）</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-018-d3e911283c.png" alt="图片"></p>
+<h2 id="特殊的二叉树">特殊的二叉树</h2>
+<p>完全二叉树：结点与对应满二叉树的结点一一对应
+完全二叉树最多只有一个度为 1 的结点；如果有两个，就说明这两个度为 1 的结点的孩子之间空了一个结点，这就违背了与对应满二叉树结点一一对应的要求
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-019-e892ba6f13.png" alt="图片"></p>
+<p><strong>完全二叉树中如果某结点只有一个孩子，那一定是左孩子</strong></p>
+<p>二叉排序树是指左孩子存的值小于双亲结点存的值，双亲结点存的值又小于右孩子存的值
+  <img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-020-1ace356834.png" alt="图片">
+ 当二叉排序树是平衡二叉树时，查找深度更小、效率更高，因为需要比较的次数更少</p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-021-6270e40aaa.png" alt="图片"></p>
+<h2 id="总结-2">总结</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-022-aadcfbd715.png" alt="图片"></p>
+<h1 id="二叉树的相关性质">二叉树的相关性质</h1>
+<p>总度数 = 度为 1 的结点数 * 1 + 度为 2 的结点数 * 2</p>
+<h2 id="二叉树考点一">二叉树考点一</h2>
+<p> <img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-023-7112fb8203.png" alt="图片"></p>
+<h2 id="二叉树考点二">二叉树考点二</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-024-659bd2e9be.png" alt="图片"></p>
+<h2 id="二叉树考点三">二叉树考点三</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-025-afade93594.png" alt="图片"></p>
+<h2 id="完全二叉树考点一">完全二叉树考点一</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-026-7e323f004e.png" alt="图片">
+<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-027-e271d825f2.png" alt="图片"></p>
+<h2 id="总结-3">总结</h2>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89%E3%80%81%E5%9F%BA%E6%9C%AC%E6%9C%AF%E8%AF%AD%E4%B8%8E%E6%80%A7%E8%B4%A8/assets/csdn-134655131/image-028-69d9f4bfe2.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E6%A0%91%E5%92%8C%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84%EF%BC%8C%E4%BB%A5%E5%8F%8A%E6%A0%91%E3%80%81%E4%BA%8C%E5%8F%89%E6%A0%91%E5%92%8C%E6%A3%AE%E6%9E%97%E7%9A%84%E9%81%8D%E5%8E%86/"><span class="l">上一篇</span>数据结构与算法 - 树和二叉树的存储结构，以及树、二叉树和森林的遍历</a><a href="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E7%BA%BF%E7%B4%A2%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E7%BA%BF%E7%B4%A2%E5%8C%96%E4%BB%A5%E5%8F%8A%E5%9C%A8%E7%BA%BF%E7%B4%A2%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E6%89%BE%E5%89%8D%E9%A9%B1%E5%92%8C%E5%90%8E%E7%BB%A7/"><span class="l">下一篇</span>数据结构与算法 - 线索二叉树的线索化以及在线索二叉树中找前驱和后继</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#相关应用">相关应用</a><a class="d2" href="#描述结点之间的关系">描述结点之间的关系</a><a class="d2" href="#描述结点和树的属性">描述结点和树的属性</a><a class="d2" href="#有序树-vs-无序树">有序树 vs 无序树</a><a class="d2" href="#树-vs-森林">树 vs 森林</a><a class="d2" href="#总结">总结</a><a class="d2" href="#考点一">考点一</a><a class="d2" href="#考点二">考点二</a><a class="d2" href="#考点三">考点三</a><a class="d2" href="#考点四">考点四</a><a class="d2" href="#考点五">考点五</a><a class="d2" href="#考点六">考点六</a><a class="d2" href="#总结-1">总结</a><a class="d2" href="#重要五种状态">重要（五种状态）</a><a class="d2" href="#特殊的二叉树">特殊的二叉树</a><a class="d2" href="#总结-2">总结</a><a class="d2" href="#二叉树考点一">二叉树考点一</a><a class="d2" href="#二叉树考点二">二叉树考点二</a><a class="d2" href="#二叉树考点三">二叉树考点三</a><a class="d2" href="#完全二叉树考点一">完全二叉树考点一</a><a class="d2" href="#总结-3">总结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

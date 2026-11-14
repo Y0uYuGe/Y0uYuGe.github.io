@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机器学习 - 逻辑回归与 Softmax 回归 · Y0uYuGe</title>
+<meta name="description" content="假设你是一名动物园管理员，想要识别园里的动物。你拍了一些照片，里面包含三种不同的动物：狗、猫和鸟。你需要一个算法来识别每张照片中是哪种动物。S 形曲线（sigmoid 函数）把线性回归的输出压缩到 0 到 1 的范围内，使其具有概率意义；大于 0.5 为正类，否则为负类。逻辑回归不是用于回归任务的算法，而是一种分类算法。一种用于多分类问题的机器学习算法。多标签与多分类的区别。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/machine-learning">机器学习</a></nav>
+    <h1>机器学习 - 逻辑回归与 Softmax 回归</h1>
+    <div class="meta"><time>2024-12-17</time><span class="tag">#机器学习</span><span class="tag">#逻辑回归</span><span class="tag">#回归</span></div>
+    <article class="post-body">
+<h1 id="逻辑回归">逻辑回归</h1>
+<p>逻辑回归不是用于回归任务的算法，而是一种分类算法。</p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-001-54c4d0dc37.png" alt="图片"></p>
+<h2 id="逻辑回归表达式">逻辑回归表达式</h2>
+<p>S 形曲线（sigmoid 函数）把线性回归的值压缩到 0 到 1 的范围内，使其具有概率意义；大于 0.5 为正类，否则为负类。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-002-ef507c6d8f.png" alt="图片"></p>
+<h2 id="模型训练">模型训练</h2>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-003-0efc307fc5.png" alt="图片"></p>
+<h2 id="逻辑回归用于多分类">逻辑回归用于多分类</h2>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-004-23b2c93dc9.png" alt="图片"></p>
+<h1 id="softmax-回归">Softmax 回归</h1>
+<p>一种用于多分类问题的机器学习算法。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-005-f2e73012d5.png" alt="图片"></p>
+<h2 id="模型示例">模型示例</h2>
+<p>假设你是一名动物园管理员，想要识别园里的动物。你拍了一些照片，里面包含三种不同的动物：狗、猫和鸟。你需要一个算法来识别每张照片中是哪种动物。</p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-006-6a2060b3c9.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-007-9e6b8911ec.png" alt="图片"></p>
+<h2 id="训练模型">训练模型</h2>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-008-8c925f5fd2.png" alt="图片"></p>
+<h1 id="注意">注意</h1>
+<p>多标签与多分类的区别。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-009-e2d04870d6.png" alt="图片"></p>
+<ul>
+<li>Softmax 回归适用于多分类模型，因为类别之间互斥，所有类别的概率之和必须为 1。</li>
+<li>逻辑回归适用于把多分类问题转换为多个二分类问题，因为各个二分类器之间相互独立。</li>
+</ul>
+<h1 id="代码">代码</h1>
+<pre><code class="language-python">    multi_class : {&#39;auto&#39;, &#39;ovr&#39;, &#39;multinomial&#39;}, default=&#39;auto&#39;
+        If the option chosen is &#39;ovr&#39;, then a binary problem is fit for each
+        label. For &#39;multinomial&#39; the loss minimised is the multinomial loss fit
+        across the entire probability distribution, *even when the data is
+        binary*. &#39;multinomial&#39; is unavailable when solver=&#39;liblinear&#39;.
+        &#39;auto&#39; selects &#39;ovr&#39; if the data is binary, or if solver=&#39;liblinear&#39;,
+        and otherwise selects &#39;multinomial&#39;.
+</code></pre>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/assets/csdn-144530160/image-010-adfb756312.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%AB%98%E6%96%AF%E6%B7%B7%E5%90%88%E6%A8%A1%E5%9E%8B/"><span class="l">上一篇</span>机器学习 - 高斯混合模型</a><a href="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/"><span class="l">下一篇</span>机器学习 - 梯度下降 + 小批量梯度下降 + 数据归一化</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#逻辑回归表达式">逻辑回归表达式</a><a class="d2" href="#模型训练">模型训练</a><a class="d2" href="#逻辑回归用于多分类">逻辑回归用于多分类</a><a class="d2" href="#模型示例">模型示例</a><a class="d2" href="#训练模型">训练模型</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - 五段式指令流水线 · Y0uYuGe</title>
+<meta name="description" content="下面都是以 RISC 为背景的。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8">中央处理器</a></nav>
+    <h1>计算机组成原理 - 五段式指令流水线</h1>
+    <div class="meta"><time>2023-12-25</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<p>下面都是以 RISC 为背景的</p>
+<h1 id="五段式指令流水线">五段式指令流水线</h1>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/assets/csdn-135207817/image-001-2124fbbac9.png" alt="图片"></p>
+<h1 id="机器周期的设置">机器周期的设置</h1>
+<p>所有阶段都设置为最长的那个机器周期的长度
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/assets/csdn-135207817/image-002-f70ccee568.png" alt="图片"></p>
+<h1 id="运算类指令的执行过程">运算类指令的执行过程</h1>
+<p>RISC 中运算结果不写回主存，而是写回寄存器。此时访存阶段什么也不做，但仍然要占用这段时间
+不同指令的操作数不同，因此涉及的寄存器也不同
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/assets/csdn-135207817/image-003-0bba5be33a.png" alt="图片"></p>
+<h1 id="load-指令的执行过程">LOAD 指令的执行过程</h1>
+<p>下图中 996 是偏移量，Rs 是基址寄存器，访存采用的是基址寻址
+先计算地址，再访存，最后写回寄存器
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/assets/csdn-135207817/image-004-7f65267061.png" alt="图片"></p>
+<h1 id="store-指令的执行过程">STORE 指令的执行过程</h1>
+<p>store 是要存入内存的数据
+ALU 计算的是要存入的地址
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/assets/csdn-135207817/image-005-20140b66fc.png" alt="图片"></p>
+<h1 id="条件转移指令">条件转移指令</h1>
+<p>(PC) + 指令字长是下一条指令的地址
+写回 PC 不是在 WB 阶段完成的，写回阶段写的是通用寄存器，而 PC 不是通用寄存器。ALU 算出比较结果后，在 M 阶段根据比较结果决定是否写回 PC
+计算新 PC 值的那个阶段大概不是由 ALU 完成的
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/assets/csdn-135207817/image-006-5117214752.png" alt="图片"></p>
+<h1 id="无条件转移指令">无条件转移指令</h1>
+<p>同上。可以看出新的 PC 不经过 ALU：第二阶段把偏移量取到 IMM 之后，进入第三阶段就直接写回 PC
+越早修改 PC，就能越早避免后续指令继续执行
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/assets/csdn-135207817/image-007-8fcb472db5.png" alt="图片"></p>
+<h1 id="例题">例题</h1>
+<p>只有当一条指令进入 ID 阶段之后，它在 IF 阶段存入锁存器的结果才不再需要。否则，如果此时另一条指令正在进行 IF 阶段，存放取出指令的锁存器就会被改变，前一条指令接着执行 ID 阶段时，译码的就会是下一条指令
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/assets/csdn-135207817/image-008-82de6eb8d3.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/"><span class="l">上一篇</span>计算机组成原理 - 微指令设计与微程序控制单元设计</a><a href="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A1%AC%E5%B8%83%E7%BA%BF%E6%8E%A7%E5%88%B6%E5%99%A8%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%99%A8/"><span class="l">下一篇</span>计算机组成原理 - 硬布线控制器与微程序控制器</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统 - 线程的实现方式与多线程模型（用户级线程、内核级线程、多线程模型）以及线程的状态、转换、组织与控制 · Y0uYuGe</title>
+<meta name="description" content="缺点：当某个线程在一段代码上阻塞时，整个进程的所有其他线程也会随之阻塞，并且多个线程都在单个 CPU 上运行（CPU 的调度单位仍然是进程）。操作系统并不知道用户级线程的存在，它只是在执行进程的代码，而这段代码中的线程库部分让各线程得以并发运行。引入内核级线程之后，CPU 调度的基本单位变成了线程，多个线程也可以被分派到多个 CPU 上并行运行。例如，QQ 有三个功能需要同时运行；如果用进程来实现，就是三个进程，每个功能一个。一个内核级线程映射到多个用户级线程就是上面的多对一情形，而一个内核级线程映射到一个用户级线程则是一对一情形。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B">进程与线程</a></nav>
+    <h1>操作系统 - 线程的实现方式与多线程模型（用户级线程、内核级线程、多线程模型）以及线程的状态、转换、组织与控制</h1>
+    <div class="meta"><time>2024-01-27</time><span class="tag">#java</span><span class="tag">#jvm</span><span class="tag">#编程语言</span><span class="tag">#操作系统</span></div>
+    <article class="post-body">
+<h1 id="线程的实现方式与多线程模型">线程的实现方式与多线程模型</h1>
+<h2 id="概述">概述</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-001-7951d7b5c1.png" alt="图片"></p>
+<h2 id="线程的实现方式">线程的实现方式</h2>
+<h2 id="用户级线程">用户级线程</h2>
+<p>程序本身通过自己设计的线程库来实现线程的管理和调度</p>
+<p>例如，QQ 有三个功能需要同时运行；如果用进程来实现，就是三个进程，每个功能一个</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-002-b9b0894d2f.png" alt="图片">
+如果由单个进程来实现呢？那就相当于并发地执行这三个函数
+<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-003-db6cfd19f6.png" alt="图片"></p>
+<p>线程管理工作：由线程库完成（如上面的 while 循环），而不是由操作系统完成。
+线程切换由程序自己的线程库完成，不需要切换 CPU 模式
+操作系统并不知道用户级线程的存在，它只是在执行进程的代码，而这段代码中的线程库部分让各线程得以并发运行</p>
+<p>优点：切换线程只需要在用户态完成
+缺点：当某个线程在一段代码上阻塞时，整个进程的所有其他线程也会随之阻塞，并且多个线程都在单个 CPU 上运行（CPU 的调度单位仍然是进程）</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-004-88a2407071.png" alt="图片"></p>
+<h2 id="内核级线程">内核级线程</h2>
+<p>线程管理工作由操作系统完成
+线程切换需要切换 CPU 模式（需要操作系统参与）</p>
+<p>引入内核级线程之后，CPU 调度的基本单位变成了线程，多个线程也可以被分派到多个 CPU 上并行运行</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-005-b5d889f91d.png" alt="图片"></p>
+<h2 id="多线程模型">多线程模型</h2>
+<h3 id="一对一">一对一</h3>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-006-d55363d676.png" alt="图片"></p>
+<h3 id="多对一">多对一</h3>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-007-0386c3b860.png" alt="图片"></p>
+<h3 id="多对多">多对多</h3>
+<p>此时内核级线程与用户级线程之间有两种映射
+一个内核级线程映射到多个用户级线程就是上面的多对一情形
+一个内核级线程映射到一个用户级线程则是一对一情形</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-008-4016304181.png" alt="图片"></p>
+<h2 id="总结">总结</h2>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-009-1fe6860cef.png" alt="图片"></p>
+<h1 id="线程的状态转换组织与控制">线程的状态、转换、组织与控制</h1>
+<h2 id="概述-1">概述</h2>
+<p>线程的状态与转换和进程的大致相同
+<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-010-2bcc1253ed.png" alt="图片"></p>
+<h1 id="section"></h1>
+<h2 id="线程的状态与转换">线程的状态与转换</h2>
+<p>时间片用完是并发执行中轮转的原因</p>
+<p>我们通常关注这三种状态
+<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-011-631ff83221.png" alt="图片"></p>
+<h2 id="线程的组织与控制">线程的组织与控制</h2>
+<p>保存栈指针就是保存线程的栈顶和栈底地址；切换线程之后，该线程的栈信息仍然保留在内存中</p>
+<p>线程表可以用不同的方式组织：例如系统中所有线程放在一张表里，或者按进程分别组织各自的表，或者按线程状态组织表</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%88%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B%E3%80%81%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%EF%BC%89%E4%BB%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%81%E8%BD%AC%E6%8D%A2%E3%80%81/assets/csdn-135883746/image-012-7d6aac52da.png" alt="图片">
+控制就是实现线程状态的转换和线程的调度</p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%EF%BC%88%E4%BB%80%E4%B9%88%E6%98%AF%E7%BA%BF%E7%A8%8B%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E7%BA%BF%E7%A8%8B%E5%85%B1%E4%BA%AB%E8%BF%9B%E7%A8%8B%E8%B5%84%E6%BA%90%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E7%BA%BF%E7%A8%8B%E5%88%87%E6%8D%A2%E5%BC%80%E9%94%80%E5%B0%8F%E3%80%81%E5%BC%95%E5%85%A5%E7%BA%BF%E7%A8%8B%E5%B8%A6%E6%9D%A5%E7%9A%84%E5%8F%98/"><span class="l">上一篇</span>操作系统 - 线程的概念（什么是线程、为什么线程共享进程资源、为什么线程切换开销小、引入线程带来的变化、线程的属性、为什么要引入线程）</a><a href="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6%EF%BC%88%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6%E3%80%81%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%8E%9F%E5%AD%90%E6%80%A7%E3%80%81%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6%E7%9B%B8%E5%85%B3%E5%8E%9F%E8%AF%AD%EF%BC%89/"><span class="l">下一篇</span>操作系统——进程控制（如何实现进程控制、如何实现原子性、进程控制相关原语）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#概述">概述</a><a class="d2" href="#线程的实现方式">线程的实现方式</a><a class="d2" href="#用户级线程">用户级线程</a><a class="d2" href="#内核级线程">内核级线程</a><a class="d2" href="#多线程模型">多线程模型</a><a class="d3" href="#一对一">一对一</a><a class="d3" href="#多对一">多对一</a><a class="d3" href="#多对多">多对多</a><a class="d2" href="#总结">总结</a><a class="d2" href="#概述-1">概述</a><a class="d2" href="#线程的状态与转换">线程的状态与转换</a><a class="d2" href="#线程的组织与控制">线程的组织与控制</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

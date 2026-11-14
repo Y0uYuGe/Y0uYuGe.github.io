@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机器学习 - 正则化技术 · Y0uYuGe</title>
+<meta name="description" content="这意味着它会惩罚较大的权重值，同时对较小的权重值也有显著影响。简而言之，L1 正则化通过绝对值惩罚鼓励稀疏解（即许多权重等于 0），而 L2 正则化通过平方惩罚鼓励所有权重取较小的值而不是变为零。L1 和 L2 正则化对权重产生不同的影响，主要是因为它们惩罚权重的方式不同（即让权重变化的方式不同）。正则化通常通过在损失函数中加入正则化项来实现；该项根据模型参数的大小来惩罚模型复杂度。欠拟合：参数过少，对原始训练数据关注过少，导致模型过于简单。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/machine-learning">机器学习</a></nav>
+    <h1>机器学习 - 正则化技术</h1>
+    <div class="meta"><time>2024-12-17</time><span class="tag">#机器学习</span><span class="tag">#人工智能</span></div>
+    <article class="post-body">
+<h1 id="拟合">拟合</h1>
+<p>过拟合：参数（特征）过多——可以理解为考虑的因素过多——或者过于关注原始训练数据，导致模型过于复杂。
+欠拟合：参数过少，对原始训练数据关注过少，导致模型过于简单。</p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/assets/csdn-144535264/image-001-670a501c21.png" alt="图片"></p>
+<p>随着模型复杂度的增加（可以理解为对训练数据的拟合程度），训练误差不断减小，而泛化误差（即在测试数据上的误差）先减小后增大。</p>
+<p>低、中、高复杂度分别对应欠拟合、良好拟合和过拟合。</p>
+<h1 id="正则化">正则化</h1>
+<p>正则化通常通过在损失函数中加入正则化项来实现；该项根据模型参数的大小来惩罚模型复杂度。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/assets/csdn-144535264/image-002-43cbe5eab2.png" alt="图片"></p>
+<h1 id="正则化项">正则化项</h1>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/assets/csdn-144535264/image-003-8b8d93cf2d.png" alt="图片">
+L1 和 L2 正则化对权重产生不同的影响，主要是因为它们惩罚权重的方式不同（即让权重变化的方式不同）。</p>
+<h3 id="l1-正则化lasso">L1 正则化（Lasso）</h3>
+<p>L1 正则化将权重绝对值之和作为惩罚项加入损失函数。这意味着它会惩罚较大的权重值，同时对较小的权重值也有显著影响。由于惩罚基于绝对值，当优化过程试图最小化整体损失函数时，它倾向于把某些权重直接压缩到零。原因如下：</p>
+<ul>
+<li>对于很小的权重 ( w )，L1 惩罚 ( |w| ) 关于 ( w ) 是线性的；即使 ( w ) 接近 0，其导数仍是一个非零常数。</li>
+<li>这使得优化算法在更新这些权重时会持续受到将其进一步推向 0 的压力，最终它们可能恰好变为 0。</li>
+<li>一旦某个权重被置为 0，L1 惩罚就不再影响它（因为 0 的绝对值仍是 0），于是该权重保持不变——相当于从模型中移除了对应的特征。</li>
+</ul>
+<h3 id="l2-正则化ridge">L2 正则化（Ridge）</h3>
+<p>另一方面，L2 正则化将权重平方和作为惩罚项加入损失函数。这会产生以下效果：</p>
+<ul>
+<li>对于任何非零权重 ( w )，L2 惩罚 ( w^2 ) 总是正的，并且随着 ( w ) 的增大而迅速增长。</li>
+<li>然而，对于接近零的 ( w )，( w^2 ) 增长得非常缓慢，因此 L2 惩罚对这些小权重的影响相对较小。</li>
+<li>在优化过程中，L2 惩罚会对所有非零权重施加缩小的压力，但不会让它们变为零，因此它们都会变得相对较小，但通常不会变成零。</li>
+</ul>
+<p>简而言之，L1 正则化通过绝对值惩罚鼓励稀疏解（即许多权重等于 0），而 L2 正则化通过平方惩罚鼓励所有权重取较小的值而不是变为零。这种差异源于两者不同的数学形式，以及它们如何影响梯度下降等优化算法的行为。</p>
+<h1 id="多元线性回归的正则化回归形式">多元线性回归的正则化回归形式</h1>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/assets/csdn-144535264/image-004-50b50dea03.png" alt="图片"></p>
+<h1 id="代码">代码</h1>
+<p><a href="https://github.com/FULLK/AI_Study/blob/main/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/20newsgroups_logistic_regressuib.py">https://github.com/FULLK/AI_Study/blob/main/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/20newsgroups_logistic_regressuib.py</a></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/"><span class="l">上一篇</span>机器学习 - 梯度下降 + 小批量梯度下降 + 数据归一化</a><a href="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20KMeans%20%E8%81%9A%E7%B1%BB/"><span class="l">下一篇</span>机器学习 - KMeans 聚类</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

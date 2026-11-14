@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docker + tmux：远程与本地 GDB 调试 · Y0uYuGe</title>
+<meta name="description" content="让在宿主机上对文件所做的修改也能在 docker 中生效；然后在 docker 中调试和运行，同时在宿主机上修改这个文件夹或文件。：连接成功后，你就可以在宿主机的 GDB 中设置断点、单步执行、查看变量等，就像在本地调试程序一样。它应当与容器中的是同一个程序的副本或符号文件，以确保 GDB 能够识别并加载正确的调试信息。附加到你想要调试的程序上，并指定监听端口。例如，如果你的程序名为。在容器中启动你的程序，并监听 2345 端口，等待来自 GDB 的连接。：在宿主机上打开终端，使用 GDB 连接容器中的那个。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/debugging-and-setup/gdb/Docker%20%2B%20tmux%EF%BC%9A%E8%BF%9C%E7%A8%8B%E4%B8%8E%E6%9C%AC%E5%9C%B0%20GDB%20%E8%B0%83%E8%AF%95" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/debugging-and-setup">调试与环境</a><span class="sep">›</span><a href="/#/endpoint-security/debugging-and-setup/gdb">gdb</a></nav>
+    <h1>Docker + tmux：远程与本地 GDB 调试</h1>
+    <div class="meta"><time>2024-06-21</time><span class="tag">#docker</span><span class="tag">#容器</span><span class="tag">#运维</span><span class="tag">#Pwn</span></div>
+    <article class="post-body">
+<h1 id="远程调试">远程调试</h1>
+<p>不过目前我还不知道怎样实现一边跟随脚本的执行一边调试</p>
+<h1 id="docker-pull-失败">docker pull 失败</h1>
+<p><a href="https://wiki.bafangwy.com/doc/413/">https://wiki.bafangwy.com/doc/413/</a></p>
+<h1 id="程序在-docker-容器上无法运行">程序在 Docker 容器上无法运行</h1>
+<p><a href="https://blog.csdn.net/qq_46106285/article/details/124946919">https://blog.csdn.net/qq_46106285/article/details/124946919</a></p>
+<h1 id="从宿主机远程调试运行在-docker-中的程序">从宿主机远程调试运行在 Docker 中的程序</h1>
+<p><a href="https://www.roderickchan.cn/zh-cn/2023-02-13-%E4%BD%BF%E7%94%A8docker%E8%B0%83%E8%AF%95pwn%E9%A2%98/#0x3-%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7">https://www.roderickchan.cn/zh-cn/2023-02-13-%E4%BD%BF%E7%94%A8docker%E8%B0%83%E8%AF%95pwn%E9%A2%98/#0x3-%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7</a></p>
+<h3 id="环境准备">环境准备</h3>
+<ol>
+<li><p><strong>容器内的准备</strong>：</p>
+<ul>
+<li><strong>安装 gdbserver</strong>：首先需要在 Docker 镜像中安装 <code>gdbserver</code>。通常的做法是在 Dockerfile 中加入相应的安装命令（例如对于基于 Debian 的镜像，使用 <code>RUN apt-get update &amp;&amp; apt-get install -y gdbserver</code>）。</li>
+</ul>
+</li>
+<li><p><strong>宿主机上的准备</strong>：</p>
+<ul>
+<li><strong>安装 GDB</strong>：确保宿主机上已安装 GDB；它是调试器的客户端部分，将用来远程控制运行在容器中的程序。</li>
+<li><strong>可执行文件或符号文件</strong>：宿主机需要有与容器中待调试程序对应的可执行文件或调试符号文件。这是因为 GDB 运行在宿主机上，需要这些信息来解析并显示调试信息。</li>
+</ul>
+</li>
+</ol>
+<h3 id="调试步骤">调试步骤</h3>
+<ol>
+<li><strong>启动容器并映射端口</strong>：   直接选用 roderick 的容器来调试
+<a href="https://hub.docker.com/r/roderickchan/debug_pwn_env/tags">https://hub.docker.com/r/roderickchan/debug_pwn_env/tags</a></li>
+</ol>
+<pre><code class="language-bash">docker run -it --rm -v host_path:container_path -p host_port:container_port --cap-add=SYS_PTRACE IMAGE_ID /bin/bash
+</code></pre>
+<ol start="2">
+<li><p><strong>在容器中启动 gdbserver</strong>：进入容器后，使用 <code>gdbserver</code> 附加到你想要调试的程序上，并指定监听端口。例如，如果你的程序名为 <code>my_program</code>，命令如下：</p>
+<pre><code class="language-bash">gdbserver localhost:12345 my_program
+</code></pre>
+<p>这会让 <code>gdbserver</code> 在容器中启动你的程序，并监听 2345 端口，等待来自 GDB 的连接。</p>
+</li>
+<li><p><strong>在宿主机上用 GDB 连接</strong>：在宿主机上打开终端，使用 GDB 连接容器中的 <code>gdbserver</code>。你需要指定宿主机上的可执行文件路径（尽管它实际上运行在容器中）以及目标远程地址和端口：</p>
+<pre><code class="language-bash">gdb -ex &#39;target remote 127.0.0.1:12345&#39; /path/to/your_program
+</code></pre>
+<p><code>/path/to/your_program</code> 应当与容器中的是同一个程序的副本或符号文件，以确保 GDB 能够识别并加载正确的调试信息。</p>
+</li>
+<li><p><strong>开始调试</strong>：连接成功后，你就可以在宿主机的 GDB 中设置断点、单步执行、查看变量等，就像直接在本机调试程序一样。</p>
+</li>
+</ol>
+<h1 id="本地调试">本地调试</h1>
+<p><strong>启动容器并映射端口</strong>：   直接选用 roderick 的容器来调试
+<a href="https://hub.docker.com/r/roderickchan/debug_pwn_env/tags">https://hub.docker.com/r/roderickchan/debug_pwn_env/tags</a></p>
+<pre><code class="language-bash">docker run -it --rm -v host_path:container_path -p host_port:container_port --cap-add=SYS_PTRACE --privileged IMAGE_ID /bin/bash
+</code></pre>
+<p>通过卷挂载 <code>-v host_path:container_path</code>，让在宿主机上对文件所做的修改也能在 docker 中生效；然后在 docker 中调试和运行，同时在宿主机上修改这个文件夹或文件</p>
+<h1 id="bug">bug</h1>
+<p><a href="https://blog.csdn.net/weixin_43483799/article/details/118757637">Could not find a terminal binary to use. Set context.terminal to your terminal</a>
+然后在容器里直接运行 ./exp.py 就行</p>
+<h1 id="pwngdbtmux">pwngdb+tmux</h1>
+<pre><code class="language-python"># 绑定Ctrl+a为新的指令前缀
+set -g prefix C-a
+
+# 从tmux v1.6版起，支持设置第二个指令前缀, 设置一个不常用的`键作为指令前缀，按键更快
+set-option -g prefix2 `
+
+# 修改分屏快捷键
+unbind &#39;&quot;&#39;
+bind - splitw -v -c &#39;#{pane_current_path}&#39; # 垂直方向新增面板，默认进入当前目录
+unbind %
+bind | splitw -h -c &#39;#{pane_current_path}&#39; # 水平方向新增面板，默认进入当前目录
+
+# 设置面板大小调整快捷键
+bind j resize-pane -D 5
+bind k resize-pane -U 5
+bind h resize-pane -L 5
+bind l resize-pane -R 5
+
+# 刷新配置文件
+bind R run-shell &quot;tmux source-file ~/.tmux.conf&quot;
+
+# 上一个窗口
+bind a last-window
+
+</code></pre>
+<p><a href="https://louiszhai.github.io/2017/09/30/tmux/">https://louiszhai.github.io/2017/09/30/tmux/</a></p>
+<ul>
+<li>先按下 Ctrl+a 并松开，再按 ?，就会显示帮助信息。然后按 ESC 或 q 退出帮助</li>
+<li>Ctrl+a &lt;方向键&gt;：把光标移动到另一个面板</li>
+<li>Ctrl+a hjkl：调整当前面板的大小</li>
+<li>Ctrl+a a：切换到上一个窗口</li>
+<li>Ctrl+a |：水平新增一个面板</li>
+<li>Ctrl+a -：垂直新增一个面板</li>
+<li>复制：直接用鼠标选中内容即可</li>
+<li>粘贴：Ctrl+a +]</li>
+</ul>
+<h1 id="从-tmux-复制粘贴到其他地方">从 Tmux 复制粘贴到其他地方</h1>
+<p><a href="https://cn.linux-console.net/?p=15192">https://cn.linux-console.net/?p=15192</a>
+<img src="/workspace/endpoint-security/debugging-and-setup/gdb/Docker%20%2B%20tmux%EF%BC%9A%E8%BF%9C%E7%A8%8B%E4%B8%8E%E6%9C%AC%E5%9C%B0%20GDB%20%E8%B0%83%E8%AF%95/assets/csdn-139858050/image-001-8f3bcf7f05.png" alt="图片"></p>
+<h1 id="pwngdb-与-tmux-的优化">pwngdb 与 tmux 的优化</h1>
+<p><a href="https://bbs.kanxue.com/thread-276203.htm">https://bbs.kanxue.com/thread-276203.htm</a></p>
+<h1 id="用了大佬的镜像之后感觉在宿主机上做-pwn-题已经没什么吸引力了"><del>用了大佬的镜像之后，感觉在宿主机上做 pwn 题已经没什么吸引力了</del></h1>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E5%B8%A6%20glibc%20%E6%BA%90%E7%A0%81%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%EF%BC%88%E5%AF%BC%E5%85%A5%20glibc%20%E5%BA%93%EF%BC%8C%E4%BD%BF%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E6%97%B6%E8%83%BD%E7%9C%8B%E5%88%B0%E5%BA%93%E5%87%BD%E6%95%B0%E6%BA%90%E7%A0%81%EF%BC%89/"><span class="l">下一篇</span>gdb 带 glibc 源码动态调试（导入 glibc 库，使动态调试可执行文件时能看到库函数源码）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

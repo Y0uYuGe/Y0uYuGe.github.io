@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零开始学机器学习（机器学习、监督学习中的线性回归、代价函数与可视化、梯度下降、线性回归的平方误差代价函数、实验） · Y0uYuGe</title>
+<meta name="description" content="机器学习是机器通过在数据集上不断训练，逐步学习到正确结果的过程。机器学习包括监督学习和无监督学习。监督学习：需要输入数据和结果数据，并不断进行训练。监督学习包括回归和分类。回归：结果是连续的，不是有限的。分类：结果是离散且有限的。无监督学习：只需要输入数据即可进行学习，例如聚类（把一类输入数据归为一组，把另一类数据归为另一组）。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/machine-learning/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%EF%BC%88%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E3%80%81%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E3%80%81%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E3%80%81%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E3%80%81%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E5%B9%B3%E6%96%B9%E8%AF%AF%E5%B7%AE%E4%BB%A3" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/machine-learning">机器学习</a></nav>
+    <h1>从零开始学机器学习（机器学习、监督学习中的线性回归、代价函数与可视化、梯度下降、线性回归的平方误差代价函数、实验）</h1>
+    <div class="meta"><time>2024-03-30</time><span class="tag">#机器学习</span><span class="tag">#学习</span><span class="tag">#线性回归</span></div>
+    <article class="post-body">
+<h1 id="机器学习的定义">机器学习的定义</h1>
+<p>机器学习是机器通过在数据集上不断训练，逐步学习到正确结果的过程</p>
+<p>机器学习包括监督学习和无监督学习</p>
+<ul>
+<li>监督学习：需要输入数据和结果数据，并不断进行训练</li>
+</ul>
+<p>监督学习包括回归和分类
+回归：结果是连续的，不是有限的
+分类：结果是离散且有限的</p>
+<p>无监督学习：只需要输入数据即可进行学习
+例如聚类（把一类输入数据归为一组，把另一类数据归为另一组）</p>
+<h1 id="监督学习中的线性回归">监督学习中的线性回归</h1>
+<p>线性回归：根据一组输入数据和输出数据之间的对应关系，得到一个函数关系（该函数是线性的），当输入数据变为其他值时，这个函数仍能给出可靠的输出数据
+<img src="/workspace/ai-foundations/machine-learning/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%EF%BC%88%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E3%80%81%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E3%80%81%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E3%80%81%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E3%80%81%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E5%B9%B3%E6%96%B9%E8%AF%AF%E5%B7%AE%E4%BB%A3/assets/csdn-137103597/image-001-4fb4491532.png" alt="图片">
+如上图所示，这里是根据一份关于面积和价格的数据集，得到两者之间的线性关系</p>
+<h1 id="代价函数与可视化">代价函数与可视化</h1>
+<p>损失函数就是代价函数
+这里 m 是数据集中数据点的数量
+从代价函数的定义可以看出，代价函数的值越小，说明 Model 函数与真实数据集之间的对应关系越接近
+<img src="/workspace/ai-foundations/machine-learning/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%EF%BC%88%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E3%80%81%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E3%80%81%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E3%80%81%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E3%80%81%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E5%B9%B3%E6%96%B9%E8%AF%AF%E5%B7%AE%E4%BB%A3/assets/csdn-137103597/image-002-1a6aa62811.png" alt="图片">
+可视化是指以图形的方式呈现出来
+当代价函数的参数取不同值时，代价函数的值可能不同，也可能相同
+当参数构成平面、代价函数的值作为纵轴时，我们就得到了一个三维可视化图
+对于对应的平面，把平面中代价函数值相同的点连接起来，就形成了等值线</p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%EF%BC%88%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E3%80%81%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E3%80%81%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E3%80%81%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E3%80%81%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E5%B9%B3%E6%96%B9%E8%AF%AF%E5%B7%AE%E4%BB%A3/assets/csdn-137103597/image-003-e4e32598e5.png" alt="图片"></p>
+<h1 id="梯度下降">梯度下降</h1>
+<p>目的：求得使代价函数最小的参数值（不仅限于线性回归）
+原理：每次对参数做微小的改变，尝试减小代价函数的值，最终到达一个最小值</p>
+<p>就好像从某个位置跑向代价函数可视化图中的最低点</p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%EF%BC%88%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E3%80%81%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E3%80%81%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E3%80%81%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E3%80%81%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E5%B9%B3%E6%96%B9%E8%AF%AF%E5%B7%AE%E4%BB%A3/assets/csdn-137103597/image-004-6f07be0b16.png" alt="图片">
+对代价函数关于某个参数求导，就是代价函数关于该参数的偏导数</p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%EF%BC%88%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E3%80%81%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E3%80%81%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E3%80%81%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E3%80%81%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E5%B9%B3%E6%96%B9%E8%AF%AF%E5%B7%AE%E4%BB%A3/assets/csdn-137103597/image-005-f5b727b017.png" alt="图片">
+学习率：一个固定的值</p>
+<p>如果学习率太大，w 的变化就会过大，在局部最小值附近左右跳动，甚至离局部最小值越来越远
+如果学习率太小，w 的变化就会过小，需要很多步才能到达局部最小值</p>
+<p>偏导数会自动变化：越接近局部最小值，对应的偏导数就越小。此时即使学习率不变，w 的变化量也会变小</p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%EF%BC%88%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E3%80%81%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E3%80%81%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E3%80%81%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E3%80%81%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E5%B9%B3%E6%96%B9%E8%AF%AF%E5%B7%AE%E4%BB%A3/assets/csdn-137103597/image-006-af32116abe.png" alt="图片"></p>
+<h1 id="线性回归的平方误差代价函数">线性回归的平方误差代价函数</h1>
+<p>下图展示了梯度下降算法的具体实现
+<img src="/workspace/ai-foundations/machine-learning/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%EF%BC%88%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E3%80%81%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E3%80%81%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E3%80%81%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E3%80%81%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E5%B9%B3%E6%96%B9%E8%AF%AF%E5%B7%AE%E4%BB%A3/assets/csdn-137103597/image-007-5d54f5c0f3.png" alt="图片"></p>
+<p>下图展示了如何得到相关的偏导数
+<img src="/workspace/ai-foundations/machine-learning/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%AD%A6%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%EF%BC%88%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E3%80%81%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E3%80%81%E4%BB%A3%E4%BB%B7%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E3%80%81%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E3%80%81%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92%E7%9A%84%E5%B9%B3%E6%96%B9%E8%AF%AF%E5%B7%AE%E4%BB%A3/assets/csdn-137103597/image-008-a5104e3174.png" alt="即">
+此外，平方误差代价函数的可视化图是一个碗状的形状，也就是说只存在一个局部最小值（即全局最小值），而其他代价函数的可视化图可能像丘陵一样，有很多局部最小值；从不同的参数位置开始梯度下降，可能会到达不同的局部最小值</p>
+<h1 id="实验">实验</h1>
+<ul>
+<li>scatter 函数用于绘制散点图。</li>
+<li>plot 函数用于根据点绘制线条</li>
+<li>legend()# 在左上角显示相关图例所代表的数据类型</li>
+</ul>
+<pre><code class="language-python">
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+from matplotlib.gridspec import GridSpec
+from matplotlib.colors import LinearSegmentedColormap
+from ipywidgets import interact
+import copy
+import math
+
+plt.style.use(&#39;./deeplearning.mplstyle&#39;)
+n_bin = 5
+
+dlblue = &#39;#0096ff&#39;; dlorange = &#39;#FF9300&#39;; dldarkred=&#39;#C00000&#39;; dlmagenta=&#39;#FF40FF&#39;; dlpurple=&#39;#7030A0&#39;
+dlc = dict(dlblue = &#39;#0096ff&#39;, dlorange = &#39;#FF9300&#39;, dldarkred=&#39;#C00000&#39;, dlmagenta=&#39;#FF40FF&#39;, dlpurple=&#39;#7030A0&#39;)
+dlcolors = [dlblue, dlorange, dldarkred, dlmagenta, dlpurple]
+dlcm = LinearSegmentedColormap.from_list(&#39;dl_map&#39;, dlcolors, N=n_bin)
+
+
+
+def compute_cost(X, y, w, b):
+    m = X.shape[0]
+    cost = 0.0
+    for i in range(m):
+        f_wb_i = np.dot(X[i],w) + b           #(n,)(n,)=scalar
+        cost = cost + (f_wb_i - y[i])**2
+    cost = cost/(2*m)
+    return cost 
+
+
+def plt_house_x(X, y,f_wb=None, ax=None):
+    &#39;&#39;&#39; plot house with aXis &#39;&#39;&#39;
+    if not ax:
+        fig, ax = plt.subplots(1,1)
+    ax.scatter(X, y, marker=&#39;x&#39;, c=&#39;r&#39;, label=&quot;Actual Value&quot;)
+
+    ax.set_title(&quot;Housing Prices&quot;)
+    ax.set_ylabel(&#39;Price (in 1000s of dollars)&#39;)
+    ax.set_xlabel(f&#39;Size (1000 sqft)&#39;)
+    if f_wb is not None:
+        ax.plot(X, f_wb,  c=dlblue, label=&quot;Our Prediction&quot;)
+    ax.legend()
+
+
+def mk_cost_lines(x,y,w,b, ax):
+    &#39;&#39;&#39; makes vertical cost lines&#39;&#39;&#39;
+    cstr = &quot;cost = (1/m)*(&quot;
+    ctot = 0
+    label = &#39;cost for point&#39;
+    addedbreak = False
+    for p in zip(x,y):
+        f_wb_p = w*p[0]+b
+        c_p = ((f_wb_p - p[1])**2)/2
+        c_p_txt = c_p
+        ax.vlines(p[0], p[1],f_wb_p, lw=3, color=dlpurple, ls=&#39;dotted&#39;, label=label)
+        label=&#39;&#39; #just one
+        cxy = [p[0], p[1] + (f_wb_p-p[1])/2]
+        ax.annotate(f&#39;{c_p_txt:0.0f}&#39;, xy=cxy, xycoords=&#39;data&#39;,color=dlpurple,
+            xytext=(5, 0), textcoords=&#39;offset points&#39;)
+        cstr += f&quot;{c_p_txt:0.0f} +&quot;
+        if len(cstr) &gt; 38 and addedbreak is False:
+            cstr += &quot;\n&quot;
+            addedbreak = True
+        ctot += c_p
+    ctot = ctot/(len(x))
+    cstr = cstr[:-1] + f&quot;) = {ctot:0.0f}&quot;
+    ax.text(0.15,0.02,cstr, transform=ax.transAxes, color=dlpurple)
+
+
+
+
+def plt_stationary(x_train, y_train):        # 绘制三个图，一个是某对w和b对应模型，一个是损失函数随着w和b变化的等值线图，一个是三维的损失函数随着w和b变化的变化
+    # setup figure 
+    fig = plt.figure( figsize=(9,8))
+    #fig = plt.figure(constrained_layout=True,  figsize=(12,10))
+    fig.set_facecolor(&#39;#ffffff&#39;) #white
+    fig.canvas.toolbar_position = &#39;top&#39;
+    #gs = GridSpec(2, 2, figure=fig, wspace = 0.01)
+    gs = GridSpec(2, 2, figure=fig)
+    ax0 = fig.add_subplot(gs[0, 0])
+    ax1 = fig.add_subplot(gs[0, 1])
+    ax2 = fig.add_subplot(gs[1, :],  projection=&#39;3d&#39;)
+    ax = np.array([ax0,ax1,ax2])
+
+    #setup useful ranges and common linspaces
+    w_range = np.array([200-300.,200+300])
+    b_range = np.array([50-300., 50+300])
+    b_space  = np.linspace(*b_range, 100)
+    w_space  = np.linspace(*w_range, 100)
+
+    # get cost for w,b ranges for contour and 3D
+    tmp_b,tmp_w = np.meshgrid(b_space,w_space)
+    print(tmp_b)
+    print(tmp_w)
+    z=np.zeros_like(tmp_b)
+    for i in range(tmp_w.shape[0]):
+        for j in range(tmp_w.shape[1]):
+          
+            z[i,j] = compute_cost(x_train, y_train, tmp_w[i][j], tmp_b[i][j] )
+            if z[i,j] == 0: z[i,j] = 1e-6
+
+    w0=200;b=-100    #initial point
+    ### plot model w cost ###
+    f_wb = np.dot(x_train,w0) + b
+    mk_cost_lines(x_train,y_train,w0,b,ax[0])
+    plt_house_x(x_train, y_train, f_wb=f_wb, ax=ax[0])
+
+    ### plot contour ###
+    CS = ax[1].contour(tmp_w, tmp_b, np.log(z),levels=12, linewidths=2, alpha=0.7,colors=dlcolors)
+    ax[1].set_title(&#39;Cost(w,b)&#39;)
+    ax[1].set_xlabel(&#39;w&#39;, fontsize=10)
+    ax[1].set_ylabel(&#39;b&#39;, fontsize=10)
+    ax[1].set_xlim(w_range) ; ax[1].set_ylim(b_range)
+    cscat  = ax[1].scatter(w0,b, s=100, color=dlblue, zorder= 10, label=&quot;cost with \ncurrent w,b&quot;)
+    chline = ax[1].hlines(b, ax[1].get_xlim()[0],w0, lw=4, color=dlpurple, ls=&#39;dotted&#39;)
+    cvline = ax[1].vlines(w0, ax[1].get_ylim()[0],b, lw=4, color=dlpurple, ls=&#39;dotted&#39;)
+    ax[1].text(0.5,0.95,&quot;Click to choose w,b&quot;,  bbox=dict(facecolor=&#39;white&#39;, ec = &#39;black&#39;), fontsize = 10,
+                transform=ax[1].transAxes, verticalalignment = &#39;center&#39;, horizontalalignment= &#39;center&#39;)
+
+    #Surface plot of the cost function J(w,b)
+    ax[2].plot_surface(tmp_w, tmp_b, z,  cmap = dlcm, alpha=0.3, antialiased=True)
+    ax[2].plot_wireframe(tmp_w, tmp_b, z, color=&#39;k&#39;, alpha=0.1)
+    plt.xlabel(&quot;$w$&quot;)
+    plt.ylabel(&quot;$b$&quot;)
+    ax[2].zaxis.set_rotate_label(False)
+    ax[2].xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax[2].yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax[2].zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    ax[2].set_zlabel(&quot;J(w, b)\n\n&quot;, rotation=90)
+    plt.title(&quot;Cost(w,b) \n [You can rotate this figure]&quot;, size=12)
+    ax[2].view_init(30, -120)
+    return fig,ax, [cscat, chline, cvline]
+
+
+#https://matplotlib.org/stable/users/event_handling.html
+class plt_update_onclick:  # 
+    def __init__(self, fig, ax, x_train,y_train, dyn_items):
+        self.fig = fig
+        self.ax = ax
+        self.x_train = x_train
+        self.y_train = y_train
+        self.dyn_items = dyn_items
+        self.cid = fig.canvas.mpl_connect(&#39;button_press_event&#39;, self) # 鼠标点击时，会调用自己，即call函数
+
+    def __call__(self, event):
+        if event.inaxes == self.ax[1]:  # 点击发生的位置从而得到相应的w和b
+            ws = event.xdata
+            bs = event.ydata
+            cst = compute_cost(self.x_train, self.y_train, ws, bs)
+
+            # clear and redraw line plot
+            self.ax[0].clear()
+            f_wb = np.dot(self.x_train,ws) + bs  
+            mk_cost_lines(self.x_train,self.y_train,ws,bs,self.ax[0])  # 距离
+            plt_house_x(self.x_train, self.y_train, f_wb=f_wb, ax=self.ax[0]) # 根据新的w和b得到模型函数
+
+            # remove lines and re-add on countour plot and 3d plot
+            for artist in self.dyn_items:
+                artist.remove()
+
+            a = self.ax[1].scatter(ws,bs, s=100, color=dlblue, zorder= 10, label=&quot;cost with \ncurrent w,b&quot;)   
+            b = self.ax[1].hlines(bs, self.ax[1].get_xlim()[0],ws, lw=4, color=dlpurple, ls=&#39;dotted&#39;)
+            c = self.ax[1].vlines(ws, self.ax[1].get_ylim()[0],bs, lw=4, color=dlpurple, ls=&#39;dotted&#39;)
+            d = self.ax[1].annotate(f&quot;Cost: {cst:.0f}&quot;, xy= (ws, bs), xytext = (4,4), textcoords = &#39;offset points&#39;,
+                               bbox=dict(facecolor=&#39;white&#39;), size = 10)            # 现在的
+
+            #Add point in 3D surface plot
+            e = self.ax[2].scatter3D(ws, bs,cst , marker=&#39;X&#39;, s=100) # 3d图上画点
+
+            self.dyn_items = [a,b,c,d,e]
+            self.fig.canvas.draw()
+
+
+
+def inbounds(a,b,xlim,ylim): #判断w和b是否出界
+    xlow,xhigh = xlim
+    ylow,yhigh = ylim
+    ax, ay = a
+    bx, by = b
+    if (ax &gt; xlow and ax &lt; xhigh) and (bx &gt; xlow and bx &lt; xhigh) \
+        and (ay &gt; ylow and ay &lt; yhigh) and (by &gt; ylow and by &lt; yhigh):
+        return True
+    return False
+
+def plt_contour_wgrad(x, y, hist, ax, w_range=[-100, 500, 5], b_range=[-500, 500, 5], # 等值线上迭代的w和b的变化
+                contours = [0.1,50,1000,5000,10000,25000,50000],
+                      resolution=5, w_final=200, b_final=100,step=10 ):
+    b0,w0 = np.meshgrid(np.arange(*b_range),np.arange(*w_range))
+    z=np.zeros_like(b0)
+    for i in range(w0.shape[0]):
+        for j in range(w0.shape[1]):
+            z[i][j] = compute_cost(x, y, w0[i][j], b0[i][j] ) 
+
+    CS = ax.contour(w0, b0, z, contours, linewidths=2,
+                   colors=[dlblue, dlorange, dldarkred, dlmagenta, dlpurple]) # 绘制等值线图
+    ax.clabel(CS, inline=1, fmt=&#39;%1.0f&#39;, fontsize=10) # 等高线图上添加标签
+    ax.set_xlabel(&quot;w&quot;);  ax.set_ylabel(&quot;b&quot;)
+    ax.set_title(&#39;Contour plot of cost J(w,b), vs b,w with path of gradient descent&#39;)
+    w = w_final; b=b_final
+    ax.hlines(b, ax.get_xlim()[0],w, lw=2, color=dlpurple, ls=&#39;dotted&#39;)
+    ax.vlines(w, ax.get_ylim()[0],b, lw=2, color=dlpurple, ls=&#39;dotted&#39;)
+
+    base = hist[0]
+    for point in hist[0::step]:
+        edist = np.sqrt((base[0] - point[0])**2 + (base[1] - point[1])**2) # 计算当前点到到下一个w和b对应的坐标
+        if(edist &gt; resolution or point!=hist[-1]):  # 当跳转距离较大的时候或者还没到最后一个点的时候继续跳转
+            if inbounds(point,base, ax.get_xlim(),ax.get_ylim()):
+                plt.annotate(&#39;&#39;, xy=point, xytext=base,xycoords=&#39;data&#39;,
+                         arrowprops={&#39;arrowstyle&#39;: &#39;-&gt;&#39;, &#39;color&#39;: &#39;r&#39;, &#39;lw&#39;: 3},
+                         va=&#39;center&#39;, ha=&#39;center&#39;) # 在当前点绘制一个箭头
+            base=point
+    return
+
+
+def plt_divergence(p_hist, J_hist, x_train,y_train):
+
+    x=np.zeros(len(p_hist))
+    y=np.zeros(len(p_hist))
+    v=np.zeros(len(p_hist))
+    for i in range(len(p_hist)):
+        x[i] = p_hist[i][0]
+        y[i] = p_hist[i][1]
+        v[i] = J_hist[i]   # 对应的w和b和此时的损失函数值
+
+    fig = plt.figure(figsize=(12,5))
+    plt.subplots_adjust( wspace=0 )  # 子图间距的函数
+    gs = fig.add_gridspec(1, 5)   # 5个空间放置子图，它们都将处于同一行内
+    fig.suptitle(f&quot;Cost escalates when learning rate is too large&quot;)
+    #===============
+    #  First subplot
+    #===============
+    ax = fig.add_subplot(gs[:2], )
+
+    # Print w vs cost to see minimum
+    fix_b = 100
+    w_array = np.arange(-35000, 35000, 1000)
+    cost = np.zeros_like(w_array)
+
+    for i in range(len(w_array)):
+        tmp_w = w_array[i]
+        cost[i] = compute_cost(x_train, y_train, tmp_w, fix_b)
+
+    ax.plot(w_array,cost)  # 损失函数随w的变化而变化
+    ax.plot(x,v, c=dlmagenta) # 迭代过程中损失函数随着w的变化而变化
+    ax.set_title(&quot;Cost vs w, b set to 100&quot;)
+    ax.set_ylabel(&#39;Cost&#39;)
+    ax.set_xlabel(&#39;w&#39;)
+    ax.xaxis.set_major_locator(MaxNLocator(2))
+
+    #===============
+    # Second Subplot
+    #===============
+
+    tmp_b,tmp_w = np.meshgrid(np.arange(-35000, 35000, 5000),np.arange(-15000, 15000, 5000)) 
+    z=np.zeros_like(tmp_b) 
+    for i in range(tmp_w.shape[0]):
+        for j in range(tmp_w.shape[1]):
+            z[i][j] = compute_cost(x_train, y_train, tmp_w[i][j], tmp_b[i][j] )
+
+    ax = fig.add_subplot(gs[2:], projection=&#39;3d&#39;) # 三维的损失函数随w和b的变化而变化
+    ax.plot_surface(tmp_w, tmp_b, z,  alpha=0.3, color=dlblue) 
+    ax.xaxis.set_major_locator(MaxNLocator(2))
+    ax.yaxis.set_major_locator(MaxNLocator(2))
+
+    ax.set_xlabel(&#39;w&#39;, fontsize=16)
+    ax.set_ylabel(&#39;b&#39;, fontsize=16)
+    ax.set_zlabel(&#39;\ncost&#39;, fontsize=16)
+    plt.title(&#39;Cost vs (b, w)&#39;)
+    # Customize the view angle
+    ax.view_init(elev=20., azim=-65)
+    ax.plot(x, y, v,c=dlmagenta) # 将迭代过程中的损失函数的值以及w和b的值
+    return
+
+# draw derivative line
+# y = m*(x - x1) + y1
+def add_line(dj_dx, x1, y1, d, ax):   # 给损失函数上某个点画切线的
+    x = np.linspace(x1-d, x1+d,50)
+    y = dj_dx*(x - x1) + y1
+    ax.scatter(x1, y1, color=dlblue, s=50) # 画点
+    ax.plot(x, y, &#39;--&#39;, c=dldarkred,zorder=10, linewidth = 1) # 画切线
+    xoff = 30 if x1 == 200 else 10
+    ax.annotate(r&quot;$\frac{\partial J}{\partial w}$ =%d&quot; % dj_dx, fontsize=14,  # 点旁边的注释
+                xy=(x1, y1), xycoords=&#39;data&#39;,
+            xytext=(xoff, 10), textcoords=&#39;offset points&#39;,
+            arrowprops=dict(arrowstyle=&quot;-&gt;&quot;),
+            horizontalalignment=&#39;left&#39;, verticalalignment=&#39;top&#39;)
+
+def plt_gradients(x_train,y_train, f_compute_cost, f_compute_gradient):
+    #===============
+    #  First subplot
+    #===============
+    fig,ax = plt.subplots(1,2,figsize=(12,4))
+
+    # Print w vs cost to see minimum
+    fix_b = 100
+    w_array = np.linspace(-100, 500, 50)
+    w_array = np.linspace(0, 400, 50)
+    cost = np.zeros_like(w_array)
+
+    for i in range(len(w_array)):
+        tmp_w = w_array[i]
+        cost[i] = f_compute_cost(x_train, y_train, tmp_w, fix_b)
+    ax[0].plot(w_array, cost,linewidth=1,label=&quot;cost function value&quot;)            # 画出损失函数图
+    ax[0].set_title(&quot;Cost vs w, with gradient; b set to 100&quot;)
+    ax[0].set_ylabel(&#39;Cost&#39;)
+    ax[0].set_xlabel(&#39;w&#39;)
+
+    # plot lines for fixed b=100
+    for tmp_w in [100,200,300]:  # 画出损失函数上三个点的斜率
+        fix_b = 100
+        dj_dw,dj_db = f_compute_gradient(x_train, y_train, tmp_w, fix_b )
+        j = f_compute_cost(x_train, y_train, tmp_w, fix_b)
+        add_line(dj_dw, tmp_w, j, 30, ax[0])
+
+    #===============
+    # Second Subplot
+    #===============
+
+    tmp_b,tmp_w = np.meshgrid(np.linspace(-200, 200, 10), np.linspace(-100, 600, 10))
+    U = np.zeros_like(tmp_w)
+    V = np.zeros_like(tmp_b)
+    for i in range(tmp_w.shape[0]):
+        for j in range(tmp_w.shape[1]):
+            U[i][j], V[i][j] = f_compute_gradient(x_train, y_train, tmp_w[i][j], tmp_b[i][j] ) # 计算一系列损失函数上关于w的斜率
+    X = tmp_w
+    Y = tmp_b
+    n=-2
+    color_array = np.sqrt(((V-n)/2)**2 + ((U-n)/2)**2)
+    print(V)
+    ax[1].set_title(&#39;Gradient shown in quiver plot&#39;)
+    Q = ax[1].quiver(X, Y, U, V, color_array, units=&#39;width&#39;) # 根据斜率确定箭头的方向
+    ax[1].quiverkey(Q, 0.9, 0.9, 2, r&#39;$2 \frac{m}{s}$&#39;, labelpos=&#39;E&#39;,coordinates=&#39;figure&#39;) # 在右上角增加一个图例
+    ax[1].set_xlabel(&quot;w&quot;); 
+    ax[1].set_ylabel(&quot;b&quot;)
+
+
+
+def compute_gradient(x, y, w, b):   # 计算w和b此时对应的偏导数（梯度）
+
+    # Number of training examples
+    m = x.shape[0]  
+    dj_dw = 0
+    dj_db = 0
+  
+    for i in range(m):  
+        f_wb = w * x[i] + b 
+        dj_dw_i = (f_wb - y[i]) * x[i] 
+        dj_db_i = f_wb - y[i] 
+        dj_db += dj_db_i
+        dj_dw += dj_dw_i 
+    dj_dw = dj_dw / m 
+    dj_db = dj_db / m 
+      
+    return dj_dw, dj_db
+
+
+def gradient_descent(x, y, w_in, b_in, alpha, num_iters, cost_function, gradient_function):  # 从起始位置迭代规定次数，最后得到合适的参数
+
+    w = copy.deepcopy(w_in) # avoid modifying global w_in
+    # An array to store cost J and w&#39;s at each iteration primarily for graphing later
+    J_history = []
+    p_history = []
+    b = b_in
+    w = w_in
+  
+    for i in range(num_iters):
+        # Calculate the gradient and update the parameters using gradient_function
+        dj_dw, dj_db = gradient_function(x, y, w , b)   
+
+        # Update Parameters using equation (3) above
+        b = b - alpha * dj_db                          
+        w = w - alpha * dj_dw                          
+
+        # Save cost J at each iteration
+        if i&lt;100000:      # prevent resource exhaustion 
+            J_history.append( cost_function(x, y, w , b))
+            p_history.append([w,b])
+        # Print cost every at intervals 10 times or as many iterations if &lt; 10
+        if i% math.ceil(num_iters/10) == 0:
+            print(f&quot;Iteration {i:4}: Cost {J_history[-1]:0.2e} &quot;,
+                  f&quot;dj_dw: {dj_dw: 0.3e}, dj_db: {dj_db: 0.3e}  &quot;,
+                  f&quot;w: {w: 0.3e}, b:{b: 0.5e}&quot;)
+ 
+    return w, b, J_history, p_history #return w and J,w history for graphing
+
+
+
+
+
+x_train=np.array([1.0,2.0])
+y_train=np.array([300.0,500.0])    # 训练数据初始化
+&quot;&quot;&quot;
+fig, ax, dyn_items = plt_stationary(x_train, y_train)
+updater = plt_update_onclick(fig, ax, x_train, y_train, dyn_items)
+plt.show()                 # 动态变化w和b对应的模型和其与训练数据的差
+
+plt_gradients(x_train,y_train, compute_cost, compute_gradient)
+plt.show()             # 得到损失函数随w的变化而变化的趋势
+
+w_final,b_final,J_hist,p_hist=gradient_descent(x_train,y_train,10,20,0.01,10000,compute_cost,compute_gradient)# 通过梯度下降得到合适的w和b值
+
+
+fig, (ax1, ax2) = plt.subplots(1, 2, constrained_layout=True, figsize=(12,4)) # 绘制梯度下降过程中损失函数随迭代次数的变化的变化
+ax1.plot(J_hist[:100]) # 前100次
+ax2.plot(1000 + np.arange(len(J_hist[1000:])), J_hist[1000:]) # 所有的次数
+ax1.set_title(&quot;Cost vs. iteration(start)&quot;);  ax2.set_title(&quot;Cost vs. iteration (end)&quot;)
+ax1.set_ylabel(&#39;Cost&#39;)            ;  ax2.set_ylabel(&#39;Cost&#39;) 
+ax1.set_xlabel(&#39;iteration step&#39;)  ;  ax2.set_xlabel(&#39;iteration step&#39;) 
+plt.show()
+
+print(f&quot;1000 sqft house prediction {w_final*1.0 + b_final:0.1f} Thousand dollars&quot;)  # 利用得到的模型预测结果
+print(f&quot;1200 sqft house prediction {w_final*1.2 + b_final:0.1f} Thousand dollars&quot;)
+print(f&quot;2000 sqft house prediction {w_final*2.0 + b_final:0.1f} Thousand dollars&quot;)
+
+
+fig, ax = plt.subplots(1,1, figsize=(12, 6))
+plt_contour_wgrad(x_train, y_train, p_hist, ax) # 在等值线中绘制梯度下降过程中w和b随迭代次数的变化的变化
+plt.show()
+
+
+
+
+w_final, b_final, J_hist, p_hist = gradient_descent(x_train ,y_train, 100, 100, 0.8, 10, compute_cost, compute_gradient)
+plt_divergence(p_hist, J_hist,x_train, y_train) # 观察当学习率较大时候在损失函数上w和b的位置的变化
+plt.show()
+
+ &quot;&quot;&quot;
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%84%9F%E7%9F%A5%E6%9C%BA%20-%20%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%20-%20%E6%BF%80%E6%B4%BB%E5%87%BD%E6%95%B0%20-%20%E6%AD%A3%E5%90%91%E4%BC%A0%E6%92%AD%E4%B8%8E%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD%20-%20%E6%A2%AF%E5%BA%A6%E6%B6%88%E5%A4%B1%20-%20Drop/"><span class="l">下一篇</span>机器学习 - 感知机 - 神经网络 - 激活函数 - 正向传播与反向传播 - 梯度消失 - Dropout</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

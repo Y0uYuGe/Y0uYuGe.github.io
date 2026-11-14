@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - SRAM 和 DRAM · Y0uYuGe</title>
+<meta name="description" content="DRAM 已被淘汰，现在的主存主要使用 SDRAM。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20SRAM%20%E5%92%8C%20DRAM" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F">存储系统</a></nav>
+    <h1>计算机组成原理 - SRAM 和 DRAM</h1>
+    <div class="meta"><time>2023-11-08</time><span class="tag">#学习</span></div>
+    <article class="post-body">
+<h1 id="dram动态随机存取存储器-dynamic-random-access-merrory主存">DRAM：动态随机存取存储器 Dynamic Random Access Merrory（主存）</h1>
+<h1 id="sram静态随机存取存储器-static-random-access-memorycache">SRAM：静态随机存取存储器 Static Random Access Memory（Cache）</h1>
+<h1 id="两者的区别">两者的区别</h1>
+<p>   <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20SRAM%20%E5%92%8C%20DRAM/assets/csdn-134286252/image-001-ce6d335386.png" alt="图片"><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20SRAM%20%E5%92%8C%20DRAM/assets/csdn-134286252/image-002-f473149f51.png" alt="图片"></p>
+<h1 id="行地址和列地址">行地址和列地址</h1>
+<p>  地址的前半部分送入行地址译码器
+  地址的后半部分送入列地址译码器
+  这样可以减少连线数量
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20SRAM%20%E5%92%8C%20DRAM/assets/csdn-134286252/image-003-a5b0161daa.png" alt="图片"></p>
+<h1 id="刷新">刷新</h1>
+<p>破坏性读出：DRAM 存储元被读取时，信号会变为 0，原信号被破坏。SRAM 没有这个问题
+易失性：DRAM 需要刷新（刷新周期为 2ms，以行为单位，每次刷新一行存储单元，与读写周期相同），因为电容会漏电。SRAM 不需要，因为只要供电，数据就不会改变</p>
+<p>DRAM 的刷新由存储器独立完成，不需要 CPU 参与<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20SRAM%20%E5%92%8C%20DRAM/assets/csdn-134286252/image-004-cdfa3a5201.png" alt="图片"></p>
+<h1 id="dram-地址线复用">DRAM 地址线复用</h1>
+<p>SRAM：行地址和列地址同时送出（集成度低）
+DRAM：分两次送出（地址线和地址引脚数减半）
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20SRAM%20%E5%92%8C%20DRAM/assets/csdn-134286252/image-005-91ac5c6cdc.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p>DRAM 已被淘汰，现在的主存主要使用 SDRAM
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20SRAM%20%E5%92%8C%20DRAM/assets/csdn-134286252/image-006-47e1d5d1bd.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E4%B8%BB%E5%AD%98%E5%82%A8%E5%99%A8%E4%B8%8E%20CPU%20%E7%9A%84%E8%BF%9E%E6%8E%A5/"><span class="l">上一篇</span>计算机组成原理 - 主存储器与 CPU 的连接</a><a href="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%8D%8A%E5%AF%BC%E4%BD%93%E9%9A%8F%E6%9C%BA%E5%AD%98%E5%82%A8%E5%99%A8/"><span class="l">下一篇</span>计算机组成原理——半导体随机存储器</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

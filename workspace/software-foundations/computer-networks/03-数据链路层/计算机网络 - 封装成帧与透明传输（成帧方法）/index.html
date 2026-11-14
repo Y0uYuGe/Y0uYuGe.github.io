@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 封装成帧与透明传输（成帧方法） · Y0uYuGe</title>
+<meta name="description" content="就像老板让秘书把一份文件送到另一家公司；秘书告诉快递员如何把文件送到对方公司的秘书手里，然后对方公司的秘书再把文件交给她的老板。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82">数据链路层</a></nav>
+    <h1>计算机网络 - 封装成帧与透明传输（成帧方法）</h1>
+    <div class="meta"><time>2024-02-04</time><span class="tag">#计算机网络</span><span class="tag">#网络</span></div>
+    <article class="post-body">
+<h1 id="数据链路层的功能概述">数据链路层的功能概述</h1>
+<p>就像老板让秘书把一份文件送到另一家公司；秘书告诉快递员如何把文件送到对方公司的秘书手里，然后对方公司的秘书再把文件交给她的老板。
+&#39;<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-001-4723b192c8.png" alt="图片"></p>
+<h1 id="封装成帧">封装成帧</h1>
+<p>MTU：与当前所用协议有关。
+接收方通过帧头和帧尾的帧定界符来区分一帧的开始和结束。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-002-78d6ea4154.png" alt="图片"></p>
+<h1 id="透明传输">透明传输</h1>
+<p>就像秘书在递送文件时并不关心文件的内容是什么。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-003-cbb2c9ea67.png" alt="图片"></p>
+<h1 id="成帧方法">成帧方法</h1>
+<h2 id="字符计数法">字符计数法</h2>
+<p>某一帧的计数字段出错，会导致其后的帧也全部出错。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-004-0d1aee45b0.png" alt="图片"></p>
+<h2 id="字符填充法">字符填充法</h2>
+<p>用开头和结尾各一个字节作为起始和结束标志。
+ASCII 码与帧的起始字节和结束字节没有重叠。</p>
+<p>但如果不是 ASCII 码，就可能出现识别错误。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-005-07740fd4b5.png" alt="图片">
+字节填充法是一种防止数据中出现与帧定界符相同比特组合的技术。
+字节填充（填入一个转义字符，告诉接收方无论后面是什么，都当作数据处理）。</p>
+<p>接收时，删除所有收到的转义字符。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-006-66e3c98b57.png" alt="图片"></p>
+<h2 id="零比特填充法">零比特填充法</h2>
+<p>在发送端，硬件扫描整个帧，一旦检测到连续五个 1 的比特序列，就自动在该序列之后插入一个 0。这样做的目的是防止数据中出现与帧定界符相同的比特组合（例如 HDLC 协议通常使用 01111110 作为帧定界符），从而避免接收端误识别帧边界。
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-007-24a7c607e8.png" alt="图片"></p>
+<h2 id="违规编码法">违规编码法</h2>
+<p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-008-0c61461735.png" alt="图片"></p>
+<h1 id="为什么字符填充法复杂且不兼容">为什么字符填充法复杂且不兼容</h1>
+<ul>
+<li>实现机制复杂：如果数据中恰好包含与填充字符相同的序列，字符填充法需要一种机制来区分它是数据本身还是填充字符，这增加了实现的复杂度。</li>
+<li>兼容性问题：由于字符填充法需要特定的处理逻辑，可能导致不同系统或协议之间出现兼容性问题。如果一个系统使用字符填充法，而另一个系统不具备相应的解码能力，数据传输就会出现问题。</li>
+</ul>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/"><span class="l">上一篇</span>差错控制</a><a href="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/"><span class="l">下一篇</span>计算机网络 - 回退 N 帧协议（缺点、滑动窗口、GBN 的运行、滑动窗口大小习题、GBN 协议性能分析）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#字符计数法">字符计数法</a><a class="d2" href="#字符填充法">字符填充法</a><a class="d2" href="#零比特填充法">零比特填充法</a><a class="d2" href="#违规编码法">违规编码法</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

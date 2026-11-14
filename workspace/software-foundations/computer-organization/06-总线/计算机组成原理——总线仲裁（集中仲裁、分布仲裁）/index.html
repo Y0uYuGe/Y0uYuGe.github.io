@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理——总线仲裁（集中仲裁、分布仲裁） · Y0uYuGe</title>
+<meta name="description" content="每个设备都有各自连到总线控制器的 BR 线和 BG 线，并且都连接到同一根 BS 上。当设备 1 和设备 n 同时发送 BR 信号时，总线控制器内部的仲裁器对 BR 信号进行处理，最终通过 BG 向其中一个设备发送总线允许信号。相应设备收到总线允许信号后，在 BS 上发出信号。总线控制器收到 BS 时，说明该设备已经获得了总线使用权，总线允许信号随之撤销。之后，当设备 1 用完总线时，撤销 BS 信号。由于设备 n 仍在通过 BR 发送信号，而总线控制器不再检测到 BS 信号，于是发出 BG，BG 到达设备 n，设备 n 开始使用总线。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF">总线</a></nav>
+    <h1>计算机组成原理——总线仲裁（集中仲裁、分布仲裁）</h1>
+    <div class="meta"><time>2024-01-03</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/assets/csdn-135350655/image-001-7196e1ff9c.png" alt="图片"></p>
+<h1 id="总线仲裁的基本概念">总线仲裁的基本概念</h1>
+<p>系统总线包括数据总线、地址总线和控制总线
+设备先通过控制总线获得总线使用权，然后才能使用数据总线和地址总线进行传输。至于和哪个设备传输数据，则由当前持有总线使用权的设备决定
+集中仲裁：由一个主体决定谁先
+分布仲裁：由一群主体决定谁先
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/assets/csdn-135350655/image-002-c14944dfad.png" alt="图片"></p>
+<h1 id="集中仲裁方式">集中仲裁方式</h1>
+<p>总线控制器可能集成在 CPU 或桥中
+总线控制器发出总线时钟信号
+BG、BR 和 BS 都是控制总线上的线</p>
+<h2 id="链式查询">链式查询</h2>
+<p>设备 1 和设备 n 同时通过 BR 向总线控制部件发送信号后，总线控制部件通过 BG 向设备发送信号。信号先经过设备 0，由于设备 0 没有请求，就让信号通过。然后到达设备 1，设备 1 需要使用总线，于是截获该信号并获得总线使用权，此时 BS 处于使用状态。总线控制器检测到 BS 信号时，就不会把总线授予设备 n，尽管设备 n 仍在通过 BR 请求总线——设备 1 的优先级高于设备 n
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/assets/csdn-135350655/image-003-328f2e7871.png" alt="图片">
+之后，当设备 1 用完总线时，撤销 BS 信号。由于设备 n 仍在通过 BR 发送信号，而总线控制器不再检测到 BS 信号，于是发出 BG，BG 到达设备 n，设备 n 开始使用总线
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/assets/csdn-135350655/image-004-d563f2226a.png" alt="图片">
+缺点中的“对故障敏感”是指：如果优先级较高的设备在接收 BG 信号时出现故障，导致其后面的所有设备都收不到 BG 信号，那么后面的这些设备将永远无法获得总线控制权</p>
+<h2 id="计数器定时查询">计数器定时查询</h2>
+<p>设备地址线是一组用来表示设备地址（即是哪个设备）的线
+当设备 1 和设备 n 通过 BR 向总线控制部件发送信号时，总线控制部件的计数器从 0 开始递增。每递增一次，就通过设备地址线查询计数值对应的设备是否需要总线。为 0 时，地址总线到达设备 0，发现它不需要总线。然后计数器加 1，地址总线到达设备 1，它确实需要总线
+（查询设备实际上是把计数值信号送到设备地址线上，设备地址线把它送给所有设备；每个设备检查该信号是否与自己的设备号相同，如果相同就作出响应）
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/assets/csdn-135350655/image-005-7d467ef9e9.png" alt="图片"></p>
+<p>当设备 1 用完总线后，撤销 BS。由于总线控制器仍然检测到 BR 信号，它会继续改变计数值，寻找下一个想要使用总线的设备</p>
+<p>“对链路故障不敏感”是指高优先级设备上的线路断了也不会影响其后面的设备
+控制线数量增加是因为设备地址线很多
+另外，由于每个设备都需要识别设备地址线上的信号，而且计数值需要转换成设备地址线上的信号，所以实现相对复杂</p>
+<h2 id="独立请求方式">独立请求方式</h2>
+<p>每个设备都有各自连到总线控制器的 BR 线和 BG 线，并且都连接到同一根 BS 上。当设备 1 和设备 n 同时发送 BR 信号时，总线控制器内部的仲裁器对 BR 信号进行处理，最终通过 BG 向其中一个设备发送总线允许信号。相应设备收到总线允许信号后，在 BS 上发出信号。总线控制器收到 BS 时，说明该设备已经获得了总线使用权，总线允许信号随之撤销。当该设备用完总线后，由仲裁器决定下一个要发送总线允许信号的设备
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/assets/csdn-135350655/image-006-6c23d806af.png" alt="图片"></p>
+<p>仲裁器的实现相当灵活，所以对优先级顺序的控制也相当灵活</p>
+<h2 id="集中仲裁方式小结">集中仲裁方式小结</h2>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/assets/csdn-135350655/image-007-8684fa5fda.png" alt="图片"></p>
+<h1 id="分布仲裁方式">分布仲裁方式</h1>
+<p>仲裁号体现了优先级
+<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/assets/csdn-135350655/image-008-7ced725779.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81%EF%BC%88%E9%9B%86%E4%B8%AD%E4%BB%B2%E8%A3%81%E3%80%81%E5%88%86%E5%B8%83%E4%BB%B2%E8%A3%81%EF%BC%89/assets/csdn-135350655/image-009-87312554d4.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0/"><span class="l">上一篇</span>计算机组成原理——总线概述</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#链式查询">链式查询</a><a class="d2" href="#计数器定时查询">计数器定时查询</a><a class="d2" href="#独立请求方式">独立请求方式</a><a class="d2" href="#集中仲裁方式小结">集中仲裁方式小结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

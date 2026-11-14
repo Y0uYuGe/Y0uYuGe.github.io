@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建 Docker 第 11 篇 - ［用 pivotRoot 实现文件系统隔离］ · Y0uYuGe</title>
+<meta name="description" content="由于新的根目录必须在原根目录的挂载点之内，为了让两者不处于同一个挂载点，我们把它绑定挂载到自身，这样当前进程就会把新根目录所在的挂载点视为新的根目录。总的来说，这条命令的效果是把当前进程整个文件系统挂载树（包括根目录及其所有子目录）设置为私有挂载，确保在当前进程及其子进程的 mount namespace 内进行的挂载操作不会影响宿主机或其他进程的 namespace。下图展示了把当前进程根目录挂载点设置为私有，并在直接在 mount namespace 中启动后，把 proc 挂载到当前容器内部的 /proc；可以发现这不会覆盖原宿主机上的 /proc。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization">容器与虚拟化</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization/docker-internals">Docker 原理</a></nav>
+    <h1>从零构建 Docker 第 11 篇 - ［用 pivotRoot 实现文件系统隔离］</h1>
+    <div class="meta"><time>2024-04-20</time><span class="tag">#docker</span><span class="tag">#eureka</span><span class="tag">#java</span></div>
+    <article class="post-body">
+<h1 id="busybox">busybox</h1>
+<p>一个简单的 UNIX 文件系统，里面有很多文件；可以把 busybox 看作一个文件夹
+我们把它作为第一个容器内运行的文件系统</p>
+<h1 id="docker-run--d-busybox-top"><code>docker run -d busybox top</code></h1>
+<p>命令 <code>docker run -d busybox top</code> 用于在 Docker 中启动一个新容器并执行特定操作。下面是对该命令每个部分的详细解释：</p>
+<ul>
+<li><p><code>docker run</code>：这是 Docker 的主要命令之一，用于从指定镜像启动一个新容器</p>
+</li>
+<li><p><code>-d</code>：这是一个标志，告诉 Docker 以分离模式（detached mode）运行容器。也就是说容器会在后台运行，而不是直接连接到用户的终端。以这种方式运行容器时，Docker 会立即返回容器 ID，用户可以继续在命令行中执行其他命令，而不影响正在运行的容器</p>
+</li>
+<li><p><code>busybox</code>：这是镜像的名称。BusyBox 是一个轻量级的类 Unix 工具集合，把大量常用的命令行工具打包进一个很小的镜像里</p>
+</li>
+<li><p><code>top</code>：这是要在容器内执行的命令。在 Linux 系统上，<code>top</code> 命令会提供实时的系统状态报告，显示系统中各进程的资源使用情况，比如 CPU 和内存的使用率</p>
+</li>
+</ul>
+<p>总的来说，当你执行 <code>docker run -d busybox top</code> 时，Docker 会从 BusyBox 镜像创建一个新容器，并在该容器内启动 <code>top</code> 命令，使其成为一个长期运行的进程，让容器在后台持续运行。这种方式常用于测试或监控目的，让容器内的 <code>top</code> 命令持续显示容器内部的系统状态</p>
+<h1 id="containeriddocker-ps---filter-ancestorbusyboxlatestgrep--v-i"><code>containerId=(docker ps --filter &quot;ancestor=busybox:latest&quot;|grep -v IMAGE|awk &#39;{print $1}&#39;)</code></h1>
+<p>Shell 命令 <code>containerId=(docker ps --filter &quot;ancestor=busybox:latest&quot;|grep -v IMAGE|awk &#39;{print $1}&#39;)</code> 的目的是获取从 <code>busybox:latest</code> 镜像启动的最新容器的 ID，并赋值给变量 <code>containerId</code>。我们逐一拆解一下：</p>
+<ul>
+<li><p><code>docker ps</code>：这是一个 Docker 命令，用于列出所有正在运行的容器及其相关信息</p>
+</li>
+<li><p><code>--filter &quot;ancestor=busybox:latest&quot;</code>：这是一个过滤参数，过滤出由 <code>busybox:latest</code> 镜像派生出的容器</p>
+</li>
+<li><p><code>|</code>（管道符号）：用于把前一个命令的输出作为后一个命令的输入</p>
+</li>
+<li><p><code>grep -v IMAGE</code>：<code>grep</code> 命令用于在文本流中查找匹配项；<code>-v</code> 参数表示反向选择，即排除包含指定模式的行。这里是为了过滤掉输出中描述镜像的那一行，因为我们只需要容器 ID</p>
+</li>
+<li><p><code>awk &#39;{print $1}&#39;</code>：<code>awk</code> 是一个强大的文本分析工具；这里用来提取每行的第一列，也就是容器 ID 这一列</p>
+</li>
+</ul>
+<p><code>awk &#39;{print $1}&#39;</code> 是一个基于 <code>awk</code> 工具的命令行表达式，用于处理和操作文本数据流。在这条命令中：</p>
+<ul>
+<li><p>它会读取一个文件或输入流（这里是经由管道传入的 <code>docker ps</code> 的输出），并按指定的模式处理每一行数据</p>
+</li>
+<li><p><code>{}</code> 花括号中包含的是 awk 命令要执行的动作</p>
+</li>
+<li><p><code>print</code> 是 awk 的内置命令，用于输出指定的字段或变量</p>
+</li>
+<li><p><code>$1</code> 是 awk 中的一个特殊变量，表示每行记录的第一个字段（默认情况下字段以空格或 Tab 等空白字符分隔）。在许多 UNIX/Linux 命令的输出格式中，第一列常常包含关键信息；例如在 <code>docker ps</code> 的输出中，第一列通常就是容器 ID</p>
+</li>
+</ul>
+<p>结合上面的命令，实际上就是从正在运行的容器列表中找出最近启动的、基于 <code>busybox:latest</code> 镜像的容器，并提取它的 ID。然后在 shell 脚本中把这个 ID 值赋给变量 <code>containerId</code></p>
+<p>最后的 <code>echo &quot;containerId&quot; $containerId</code> 用于输出变量 <code>containerId</code> 的值，这样你就能看到实际获取到的容器 ID</p>
+<h1 id="docker-export--o-busyboxtar-containerid-或-sudo-docker-export"><code>docker export -o busybox.tar $containerId</code> 或 <code>sudo docker export 09bbf421d93f &gt; ./busybox.tar </code></h1>
+<p><code>docker export -o busybox.tar $containerId</code> 是一个 Docker 命令，用于把指定容器的文件系统内容导出为一个 tar 归档文件</p>
+<ul>
+<li><p><code>docker export</code>：这是一个 Docker 命令，用于导出容器文件系统的快照。该命令只导出容器内部的文件系统层级，不包括容器的元数据、配置信息或运行状态</p>
+</li>
+<li><p><code>-o busybox.tar</code>：<code>-o</code> 选项后面跟的是输出文件的名称；这里指定把导出的内容保存为名为 <code>busybox.tar</code> 的 tar 文件</p>
+</li>
+<li><p><code>$containerId</code>：这是一个变量，代表前面命令获取到的容器 ID。在这条命令中，它用于指定要导出的具体容器实例</p>
+</li>
+</ul>
+<p>所以整条命令的意思是：把之前通过 <code>docker run</code> 命令创建并运行的 BusyBox 容器的文件系统内容，以 tar 文件的形式导出，并将导出的文件命名为 <code>busybox.tar</code>。这个 tar 文件包含了容器内部的所有文件和目录结构，可以用来做备份，或者在另一个环境中重新导入这个文件系统</p>
+<h1 id="tar--xvf-busyboxtar--c-busybox"><code>tar -xvf busybox.tar -C busybox/</code></h1>
+<p>命令 <code>tar -xvf busybox.tar -C busybox/</code> 用于把 <code>busybox.tar</code> 文件的内容解压并提取到指定目录。命令各部分的含义如下：</p>
+<ul>
+<li><p><strong>tar</strong>：这是 Unix/Linux 系统中用于处理归档文件（通常是 *.tar 文件）的工具；可以用来打包、压缩、解压，以及列出归档内的文件</p>
+</li>
+<li><p><strong>-x</strong>：这个选项表示执行提取操作。它告诉 tar 工具从指定的 tar 归档中提取文件</p>
+</li>
+<li><p><strong>-v</strong>：这是详细模式；在提取过程中会显示详细信息，包括正在提取的文件名，方便用户了解提取进度</p>
+</li>
+<li><p><strong>-f</strong>：这个选项后面跟的是要操作的 tar 文件名，即 <code>busybox.tar</code>。指定要提取的 tar 归档时必须要有这个参数</p>
+</li>
+<li><p><strong>-C</strong>：这个选项用于指定提取出的文件存放的目录；它后面跟着目标目录路径 <code>busybox/</code>。这意味着从 <code>busybox.tar</code> 中提取出的所有文件和目录都会放到名为 <code>busybox</code> 的目录下</p>
+</li>
+</ul>
+<p>总的来说，这条命令的整体效果是把 <code>busybox.tar</code> 中的所有文件提取出来，解压到当前目录下的 <code>busybox/</code> 子目录中。如果 <code>busybox/</code> 目录尚不存在，<code>tar</code> 会在提取之前先创建这个目录
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-001-2c08e72d6b.png" alt="图片"></p>
+<h1 id="mount-namespace-的共享性">mount namespace 的共享性</h1>
+<p>在 Linux 的 <code>mount namespace</code> 中挂载文件系统是否会影响宿主机的文件系统，取决于具体情况</p>
+<ul>
+<li><p><strong>默认情况下（在引入 systemd 之前，或设置了 MS_SHARED 传播类型时）</strong>：
+如果你在一个新的 <code>mount namespace</code> 中挂载文件系统，并且该挂载点是共享挂载（即挂载传播类型为 <code>MS_SHARED</code>），那么在新的 <code>mount namespace</code> 中进行的挂载操作会传播回宿主机以及共享该挂载点的其他 <code>mount namespace</code>。这意味着宿主机的文件系统视图也会相应发生变化</p>
+</li>
+<li><p><strong>设置为私有挂载（MS_PRIVATE）</strong>：
+如果在创建 <code>mount namespace</code> 时，把挂载点设置为私有（通过 <code>syscall.Mount(&quot;&quot;, &quot;/&quot;, &quot;&quot;, syscall.MS_PRIVATE|syscall.MS_REC, &quot;&quot;)</code> 命令），那么在这个新的 <code>mount namespace</code> 中挂载的任何文件系统，都不会影响宿主机，也不会影响没有设置为私有的其他 <code>mount namespace</code>。也就是说，新 <code>mount namespace</code> 中对文件系统的挂载和卸载操作只会影响该 namespace 本身，宿主机的文件系统视图不会发生变化</p>
+</li>
+</ul>
+<p>在 Docker 等容器技术中，通常会创建一个新的 <code>mount namespace</code>，并将其内部的挂载点设置为私有，以确保容器内部的文件系统操作不会影响宿主机或其他容器，从而实现容器级别的文件系统隔离</p>
+<h1 id="自挂载self-mount">自挂载（Self Mount）</h1>
+<p>想象你有一棵大树：树干代表宿主机的根文件系统，树枝代表挂载在其上的各个目录。当你想创建一个独立的分支（比如 <code>/newroot</code>）作为容器的新根目录时，如果不采取措施，这个分支仍然会受到整棵树（宿主机）其他变化的影响</p>
+<p><strong>举例说明</strong>：
+假设宿主机上有如下目录结构：</p>
+<pre><code>/
+├── bin
+├── etc
+├── home
+├── newroot
+│   ├── bin
+│   ├── etc
+│   └── var
+└── var
+</code></pre>
+<p>你想让 <code>/newroot</code> 成为容器的独立根目录，但如果不对 <code>/newroot</code> 进行自身的绑定挂载，那么在 <code>/newroot</code> 下进行的挂载操作会影响到宿主机的其他部分。例如，如果在 <code>/newroot/var</code> 下挂载了一个临时文件系统，这个挂载也会传播到宿主机的 <code>/var</code> 目录</p>
+<p>但是，通过执行自身的绑定挂载（<code>mount --bind /newroot /newroot</code> 或 <code>syscall.Mount(&quot;/newroot&quot;, &quot;/newroot&quot;, &quot;&quot;, syscall.MS_BIND|syscall.MS_REC, &quot;&quot;)</code>），你实际上创建了一个在挂载行为上独立于宿主机其余部分的“镜像”分支。此后，在 <code>/newroot</code> 下进行的任何挂载操作，比如把临时文件系统挂载到 <code>/newroot/var</code>，都只会影响 <code>/newroot</code> 这个“镜像”分支，而不会影响宿主机原本的 <code>/var</code> 目录</p>
+<p>这样一来，在执行 <code>pivot_root</code> 把 <code>/newroot</code> 切换为容器的新根目录时，新根目录（<code>/newroot</code>）就是一个干净独立的文件系统视图，不会影响宿主机的其余部分，从而实现了容器所需要的隔离</p>
+<h1 id="syscallmount-syscallms_privatesyscallms_rec-"><code>syscall.Mount(&quot;&quot;, &quot;/&quot;, &quot;&quot;, syscall.MS_PRIVATE|syscall.MS_REC, &quot;&quot;)</code></h1>
+<p><code>syscall.Mount(&quot;&quot;, &quot;/&quot;, &quot;&quot;, syscall.MS_PRIVATE|syscall.MS_REC, &quot;&quot;)</code> 是 Go 语言中的一段代码，调用了 Linux 内核的 <code>mount()</code> 系统调用，目的是修改当前进程根目录挂载点的挂载标志。具体来说：</p>
+<ul>
+<li>第一个参数 <code>&quot;&quot;</code> 代表当前挂载点；这里空字符串表示当前进程的根目录 <code>/</code></li>
+<li>第二个参数同样是 <code>&quot;/&quot;</code>，指的是目标挂载点，这里同样是根目录</li>
+<li>第三个参数 <code>&quot;&quot;</code> 代表文件系统类型；由于这不是挂载新的文件系统，而是修改已有挂载点的属性，所以这里也留空</li>
+<li>第四个参数是挂载标志，<code>syscall.MS_PRIVATE|syscall.MS_REC</code>：<ul>
+<li><code>syscall.MS_PRIVATE</code>：把当前挂载点及其所有子挂载点设置为私有挂载。这意味着对该挂载点进行的任何挂载、卸载或重新挂载操作都不会传播到其他 mount namespace，从而实现挂载事件的隔离，这对于创建独立的容器环境或其他需要文件系统隔离的场景至关重要</li>
+<li><code>syscall.MS_REC</code>：这是一个递归标志，意味着这个私有挂载属性不仅应用于根目录 <code>/</code>，还应用于根目录下所有的子挂载点，确保整个挂载树都变成私有挂载</li>
+</ul>
+</li>
+<li>第五个参数 <code>&quot;&quot;</code> 代表额外的挂载选项参数；这里是空字符串，表示不需要设置额外的挂载选项</li>
+</ul>
+<p>总的来说，这条命令的效果是把当前进程整个文件系统挂载树（包括根目录及其所有子目录）设置为私有挂载，确保在当前进程及其子进程的 mount namespace 内进行的挂载操作不会影响宿主机或其他进程的 namespace</p>
+<h1 id="bind-mount">bind mount</h1>
+<p>这是因为“bind mount”操作会在宿主机上创建一个新的文件系统挂载点，它的内容与原始的 <code>/container_root</code> 目录相同，但位于不同的文件系统中</p>
+<p>具体来说：</p>
+<ol>
+<li>在容器中，<code>/container_root</code> 是容器的根文件系统</li>
+<li>当我们执行 <code>mount --bind /container_root /container_root</code> 时，会在宿主机上创建一个指向 <code>/container_root</code> 目录的新文件系统挂载点</li>
+<li>这个新的文件系统挂载点与宿主机的根文件系统 <code>/host_root</code> 是不同的文件系统</li>
+</ol>
+<p>也就是说，从宿主机的角度看，<code>/container_root</code> 现在是一个独立的文件系统，而不是与宿主机根文件系统 <code>/host_root</code> 处于同一个文件系统中</p>
+<p>这个过程可以用一个例子来说明：</p>
+<p>假设在宿主机上，<code>/container_root</code> 原本是宿主机根文件系统 <code>/host_root</code> 的一个子目录。但执行 <code>mount --bind</code> 之后，<code>/container_root</code> 变成了一个独立的文件系统挂载点，不再与 <code>/host_root</code> 处于同一个文件系统中</p>
+<p>这样做的目的是为了满足 <code>syscall.PivotRoot</code> 函数的要求，即新的根文件系统和旧的根文件系统不能处于同一个文件系统下。通过“bind mount”操作，我们可以满足这个要求</p>
+<h1 id="私有挂载点-vs-私有-mount-namespace">私有挂载点 vs. 私有 mount namespace</h1>
+<p>Mount Namespace 的属性主要指的是 Namespace 中挂载点的传播属性（Mount Propagation）。下面的例子可以说明这一点：</p>
+<p><strong>示例场景</strong>：
+假设宿主机上有两个目录 <code>/mnt/shared</code> 和 <code>/mnt/private</code>，宿主机根目录 <code>/</code> 的挂载传播属性为默认值</p>
+<ol>
+<li><p><strong>创建一个新的 Mount Namespace 并设置挂载点的传播属性</strong>：
+我们可以用 <code>unshare</code> 命令创建一个新的 Mount Namespace，把 <code>/mnt/shared</code> 设置为共享挂载属性，<code>/mnt/private</code> 设置为私有挂载属性</p>
+<pre><code class="language-bash">sudo unshare -m bash            # 创建一个新的Mount Namespace
+sudo mount --make-shared /mnt/shared    # 设置/mnt/shared为共享挂载
+sudo mount --make-private /mnt/private  # 设置/mnt/private为私有挂载
+</code></pre>
+</li>
+<li><p><strong>Namespace 内部的操作</strong>：</p>
+<ul>
+<li><strong>共享挂载（/mnt/shared）</strong>：在新的 Namespace 中，如果把一个新的文件系统挂载到 <code>/mnt/shared/subdir</code>，由于 <code>/mnt/shared</code> 是共享挂载，这个新增的挂载点在宿主机或其他 Mount Namespace 中也能看到</li>
+<li><strong>私有挂载（/mnt/private）</strong>：如果在新的 Namespace 中对 <code>/mnt/private</code> 进行任何挂载或卸载操作，这些操作都不会影响宿主机或其他 Mount Namespace。换句话说，新 Namespace 中对 <code>/mnt/private</code> 做出的任何改动，对外部的 Namespace 都是透明的</li>
+</ul>
+</li>
+<li><p><strong>效果</strong>：</p>
+<ul>
+<li>对于 <code>/mnt/shared</code>，Namespace 内外的挂载操作会相互影响，而对于 <code>/mnt/private</code>，两者是完全隔离的</li>
+</ul>
+</li>
+</ol>
+<p>通过这个例子，我们可以看到 Mount Namespace 的属性如何影响不同 Namespace 之间挂载点的可见性以及操作带来的效果。在容器技术中，Mount Namespace 的这些属性为容器提供了独立的文件系统视图，有助于实现资源隔离和安全性</p>
+<h1 id="pivotroot">pivotroot</h1>
+<p>它会切换根系统目录，但不会自动把当前工作目录切换到根系统目录。如果不手动切换，你仍会停留在程序执行时所处的工作目录
+如下图所示
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-002-9e8fcb9b46.png" alt="图片">
+加上 <code>syscall.Chdir(&quot;/&quot;);</code>
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-003-e8c44cd007.png" alt="图片">
+不加 <code>syscall.Chdir(&quot;/&quot;);</code>，但加上 <code>command.Dir = &quot;/home/llk/Desktop/docker/src/pivotroot_docker/busybox&quot;</code>
+那么当前工作目录会在 command.start 时自动切换
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-004-dcd7e8a250.png" alt="图片"></p>
+<h1 id="我自己的理解">我自己的理解</h1>
+<ol>
+<li>不同的 mount namespace 各自拥有符合当前 namespace 的挂载点列表，也就是说挂载后显示的文件系统是不同的，但文件视图仍与从宿主机继承而来的一样。挂载操作是否会影响宿主机以及其他 mount namespace 的文件，取决于这个挂载点的属性。如果是私有的，就会修改宿主机和其他 mount namespace 的文件，否则就不会影响它们</li>
+</ol>
+<p>下图展示了把当前进程根目录挂载点设置为私有，并在直接在 mount namespace 中启动后，把 proc 挂载到当前容器内部的 /proc；可以发现这不会覆盖原宿主机上的 /proc
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-005-0fcadc88db.png" alt="图片">
+而如果不把当前进程根目录挂载点设置为私有，挂载的内容就会影响宿主机的 /proc
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-006-84b7011016.png" alt="图片">
+2. 把当前进程根目录挂载点下的一切都设置为私有，意味着该进程在这个挂载点上进行操作时，不会影响宿主机以及其他 mount namespace 的根目录挂载点
+3.  对新根目录挂载点进行绑定挂载，是因为 pivotroot 要求新根目录和原根目录处于不同的挂载点。由于新的根目录必须在原根目录的挂载点之内，为了让两者不处于同一个挂载点，我们把它绑定挂载到自身，这样当前进程就会把新根目录所在的挂载点视为新的根目录，这就使得两者不处于同一个挂载点</p>
+<h1 id="代码">代码</h1>
+<p><a href="https://github.com/FULLK/llkdocker/tree/main/pivotroot_docker">https://github.com/FULLK/llkdocker/tree/main/pivotroot_docker</a></p>
+<h1 id="结果">结果</h1>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-007-7ad7493614.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/"><span class="l">上一篇</span>从零构建 Docker 7 - ［联合文件系统］（联合文件系统、overlay 挂载、Docker 的 overlay2、镜像与容器与 overlay2、疑问）</a><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/"><span class="l">下一篇</span>从零构建 Docker 第 12 篇 - ［overlayfs］</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

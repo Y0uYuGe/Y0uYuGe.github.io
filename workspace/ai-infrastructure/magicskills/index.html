@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MagicSkills · Y0uYuGe</title>
+<meta name="description" content="A shared skill library for AI agents, with reusable collections, AGENTS.md synchronization, and CLI/Python integration.">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-infrastructure/magicskills" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-infrastructure">AI 基础设施</a></nav>
+    <h1>MagicSkills</h1>
+    <div class="meta"><time>2026-10-20</time><span class="tag">#Python</span><span class="tag">#Agent Skills</span><span class="tag">#AGENTS.md</span></div>
+    <article class="post-body">
+<h2 id="the-problem">The problem</h2>
+<p>A team using several agents can accumulate many copies of the same <code>SKILL.md</code> directory. Updates then need to be repeated, each agent&#39;s available capabilities become harder to track, and framework migrations introduce another integration layer. MagicSkills, developed in <a href="https://github.com/Narwhal-Lab">Narwhal-Lab</a>, gives those reusable instructions and supporting files a common management workflow.</p>
+<p>The practical goal is to maintain a skill once, select an appropriate working set for each agent, and connect that set to different runtimes. The project includes examples for agent applications and frameworks such as Codex, Cursor, LangChain, and CrewAI. See the <a href="https://github.com/Narwhal-Lab/MagicSkills#overview-en">project overview</a> for the supported integration patterns.</p>
+<h2 id="how-the-pieces-fit">How the pieces fit</h2>
+<figure>
+  <a href="/workspace/ai-infrastructure/magicskills/assets/magicskills-flow.svg" title="Open full-size diagram"><img src="/workspace/ai-infrastructure/magicskills/assets/magicskills-flow.svg" alt="A shared skill pool feeds Skills collections, which synchronize to AGENTS.md or expose CLI and Python interfaces."></a>
+  <figcaption>Skill reuse workflow, based on the repository's object model and synchronization code.</figcaption>
+</figure>
+
+<p><strong>Skill discovery.</strong> A skill is a directory containing <code>SKILL.md</code>. The implementation records its path, description, and source, allowing the content to stay in ordinary files that can be inspected and versioned.</p>
+<p><strong>Collection composition.</strong> A <code>Skills</code> instance selects the capabilities needed by one workflow. Several collections can reference the same installed directory. Lookup accepts names or explicit paths, which resolves ambiguity when two directories share a name. These operations live in the <a href="https://github.com/Narwhal-Lab/MagicSkills/blob/main/src/magicskills/type/skills.py">collection implementation</a>.</p>
+<p><strong>Persistence and integration.</strong> <code>REGISTRY</code> stores collection configuration and path references in <code>~/.magicskills/collections.json</code>; it does not duplicate the complete skill contents. Synchronization generates the skills section of <code>AGENTS.md</code>. Frameworks can instead call the collection&#39;s list, read, and execution interface through Python or the CLI. The <a href="https://github.com/Narwhal-Lab/MagicSkills/blob/main/src/magicskills/type/skillsregistry.py">registry implementation</a> and <a href="https://github.com/Narwhal-Lab/MagicSkills/blob/main/doc/python-api.md">Python API guide</a> explain these boundaries.</p>
+<h2 id="try-the-documented-workflow">Try the documented workflow</h2>
+<p>The following example uses the repository&#39;s included C-to-AST skill and a fresh collection name. It follows the <a href="https://github.com/Narwhal-Lab/MagicSkills/blob/main/doc/cli.md">CLI documentation</a>; Python 3.10–3.13 and Git are required.</p>
+<pre><code class="language-bash">git clone https://github.com/Narwhal-Lab/MagicSkills.git
+cd MagicSkills
+python -m pip install -e .
+magicskills install skill_template -t ./demo-skills
+magicskills addskills portfolio_demo --skill-list c_2_ast --agent-md-path ./demo-agent/AGENTS.md
+magicskills syncskills portfolio_demo
+magicskills skill-tool listskill --name portfolio_demo
+</code></pre>
+<p>Review the synchronization prompt to write the generated file. The final command lists the selected skill; reading its instructions and running its parser are separate steps. The <a href="https://github.com/Narwhal-Lab/MagicSkills/tree/main/skill_template/c_2_ast">sample skill</a> provides those files. Execution uses the current working directory, so an integration must choose its working directory explicitly.</p>
+<h2 id="development-history-and-writing">Development history and writing</h2>
+<p>The <a href="https://github.com/Narwhal-Lab/MagicSkills/commits/main/">commit history</a> and <a href="https://github.com/Narwhal-Lab/MagicSkills/pulls?q=is%3Apr">pull requests</a> provide the public implementation record. For a longer explanation of the skill reuse model, see my MagicSkills technical article.</p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-infrastructure/llkdocker/"><span class="l">上一篇</span>llkdocker</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#the-problem">The problem</a><a class="d2" href="#how-the-pieces-fit">How the pieces fit</a><a class="d2" href="#try-the-documented-workflow">Try the documented workflow</a><a class="d2" href="#development-history-and-writing">Development history and writing</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

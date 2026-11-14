@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>制作 RISC-V 操作系统（四）——嵌入式开发介绍 · Y0uYuGe</title>
+<meta name="description" content="程序运行在开发板上，换句话说，就是运行在硬件上。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/risc-v-labs">RISC-V 实验</a></nav>
+    <h1>制作 RISC-V 操作系统（四）——嵌入式开发介绍</h1>
+    <div class="meta"><time>2023-12-05</time><span class="tag">#risc-v</span></div>
+    <article class="post-body">
+<h1 id="什么是嵌入式开发">什么是嵌入式开发</h1>
+<p>程序运行在开发板上，换句话说，就是运行在硬件上</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-001-bf1e7a4524.png" alt="图片"></p>
+<h1 id="交叉编译">交叉编译</h1>
+<p>简单来说，交叉编译就是生成的程序不在本机上运行，而是在与本机体系结构不同的计算机上运行
+build：构建编译器的计算机
+host：运行由 build 计算机生成的编译器的计算机
+target：编译结果运行的地方
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-002-ad59a30f85.png" alt="图片"></p>
+<h2 id="看看-gcc-的一些文件夹">看看 GCC 的一些文件夹</h2>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-003-3ca2b214fb.png" alt="图片">
+-&gt; 表示符号链接
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-004-ecc9946ce7.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-005-d420e3a61e.png" alt="图片"></p>
+<h1 id="gdb-调试器">GDB 调试器</h1>
+<p>GDB 调试涉及 2 个程序：gdb 程序和被调试的程序。根据这 2 个程序是否运行在同一台计算机上，GDB 的调试模式可以分为 2 种：
+本地调试：调试器和被调试程序运行在同一台计算机上
+gdb 启动后，首先 fork 一个子进程，被调试程序就在这个单独的子进程中运行，gdb 程序本身也在自己独立的进程中运行。然后这两个进程通过特殊的 ptrace 系统调用建立联系。</p>
+<p>远程调试：调试器运行在一台计算机上，而被调试程序运行在另一台计算机上
+目标机上有一个 gdbserver 服务，gdb 与 gdbserver 交互，由 gdbserver 代理我们的调试过程。被调试程序运行在目标机上，而调试操作在本机上进行。两台机器通过网络连接</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-006-aa5bb4d36f.png" alt="图片"></p>
+<h2 id="相关语法和命令">相关语法和命令</h2>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-007-85ad1084a6.png" alt="图片"></p>
+<pre><code class="language-bash">p &lt;变量名称&gt;
+Print的简写，显示指定变量（临时变量或全局变量）的值。
+
+s
+执行一行源程序代码，如果此行代码中有函数调用，则进入该函数。相当于其它调试器中的“Step Into (单步跟踪进入)”。
+这个命令必须在有源代码调试信息的情况下才可以使用（GCC编译时使用“-g”参数）。
+
+si
+si命令类似于s命令，但针对汇编指令。
+
+n
+执行一行源程序代码，此行代码中的函数调用也一并执行。相当于其它调试器中的“Step Over (单步跟踪)”。
+这个命令必须在有源代码调试信息的情况下才可以使用（GCC编译时使用“-g”参数）。
+
+ni
+ni命令类似于n命令，但针对汇编指令。
+
+c
+Continue的简写，继续执行被调试程序，直至下一个断点或程序结束。
+
+l
+List的简写，列出当前位置之后的10行代码；list line_number: 列出line_number之后的十行代码。
+</code></pre>
+<h1 id="qemu-模拟器">QEMU 模拟器</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-008-5e6500fba0.png" alt="图片">
+此时它模拟的是用户级环境（类似于操作系统）；llk 运行在用户级</p>
+<pre><code class="language-bash">qemu-riscv32 ./llk  #在qemu提供的环境上运行llk
+</code></pre>
+<p>开发操作系统时，需要模拟系统级层面（类似于硬件层面）</p>
+<h1 id="安装和使用-qemu">安装和使用 QEMU</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-009-d0e5b89964.png" alt="图片"></p>
+<h1 id="项目构建工具-make">项目构建工具 Make</h1>
+<p>以自动化的方式编译程序
+-f 指定 makefile
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-010-a614d2ed18.png" alt="图片"></p>
+<h2 id="makefile-的结构">Makefile 的结构</h2>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-011-bdd8a21a28.png" alt="图片">
+特殊变量 .DEFAULT_GOAL 可以用来告诉 Make：如果命令行上没有指定目标（即直接运行 make 时），要构建哪个（或哪些）目标。否则，Make 就构建它遇到的第一个目标。
+.PHONY：伪目标。伪目标并不代表一个真正的文件名，在执行 make 时可以指定这个目标来执行其规则中定义的命令。伪目标有时也称为标签。伪目标用 PHONY 声明。在 PHONY 中声明的目标，其命令总是会被执行
+在下图中，意思是无论 clean 是否存在，clean 中的命令都会执行</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-012-4f63c38583.png" alt="图片"></p>
+<pre><code class="language-bash">$(SRCS_ASM:.S=.o) 就是将SRCS_ASH变量里面的.S都替换为.o
+</code></pre>
+<h2 id="运行-make">运行 make</h2>
+<p>基本上就是一层套一层
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-013-63e56f02c4.png" alt="图片"></p>
+<h1 id="练习-4-1">练习 4-1</h1>
+<p>熟悉交叉编译的概念。使用 riscv gcc 编译代码，并使用 binutils 工具分析生成的目标文件和可执行文件（ELF 格式）。具体要求如下：</p>
+<ul>
+<li>编写一个打印 &quot;hello world!&quot; 的简单程序源文件：hello.c</li>
+<li>针对支持 rv32ima 指令集架构的处理器，编译源文件生成目标文件 hello.o</li>
+<li>查看 hello.o 的文件头信息。</li>
+<li>查看 hello.o 的 Section Header Table。</li>
+<li>反汇编 hello.o，查看 hello.c 的 C 源代码与机器指令之间的对应关系。</li>
+</ul>
+<p>-march=rv32ima：指定生成的 32 位可执行文件可以运行在支持 i 整数指令集、m 乘除法指令集和 a 原子操作指令集的处理器上</p>
+<p>-mabi=ilp32：长整型是多少位</p>
+<pre><code class="language-bash">riscv64-unknown-elf-gcc -march=rv32ima -mabi=ilp32 llk.c -o llk
+</code></pre>
+<pre><code class="language-bash">file llk
+</code></pre>
+<pre><code class="language-bash">qemu-riscv32 ./llk  #在qemu提供的环境上运行llk
+</code></pre>
+<h1 id="练习-4-2">练习 4-2</h1>
+<p>在练习 4-1 的基础上，继续熟悉 qemu/gdb 等工具。具体要求如下：</p>
+<ul>
+<li>将 hello.c 编译成可调试的可执行文件 a.out</li>
+<li>先用 qemu-riscv32 运行 a.out。</li>
+<li>使用 qemu-riscv32 和 gdb 调试 a.out。</li>
+</ul>
+<h1 id="练习-4-3">练习 4-3</h1>
+<ul>
+<li>自学 Makefile 语法，并理解在 riscv-operating-system-mooc 仓库根目录下执行 make 时会发生什么。</li>
+</ul>
+<pre><code class="language-bash">SECTIONS = \
+	code/asm \
+	code/os \
+
+.DEFAULT_GOAL := all
+all :
+	@echo &quot;begin compile ALL exercises for assembly samples .......................&quot;
+	for dir in $(SECTIONS); do $(MAKE) -C $$dir || exit &quot;$$?&quot;; done
+	@echo &quot;compile ALL exercises finished successfully! ......&quot;
+
+.PHONY : clean
+clean:
+	for dir in $(SECTIONS); do $(MAKE) -C $$dir clean || exit &quot;$$?&quot;; done
+
+.PHONY : slides
+slides:
+	rm -f ./slides/*.pdf
+	soffice --headless --convert-to pdf:writer_pdf_Export --outdir ./slides ./docs/ppts/*.pptx
+
+</code></pre>
+<ul>
+<li>\ 表示续行。只有在执行 Makefile 对应命令中的 shell 语句时才会进入 shell 环境；每一行命令都是独立的，每一行都在单独的 shell 中运行，因此上一行定义的 shell 变量对下一行无效。当然，用 \ 把行连接起来就可以消除这个限制，使它们成为由同一个 shell 执行的一条命令。图中 SECTIONS 后面的 \ 可以理解为把下面几行与上面一行连接成一行。否则 make 执行时每一行都在单独的 shell 中运行，SECTIONS 就无法成功赋值。加上之后，shell 会把这三行一起执行，于是赋值成功</li>
+<li>for in ; do ; done 循环语句：在 makefile 中，shell 变量需要用两个 $ 来表示变量名，这里对应 dir</li>
+<li>make -C directory 表示进入该目录后再执行 make</li>
+<li>|| 表示如果前面的命令执行失败，就执行后面的命令</li>
+</ul>
+<p>所以整个 make 大致就是进入 code/asm 和 code/os 目录执行 make；/code/asm 下对应的 makefile 又会进入每个子目录执行 make，/code/os 也是一样</p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/"><span class="l">上一篇</span>制作 RISC-V 操作系统（六）——引导程序（RISC-V Bootloader）</a><a href="/workspace/software-foundations/operating-systems/risc-v-labs/RISC-V%20%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E7%BC%96%E7%A8%8B/"><span class="l">下一篇</span>RISC-V 汇编语言编程</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#看看-gcc-的一些文件夹">看看 GCC 的一些文件夹</a><a class="d2" href="#相关语法和命令">相关语法和命令</a><a class="d2" href="#makefile-的结构">Makefile 的结构</a><a class="d2" href="#运行-make">运行 make</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

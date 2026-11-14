@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>水文知识图谱构建 - 学习笔记 + 代码 · Y0uYuGe</title>
+<meta name="description" content="利用大模型通过提示词抽取防汛抢险相关术语，并通过聚类算法提取术语主题进行重组优化。亮点：三元组 + 《水利水电工程设计术语标准》（SL 26-2012）—&gt; 五元组。数据处理：防汛抢险知识来源于多源异构的知识载体，既有半结构化的，也有非结构化的。总结：多源文本 -&gt; 大模型 + 卷积模块 + 语义关联层面的改进。作者：周逸凡、段浩、赵红莉、赵慧子、李昊、韩昆。期刊：《水利学报》2024 年第 1 期。实体数据增强扩充数据，并引入 CNN 改进抽取模型。题目：水文模型知识图谱构建与应用。知识融合与加工，然后存入图数据库。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/knowledge-graphs-and-rag/%E6%B0%B4%E6%96%87%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E6%9E%84%E5%BB%BA%20-%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%20%2B%20%E4%BB%A3%E7%A0%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/knowledge-graphs-and-rag">知识图谱与 RAG</a></nav>
+    <h1>水文知识图谱构建 - 学习笔记 + 代码</h1>
+    <div class="meta"><time>2024-12-17</time><span class="tag">#知识图谱</span><span class="tag">#学习</span><span class="tag">#人工智能</span><span class="tag">#LLM</span></div>
+    <article class="post-body">
+<h1 id="水文模型知识图谱构建与应用核心">水文模型知识图谱构建与应用（核心）</h1>
+<p><a href="https://mp.weixin.qq.com/s/oV-16C4EQ7hqHJ2kUAlxvw">水文模型知识图谱构建与应用</a></p>
+<p>题目：水文模型知识图谱构建与应用
+作者：周逸凡、段浩、赵红莉、赵慧子、李昊、韩昆
+期刊：《水利学报》2024 年第 1 期</p>
+<p>总结：自顶向下构建。
+<img src="/workspace/ai-foundations/knowledge-graphs-and-rag/%E6%B0%B4%E6%96%87%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E6%9E%84%E5%BB%BA%20-%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%20%2B%20%E4%BB%A3%E7%A0%81/assets/csdn-144455199/image-001-eee173e2dd.png" alt="图片"></p>
+<ol>
+<li>本体建模：图谱边界 -&gt; 概念/术语节点 -&gt; 属性</li>
+<li>实体抽取：BERT 模型 -&gt; 针对不同类型实体采用不同的抽取策略并赋予策略权重 -&gt; 对不同策略的结果进行打分排序（某策略抽取出的实体获得相应的权重分数），再加上模式过滤（去除抽取方式不同但可能重复的实体）</li>
+<li>关系抽取：直接匹配与模式匹配相结合（常见方法有基于模板的关系抽取、基于监督学习的关系抽取和基于弱监督学习的关系抽取）</li>
+<li>知识融合：通过词汇映射进行实体融合（把同一模型的不同表述映射为标准名称），解决多词同指问题 + 同样用词汇映射表对同义的评价指标进行整理和对齐</li>
+<li>知识存储：存入 Neo4j</li>
+</ol>
+<h1 id="水利防汛抢险知识图谱构建与应用">水利防汛抢险知识图谱构建与应用</h1>
+<p><a href="https://mp.weixin.qq.com/s/SqHaZMxSzF2bd9lHErYO7A">水利防汛抢险知识图谱构建与应用</a>
+<img src="/workspace/ai-foundations/knowledge-graphs-and-rag/%E6%B0%B4%E6%96%87%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E6%9E%84%E5%BB%BA%20-%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%20%2B%20%E4%BB%A3%E7%A0%81/assets/csdn-144455199/image-002-5fdae50747.png" alt="图片"></p>
+<p>总结：多源文本 -&gt; 大模型 + 卷积模块 + 语义关联层面的改进</p>
+<ol>
+<li><p>数据处理：防汛抢险知识来源于多源异构的知识载体，既有半结构化的，也有非结构化的</p>
+</li>
+<li><p>利用大模型通过提示词抽取防汛抢险相关术语 + 通过聚类算法提取术语主题进行重组优化</p>
+</li>
+<li><p>实体数据增强扩充数据，并引入 CNN 改进抽取模型</p>
+</li>
+<li><p>知识融合与加工，然后存入图数据库</p>
+</li>
+</ol>
+<p>亮点：三元组 + 《水利水电工程设计术语标准》（SL 26-2012）—&gt; 五元组</p>
+<h1 id="水利工程知识图谱构建与应用">水利工程知识图谱构建与应用</h1>
+<p><a href="https://mp.weixin.qq.com/s/s-JUhfTG5Lila085oMkr1g">水利工程知识图谱构建与应用</a></p>
+<ol>
+<li>数据清洗、集成与标准化</li>
+<li>依据《水利对象分类与编码总则》确定概念节点（或节点类型）+ 对象基础信息作为类型的属性及属性数据节点 + 二分图映射算法（其节点可分为两组，每条边都连接不同组的节点）确定概念节点之间的关系</li>
+<li>基于概念节点、属性和关系，用具体数据进行实例化（推理规则嵌入在关系中）</li>
+<li>ECharts 可视化，提供检索与推荐功能</li>
+</ol>
+<h1 id="代码">代码</h1>
+<p><a href="https://github.com/FULLK/Intelligent_Water_Management_Emergency_Response-Studying/tree/master/%E6%B0%B4%E5%88%A9%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1">https://github.com/FULLK/Intelligent_Water_Management_Emergency_Response-Studying/tree/master/%E6%B0%B4%E5%88%A9%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1</a></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-foundations/knowledge-graphs-and-rag/%E5%9F%BA%E4%BA%8E%20GraphRAG%20%2B%20Llama%203.2%20%E7%9A%84%E6%85%95%E8%AF%BE%E8%AF%BE%E7%A8%8B%E8%B5%84%E6%BA%90%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/"><span class="l">上一篇</span>基于 GraphRAG + Llama 3.2 的慕课课程资源问答系统</a><a href="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"><span class="l">下一篇</span>GraphRAG 学习笔记</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建 RISC-V 操作系统 第8部分 - 内存管理（内存管理分类、链接脚本、ld 脚本语法、从 ld 脚本获取符号值、页级动态分配、管理 heap 区域每个页的状态、动态分配（页级）、代码） · Y0uYuGe</title>
+<meta name="description" content="在汇编中，可以使用链接脚本中的符号进行赋值，但它们只在链接之后才生效；也就是说，生成目标文件时赋值并没有成功（该符号被识别为未定义符号，意味着该符号在当前目标文件中没有定义，会在链接阶段被解析为在另一个目标文件中定义的符号。数据段中声明了一个变量，这个变量的值会被包含进 ELF 中；ELF 文件中包含该变量的符号和值，但如果编译器发现你的某些变量初始值是 0，编译器可以只存储它们的符号而不存储值（反正都是 0），把它们统一放进 BSS 段（也就是在堆中动态分配页级大小。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/risc-v-labs">RISC-V 实验</a></nav>
+    <h1>从零构建 RISC-V 操作系统 第8部分 - 内存管理（内存管理分类、链接脚本、ld 脚本语法、从 ld 脚本获取符号值、页级动态分配、管理 heap 区域每个页的状态、动态分配（页级）、代码）</h1>
+    <div class="meta"><time>2024-03-31</time><span class="tag">#risc-v</span><span class="tag">#java</span><span class="tag">#linux</span><span class="tag">#堆</span></div>
+    <article class="post-body">
+<h1 id="内存管理的分类">内存管理的分类</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-001-8523c0e7a9.png" alt="图片"></p>
+<h1 id="链接脚本">链接脚本</h1>
+<p>各个目标文件通过链接脚本链接在一起
+最后会添加一个程序表
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-002-d919b4508d.png" alt="图片">
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-003-fecadbae4d.png" alt="图片"></p>
+<h1 id="ld-脚本语法">ld 脚本语法</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-004-e164a0a5c9.png" alt="图片">
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-005-62ea47f918.png" alt="图片">
+memory 定义了一个区域
+其中 rx 表示该内存区域是一个只读区域
+origin 是起始位置，length 是长度
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-006-9ffd354377.png" alt="图片">
+<code>.</code> 表示当前位置指针；.=0x10000 表示当前指针为 0x10000。&gt;ram 表示把这些段布局并加载到名为 ram 的内存区域中</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-007-72427f2556.png" alt="图片">
+对符号赋值
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-008-01a09adcae.png" alt="图片"></p>
+<h1 id="从-ld-脚本获取符号值">从 ld 脚本获取符号值</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-009-8bcc2e77f1.png" alt="图片"></p>
+<h1 id="实现页级的动态分配">实现页级的动态分配</h1>
+<p>页级指的是大小为 4K
+也就是在堆中动态分配页级大小
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-010-aba05e02ef.png" alt="图片"></p>
+<h1 id="管理-heap-区域每个页的状态">管理 heap 区域每个页的状态</h1>
+<p>链表方式：用链表把 heap 区域中所有未分配的页链接起来，再用另一条链表把所有已分配的区域链接起来
+数组方式：用一个数组表示 heap 区域中所有的页，并设置某些标志位来表示数组元素对应的页是否已被分配
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-011-3bb57936ec.png" alt="图片"></p>
+<h1 id="动态分配页级">动态分配（页级）</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-012-9644be2995.png" alt="图片">
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-013-634cbdb704.png" alt="图片"></p>
+<h1 id="代码">代码</h1>
+<p>整体上实现了两部分：内存布局和内存动态分配</p>
+<p>链接脚本和汇编文件 memory.S 实现了内存布局
+页级动态分配在 page.c 中实现</p>
+<ul>
+<li><p>word：表示四个字节</p>
+</li>
+<li><p>在汇编中，可以使用链接脚本中的符号进行赋值，但它们只在链接之后才生效；也就是说，生成目标文件时赋值并没有成功（该符号被识别为未定义符号，意味着该符号在当前目标文件中没有定义，会在链接阶段被解析为在另一个目标文件中定义的符号。在这种情况下，_heap_start 可能在另一个目标文件中定义，并在链接阶段被解析。）</p>
+</li>
+<li><p>extern 关键字不仅可以用来声明在其他 C 文件中定义的全局变量，也可以用来声明在汇编文件中定义的全局变量。这通常出现在嵌入式开发或底层系统编程中，需要与汇编代码交互的场合。</p>
+</li>
+<li><p>数据段中声明了一个变量，这个变量的值会被包含进 ELF 中；ELF 文件中包含该变量的符号和值，但如果编译器发现你的某些变量初始值是 0，编译器可以只存储它们的符号而不存储值（反正都是 0），把它们统一放进 BSS 段（<strong>参考：刘霁兰老师</strong>）</p>
+</li>
+<li><p>la 是 &quot;load address&quot; 的缩写；它是一个伪指令，用于把一个符号的地址加载到寄存器中。</p>
+</li>
+<li><p>bgeu 是 &quot;branch if greater or equal, unsigned&quot; 的缩写；它是一条条件分支指令。</p>
+</li>
+<li><p>sw 是 store word</p>
+</li>
+<li><p>addi 是 add immediate</p>
+</li>
+<li><p>bltu 是 branch if less than unsigned</p>
+</li>
+<li><p>sll 是 Shift Left Logical</p>
+</li>
+</ul>
+<p><a href="https://github.com/FULLK/risllkos">代码链接 https://github.com/FULLK/risllkos</a></p>
+<h1 id="待完善整体完成后再补充-smile">待完善（整体完成后再补充 :smile:）</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-014-b309f8e8af.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC8%E9%83%A8%E5%88%86%20-%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%88%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%88%86%E7%B1%BB%E3%80%81%E9%93%BE%E6%8E%A5%E8%84%9A%E6%9C%AC%E3%80%81ld%20%E8%84%9A%E6%9C%AC%E8%AF%AD%E6%B3%95%E3%80%81%E4%BB%8E/assets/csdn-137064900/image-015-4924bb49e1.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E7%AC%AC2%E9%83%A8%E5%88%86%20-%20RISC-V%20%E6%8C%87%E4%BB%A4%E9%9B%86%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B/"><span class="l">上一篇</span>从零构建 RISC-V 操作系统 第2部分 - RISC-V 指令集架构简介</a><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B9%9D%EF%BC%89-%20%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%EF%BC%88%E4%BB%BB%E5%8A%A1%E3%80%81%E4%BB%BB%E5%8A%A1%E4%B8%8A%E4%B8%8B%E6%96%87%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1%E3%80%81%E5%A4%9A%E4%BB%BB%E5%8A%A1/"><span class="l">下一篇</span>从零构建 RISC-V 操作系统（九）- 上下文切换与协作式多任务（任务、任务上下文、多任务、多任务系统分类、协作式多任务、代码实现）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

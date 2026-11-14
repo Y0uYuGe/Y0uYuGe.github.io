@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机器学习 - 梯度下降 + 小批量梯度下降 + 数据归一化 · Y0uYuGe</title>
+<meta name="description" content="当前参数 − 损失函数对参数的导数 = 新参数，新参数朝着使损失函数减小的方向移动。小批量梯度下降：每次迭代选取一部分数据计算损失并进行梯度下降。每一轮依次用每一批数据进行梯度下降，重复多轮。随机梯度下降：随机选取数据计算损失并进行梯度下降。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/machine-learning">机器学习</a></nav>
+    <h1>机器学习 - 梯度下降 + 小批量梯度下降 + 数据归一化</h1>
+    <div class="meta"><time>2024-12-22</time><span class="tag">#机器学习</span><span class="tag">#人工智能</span></div>
+    <article class="post-body">
+<h1 id="梯度下降">梯度下降</h1>
+<p>当前参数 − 损失函数对参数的导数 = 新参数，新参数朝着使损失函数减小的方向移动。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-001-a0a4ccc1c0.png" alt="图片">
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-002-a9c12ad788.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-003-3bfd7bf3ff.png" alt="图片"></p>
+<h1 id="小批量梯度下降">小批量梯度下降</h1>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-004-8b8018f2a1.png" alt="图片"></p>
+<p>小批量梯度下降：每次迭代选取一部分数据计算损失并进行梯度下降。
+随机梯度下降：随机选取数据计算损失并进行梯度下降。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-005-af16b39a26.png" alt="图片"></p>
+<h2 id="多轮训练">多轮训练</h2>
+<p>每一轮依次用每一批数据进行梯度下降，重复多轮。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-006-6128ee81ad.png" alt="图片"></p>
+<h1 id="数据归一化">数据归一化</h1>
+<h2 id="为什么要归一化">为什么要归一化</h2>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-007-77bf931a96.png" alt="图片">
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-008-039bf33913.png" alt="图片">
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-009-8629339930.png" alt="图片">
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-010-81895e8944.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-011-31e91eaa84.png" alt="图片"></p>
+<h2 id="损失函数的等高线">损失函数的等高线</h2>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-012-738970b4dd.png" alt="图片"></p>
+<h2 id="归一化">归一化</h2>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E5%B0%8F%E6%89%B9%E9%87%8F%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%20%2B%20%E6%95%B0%E6%8D%AE%E5%BD%92%E4%B8%80%E5%8C%96/assets/csdn-144621635/image-013-f7fc7d4b17.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E9%80%BB%E8%BE%91%E5%9B%9E%E5%BD%92%E4%B8%8E%20Softmax%20%E5%9B%9E%E5%BD%92/"><span class="l">上一篇</span>机器学习 - 逻辑回归与 Softmax 回归</a><a href="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/"><span class="l">下一篇</span>机器学习 - 正则化技术</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#多轮训练">多轮训练</a><a class="d2" href="#为什么要归一化">为什么要归一化</a><a class="d2" href="#损失函数的等高线">损失函数的等高线</a><a class="d2" href="#归一化">归一化</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

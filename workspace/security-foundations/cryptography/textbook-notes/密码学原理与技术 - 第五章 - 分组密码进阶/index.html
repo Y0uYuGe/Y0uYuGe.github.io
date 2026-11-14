@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密码学原理与技术 - 第五章 - 分组密码进阶 · Y0uYuGe</title>
+<meta name="description" content="在 XTS-AES 模式中：每个分组有固定大小（例如 128 位），并且 XTS 支持“密文窃取”，用于加密长度不是分组大小整数倍的明文数据。如果每次转账都使用相同的 IV，攻击者就能识别出这个转账操作被发送了很多次；如果是他自己的转账，他就会知道这段密文对应的是转账明文的加密结果。平均每个映射由 2^16 个密钥满足，总共有 2^64 个映射，因此总共有 2^80 个密钥。可以尝试修改某些明文，得知其对应密文分组的位置，然后用已知的密文分组进行替换。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/security-foundations">安全基础</a><span class="sep">›</span><a href="/#/security-foundations/cryptography">密码学</a><span class="sep">›</span><a href="/#/security-foundations/cryptography/textbook-notes">教材笔记</a></nav>
+    <h1>密码学原理与技术 - 第五章 - 分组密码进阶</h1>
+    <div class="meta"><time>2024-12-30</time><span class="tag">#密码学</span><span class="tag">#AES</span></div>
+    <article class="post-body">
+<h1 id="分组密码概述">分组密码概述</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-001-f010421fc3.png" alt="图片"></p>
+<h1 id="使用分组密码加密工作模式">使用分组密码加密：工作模式</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-002-e019a18aa7.png" alt="图片"></p>
+<h2 id="电子密码本模式ecb">电子密码本模式（ECB）</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-003-13bc1a8acb.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-004-bc4a91dd8f.png" alt="图片"></p>
+<h3 id="ecb-的优缺点">ECB 的优缺点</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-005-d18535e6e1.png" alt="图片"></p>
+<h3 id="针对-ecb-的替换攻击">针对 ECB 的替换攻击</h3>
+<p>可以尝试修改某些明文，得知其对应密文分组的位置，然后用已知的密文分组进行替换</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-006-be1e46709c.png" alt="图片"></p>
+<h3 id="示例">示例</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-007-c0c544722e.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-008-a1309e29a9.png" alt="图片"></p>
+<h2 id="密码分组链接模式cbc">密码分组链接模式（CBC）</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-009-3eb5488a78.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-010-f3f06eae9e.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-011-6b38fea7c8.png" alt="图片"></p>
+<h3 id="针对-cbc-的替换攻击">针对 CBC 的替换攻击</h3>
+<ul>
+<li>如果每次转账都选择一个合适的 IV（初始化向量），该攻击就完全失效。（IV 是 CBC 加密模式中的关键参数。如果每次转账都随机生成合适的 IV，攻击者就无法利用固定模式来识别或篡改转账信息。）</li>
+<li>如果每次加密都选择一个新的 IV，CBC 模式就成为一种概率加密方案，即同一明文的两次加密看起来完全不同。（通过使用不同的随机 IV，同一明文加密得到的密文完全不同，这增强了安全性，防止攻击者通过观察密文发现规律。）</li>
+<li>一般来说，IV 应当是一个非秘密的随机数（只使用一次）。（IV 的主要作用是使密文随机化；它可以公开，但应当是随机值，且不能重复使用。）</li>
+</ul>
+<p>如果每次转账都使用相同的 IV，攻击者就能识别出这个转账操作被发送了很多次；如果是他自己的转账，他就会知道这段密文对应的是转账明文的加密结果</p>
+<h2 id="输出反馈模式ofb">输出反馈模式（OFB）</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-012-b51df891e2.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-013-2bf03009bd.png" alt="图片"></p>
+<h2 id="密码反馈模式cfb">密码反馈模式（CFB）</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-014-87d4533339.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-015-cc28c4d192.png" alt="图片"></p>
+<h2 id="计数器模式ctr">计数器模式（CTR）</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-016-c1f3afe500.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-017-6beb60b6fe.png" alt="图片"></p>
+<h2 id="面向分组存储设备的-x-t-s-a-e-s-模式">面向分组存储设备的 X T S-A E S 模式</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-018-a5e8f8cff9.png" alt="图片"></p>
+<h3 id="可调分组密码">可调分组密码</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-019-a2ce3edfc8.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-020-d8362c1bc9.png" alt="图片"></p>
+<h3 id="存储加密要求">存储加密要求</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-021-7dfa492df6.png" alt="图片">
+P1619 标准的内容：
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-022-842d3fec5a.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-023-6e86a8c931.png" alt="图片"></p>
+<h3 id="单个分组上的-x-t-s-a-e-s-操作">单个分组上的 X T S-A E S 操作</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-024-7137ae5e97.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-025-6cfb6a6644.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-026-17ad5c1b9d.png" alt="图片"></p>
+<h3 id="x-t-s-a-e-s-模式">X T S-A E S 模式</h3>
+<p>单个分组的加密</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-027-c13b43c193.png" alt="图片">
+在 XTS-AES 模式中：每个分组有固定大小（例如 128 位），并且 XTS 支持“密文窃取”，用于加密长度不是分组大小整数倍的明文数据。</p>
+<h1 id="再论穷举密钥搜索">再论穷举密钥搜索</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-028-491ad7954c.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-029-5c8204e588.png" alt="图片"></p>
+<h2 id="示例-1">示例</h2>
+<p>平均每个映射由 2^16 个密钥满足；总共有 2^64 个映射，因此总共有 2^80 个密钥
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-030-c7413ea7a3.png" alt="图片"></p>
+<h1 id="提高分组密码的安全性">提高分组密码的安全性</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-031-0e37961b55.png" alt="图片"></p>
+<h2 id="双重加密">双重加密</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-032-9d91dc8fd6.png" alt="图片"></p>
+<h3 id="中间相遇攻击">中间相遇攻击</h3>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-033-2ee4e34d88.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-034-615019a929.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-035-e5523939a0.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-036-2158f7d6f0.png" alt="图片"></p>
+<h2 id="三重加密">三重加密</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-037-a5d6ac98e2.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-038-38cf663a9a.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-039-985641eee8.png" alt="图片"></p>
+<h2 id="密钥白化">密钥白化</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-040-009a73a7cf.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-041-9dbacb3a0c.png" alt="图片"></p>
+<h1 id="线性密码分析与差分密码分析">线性密码分析与差分密码分析</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%BA%94%E7%AB%A0%20-%20%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E8%BF%9B%E9%98%B6/assets/csdn-144801821/image-042-58c0f77b56.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B8%89%E7%AB%A0%20-%20%E6%95%B0%E6%8D%AE%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88DES%EF%BC%89/"><span class="l">上一篇</span>密码学原理与技术 - 第三章 - 数据加密标准（DES）</a><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/"><span class="l">下一篇</span>密码学原理与技术——第 1 章——引言</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#电子密码本模式ecb">电子密码本模式（ECB）</a><a class="d3" href="#ecb-的优缺点">ECB 的优缺点</a><a class="d3" href="#针对-ecb-的替换攻击">针对 ECB 的替换攻击</a><a class="d3" href="#示例">示例</a><a class="d2" href="#密码分组链接模式cbc">密码分组链接模式（CBC）</a><a class="d3" href="#针对-cbc-的替换攻击">针对 CBC 的替换攻击</a><a class="d2" href="#输出反馈模式ofb">输出反馈模式（OFB）</a><a class="d2" href="#密码反馈模式cfb">密码反馈模式（CFB）</a><a class="d2" href="#计数器模式ctr">计数器模式（CTR）</a><a class="d2" href="#面向分组存储设备的-x-t-s-a-e-s-模式">面向分组存储设备的 X T S-A E S 模式</a><a class="d3" href="#可调分组密码">可调分组密码</a><a class="d3" href="#存储加密要求">存储加密要求</a><a class="d3" href="#单个分组上的-x-t-s-a-e-s-操作">单个分组上的 X T S-A E S 操作</a><a class="d3" href="#x-t-s-a-e-s-模式">X T S-A E S 模式</a><a class="d2" href="#示例-1">示例</a><a class="d2" href="#双重加密">双重加密</a><a class="d3" href="#中间相遇攻击">中间相遇攻击</a><a class="d2" href="#三重加密">三重加密</a><a class="d2" href="#密钥白化">密钥白化</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

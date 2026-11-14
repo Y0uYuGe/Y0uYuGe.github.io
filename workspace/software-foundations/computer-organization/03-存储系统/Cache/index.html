@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cache · Y0uYuGe</title>
+<meta name="description" content="计算机组成原理 - Cache 的基本概念与原理 存储系统存在的问题 增加一层 Cache，缓解 CPU 与主存之间工作速度不匹配的问题 Cache 的工作原理 程序启动后，其代码从外存取入内存，再从内存调入 Cache，这样 CPU 执行程序代码时可以直接从 Cache 中读取">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F">存储系统</a></nav>
+    <h1>Cache</h1>
+    <div class="meta"><time>2023-11-26</time></div>
+    <article class="post-body">
+<h1 id="计算机组成原理---cache-的基本概念与原理">计算机组成原理 - Cache 的基本概念与原理</h1>
+<h2 id="存储系统存在的问题">存储系统存在的问题</h2>
+<p>增加一层 Cache，缓解 CPU 与主存之间工作速度不匹配的问题
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134613179/image-001-25c1932698.png" alt="图片"></p>
+<h2 id="cache-的工作原理">Cache 的工作原理</h2>
+<p>程序启动后，其代码从外存取入内存，再从内存调入 Cache，这样 CPU 执行程序代码时可以直接从 Cache 中读取，速度更快
+ <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134613179/image-002-ddb1f850ac.png" alt="图片"></p>
+<h2 id="局部性原理">局部性原理</h2>
+<p> 空间局部性：将要使用的信息在存储空间上是相邻的
+ 时间局部性：将要使用的信息很可能是已经使用过的信息
+（这里的信息指数据或指令）
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134613179/image-003-86a58f77c1.png" alt="图片"></p>
+<h2 id="性能分析">性能分析</h2>
+<p>两种访问方式</p>
+<ul>
+<li><p>第一种：
+ 先访问 Cache，不命中再访问内存。
+ 平均访问时间大于 Cache 访问时间，小于 Cache 访问时间与内存访问时间之和</p>
+</li>
+<li><p>第二种
+  同时访问 Cache 和内存
+  平均访问时间大于 Cache 访问时间，小于内存访问时间</p>
+</li>
+</ul>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134613179/image-004-f5eddbbbcb.png" alt="图片"></p>
+<h2 id="例题">例题</h2>
+<p>访问方式不同，平均访问时间的计算方式也不同
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134613179/image-005-e3b00abdf8.png" alt="图片"></p>
+<h2 id="定义局部的含义">定义“局部”的含义</h2>
+<p>主存被划分为大小相等的块，当需要把主存中的某些数据放入 Cache 时，包含这些数据的块被视为局部，并整体放入某个 Cache 块中（是复制，不是剪切）</p>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134613179/image-006-3681e0a96d.png" alt="图片"></p>
+<h2 id="一些问题">一些问题</h2>
+<p>对应关系指的是复制到哪一个 Cache 块
+数据副本就是复制出来的那份拷贝
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134613179/image-007-96f0acea59.png" alt="图片"></p>
+<h2 id="总结">总结</h2>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134613179/image-008-ca656a3291.png" alt="图片"></p>
+<h1 id="计算机组成原理---cache-替换算法">计算机组成原理 - Cache 替换算法</h1>
+<h2 id="概述">概述</h2>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134642195/image-001-1139353b18.png" alt="w">
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134642195/image-002-d0678cfabb.png" alt="图片"></p>
+<h2 id="随机算法rand">随机算法（RAND）</h2>
+<p>它不会有选择地考虑替换哪个 Cache 块，换句话说没有考虑局部性原理（可能被用到的 Cache 块），所以下一次要访问的 Cache 块可能被替换掉，导致频繁替换</p>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134642195/image-003-39be6026ef.png" alt="图片"></p>
+<h2 id="先进先出算法fifo">先进先出算法（FIFO）</h2>
+<p>最先进入的 Cache 块最先被替换
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134642195/image-004-01ff779131.png" alt="图片"></p>
+<h2 id="近期最少使用算法lru">近期最少使用算法（LRU）</h2>
+<p>人工判断替换哪个 Cache 块：从当前访问的主存块开始向后看，与 Cache 块逐一比较，直到只剩一个 Cache 块没有对应的主存块，就替换它<br>当 Cache 块总数为 2^n 时，计数器只需要 n 位。
+装满之后只有替换和命中两种情况；替换时替换计数器值最大的那一个；命中时，由于比命中块计数值小的计数器都加 1，最大的计数器位数仍不会超过 n 位
+并且 Cache 装满之后，所有计数器的值保证互不相同。
+仍然可能发生抖动
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134642195/image-005-702fe0711d.png" alt="图片"></p>
+<h2 id="最不经常使用算法lfu">最不经常使用算法（LFU）</h2>
+<p>如果有多行的计数器都是最小值（多行并列最小），可以按行号递增，或者按 FIFO（先进先出）策略来选择要替换的那一行
+新装入的块计数器置为 0，之后每被访问一次就加 1。需要替换时，选择计数器最小的那一行<br>计数器的位数更多，因为此时对计数器的值没有限制
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134642195/image-006-3a98d04469.png" alt="图片"></p>
+<h2 id="总结-1">总结</h2>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134642195/image-007-f7396d3184.png" alt="图片"></p>
+<h1 id="计算机组成原理---cache-写策略">计算机组成原理 - Cache 写策略</h1>
+<h2 id="概述-1">概述</h2>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134643435/image-001-e88146028f.png" alt="图片"></p>
+<h2 id="写命中">写命中</h2>
+<h3 id="写回法">写回法</h3>
+<p>数据不一致是指 Cache 中的数据与主存中的数据不一致
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134643435/image-002-cff1a8fcde.png" alt="图片"></p>
+<h3 id="全写法">全写法</h3>
+<p> <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134643435/image-003-3b15327952.png" alt="图片"></p>
+<p>写缓冲
+使用写缓冲时，写入 Cache 的数据同时写入写缓冲；之后在 CPU 做其他事情时，由专门的控制电路将其逐一写回对应的主存块
+写缓冲的容量有限，写操作过多会导致写缓冲被填满，此时就需要等待。
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134643435/image-004-ed9f2dcf30.png" alt="图片"></p>
+<h2 id="写不命中">写不命中</h2>
+<h3 id="写分配法">写分配法</h3>
+<p>即先把主存块调入 Cache，再按写回法处理
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134643435/image-005-50c0f44fc7.png" alt="图片"></p>
+<h3 id="非写分配法">非写分配法</h3>
+<p>即写不命中时只写主存，写命中时采用全写法。这种情况下只有读不命中才会调入 Cache
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134643435/image-006-9c96c53ab6.png" alt="图片"></p>
+<h2 id="多级-cache">多级 Cache</h2>
+<p>高一级的 Cache 保存着其低一级 Cache 中部分块的副本
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134643435/image-007-8267b73107.png" alt="图片"></p>
+<h2 id="总结-2">总结</h2>
+<p>本质上，各级 Cache 之间的关系与主存和 Cache 之间的关系是一样的——都是为了提高 CPU 的读写速度
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134643435/image-008-7516d2ab8c.png" alt="图片"></p>
+<h1 id="计算机组成原理---cache-与主存之间的映射方式">计算机组成原理 - Cache 与主存之间的映射方式</h1>
+<h2 id="概述-2">概述</h2>
+<p> 在组相联映射中，找到对应的 Cache 组之后，主存内容放在该组中任意有空位的位置
+ 标记（tag）用来标识它对应主存中的哪一块，即块号
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134641087/image-001-aff6e1b958.png" alt="图片"></p>
+<h2 id="全相联映射可放在任意位置">全相联映射（可放在任意位置）</h2>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134641087/image-002-260639edf1.png" alt="图片"></p>
+<h2 id="直接映射只能放在固定位置">直接映射（只能放在固定位置）</h2>
+<p>当两个主存块映射到同一位置时，先前映射的内容会被覆盖。
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134641087/image-003-ed193b026e.png" alt="图片"></p>
+<h2 id="组相联映射可放在特定的某一组内">组相联映射（可放在特定的某一组内）</h2>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134641087/image-004-af2a80f02b.png" alt="图片"></p>
+<h2 id="总结-3">总结</h2>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/assets/csdn-134641087/image-005-18ead8c4f7.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/"><span class="l">上一篇</span>计算机组成原理——存储系统的基本概念</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#存储系统存在的问题">存储系统存在的问题</a><a class="d2" href="#cache-的工作原理">Cache 的工作原理</a><a class="d2" href="#局部性原理">局部性原理</a><a class="d2" href="#性能分析">性能分析</a><a class="d2" href="#例题">例题</a><a class="d2" href="#定义局部的含义">定义“局部”的含义</a><a class="d2" href="#一些问题">一些问题</a><a class="d2" href="#总结">总结</a><a class="d2" href="#概述">概述</a><a class="d2" href="#随机算法rand">随机算法（RAND）</a><a class="d2" href="#先进先出算法fifo">先进先出算法（FIFO）</a><a class="d2" href="#近期最少使用算法lru">近期最少使用算法（LRU）</a><a class="d2" href="#最不经常使用算法lfu">最不经常使用算法（LFU）</a><a class="d2" href="#总结-1">总结</a><a class="d2" href="#概述-1">概述</a><a class="d2" href="#写命中">写命中</a><a class="d3" href="#写回法">写回法</a><a class="d3" href="#全写法">全写法</a><a class="d2" href="#写不命中">写不命中</a><a class="d3" href="#写分配法">写分配法</a><a class="d3" href="#非写分配法">非写分配法</a><a class="d2" href="#多级-cache">多级 Cache</a><a class="d2" href="#总结-2">总结</a><a class="d2" href="#概述-2">概述</a><a class="d2" href="#全相联映射可放在任意位置">全相联映射（可放在任意位置）</a><a class="d2" href="#直接映射只能放在固定位置">直接映射（只能放在固定位置）</a><a class="d2" href="#组相联映射可放在特定的某一组内">组相联映射（可放在特定的某一组内）</a><a class="d2" href="#总结-3">总结</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

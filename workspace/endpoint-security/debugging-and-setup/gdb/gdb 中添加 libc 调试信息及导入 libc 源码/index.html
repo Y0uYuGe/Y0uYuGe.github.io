@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gdb 中添加 libc 调试信息及导入 libc 源码 · Y0uYuGe</title>
+<meta name="description" content=".symtab 是全面的，包含程序中的所有符号信息，既包括局部静态符号也包括全局符号，主要用于链接和调试。.dynsym 则更精简，只记录动态链接过程中需要的那些符号；这些符号通常属于动态链接库，或者是需要被其他共享对象链接的全局符号。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/debugging-and-setup">调试与环境</a><span class="sep">›</span><a href="/#/endpoint-security/debugging-and-setup/gdb">gdb</a></nav>
+    <h1>gdb 中添加 libc 调试信息及导入 libc 源码</h1>
+    <div class="meta"><time>2024-05-16</time><span class="tag">#java</span><span class="tag">#linux</span><span class="tag">#编程语言</span><span class="tag">#GDB 调试</span></div>
+    <article class="post-body">
+<h1 id="调试信息">调试信息</h1>
+<p>调试信息是在编译或构建程序时生成的额外数据，用于帮助开发者在调试时理解代码的执行流程和状态。这些信息不直接影响程序的功能，但在调试阶段至关重要。调试信息通常包含以下内容：</p>
+<ul>
+<li><strong>源代码行号</strong>：对应每段可执行代码的源代码位置，使调试器能够在源代码中定位确切的执行点。</li>
+<li><strong>局部变量和函数参数的名称与类型</strong>：使调试时可以查看和修改变量的值。</li>
+<li><strong>源代码路径</strong>：帮助调试器找到原始源文件，以便显示代码上下文。</li>
+<li><strong>编译器宏定义</strong>：有助于理解代码中条件编译的部分。</li>
+<li><strong>程序的静态结构信息</strong>：如类、结构体、枚举等的定义，有助于理解数据结构。</li>
+</ul>
+<p>有了这些信息，调试器就能提供丰富的上下文视图，使开发者能够单步执行代码、设置断点、查看和修改变量值，从而追踪错误的根源。</p>
+<h1 id="符号表">符号表</h1>
+<p>符号表是编译器或汇编器在编译过程中创建的一种数据结构。它存储程序中定义的所有符号（如变量名、函数名、类名等）及其对应的地址或内存位置。符号表的主要用途包括：</p>
+<ul>
+<li><strong>地址解析</strong>：生成目标代码时，把源代码中的符号引用转换为目标代码中的实际地址。这对链接过程尤为重要，因为它帮助链接器解析外部引用。</li>
+<li><strong>辅助调试</strong>：提供给调试器，使其能够根据符号名查找变量或函数的确切内存地址，进而查看或修改其值，或跳转到特定函数的开头执行。</li>
+<li><strong>错误报告</strong>：编译时的错误和警告信息通常会引用符号表中的符号名，从而提供更易理解的错误描述。</li>
+<li><strong>性能分析</strong>：在性能分析工具中，符号表帮助把内存地址映射回源代码中的符号，便于了解哪些函数或代码块消耗了更多资源。</li>
+</ul>
+<h1 id="symtab-与-dynsym"><code>.symtab</code> 与 <code>.dynsym</code></h1>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81/assets/csdn-138926384/image-001-3bc3536bf0.png" alt="图片">
+在 ELF（Executable and Linkable Format，可执行与可链接格式）文件结构中，<code>.symtab</code>（符号表）和 <code>.dynsym</code>（动态符号表）存储着用途不同的符号信息。下面通过例子详细说明这两种符号表的区别。</p>
+<h3 id="symtab符号表"><code>.symtab</code>（符号表）</h3>
+<p><code>.symtab</code> 包含程序中的所有符号信息，无论是局部（静态）符号还是全局符号。这些符号信息用于在链接阶段解析符号引用，运行时也可能用于调试目的。这里的“局部静态符号”指只在当前编译单元内可见的符号，而“全局符号”是在整个程序中都可以访问的符号。</p>
+<p><strong>例子</strong>：
+假设有一个 C 程序，包含两个源文件：<code>main.c</code> 和 <code>helper.c</code>。<code>helper.c</code> 中定义了一个全局函数 <code>void helper_function()</code>，并在 <code>main.c</code> 中被调用。在这种情况下：</p>
+<ul>
+<li><code>helper_function</code> 的符号信息作为全局符号出现在 <code>.symtab</code> 中，因为它跨编译单元可见。</li>
+<li>假设 <code>main.c</code> 中还有一个局部静态变量 <code>static int local_var;</code>，它的符号信息也会被加入 <code>.symtab</code>，但作为局部静态符号，它只在编译 <code>main.c</code> 时可见，不会暴露给链接后程序的其他地方。</li>
+</ul>
+<h3 id="dynsym动态符号表"><code>.dynsym</code>（动态符号表）</h3>
+<p>相比之下，<code>.dynsym</code> 只包含动态链接时需要的符号，如从动态库导出的函数和全局变量。动态链接器（如 Linux 上的 <code>ld.so</code>）在程序启动时使用 <code>.dynsym</code> 来解析程序引用的动态库中的符号。</p>
+<p><strong>例子</strong>：
+如果你的程序使用了 <code>libm.so</code>（数学库）中的 <code>sin()</code> 函数，那么 <code>sin</code> 的符号信息会出现在 <code>.dynsym</code> 中而不是 <code>.symtab</code> 中。这是因为 <code>sin</code> 函数由动态库提供，只有在程序运行时，动态链接器才需要知道去哪里找这个函数的实现。</p>
+<h3 id="总结">总结</h3>
+<ul>
+<li><code>.symtab</code> 是全面的，包含程序中的所有符号信息，既包括局部静态符号也包括全局符号，主要用于链接和调试。</li>
+<li><code>.dynsym</code> 则更精简，只记录动态链接过程中需要的那些符号；这些符号通常属于动态链接库，或者是需要被其他共享对象链接的全局符号。</li>
+</ul>
+<h1 id="编译相关选项">编译相关选项</h1>
+<p><a href="https://workerwork.github.io/posts/sub-bin/">https://workerwork.github.io/posts/sub-bin/</a></p>
+<h1 id="实际调试">实际调试</h1>
+<h2 id="检查是否有符号表或调试信息">检查是否有符号表或调试信息</h2>
+<pre><code class="language-bash">readelf -S  vuln  | grep debug #查看是否有调试信息
+readelf -s vuln #查看是否去除符号表           
+</code></pre>
+<p>确实，<code>.symtab</code> 和 <code>.dynsym</code> 是 ELF（Executable and Linkable Format）文件中两个重要的节。它们各自扮演不同的角色，共同服务于程序的链接和运行时符号解析过程。下面简要说明这两个节，以及它们如何帮助我们查看 libc 或其他库中变量的类型。</p>
+<ul>
+<li><p><strong>.symtab（静态符号表）</strong>：这是一个完整的符号表，包含程序中所有的符号定义和引用，无论是局部符号、全局符号还是外部符号。它主要用于链接时的符号解析和调试目的。<code>.symtab</code> 包含符号的名称、类型（如函数、对象、TLS 等）、在文件中的地址，以及符号的绑定属性（局部或全局）。静态链接器利用这些信息解析未定义的符号引用。不过，在程序运行时，<code>.symtab</code> 并不直接用于动态链接，所以在生成程序的最终发布版本时，通常会用 <code>strip</code> 命令将其去除以减小文件体积。</p>
+</li>
+<li><p><strong>.dynsym（动态符号表）</strong>：这个节只包含动态链接所需的信息，即运行时可能需要从共享库中解析的全局符号和外部符号。<code>.dynsym</code> 不包含局部符号，因为它关注的是跨模块边界的符号查找。在程序执行过程中，动态链接器会查阅这张表来定位和加载共享对象中定义的符号。<code>.dynsym</code> 同样记录了符号的类型和地址，这对动态库尤为重要。</p>
+</li>
+</ul>
+<p>符号表（<code>.symtab</code>）已被去除，也没有调试信息。</p>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81/assets/csdn-138926384/image-002-5e10abfa36.png" alt="图片"></p>
+<p>调试符号是编译器在编译程序时生成并嵌入到可执行文件或库文件中的一系列信息。它们主要用于提供源代码级的调试信息，使调试器（如 GDB）能够：</p>
+<ul>
+<li>显示源代码行号与指令之间的对应关系，让你知道每条机器指令对应哪一行源代码。</li>
+<li>显示变量名及其在内存中的位置，包括局部变量、全局变量和结构体成员等，这对观察和修改变量值至关重要。</li>
+<li>提供函数名及其在内存中的地址，有助于设置断点和追踪函数调用栈。</li>
+<li>呈现类型信息，这对理解复杂数据结构以及正确显示复杂类型（如结构体和类）的内容尤为重要。</li>
+</ul>
+<p>缺少调试符号时，虽然有些调试器仍然可以加载并运行程序，但很多高级调试功能（如列出源代码、查看变量值等）将不可用或受限，使调试过程更加困难。
+<img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81/assets/csdn-138926384/image-003-d53dfc5a0d.png" alt="图片"></p>
+<h2 id="从-glibc-all-in-one-下载不同版本的-glibc-二进制库和调试信息">从 glibc-all-in-one 下载不同版本的 glibc 二进制库和调试信息</h2>
+<p><code>libc6_2.31-0ubuntu9.15_amd64.deb</code> 和 <code>libc6-dbg_2.31-0ubuntu9.15_amd64.deb</code> 都是 Debian 软件包格式的二进制包文件，即 <code>.deb</code> 文件。它们包含预编译的二进制代码、库文件、配置文件和其他支持文件，旨在简化软件的安装和管理过程。用户无需从源代码编译，可以直接用包管理器（如 APT）安装这些包。</p>
+<ul>
+<li><p><code>libc6_2.31-0ubuntu9.15_amd64.deb</code> 包含 GNU C 库（glibc）的共享库文件，这是许多 Linux 程序运行所需的基础库。</p>
+</li>
+<li><p><code>libc6-dbg_2.31-0ubuntu9.15_amd64.deb</code> 包含与 glibc 相关的调试符号信息，这对开发和调试使用这些库的应用程序非常重要，因为它使调试器（如 GDB）能够提供详细的栈回溯、变量值和源代码级调试信息。</p>
+</li>
+</ul>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81/assets/csdn-138926384/image-004-b7048bb83c.png" alt="图片">
+它们被下载到 libs/2.31-0ubuntu9.15_amd64 和 libs/2.31-0ubuntu9.15_amd64/.debug 中；需要显示隐藏文件才能看到。
+<img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81/assets/csdn-138926384/image-005-a6a327136e.png" alt="图片"></p>
+<h2 id="导入调试信息">导入调试信息</h2>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81/assets/csdn-138926384/image-006-aefbf029be.png" alt="图片"></p>
+<blockquote>
+<p>感谢 flyyy 师傅的指点，不然我都忘了导入调试信息的命令和导入源码搜索路径的命令是不一样的，害我之前用 dir 试了半天都不行。</p>
+</blockquote>
+<pre><code class="language-bash">show debug-file-directory
+set debug-file-directory /home/llk/Desktop/tools/glibc-all-in-one/libs/2.35-0ubuntu3.7_amd64/.debug/
+info share 再次查看发现导入成功
+</code></pre>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81/assets/csdn-138926384/image-007-27a821a865.png" alt="图片"></p>
+<h2 id="下载源码">下载源码</h2>
+<p><a href="https://mirrors.tuna.tsinghua.edu.cn/gnu/glibc/?spm=5176.28103460.0.0.4a8b3da2UN07VI">https://mirrors.tuna.tsinghua.edu.cn/gnu/glibc/?spm=5176.28103460.0.0.4a8b3da2UN07VI</a>
+<a href="https://ftp.gnu.org/gnu/glibc/?spm=5176.28103460.0.0.4a8b3da2UN07VI">https://ftp.gnu.org/gnu/glibc/?spm=5176.28103460.0.0.4a8b3da2UN07VI</a></p>
+<pre><code class="language-bash"> directory 源码路径
+</code></pre>
+<h2 id="导入源码">导入源码</h2>
+<p>当 GDB 或其他调试器提示缺少调试信息时，即使你有源代码文件，调试器在运行时也无法把执行的指令准确映射到源代码行。没有调试信息时，你可能只能看到汇编代码（通过 <code>disassemble</code> 命令），无法直接跳转到或查看具体的 C 源代码行。</p>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81/assets/csdn-138926384/image-008-1302ee0d3e.png" alt="图片">
+<img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E4%B8%AD%E6%B7%BB%E5%8A%A0%20libc%20%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E5%8F%8A%E5%AF%BC%E5%85%A5%20libc%20%E6%BA%90%E7%A0%81/assets/csdn-138926384/image-009-ef0ded3e99.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/debugging-and-setup/gdb/GDB%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%E5%AD%A6%E4%B9%A0/"><span class="l">上一篇</span>GDB 动态调试学习</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d3" href="#symtab符号表">.symtab（符号表）</a><a class="d3" href="#dynsym动态符号表">.dynsym（动态符号表）</a><a class="d3" href="#总结">总结</a><a class="d2" href="#检查是否有符号表或调试信息">检查是否有符号表或调试信息</a><a class="d2" href="#从-glibc-all-in-one-下载不同版本的-glibc-二进制库和调试信息">从 glibc-all-in-one 下载不同版本的 glibc 二进制库和调试信息</a><a class="d2" href="#导入调试信息">导入调试信息</a><a class="d2" href="#下载源码">下载源码</a><a class="d2" href="#导入源码">导入源码</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

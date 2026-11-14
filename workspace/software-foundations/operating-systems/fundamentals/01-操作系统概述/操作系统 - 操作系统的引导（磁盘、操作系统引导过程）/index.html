@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>操作系统 - 操作系统的引导（磁盘、操作系统引导过程） · Y0uYuGe</title>
+<meta name="description" content="开机时，CPU 首先到主存中执行 ROM 里的引导程序。该引导程序让 CPU 把磁盘的主引导记录读入内存，然后根据分区表执行磁盘引导程序。此时找到 C 盘，并把 C 盘的引导记录（PBR）读入内存，再执行该引导记录以找到启动管理器。接着从根目录中找到启动管理器并读入内存，CPU 随后执行启动管理器。它会找到 /Windows/Boot 文件夹并执行其中的内容。根目录：双击打开 C 盘后看到的文件和文件夹。主引导记录不属于任何一个具体的磁盘分区。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals">基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0">操作系统概述</a></nav>
+    <h1>操作系统 - 操作系统的引导（磁盘、操作系统引导过程）</h1>
+    <div class="meta"><time>2024-01-21</time><span class="tag">#操作系统</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-001-b85ea807f1.png" alt="图片"></p>
+<h1 id="一块全新的磁盘硬盘">一块全新的磁盘（硬盘）</h1>
+<p>此时里面完全是空的
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-002-38a40b07ed.png" alt="图片"></p>
+<h1 id="在磁盘上安装操作系统之后">在磁盘上安装操作系统之后</h1>
+<p>操作系统位于 C 盘</p>
+<p>主引导记录不属于任何一个具体的磁盘分区 </p>
+<p>根目录：双击打开 C 盘后看到的文件和文件夹
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-003-de131f72ad.png" alt="图片"></p>
+<h1 id="操作系统的引导过程">操作系统的引导过程</h1>
+<p>BIOS：基本输入输出系统（basic input ouput system）</p>
+<p>开机时，CPU 首先到主存中执行 ROM 里的引导程序。该引导程序让 CPU 把磁盘的主引导记录读入内存，然后根据分区表执行磁盘引导程序。此时找到 C 盘，并把 C 盘的引导记录（PBR）读入内存，再执行该引导记录以找到启动管理器。接着从根目录中找到启动管理器并读入内存，CPU 随后执行启动管理器
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-004-02c1f2e9a5.png" alt="图片"></p>
+<h1 id="示例windows-操作系统的初始化程序">示例：Windows 操作系统的初始化程序</h1>
+<p>它会找到 /Windows/Boot 文件夹并执行其中的内容
+<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-005-7fb56af4c9.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%89%B9%E5%BE%81%EF%BC%88%E5%B9%B6%E5%8F%91%E3%80%81%E5%85%B1%E4%BA%AB%E3%80%81%E8%99%9A%E6%8B%9F%E3%80%81%E5%BC%82%E6%AD%A5%E5%8F%8A%E5%85%B6%E7%9B%B8%E4%BA%92%E5%85%B3%E7%B3%BB%EF%BC%89/"><span class="l">上一篇</span>操作系统 - 操作系统的特征（并发、共享、虚拟、异步及其相互关系）</a><a href="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6%EF%BC%88%E5%86%85%E6%A0%B8%E7%A8%8B%E5%BA%8F%E3%80%81%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E3%80%81%E7%89%B9%E6%9D%83%E6%8C%87%E4%BB%A4%E3%80%81%E9%9D%9E%E7%89%B9%E6%9D%83%E6%8C%87%E4%BB%A4%E3%80%81%E5%86%85%E6%A0%B8%E6%80%81%E3%80%81%E7%94%A8%E6%88%B7%E6%80%81%E3%80%81%E7%8A%B6%E6%80%81%E5%88%87%E6%8D%A2/"><span class="l">下一篇</span>操作系统 - 操作系统的运行机制（内核程序、应用程序、特权指令、非特权指令、内核态、用户态、状态切换）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机器学习——多元线性回归 · Y0uYuGe</title>
+<meta name="description" content="用历史数据训练模型、预测未来具体数值的任务就是回归任务。多元线性回归是众多回归算法中最基础的一种。多元：多个维度——影响预测目标的多个因素；房子的售价取决于多个因素。三维空间中的线性：平面。更高维空间中的线性：统称为超平面。回归：拟合数据点。拟合可以是线性的，也可以是非线性的。三维中的线性回归：用平面拟合数据点。三维中的非线性回归：用曲面拟合数据点。多元线性回归：在多元空间中用线性形状（直线、平面、超平面）拟合数据点。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/machine-learning">机器学习</a></nav>
+    <h1>机器学习——多元线性回归</h1>
+    <div class="meta"><time>2024-12-16</time><span class="tag">#机器学习</span><span class="tag">#线性回归</span><span class="tag">#人工智能</span></div>
+    <article class="post-body">
+<h1 id="代码">代码</h1>
+<p><a href="https://github.com/FULLK/AI_Study/tree/main/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92">https://github.com/FULLK/AI_Study/tree/main/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92</a></p>
+<h1 id="什么是回归任务">什么是回归任务</h1>
+<p>用历史数据训练模型、预测未来具体数值的任务就是回归任务。
+多元线性回归是众多回归算法中最基础的一种。</p>
+<h1 id="多元是什么意思">“多元”是什么意思</h1>
+<p>多元：多个维度——影响预测目标的多个因素。房子的售价取决于多个因素。
+三维空间中的线性：就是平面。
+更高维空间中的线性：统称为超平面。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-001-a5db87bf85.png" alt="图片"></p>
+<h1 id="什么是回归">什么是回归</h1>
+<p>回归：拟合数据点。
+拟合可以是线性的，也可以是非线性的。
+三维中的线性回归：用平面拟合数据点。
+三维中的非线性回归：用曲面拟合数据点。</p>
+<h1 id="什么是多元线性回归">什么是多元线性回归</h1>
+<p>多元线性回归：在多元空间中用线性形状（直线、平面、超平面）拟合数据点。</p>
+<h1 id="表达式">表达式</h1>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-002-da2ca8a914.png" alt="图片"></p>
+<h1 id="什么时候使用多元线性回归">什么时候使用多元线性回归</h1>
+<p>什么时候用：当你怀疑它适用的时候——在未知情况下试一试，看是否合适。</p>
+<h1 id="注意">注意</h1>
+<p>算上 Y，实际上有 N+1 个维度：N 个 X 和 1 个 Y。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-003-61b9e07e96.png" alt="图片"></p>
+<p>Y 由一组 X 决定，具体来说，就是线性形状上与 X 对应位置处的 Y 值。</p>
+<h1 id="损失函数">损失函数</h1>
+<p>真实 Y 与预测 Y 之间的均方误差（Mean Squared Error）：回归任务常用的损失函数——越小拟合得越好。
+<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-004-f4e824d5c2.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20KMeans%20%E8%81%9A%E7%B1%BB/"><span class="l">上一篇</span>机器学习 - KMeans 聚类</a><a href="/workspace/ai-foundations/machine-learning/%E9%9A%90%E9%A9%AC%E5%B0%94%E5%8F%AF%E5%A4%AB%E6%A8%A1%E5%9E%8B%20-%20HMM%EF%BC%88%E5%B7%B2%E7%9F%A5%E6%A8%A1%E5%9E%8B%EF%BC%8C%E6%B1%82%E6%9F%90%E8%A7%82%E6%B5%8B%E5%BA%8F%E5%88%97%E7%9A%84%E6%A6%82%E7%8E%87%EF%BC%9B%E6%9C%AA%E7%9F%A5%E6%A8%A1%E5%9E%8B%EF%BC%8C%E5%B7%B2%E7%9F%A5%E5%8F%AF%E8%A7%82%E6%B5%8B%E5%BA%8F%E5%88%97%EF%BC%8C%E6%B1%82%E4%BD%BF%E5%8F%AF%E8%A7%82%E6%B5%8B%E5%BA%8F%E5%88%97%E6%A6%82/"><span class="l">下一篇</span>隐马尔可夫模型 - HMM（已知模型，求某观测序列的概率；未知模型，已知可观测序列，求使可观测序列概率最大的模型；已知模型和可观测序列，求最可能的隐藏序列）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

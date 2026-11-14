@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>密码学原理与技术 - 第13章 - 消息认证码（MAC） · Y0uYuGe</title>
+<meta name="description" content="可以理解为对称形式的数字签名，但与数字签名之间仍有很多不同。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/security-foundations">安全基础</a><span class="sep">›</span><a href="/#/security-foundations/cryptography">密码学</a><span class="sep">›</span><a href="/#/security-foundations/cryptography/textbook-notes">教材笔记</a></nav>
+    <h1>密码学原理与技术 - 第13章 - 消息认证码（MAC）</h1>
+    <div class="meta"><time>2025-01-04</time><span class="tag">#密码学</span><span class="tag">#哈希算法</span><span class="tag">#算法</span><span class="tag">#哈希</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p>可以理解为对称形式的数字签名，但与数字签名之间仍有很多不同
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-001-e45fb0a586.png" alt="图片"></p>
+<h1 id="mac-的原理">MAC 的原理</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-002-9650c04a9b.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-003-226475c802.png" alt="图片"></p>
+<h1 id="消息认证码的性质">消息认证码的性质</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-004-c8f4c59169.png" alt="图片">
+消息认证 = 数据源认证</p>
+<h1 id="消息认证码mac的安全性">消息认证码（MAC）的安全性</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-005-ea33bd448c.png" alt="图片"></p>
+<h1 id="基于哈希函数的-mac">基于哈希函数的 MAC</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-006-c1d47bd746.png" alt="图片"></p>
+<p>前缀攻击：直接在原消息后面追加消息分组
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-007-dbe492dbc4.png" alt="图片"></p>
+<p>后缀攻击：两个 x 产生碰撞，从而生成一个合法的消息和认证码
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-008-84b3115949.png" alt="图片"></p>
+<h1 id="hmac">HMAC</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-009-a9531ee12f.png" alt="图片">
+这里的 h 是哈希函数</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-010-9e9a4535f6.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-011-1380713a51.png" alt="图片">
+这里的 h 可以理解为哈希函数中的压缩函数</p>
+<h1 id="基于分组密码的-mac">基于分组密码的 MAC</h1>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-012-e79cbc8d8b.png" alt="图片"></p>
+<h2 id="cbc-mac">CBC-MAC</h2>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-013-f02170b11c.png" alt="图片"></p>
+<p> 最后一步使用 k1 而不是 k 会更安全
+ <img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-014-a5971b7656.png" alt="图片">
+<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-015-291f9065bb.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC4%E7%AB%A0%20-%20%E9%AB%98%E7%BA%A7%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86%EF%BC%88AES%EF%BC%89/"><span class="l">上一篇</span>密码学原理与技术 - 第4章 - 高级加密标准（AES）</a><a href="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC%E4%B9%9D%E7%AB%A0%20-%20%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF%E5%AF%86%E7%A0%81/"><span class="l">下一篇</span>密码学原理与技术 - 第九章 - 椭圆曲线密码</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

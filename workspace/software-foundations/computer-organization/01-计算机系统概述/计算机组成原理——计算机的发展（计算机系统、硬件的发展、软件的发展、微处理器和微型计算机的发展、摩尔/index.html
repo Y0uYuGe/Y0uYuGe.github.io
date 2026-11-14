@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理——计算机的发展（计算机系统、硬件的发展、软件的发展、微处理器和微型计算机的发展、摩尔定律、发展趋势） · Y0uYuGe</title>
+<meta name="description" content="语言处理程序就是编译器之类的程序；调试代码属于服务程序。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0">计算机系统概述</a></nav>
+    <h1>计算机组成原理——计算机的发展（计算机系统、硬件的发展、软件的发展、微处理器和微型计算机的发展、摩尔定律、发展趋势）</h1>
+    <div class="meta"><time>2024-01-12</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-001-ca54c91bc6.png" alt="图片"></p>
+<h1 id="什么是计算机系统">什么是计算机系统</h1>
+<p><img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-002-5baec221d8.png" alt="图片"></p>
+<h1 id="软件">软件</h1>
+<p>语言处理程序就是编译器之类的程序
+调试代码属于服务程序
+<img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-003-3adc3e24a1.png" alt="图片"></p>
+<h1 id="硬件的发展">硬件的发展</h1>
+<h2 id="第一代">第一代</h2>
+<p>逻辑元件：处理电信号的最小基本单元
+电子管：体积大，功耗高
+<img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-004-ef458c63d7.png" alt="图片">
+这一时期的程序员大多用机器语言编程。至于“bug”：曾经有一只小虫子钻进了一个孔里，导致机器语言的二进制信号被错误读取而产生错误——因此错误被称为 bug
+<img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-005-06cce8766d.png" alt="图片"></p>
+<h2 id="第二代">第二代</h2>
+<p>晶体管：比电子管体积小，功耗低
+<img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-006-7461bbb02c.png" alt="图片"></p>
+<h2 id="第三代">第三代</h2>
+<p>电子元件被高密度地集成在电路板上
+<img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-007-53d8729b40.png" alt="图片"></p>
+<h2 id="第四代">第四代</h2>
+<p>随着集成技术的进步，出现了更大规模的集成电路
+微处理器：CPU
+<img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-008-0dbd9906e4.png" alt="图片"></p>
+<h2 id="微处理器的发展">微处理器的发展</h2>
+<p>计算机随着微处理器的发展而发展
+<img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-009-6eda0c8d6f.png" alt="图片"></p>
+<h2 id="相关人物">相关人物</h2>
+<p><img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-010-55fc716843.png" alt="图片"></p>
+<h2 id="摩尔定律">摩尔定律</h2>
+<p>  主存容量每两年可以翻一番
+  晶体管数量也每 18 个月翻一番
+  <img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-011-f5d1f3e101.png" alt="图片"></p>
+<h1 id="软件的发展">软件的发展</h1>
+<p>高级语言不再需要过多关注机器的具体特性，只需专注于要解决的问题。</p>
+<p>DOS：磁盘操作系统（Disk Operating System），早期个人计算机上的一类操作系统。
+从 1981 年的 MS-DOS 1.0 到 1995 年的 MS-DOS 6.22 这 15 年间，DOS 作为微软在个人计算机上使用的操作系统载体，发布了多个版本。DOS 在 IBM PC 兼容机市场中占有举足轻重的地位。它可以直接操纵和管理硬盘上的文件，以 DOS 的形式运行。
+<img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-012-26a907e8f7.png" alt="图片"></p>
+<h1 id="当前的发展趋势">当前的发展趋势</h1>
+<p><img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-013-af5cd72e87.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%EF%BC%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E3%80%81%E7%A1%AC%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8%E5%92%8C%E5%BE%AE%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E3%80%81%E6%91%A9%E5%B0%94/assets/csdn-135561587/image-014-ecc3dbddc4.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E5%8F%91%E5%B1%95%E5%8E%86%E7%A8%8B/"><span class="l">上一篇</span>计算机组成原理 - 计算机的发展历程</a><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#第一代">第一代</a><a class="d2" href="#第二代">第二代</a><a class="d2" href="#第三代">第三代</a><a class="d2" href="#第四代">第四代</a><a class="d2" href="#微处理器的发展">微处理器的发展</a><a class="d2" href="#相关人物">相关人物</a><a class="d2" href="#摩尔定律">摩尔定律</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

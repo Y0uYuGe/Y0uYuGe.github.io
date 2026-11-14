@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>使用 IDA：以 2023 年 CISCN 中南赛区 pwn 题为例进行逆向分析 · Y0uYuGe</title>
+<meta name="description" content="然后代码变成 if (!return v1; 可以发现从起始位置偏移四字节之后的十六个字节都被设置为 0。memset 函数：memset 是 C 标准库中的一个内存操作函数，主要用于把一块内存的内容设置为指定的值。void *s：指向要填充的内存块的指针。int c：要设置的值，在用来设置内存块之前会被转换为 unsigned char。size_t n：要设置的内存块的字节数。得到的代码 if (!return v1;">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/reverse-engineering">逆向工程</a></nav>
+    <h1>使用 IDA：以 2023 年 CISCN 中南赛区 pwn 题为例进行逆向分析</h1>
+    <div class="meta"><time>2024-02-25</time><span class="tag">#c#</span><span class="tag">#编程语言</span><span class="tag">#Pwn</span></div>
+    <article class="post-body">
+<p><a href="https://www.bilibili.com/video/BV1em4y1P7PM/?spm_id_from=333.337.search-card.all.click&vd_source=a1be939c65919194c77b8a6a36c14a6e">2023 中南赛区 pwn 题逆向参考视频教程</a></p>
+<h1 id="相关字节标识">相关字节标识</h1>
+<p>_WORD（1 word = 2 字节 = 16 位）
+_DWORD（2 word = 4 字节 = 32 位）
+_QWORD（4 word = 8 字节 = 64 位）
+_OWORD（8 word = 16 字节 = 128 位）</p>
+<p>DB（Define Byte）：用于定义单字节（8 位）数据。
+DW（Define Word）：用于定义字（word）大小的数据，通常为 2 字节（16 位）。
+DD（Define Doubleword）：用于定义双字（doubleword）大小的数据，通常为 4 字节（32 位）。
+DQ（Define Quadword）：用于定义四字（quadword）大小的数据，通常为 8 字节（64 位）。</p>
+<h1 id="导入函数与导出函数">导入函数与导出函数</h1>
+<p>在 C 语言中，导入函数和导出函数是实现模块化编程的关键技术；它们用于在不同模块之间共享和使用函数。下面做详细分析：</p>
+<ul>
+<li>导出函数：在 C 语言中，当一个函数被声明为导出时，意味着该函数可以被其他模块调用。这通常通过特定的编译器指令或关键字实现，例如在 Windows 平台的 C/C++ 中使用 __declspec(dllexport) 从 DLL 中导出函数。</li>
+</ul>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-001-91c87b9d1d.png" alt="图片"></p>
+<ul>
+<li>导入函数：与导出函数相对应，导入函数是在外部模块中定义、在当前模块中被引用的函数。在 C 语言中，导入一个函数通常需要包含相应的头文件，并在链接时确保包含定义该函数的目标文件或库文件。</li>
+</ul>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-002-795b8dad71.png" alt="图片"></p>
+<h1 id="寻找程序入口函数">寻找程序入口函数</h1>
+<p>先在导出表中找到 start，再在 start 中找到 main
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-003-a3ad2075d7.png" alt="图片"></p>
+<h1 id="选项设置">选项设置</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-004-c532ad2252.png" alt="图片"></p>
+<h1 id="重命名">重命名</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-005-2a898975a0.png" alt="图片"></p>
+<h1 id="ciscn2023-中南赛区-awd">CISCN2023 中南赛区 AWD</h1>
+<h2 id="ida-源码">IDA 源码</h2>
+<h3 id="main">main</h3>
+<pre><code class="language-c">__int64 __fastcall main(int a1, char **a2, char **a3)
+{
+  int v4; // [rsp+Ch] [rbp-14h]
+  void *ptr; // [rsp+10h] [rbp-10h]
+  void *v6; // [rsp+18h] [rbp-8h]
+
+  setvbuf(stdin, 0LL, 2, 0LL);
+  setvbuf(stdout, 0LL, 2, 0LL);
+  setvbuf(stderr, 0LL, 2, 0LL);
+  alarm(0x20u);
+  qword_50E0 = sub_141B();
+  *(_DWORD *)qword_50E0 = 0;
+  qword_5150 = qword_50E0;
+  *(_BYTE *)(qword_50E0 + 4) = 47;
+  strncpy(dest, (const char *)(qword_50E0 + 4), 1uLL);
+  do
+  {
+    printf(&quot;\x1B[36mmybash:%s$ \x1B[0m&quot;, dest);
+    ptr = (void *)sub_25D5();
+    v6 = (void *)sub_247F(ptr);
+    v4 = sub_23CA(v6);
+    free(ptr);
+    free(v6);
+  }
+  while ( v4 );
+  return 0LL;
+}
+</code></pre>
+<h1 id="构造结构体">构造结构体</h1>
+<h3 id="sub_141b">sub_141B()</h3>
+<p>这个函数在已分配堆块的不同位置设置变量。为了更方便地查看被设置的位置，可以定义一个结构体来表示它。</p>
+<pre><code class="language-c">_QWORD *sub_141B()
+{
+  _QWORD *v1; // [rsp+8h] [rbp-8h]
+
+  v1 = malloc(0x40uLL);
+  if ( !v1 )
+    _exit(0);
+  memset((char *)v1 + 4, 0, 0x10uLL);
+  v1[7] = 0LL;
+  v1[5] = 0LL;
+  v1[4] = 0LL;
+  v1[6] = 0LL;
+  return v1;
+}
+</code></pre>
+<h2 id="打开局部变量类型视图">打开局部变量类型视图</h2>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-006-5a01f147b2.png" alt="图片">
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-007-d8979aa2c7.png" alt="图片"></p>
+<h2 id="添加变量类型">添加变量类型</h2>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-008-465c6e91c2.png" alt="图片">
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-009-a438360548.png" alt="图片">
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-010-62fb133b15.png" alt="图片"></p>
+<h2 id="重新定义变量类型">重新定义变量类型</h2>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-011-ed59c93608.png" alt="图片">
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-012-2558f17db9.png" alt="图片">
+然后代码变成</p>
+<pre><code class="language-c">SomeStruct *sub_141B()
+{
+  SomeStruct *v1; // [rsp+8h] [rbp-8h]
+
+  v1 = (SomeStruct *)malloc(0x40uLL);
+  if ( !v1 )
+    _exit(0);
+  memset(&amp;v1-&gt;gap[4], 0, 0x10uLL);
+  *(_QWORD *)&amp;v1-&gt;gap[56] = 0LL;
+  *(_QWORD *)&amp;v1-&gt;gap[40] = 0LL;
+  *(_QWORD *)&amp;v1-&gt;gap[32] = 0LL;
+  *(_QWORD *)&amp;v1-&gt;gap[48] = 0LL;
+  return v1;
+}
+</code></pre>
+<pre><code class="language-c">发现在距离起始四个字节后的十六个字节都设置为0
+  memset(&amp;v1-&gt;gap[4], 0, 0x10uLL);
+</code></pre>
+<p> <strong>memset 函数</strong></p>
+<p>memset 函数是 C 标准库中的一个内存操作函数，主要用于把一块内存的内容设置为指定的值。</p>
+<p>memset 函数的原型是：</p>
+<pre><code class="language-c">void *memset(void *s, int c, size_t n);
+</code></pre>
+<ul>
+<li>void *s：指向要填充的内存块的指针。</li>
+<li>int c：要设置的值；在用来设置内存块之前会被转换为 unsigned char。</li>
+<li>size_t n：要设置的内存块的字节数。</li>
+</ul>
+<h2 id="再次设置变量类型并重新定义">再次设置变量类型并重新定义</h2>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-013-82cb848f9e.png" alt="图片">
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-014-baaa4258c0.png" alt="图片">
+得到的代码</p>
+<pre><code class="language-c">SomeStruct *sub_141B()
+{
+  SomeStruct *v1; // [rsp+8h] [rbp-8h]
+
+  v1 = (SomeStruct *)malloc(0x40uLL);
+  if ( !v1 )
+    _exit(0);
+  memset(v1-&gt;some_array, 0, sizeof(v1-&gt;some_array));
+  *(_QWORD *)&amp;v1-&gt;gap[36] = 0LL;
+  *(_QWORD *)&amp;v1-&gt;gap[20] = 0LL;
+  *(_QWORD *)&amp;v1-&gt;gap[12] = 0LL;
+  *(_QWORD *)&amp;v1-&gt;gap[28] = 0LL;
+  return v1;
+}
+</code></pre>
+<h2 id="再次设置变量类型并重新定义-1">再次设置变量类型并重新定义</h2>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-015-9feb827cce.png" alt="图片"></p>
+<pre><code class="language-c">SomeStruct *sub_141B()
+{
+  SomeStruct *v1; // [rsp+8h] [rbp-8h]
+
+  v1 = (SomeStruct *)malloc(0x40uLL);
+  if ( !v1 )
+    _exit(0);
+  memset(v1-&gt;some_array, 0, sizeof(v1-&gt;some_array));
+  *(_QWORD *)&amp;v1-&gt;gap[24] = 0LL;
+  *(_QWORD *)&amp;v1-&gt;gap[8] = 0LL;
+  *(_QWORD *)v1-&gt;gap = 0LL;
+  *(_QWORD *)&amp;v1-&gt;gap[16] = 0LL;
+  return v1;
+}
+</code></pre>
+<h2 id="再次设置变量类型并重新定义-2">再次设置变量类型并重新定义</h2>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-016-bad4afd0d4.png" alt="图片"></p>
+<pre><code class="language-c">SomeStruct *sub_141B()
+{
+  SomeStruct *v1; // [rsp+8h] [rbp-8h]
+
+  v1 = (SomeStruct *)malloc(0x40uLL);
+  if ( !v1 )
+    _exit(0);
+  memset(v1-&gt;some_array, 0, sizeof(v1-&gt;some_array));
+  v1-&gt;ptr56 = 0LL;
+  v1-&gt;ptr40 = 0LL;
+  v1-&gt;ptr32 = 0LL;
+  v1-&gt;ptr48 = 0LL;
+  return v1;
+}
+</code></pre>
+<h1 id="设置函数名">设置函数名</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-017-24baeb38ee.png" alt="图片"></p>
+<h1 id="标记分析完成">标记分析完成</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-018-9169bee20a.png" alt="图片"></p>
+<h1 id="查找所有引用某个函数的位置">查找所有引用某个函数的位置</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-019-0e314a297b.png" alt="图片">
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-020-9408c2effe.png" alt="图片"></p>
+<h1 id="重新定义某个变量的类型">重新定义某个变量的类型</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-021-93233c911f.png" alt="图片"></p>
+<pre><code class="language-c">__int64 __fastcall main(int a1, char **a2, char **a3)
+{
+  int v4; // [rsp+Ch] [rbp-14h]
+  void *ptr; // [rsp+10h] [rbp-10h]
+  void *v6; // [rsp+18h] [rbp-8h]
+
+  setvbuf(stdin, 0LL, 2, 0LL);
+  setvbuf(stdout, 0LL, 2, 0LL);
+  setvbuf(stderr, 0LL, 2, 0LL);
+  alarm(0x20u);
+  qword_50E0 = SomeStruct::CreateInstance();
+  qword_50E0-&gt;unkown_0 = 0;
+  qword_5150 = qword_50E0;
+  qword_50E0-&gt;some_array[0] = 47;
+  strncpy(dest, qword_50E0-&gt;some_array, 1uLL);
+  do
+  {
+    printf(&quot;\x1B[36mmybash:%s$ \x1B[0m&quot;, dest);
+    ptr = (void *)sub_25D5();
+    v6 = (void *)sub_247F(ptr);
+    v4 = sub_23CA(v6);
+    free(ptr);
+    free(v6);
+  }
+  while ( v4 );
+  return 0LL;
+}
+</code></pre>
+<h1 id="转换成字符类型">转换成字符类型</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-022-1b23394130.png" alt="图片"></p>
+<h1 id="格式化字符串-x1b36mmybashs-x1b0m">格式化字符串 &quot;\x1B[36mmybash:%s$ \x1B[0m&quot;</h1>
+<p>字符串 &quot;\x1B[36mmybash:%s$ \x1B[0m&quot; 是一个包含 ANSI 转义序列的字符串，用于在终端中显示带颜色的文本。在这个字符串中：</p>
+<p>\x1B[36m 是一个 ANSI 转义序列，把后面文本的颜色设置为青色。\x1B 是 ESC 字符的十六进制表示，[ 标记转义序列的开始，36 是青色的颜色代码，m 标记这一颜色设置的结束。
+mybash:%s$ 是要显示的实际文本，其中 %s 大概是一个占位符，格式化字符串时会被替换为具体的值。
+\x1B[0m 是另一个 ANSI 转义序列，把文本颜色重置为默认设置。这里的 0 表示默认颜色，m 同样标记这一设置的结束。</p>
+<h3 id="sub_25d5">sub_25D5()</h3>
+<pre><code class="language-c">_BYTE *sub_25D5()
+{
+  int v1; // [rsp+Ch] [rbp-14h]
+  int v2; // [rsp+10h] [rbp-10h]
+  int v3; // [rsp+14h] [rbp-Ch]
+  _BYTE *ptr; // [rsp+18h] [rbp-8h]
+
+  v1 = 528;
+  v2 = 0;
+  ptr = malloc(0x210uLL);
+  if ( !ptr )
+    _exit(0);
+  while ( 1 )
+  {
+    v3 = getchar();
+    if ( v3 == -1 || v3 == 10 )
+      break;
+    ptr[v2++] = v3;
+    if ( v2 &gt;= v1 &amp;&amp; v1 &lt;= 2147483639 )
+    {
+      v1 += 496;
+      ptr = realloc(ptr, v1);
+      if ( !ptr )
+      {
+        fwrite(&quot;mybash: allocation error\n&quot;, 1uLL, 0x19uLL, stderr);
+        exit(1);
+      }
+    }
+  }
+  ptr[v2] = 0;
+  return ptr;
+}
+</code></pre>
+<h1 id="转换--1并命名相关变量与函数">转换 -1，并命名相关变量与函数</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-023-85ec1bc44b.png" alt="图片"></p>
+<h1 id="整理-sub_25d5">整理 sub_25D5()</h1>
+<p>这里由于是逐字符输入，所以把分配的堆指针设置为字符指针类型。</p>
+<pre><code class="language-c">void __fastcall read_line()
+{
+  int high; // [rsp+Ch] [rbp-14h]
+  int i; // [rsp+10h] [rbp-10h]
+  int tmp_char; // [rsp+14h] [rbp-Ch]
+  char *input_content_line; // [rsp+18h] [rbp-8h]
+
+  high = 528;
+  i = 0;
+  input_content_line = (char *)malloc(0x210uLL);
+  if ( !input_content_line )
+    _exit(0);
+  while ( 1 )
+  {
+    tmp_char = getchar();
+    if ( tmp_char == (unsigned int)EOF || tmp_char == &#39;\n&#39; )
+      break;
+    input_content_line[i++] = tmp_char;
+    if ( i &gt;= high &amp;&amp; high &lt;= 2147483639 )
+    {
+      high += 496;
+      input_content_line = (char *)realloc(input_content_line, high);
+      if ( !input_content_line )
+      {
+        fwrite(&quot;mybash: allocation error\n&quot;, 1uLL, 0x19uLL, stderr);
+        exit(1);
+      }
+    }
+  }
+  input_content_line[i] = 0;
+}
+</code></pre>
+<h3 id="sub_247fchar-a1">sub_247F(char *a1)</h3>
+<pre><code class="language-c">_QWORD *__fastcall sub_247F(char *a1)
+{
+  int v2; // [rsp+10h] [rbp-20h]
+  int v3; // [rsp+14h] [rbp-1Ch]
+  _QWORD *ptr; // [rsp+18h] [rbp-18h]
+  char *i; // [rsp+20h] [rbp-10h]
+  _QWORD *v6; // [rsp+28h] [rbp-8h]
+
+  v2 = 64;
+  v3 = 0;
+  v6 = malloc(0x200uLL);
+  if ( !v6 )
+    _exit(0);
+  ptr = v6;
+  for ( i = strtok(a1, &quot; \t\r\n\a&quot;); i; i = strtok(0LL, &quot; \t\r\n\a&quot;) )
+  {
+    ptr[v3++] = i;
+    if ( v3 &gt;= v2 )
+    {
+      v2 += 64;
+      ptr = realloc(ptr, 8LL * v2);
+      if ( !ptr )
+      {
+        fwrite(&quot;mybash: allocation error\n&quot;, 1uLL, 0x19uLL, stderr);
+        exit(1);
+      }
+    }
+  }
+  ptr[v3] = 0LL;
+  return ptr;
+}
+</code></pre>
+<h1 id="整理-sub_247fchar-a1-函数">整理 sub_247F(char *a1) 函数</h1>
+<p>这里 i 是一个地址，所以 ptr 应该是一个二级指针。
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-024-29df2df041.png" alt="图片"></p>
+<pre><code class="language-c">char **__fastcall split_string(char *content_line)
+{
+  int high; // [rsp+10h] [rbp-20h]
+  int cur_pos; // [rsp+14h] [rbp-1Ch]
+  char **split_content_ptr; // [rsp+18h] [rbp-18h]
+  char *one_split_content_ptr; // [rsp+20h] [rbp-10h]
+  char **temp_chunk_ptr; // [rsp+28h] [rbp-8h]
+
+  high = 64;
+  cur_pos = 0;
+  temp_chunk_ptr = (char **)malloc(0x200uLL);
+  if ( !temp_chunk_ptr )
+    _exit(0);
+  split_content_ptr = temp_chunk_ptr;
+  for ( one_split_content_ptr = strtok(content_line, &quot; \t\r\n\a&quot;);
+        one_split_content_ptr;
+        one_split_content_ptr = strtok(0LL, &quot; \t\r\n\a&quot;) )
+  {
+    split_content_ptr[cur_pos++] = one_split_content_ptr;
+    if ( cur_pos &gt;= high )
+    {
+      high += 64;
+      split_content_ptr = (char **)realloc(split_content_ptr, 8LL * high);
+      if ( !split_content_ptr )
+      {
+        fwrite(&quot;mybash: allocation error\n&quot;, 1uLL, 0x19uLL, stderr);
+        exit(1);
+      }
+    }
+  }
+  split_content_ptr[cur_pos] = 0LL;
+  return split_content_ptr;
+}
+</code></pre>
+<h3 id="sub_23caconst-char-a1">sub_23CA(const char **a1)</h3>
+<pre><code class="language-c">__int64 __fastcall sub_23CA(const char **a1)
+{
+  int i; // [rsp+1Ch] [rbp-4h]
+
+  if ( !*a1 )
+    return 1LL;
+  for ( i = 0; i &lt; (int)sub_1523(); ++i )
+  {
+    if ( !strcmp(*a1, (const char *)*(&amp;off_5020 + i)) )
+      return ((__int64 (__fastcall *)(const char **))funcs_2446[i])(a1);
+  }
+  printf(&quot;%s: ERROR\n&quot;, *a1);
+  return 0LL;
+}
+</code></pre>
+<h1 id="整理-sub_23caconst-char-a1-函数">整理 sub_23CA(const char **a1) 函数</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-025-b109446cf9.png" alt="图片"></p>
+<pre><code class="language-c">__int64 __fastcall instruction_proccess(const char **split_content_ptr_array)
+{
+  int i; // [rsp+1Ch] [rbp-4h]
+
+  if ( !*split_content_ptr_array )
+    return 1LL;
+  for ( i = 0; i &lt; (int)return_7(); ++i )
+  {
+    if ( !strcmp(*split_content_ptr_array, struction_name_ptr_array[i]) )
+      return struction_function_ptr_array[i](split_content_ptr_array);
+  }
+  printf(&quot;%s: ERROR\n&quot;, *split_content_ptr_array);
+  return 0LL;
+}
+</code></pre>
+<h3 id="sub_1523">sub_1523()</h3>
+<pre><code class="language-c">__int64 sub_1523()
+{
+  return 7LL;
+}
+</code></pre>
+<h1 id="整理-sub_1523-函数">整理 sub_1523() 函数</h1>
+<pre><code class="language-c">__int64 return_7()
+{
+  return 7LL;
+}
+</code></pre>
+<h1 id="用-h-改变数据格式">用 h 改变数据格式</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-026-1cb242bff9.png" alt="图片">
+对应的字符串
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-027-440cd7181d.png" alt="图片"></p>
+<h1 id="重命名每个函数">重命名每个函数</h1>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-028-e73cd85747.png" alt="图片"></p>
+<h3 id="__int64-__fastcall-command_touch__int64-a1">__int64 __fastcall command_touch(__int64 a1)</h3>
+<pre><code class="language-c">__int64 __fastcall command_touch(__int64 a1)
+{
+  int v2; // [rsp+1Ch] [rbp-14h]
+  void *ptr56; // [rsp+20h] [rbp-10h]
+  SomeStruct *Instance; // [rsp+28h] [rbp-8h]
+
+  v2 = 1;
+  if ( !*(_QWORD *)(a1 + 8) )
+    fwrite(&quot;mybash: missing operand\n&quot;, 1uLL, 0x18uLL, stderr);
+  while ( *(_QWORD *)(8LL * v2 + a1) )
+  {
+    ptr56 = qword_5150-&gt;ptr56;
+    if ( (unsigned __int8)sub_13C9((__int64)ptr56, *(const char **)(8LL * v2 + a1)) != 1 )
+    {
+      ++v2;
+    }
+    else
+    {
+      Instance = SomeStruct::CreateInstance();
+      Instance-&gt;unkown_0 = 1;
+      sub_166E(Instance, *(_QWORD *)(8LL * v2 + a1));
+      if ( qword_5150-&gt;ptr56 )
+        sub_1628(ptr56, Instance);
+      else
+        qword_5150-&gt;ptr56 = Instance;
+      ++v2;
+    }
+  }
+  return 1LL;
+}
+</code></pre>
+<h1 id="修改后的-__int64-__fastcall-command_touch__int64-a1">修改后的 __int64 __fastcall command_touch(__int64 a1)</h1>
+<pre><code class="language-c">__int64 __fastcall command_touch(char **args)
+{
+  int parameter_position; // [rsp+1Ch] [rbp-14h]
+  SomeStruct *main_save_instance_ptr_of_first_file_ptr; // [rsp+20h] [rbp-10h]
+  SomeStruct *Instance_ptr; // [rsp+28h] [rbp-8h]
+
+  parameter_position = 1;
+  if ( !args[1] )
+    fwrite(&quot;mybash: missing operand\n&quot;, 1uLL, 0x18uLL, stderr);
+  while ( args[parameter_position] )
+  {
+    main_save_instance_ptr_of_first_file_ptr = main_save_instance_ptr-&gt;first_son;
+    if ( (unsigned __int8)SomeStruct::Folder_Not_Eixst(
+                            main_save_instance_ptr_of_first_file_ptr,
+                            args[parameter_position]) != 1 )
+    {
+      ++parameter_position;
+    }
+    else
+    {
+      Instance_ptr = SomeStruct::CreateInstance();
+      Instance_ptr-&gt;isfile = 1;
+      SomeStruct::set_some_array(Instance_ptr, args[parameter_position]);
+      if ( main_save_instance_ptr-&gt;first_son )
+        sub_1628(main_save_instance_ptr_of_first_file_ptr, Instance_ptr);
+      else
+        main_save_instance_ptr-&gt;first_son = Instance_ptr;
+      ++parameter_position;
+    }
+  }
+  return 1LL;
+}
+</code></pre>
+<h3 id="__int64-__fastcall-command_mkdir__int64-a1">__int64 __fastcall command_mkdir(__int64 a1)</h3>
+<pre><code class="language-c">__int64 __fastcall command_mkdir(__int64 a1)
+{
+  char v1; // al
+  int v3; // [rsp+1Ch] [rbp-14h]
+  void *ptr56; // [rsp+20h] [rbp-10h]
+  SomeStruct *Instance; // [rsp+28h] [rbp-8h]
+
+  v3 = 1;
+  if ( !*(_QWORD *)(a1 + 8) )
+    fwrite(&quot;mybash: missing operand\n&quot;, 1uLL, 0x18uLL, stderr);
+  while ( *(_QWORD *)(8LL * v3 + a1) )
+  {
+    ptr56 = qword_5150-&gt;ptr56;
+    ((void (__fastcall *)())((char *)&amp;sub_13C8 + 1))();
+    if ( v1 != 1 )
+    {
+      fprintf(stderr, aMybashCannotCr, *(_QWORD *)(8LL * v3++ + a1));
+    }
+    else
+    {
+      Instance = SomeStruct::CreateInstance();
+      Instance-&gt;unkown_0 = 0;
+      Instance-&gt;ptr48 = qword_5150;
+      sub_166E(Instance, *(_QWORD *)(8LL * v3 + a1));
+      if ( qword_5150-&gt;ptr56 )
+        sub_1628(ptr56, Instance);
+      else
+        qword_5150-&gt;ptr56 = Instance;
+      ++v3;
+    }
+  }
+  return 1LL;
+}
+</code></pre>
+<pre><code class="language-c">void sub_13C8()
+{
+  JUMPOUT(0x13CALL);
+}
+</code></pre>
+<h1 id="修改后的-__int64-__fastcall-command_mkdirconst-char-args">修改后的 __int64 __fastcall command_mkdir(const char **args)</h1>
+<pre><code class="language-c">__int64 __fastcall command_mkdir(const char **args)
+{
+  // [COLLAPSED LOCAL DECLARATIONS. PRESS KEYPAD CTRL-&quot;+&quot; TO EXPAND]
+
+  parameter_position = 1;
+  if ( !args[1] )
+    fwrite(&quot;mybash: missing operand\n&quot;, 1uLL, 0x18uLL, stderr);
+  while ( args[parameter_position] )
+  {
+    main_save_instance_ptr_of_first = main_save_instance_ptr-&gt;first_son;
+    if ( (unsigned __int8)SomeStruct::Folder_Not_Eixst(main_save_instance_ptr_of_first, args[parameter_position]) != 1 )
+    {
+      fprintf(stderr, aMybashCannotCr, args[parameter_position++]);
+    }
+    else
+    {
+      mkdir_create_Instance_ptr = SomeStruct::CreateInstance();
+      mkdir_create_Instance_ptr-&gt;isfile = 0;    // 0为目录
+      mkdir_create_Instance_ptr-&gt;parent = main_save_instance_ptr;
+      SomeStruct::set_some_array(mkdir_create_Instance_ptr, args[parameter_position]);
+      if ( main_save_instance_ptr-&gt;first_son )
+        sub_1628(main_save_instance_ptr_of_first, mkdir_create_Instance_ptr);
+      else
+        main_save_instance_ptr-&gt;first_son = mkdir_create_Instance_ptr;
+      ++parameter_position;
+    }
+  }
+  return 1LL;
+}
+</code></pre>
+<h1 id="此时发现-void-sub_13c8-函数再次跳转">此时发现 void sub_13C8() 函数再次跳转</h1>
+<p>Tab 键：反编译
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-029-9b231f67c5.png" alt="图片">
+首先
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-030-51adf8070a.png" alt="图片">
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-031-b060d56273.png" alt="图片">
+<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-032-cb8db815f9.png" alt="图片">
+最终得到的原始 void sub_13C8() 函数</p>
+<pre><code class="language-c">__int64 __fastcall sub_13C9(__int64 a1, const char *a2)
+{
+  while ( a1 )
+  {
+    if ( !strcmp((const char *)(a1 + 4), a2) )
+      return 0LL;
+    a1 = *(_QWORD *)(a1 + 40);
+  }
+  return 1LL;
+}
+</code></pre>
+<h1 id="注">注</h1>
+<p>当分析一个函数遇到困难时，可以看看还有哪些地方引用了这个函数。</p>
+<h1 id="修改后的-__int64-__fastcall-command_catconst-char-args">修改后的 __int64 __fastcall command_cat(const char **args)</h1>
+<pre><code class="language-c">__int64 __fastcall command_cat(const char **args)
+{
+  unsigned __int64 high_parament_length_16; // rax
+  void *v2; // rsp
+  _BYTE v4[8]; // [rsp+8h] [rbp-70h] BYREF
+  const char **args_save; // [rsp+10h] [rbp-68h]
+  char v6; // [rsp+1Fh] [rbp-59h]
+  int parament_longest_length_more1; // [rsp+20h] [rbp-58h]
+  int parameter_position; // [rsp+24h] [rbp-54h]
+  SomeStruct *first_son; // [rsp+28h] [rbp-50h]
+  __int64 parament_longest_length_more; // [rsp+30h] [rbp-48h]
+  char *cat_file_name; // [rsp+38h] [rbp-40h]
+  unsigned __int64 v12; // [rsp+40h] [rbp-38h]
+
+  args_save = args;
+  v12 = __readfsqword(0x28u);
+  parameter_position = 0;
+  v6 = 0;
+  parament_longest_length_more1 = 0;
+  first_son = 0LL;
+
+  while ( args_save[++parameter_position] )
+  {
+    if ( strlen(args_save[parameter_position]) &gt; parament_longest_length_more1 )
+      parament_longest_length_more1 = strlen(args_save[parameter_position]) + 1;
+  }
+
+  parament_longest_length_more = parament_longest_length_more1 - 1LL;
+  high_parament_length_16 = 16 * ((parament_longest_length_more1 + 15LL) / 0x10uLL);
+  while ( v4 != &amp;v4[-(high_parament_length_16 &amp; 0xFFFFFFFFFFFFF000LL)] )
+    ;
+  v2 = alloca(high_parament_length_16 &amp; 0xFFF);
+
+  if ( (high_parament_length_16 &amp; 0xFFF) != 0 )
+    *&amp;v4[(high_parament_length_16 &amp; 0xFFF) - 8] = *&amp;v4[(high_parament_length_16 &amp; 0xFFF) - 8];
+  cat_file_name = v4;                           // 上面都没啥用，v2，v4后面都没用到
+
+  parameter_position = 1;
+
+
+
+  if ( !args_save[1] )
+    fwrite(&quot;mybash: missing operand\n&quot;, 1uLL, 0x18uLL, stderr);
+
+  while ( args_save[parameter_position] )
+  {
+    first_son = current_directory_ptr-&gt;first_son;
+    strcpy(cat_file_name, args_save[parameter_position]);
+
+    while ( first_son )
+    {
+      if ( !strcmp(cat_file_name, first_son-&gt;file_name) )
+      {
+        if ( first_son-&gt;file_content_ptr )
+          puts(first_son-&gt;file_content_ptr);
+        v6 = 1;
+        break;
+      }
+      first_son = first_son-&gt;next_ptr;
+    }
+
+    if ( v6 != 1 )
+      fprintf(stderr, &quot;mybash: %s: No such file or directory\n&quot;, args_save[parameter_position]);
+    ++parameter_position;
+  }
+
+  return 1LL;
+}
+</code></pre>
+<h1 id="修改后的-__int64-__fastcall-command_rmconst-char-args">修改后的 __int64 __fastcall command_rm(const char **args)</h1>
+<pre><code class="language-c">__int64 __fastcall command_rm(const char **args)
+{
+  // [COLLAPSED LOCAL DECLARATIONS. PRESS KEYPAD CTRL-&quot;+&quot; TO EXPAND]
+
+  parameter_position = 1;
+  if ( !args[1] )
+    fwrite(&quot;mybash: missing operand\n&quot;, 1uLL, 0x18uLL, stderr);
+  while ( args[parameter_position] )
+  {
+    son_file = current_directory_ptr-&gt;first_son;
+    success_flag = 0;
+    while ( son_file )
+    {
+      if ( !strcmp(son_file-&gt;file_name, args[parameter_position]) )
+      {
+        success_flag = 1;
+        if ( IsFile(son_file) )
+        {
+          memset(son_file-&gt;file_name, 0, sizeof(son_file-&gt;file_name));
+          if ( son_file-&gt;file_content_ptr )
+            free(son_file-&gt;file_content_ptr);
+          SomeStruct::unlink_file(son_file);
+        }
+        else
+        {
+          fprintf(stderr, &quot;mybash: &#39;%s&#39;: Is a directory\n&quot;, args[parameter_position]);
+        }
+        break;
+      }
+      son_file = son_file-&gt;next_ptr;
+    }
+    if ( success_flag != 1 )
+      fprintf(stderr, &quot;mybash: &#39;%s&#39;: No such file or directory\n&quot;, args[parameter_position]);
+    ++parameter_position;
+  }
+  return 1LL;
+}
+</code></pre>
+<h1 id="修改后的-__int64-__fastcall-command_echochar-args">修改后的 __int64 __fastcall command_echo(char **args)</h1>
+<pre><code class="language-c">__int64 __fastcall command_echo(char **args)
+{
+  SomeStruct *v2; // rbx
+  SomeStruct *v3; // rbx
+  int parameter_position; // [rsp+14h] [rbp-3Ch]
+  int i; // [rsp+14h] [rbp-3Ch]
+  int content_length; // [rsp+18h] [rbp-38h]
+  int last_parameter_position; // [rsp+1Ch] [rbp-34h]
+  int input_content_length; // [rsp+24h] [rbp-2Ch]
+  SomeStruct *current_son_file; // [rsp+28h] [rbp-28h] BYREF
+  const char *last_parameter_ptr; // [rsp+30h] [rbp-20h]
+  unsigned __int64 v11; // [rsp+38h] [rbp-18h]
+
+  v11 = __readfsqword(0x28u);
+  parameter_position = 0;
+  if ( args[1] )
+  {
+    do
+      ++parameter_position;
+    while ( args[parameter_position] );
+
+    last_parameter_position = parameter_position - 1;
+    if ( Is_No_Echo_to_File(args[parameter_position - 2]) )
+    {
+      for ( i = 1; i &lt; last_parameter_position; ++i )
+        printf(args[i]);
+      puts(args[last_parameter_position]);
+      return 1LL;
+    }
+    else
+    {
+      current_son_file = current_directory_ptr-&gt;first_son;
+      last_parameter_ptr = args[last_parameter_position];
+      if ( Is_Exist_File(&amp;current_son_file, last_parameter_ptr) != 1 )
+      {
+        fprintf(stderr, &quot;mybash: %s: No such file\n&quot;, last_parameter_ptr);
+        return 1LL;
+      }
+      else if ( IsFile(current_son_file) )
+      {
+        if ( current_son_file-&gt;file_content_ptr )
+        {
+          content_length = SomeStruct::Get_Content_length(current_son_file-&gt;file_content_ptr);
+        }
+        else
+        {
+          content_length = 0x1F0;
+          v2 = current_son_file;
+          v2-&gt;file_content_ptr = malloc(0x1F0uLL);
+          if ( !current_son_file-&gt;file_content_ptr )
+            _exit(0);
+        }
+
+        input_content_length = strlen(args[last_parameter_position - 2]);
+        while ( input_content_length &gt; content_length )
+          content_length += 0x1F0;
+
+        if ( content_length &gt; SomeStruct::Get_Content_length(current_son_file-&gt;file_content_ptr) )
+        {
+          v3 = current_son_file;
+          v3-&gt;file_content_ptr = realloc(current_son_file-&gt;file_content_ptr, content_length);
+        }
+        strncpy(current_son_file-&gt;file_content_ptr, args[last_parameter_position - 2], input_content_length);
+        return 1LL;
+      }
+      else
+      {
+        fprintf(stderr, &quot;mybash: %s: Is a directory\n&quot;, last_parameter_ptr);
+        return 1LL;
+      }
+    }
+  }
+  else
+  {
+    putchar(10);
+    return 1LL;
+  }
+}
+</code></pre>
+<h1 id="修改后的-__int64-__fastcall-command_cdchar-arg">修改后的 __int64 __fastcall command_cd(char **arg)</h1>
+<pre><code class="language-c">__int64 __fastcall command_cd(char **arg)
+{
+  size_t dest_length; // rbx
+  size_t current_file_name_length; // rax
+  int main_save_instance_ptr_file_name_length; // [rsp+18h] [rbp-38h]
+  const char *after_dlim_para; // [rsp+20h] [rbp-30h]
+  SomeStruct *current_file; // [rsp+28h] [rbp-28h]
+  char delim[2]; // [rsp+36h] [rbp-1Ah] BYREF
+  unsigned __int64 v8; // [rsp+38h] [rbp-18h]
+
+  v8 = __readfsqword(0x28u);
+  if ( arg[1] )
+  {
+    if ( arg[2] )
+    {
+      fwrite(&quot;mybash: too many arguments\n&quot;, 1uLL, 0x1BuLL, stderr);
+    }
+    else
+    {
+      strcpy(delim, &quot;/&quot;);
+      for ( after_dlim_para = strtok(arg[1], delim); after_dlim_para; after_dlim_para = strtok(0LL, delim) )
+      {
+        if ( strcmp(after_dlim_para, &quot;.&quot;) )
+        {
+          if ( !strcmp(after_dlim_para, &quot;..&quot;) )
+          {
+            if ( current_directory_ptr-&gt;parent )
+            {
+              main_save_instance_ptr_file_name_length = strlen(current_directory_ptr-&gt;file_name);
+              current_directory_path[(strlen(current_directory_path) - 1 - main_save_instance_ptr_file_name_length)] = 0;
+              current_directory_ptr = current_directory_ptr-&gt;parent;// 当前目录更新为之前目录的父目录
+            }
+          }
+          else
+          {
+            current_file = current_directory_ptr-&gt;first_son;
+            if ( SomeStruct::File_Not_Eixst(current_file, after_dlim_para) )
+            {
+              fprintf(stderr, &quot;mybash: %s: No such file or directory\n&quot;, after_dlim_para);
+              return 1LL;
+            }
+
+            while ( current_file &amp;&amp; strcmp(current_file-&gt;file_name, after_dlim_para) )
+              current_file = current_file-&gt;next_ptr;
+            if ( !SomeStruct::IsDirectory(current_file) )
+            {
+              fwrite(&quot;something wrong happened\n&quot;, 1uLL, 0x19uLL, stderr);
+              return 1LL;
+            }
+            current_directory_ptr = current_file;
+            dest_length = strlen(current_directory_path);
+
+            if ( dest_length + strlen(current_file-&gt;file_name) + 1 &lt;= 0x4F )
+            {
+              current_file_name_length = strlen(current_file-&gt;file_name);
+              strncat(current_directory_path, current_file-&gt;file_name, current_file_name_length);
+              *&amp;current_directory_path[strlen(current_directory_path)] = 47;
+            }
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+    fwrite(&quot;mybash: expected argument\n&quot;, 1uLL, 0x1AuLL, stderr);
+  }
+  return 1LL;
+}
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/"><span class="l">上一篇</span>逆向入门 - [Base64 编码逆向、Base64 变表逆向、IDA 动态调试 IDA 8.3、IDA 动态调试求解 RC4、绕过反调试、IDA 代码修复与数组识别]</a><a href="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/"><span class="l">下一篇</span>Go 语言逆向工程 - 基础</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#ida-源码">IDA 源码</a><a class="d3" href="#main">main</a><a class="d3" href="#sub_141b">sub_141B()</a><a class="d2" href="#打开局部变量类型视图">打开局部变量类型视图</a><a class="d2" href="#添加变量类型">添加变量类型</a><a class="d2" href="#重新定义变量类型">重新定义变量类型</a><a class="d2" href="#再次设置变量类型并重新定义">再次设置变量类型并重新定义</a><a class="d2" href="#再次设置变量类型并重新定义-1">再次设置变量类型并重新定义</a><a class="d2" href="#再次设置变量类型并重新定义-2">再次设置变量类型并重新定义</a><a class="d3" href="#sub_25d5">sub_25D5()</a><a class="d3" href="#sub_247fchar-a1">sub_247F(char *a1)</a><a class="d3" href="#sub_23caconst-char-a1">sub_23CA(const char **a1)</a><a class="d3" href="#sub_1523">sub_1523()</a><a class="d3" href="#__int64-__fastcall-command_touch__int64-a1">__int64 __fastcall command_touch(__int64 a1)</a><a class="d3" href="#__int64-__fastcall-command_mkdir__int64-a1">__int64 __fastcall command_mkdir(__int64 a1)</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

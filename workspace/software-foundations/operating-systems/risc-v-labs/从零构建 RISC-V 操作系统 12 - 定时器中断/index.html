@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建 RISC-V 操作系统 12 - 定时器中断 · Y0uYuGe</title>
+<meta name="description" content="我们实现的初始化根据 hartid 给对应的 mtimecmp 设置一个初始值，然后设置一些中断使能位。mtime 按一定频率递增，当它大于等于 mtimecmp 时就会产生定时器中断。通过读取当前时间和此时的 tick 值计算出最新的当前时间。MTIP 是 mip 中 M 模式下表示当前是否正在发送定时器中断的位。硬件定时器的周期：多久触发一次定时器中断。MTIE 是 mie 中 M 模式的定时器中断使能位。类似计数器，按照硬件对应的固定频率递增。上电后自动复位为 0，由硬件自动完成。产生软件中断和定时器中断。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2012%20-%20%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/risc-v-labs">RISC-V 实验</a></nav>
+    <h1>从零构建 RISC-V 操作系统 12 - 定时器中断</h1>
+    <div class="meta"><time>2024-04-17</time><span class="tag">#risc-v</span><span class="tag">#单片机</span><span class="tag">#嵌入式硬件</span></div>
+    <article class="post-body">
+<h1 id="clint">CLINT</h1>
+<p>产生软件中断和定时器中断
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2012%20-%20%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD/assets/csdn-137860421/image-001-75c092d92c.png" alt="图片"></p>
+<h1 id="定时器中断">定时器中断</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2012%20-%20%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD/assets/csdn-137860421/image-002-a4d828436a.png" alt="图片"></p>
+<h1 id="mtime">mtime</h1>
+<p>类似计数器，按照硬件对应的固定频率递增</p>
+<p>上电后自动复位为 0，由硬件自动完成
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2012%20-%20%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD/assets/csdn-137860421/image-003-5170eb1d7b.png" alt="图片"></p>
+<h1 id="mtimecmp">mtimecmp</h1>
+<p> 需要手动设置，同样是 64 位
+我们实现的初始化根据 hartid 给对应的 mtimecmp 设置一个初始值，然后设置一些中断使能位
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2012%20-%20%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD/assets/csdn-137860421/image-004-cf0e44121a.png" alt="图片"></p>
+<h1 id="机制">机制</h1>
+<p>mtime 按一定频率递增，当它大于等于 mtimecmp 时，就会产生定时器中断</p>
+<p>MTIE 是 mie 中 M 模式的定时器中断使能位
+MTIP 是 mip 中 M 模式下表示当前是否正在发送定时器中断的位
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2012%20-%20%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD/assets/csdn-137860421/image-005-b40b5c229e.png" alt="图片"></p>
+<h1 id="总体框架流程">总体框架流程</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2012%20-%20%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD/assets/csdn-137860421/image-006-7ab2e7b7b6.png" alt="图片"></p>
+<h1 id="时钟节拍time-tick">时钟节拍（Time Tick）</h1>
+<p>硬件定时器的周期：多久触发一次定时器中断
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2012%20-%20%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD/assets/csdn-137860421/image-007-61406e1269.png" alt="图片"></p>
+<h1 id="系统时钟">系统时钟</h1>
+<p>通过读取当前时间和此时的 tick 值，计算出最新的当前时间
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2012%20-%20%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD/assets/csdn-137860421/image-008-d96fdc942a.png" alt="图片"></p>
+<h1 id="代码">代码</h1>
+<p><a href="https://github.com/FULLK/risllkos/tree/main/Fullkenerl7">https://github.com/FULLK/risllkos/tree/main/Fullkenerl7</a></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/"><span class="l">上一篇</span>从零构建 RISC-V 操作系统 - 环境配置</a><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/"><span class="l">下一篇</span>从零构建 RISC-V 操作系统 16 - 系统调用</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

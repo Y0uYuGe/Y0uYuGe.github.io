@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图像识别 - 迁移学习 - AlexNet - AlexNet 源码 · Y0uYuGe</title>
+<meta name="description" content="Data augmentation：即数据增强——通过在训练样本中引入变化，使模型能够适应变化后的图像，提高泛化能力。这也使模型不仅能识别原始图像，还能识别变化后的图像（防止过拟合）。IMAGENET1K_V1 是一个 Weights 对象，其属性包括 url（下载模型参数的 URL）和 pth（表示 PyTorch 模型文件）。它指定了使用这些权重时所需的输入预处理方式，例如裁剪尺寸为 224。meta 是一个字典，用于存放与权重相关的各种信息，例如模型参数量、准确率、文件大小等。两部分得到的卷积结果分别进行池化，得到各自的池化结果。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/ai-foundations">AI 基础</a><span class="sep">›</span><a href="/#/ai-foundations/computer-vision">计算机视觉</a></nav>
+    <h1>图像识别 - 迁移学习 - AlexNet - AlexNet 源码</h1>
+    <div class="meta"><time>2025-01-10</time><span class="tag">#迁移学习</span><span class="tag">#人工智能</span><span class="tag">#机器学习</span><span class="tag">#AlexNet</span></div>
+    <article class="post-body">
+<h1 id="迁移学习">迁移学习</h1>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-001-ab2bc82129.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-002-32bd3157b0.png" alt="图片"></p>
+<h1 id="深度学习框架中可用的预训练分类模型">深度学习框架中可用的预训练分类模型</h1>
+<p><a href="https://tensorflow.google.cn/api_docs/python/tf/keras/applications">https://tensorflow.google.cn/api_docs/python/tf/keras/applications</a></p>
+<p><a href="https://pytorch.org/vision/stable/models.html#classification">https://pytorch.org/vision/stable/models.html#classification</a></p>
+<h1 id="alexnet">AlexNet</h1>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-003-ce7775939c.png" alt="图片">
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-004-aba86c9ed4.png" alt="图片">
+Data augmentation：即数据增强——通过在训练样本中引入变化，使模型能够适应变化后的图像，提高泛化能力。这也使模型不仅能识别原始图像，还能识别变化后的图像（防止过拟合）。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-005-8b659acc1c.png" alt="图片"></p>
+<p>卷积核按输出通道被分为两部分，但每部分的卷积核仍然遍历整张图像。</p>
+<p>两部分得到的卷积结果分别进行池化，得到各自的池化结果。</p>
+<p>然后再分别进行卷积，但仍然是作用于各自的结果。</p>
+<p>最后，全连接层也是分别作用于各自的结果。
+<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-006-0675835dc6.png" alt="图片"></p>
+<h2 id="transformstotensor">transforms.ToTensor()</h2>
+<h3 id="transformstotensor-的作用"><strong><code>transforms.ToTensor()</code> 的作用</strong></h3>
+<p><code>transforms.ToTensor()</code> 是 PyTorch 提供的 <code>torchvision.transforms</code> 模块中的常用方法，用于把 <strong>PIL 图像</strong>或 <strong>NumPy 数组</strong>转换为 <strong>PyTorch 张量（Tensor）</strong>。</p>
+<hr>
+<h3 id="1-为什么需要-totensor"><strong>1. 为什么需要 <code>ToTensor()</code>？</strong></h3>
+<ul>
+<li><p><strong>神经网络只能处理张量</strong>：
+深度学习模型通常只接受 PyTorch 张量（Tensor）作为输入，而图像数据通常以 <strong>PIL 图像</strong>或 <strong>NumPy 数组</strong>的形式存储，因此需要转换为 PyTorch 张量格式。</p>
+</li>
+<li><p><strong>自动归一化</strong>：
+<code>ToTensor()</code> 会把图像数据从像素值范围 <code>[0, 255]</code> 转换为 <code>[0.0, 1.0]</code> 范围内的浮点数。</p>
+<ul>
+<li>这种归一化有助于提高模型训练的稳定性。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="2-totensor-转换了什么"><strong>2. <code>ToTensor()</code> 转换了什么</strong></h3>
+<h4 id="输入数据类型"><strong>输入数据类型</strong></h4>
+<ul>
+<li>支持 <strong>PIL 图像</strong>（<code>PIL.Image.Image</code>）。</li>
+<li>支持 <strong>NumPy 数组</strong>（<code>numpy.ndarray</code>）。</li>
+</ul>
+<h4 id="输出"><strong>输出</strong></h4>
+<ul>
+<li>返回形状为 <code>[C, H, W]</code>（通道、高、宽）的 PyTorch <strong>张量（Tensor）</strong>。</li>
+</ul>
+<h4 id="注意通道顺序"><strong>注意：通道顺序</strong></h4>
+<ul>
+<li>对于彩色图像（RGB）：<ul>
+<li><code>ToTensor()</code> 会把通道顺序从 <strong>HWC</strong> 转换为 <strong>CHW</strong>。</li>
+<li><strong>HWC</strong>：高（Height）、宽（Width）、通道（Channels）。</li>
+<li><strong>CHW</strong>：通道（Channels）、高（Height）、宽（Width）。</li>
+</ul>
+</li>
+<li>例如，输入图像形状为 <code>(224, 224, 3)</code>，转换后的张量形状为 <code>(3, 224, 224)</code>。</li>
+</ul>
+<hr>
+<h3 id="3-示例代码"><strong>3. 示例代码</strong></h3>
+<h4 id="31-转换-pil-图像"><strong>3.1 转换 PIL 图像</strong></h4>
+<pre><code class="language-python">from torchvision import transforms
+from PIL import Image
+import torch
+
+# 创建一个模拟的 PIL 图像
+img = Image.new(&quot;RGB&quot;, (224, 224), color=(255, 0, 0))  # 创建一个红色的 RGB 图片
+
+# 使用 ToTensor() 转换
+transform = transforms.ToTensor()
+tensor = transform(img)
+
+print(tensor.shape)  # torch.Size([3, 224, 224])
+print(tensor)  # 打印像素值（范围 [0, 1]）
+</code></pre>
+<h4 id="输出说明"><strong>输出说明</strong></h4>
+<ul>
+<li><strong>形状</strong>：输出张量形状为 <code>[3, 224, 224]</code>，即 3 个通道，高和宽都是 224。</li>
+<li><strong>取值范围</strong>：每个像素值从原来的 <code>[0, 255]</code> 转换为 <code>[0.0, 1.0]</code> 内的浮点数。</li>
+</ul>
+<hr>
+<h4 id="32-转换-numpy-数组"><strong>3.2 转换 NumPy 数组</strong></h4>
+<pre><code class="language-python">import numpy as np
+from torchvision import transforms
+
+# 创建一个随机 NumPy 图像数组 (HWC 格式)
+img = np.random.randint(0, 256, (224, 224, 3), dtype=np.uint8)
+
+# 将 NumPy 数组转换为 PIL 图像
+from PIL import Image
+pil_img = Image.fromarray(img)
+
+# 使用 ToTensor() 转换
+transform = transforms.ToTensor()
+tensor = transform(pil_img)
+
+print(tensor.shape)  # torch.Size([3, 224, 224])
+print(tensor.dtype)  # torch.float32
+</code></pre>
+<ul>
+<li><strong>从 NumPy 数组到 PIL 再到张量</strong>：<ul>
+<li>NumPy 图像通常是 HWC 格式（高、宽、通道）。</li>
+<li>转换为张量后变为 CHW 格式。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="4-常见用途"><strong>4. 常见用途</strong></h3>
+<h4 id="41-图像预处理"><strong>4.1 图像预处理</strong></h4>
+<p><code>ToTensor()</code> 常用于图像数据预处理流水线中，例如与其他变换组合使用：</p>
+<pre><code class="language-python">from torchvision import transforms
+
+# 创建一个图像预处理流水线
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),  # 调整图像大小
+    transforms.ToTensor(),         # 转换为张量
+])
+
+# 加载图像并应用预处理
+img = Image.open(&quot;example.jpg&quot;)  # 加载图片
+tensor = transform(img)          # 预处理并转换为张量
+print(tensor.shape)               # 输出张量形状
+</code></pre>
+<h4 id="42-数据增强"><strong>4.2 数据增强</strong></h4>
+<p><code>ToTensor()</code> 通常与数据增强方法一起使用，例如随机裁剪和翻转：</p>
+<pre><code class="language-python">transform = transforms.Compose([
+    transforms.RandomHorizontalFlip(),  # 随机水平翻转
+    transforms.RandomCrop(200),         # 随机裁剪为 200x200
+    transforms.ToTensor(),              # 转换为张量
+])
+</code></pre>
+<hr>
+<h3 id="5-注意事项"><strong>5. 注意事项</strong></h3>
+<ol>
+<li><p><strong>自动归一化到 <code>[0, 1]</code></strong>：</p>
+<ul>
+<li>如果输入是整数（例如 <code>[0, 255]</code> 的像素值），<code>ToTensor()</code> 会自动除以 255，把它们归一化到 <code>[0, 1]</code> 范围。</li>
+<li>如果输入已经是浮点数（例如 <code>[0.0, 1.0]</code>），则不会再次归一化。</li>
+</ul>
+</li>
+<li><p><strong>形状变换</strong>：</p>
+<ul>
+<li>输入为 HWC 格式，输出为 CHW 格式。</li>
+<li>这是因为 PyTorch 模型通常要求输入张量为 CHW 格式。</li>
+</ul>
+</li>
+<li><p><strong>灰度图像</strong>：</p>
+<ul>
+<li>如果输入是灰度图像（1 个通道），<code>ToTensor()</code> 会把它转换为形状为 <code>[1, H, W]</code> 的张量。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="6-示例对比"><strong>6. 示例对比</strong></h3>
+<h4 id="61-输入为-pil-图像"><strong>6.1 输入为 PIL 图像</strong></h4>
+<pre><code class="language-python">from PIL import Image
+from torchvision import transforms
+
+# 创建一个灰度图像
+img = Image.new(&quot;L&quot;, (3, 3), color=255)  # 灰度图像 (L 模式)
+print(img)  # 输出 PIL 图像
+
+# 转换为张量
+tensor = transforms.ToTensor()(img)
+print(tensor)  # 输出张量
+</code></pre>
+<ul>
+<li><strong>PIL 图像</strong>：<pre><code>&lt;PIL.Image.Image image mode=L size=3x3 at 0x...&gt;
+</code></pre>
+</li>
+<li><strong>输出张量</strong>：<pre><code>tensor([[[1., 1., 1.],
+         [1., 1., 1.],
+         [1., 1., 1.]]])
+</code></pre>
+</li>
+</ul>
+<h4 id="62-输入为-numpy-数组"><strong>6.2 输入为 NumPy 数组</strong></h4>
+<pre><code class="language-python">import numpy as np
+from torchvision import transforms
+
+# 创建一个 NumPy 数组
+img = np.array([[0, 127, 255], [255, 127, 0], [0, 255, 127]], dtype=np.uint8)
+print(img)
+
+# 转换为 PIL 图像
+from PIL import Image
+pil_img = Image.fromarray(img)
+
+# 转换为张量
+tensor = transforms.ToTensor()(pil_img)
+print(tensor)
+</code></pre>
+<ul>
+<li><strong>NumPy 数组</strong>：<pre><code>[[  0 127 255]
+ [255 127   0]
+ [  0 255 127]]
+</code></pre>
+</li>
+<li><strong>输出张量</strong>：<pre><code>tensor([[[0.0000, 0.4980, 1.0000],
+         [1.0000, 0.4980, 0.0000],
+         [0.0000, 1.0000, 0.4980]]])
+</code></pre>
+</li>
+</ul>
+<hr>
+<h1 id="alexnet-源码">AlexNet 源码</h1>
+<h2 id="alexnet-函数">alexnet 函数</h2>
+<p>网络结构定义在 AlexNet 类中；创建对象后，通过 model.load_state_dict 加载模型参数。</p>
+<pre><code class="language-python">
+@register_model()
+@handle_legacy_interface(weights=(&quot;pretrained&quot;, AlexNet_Weights.IMAGENET1K_V1))
+def alexnet(*, weights: Optional[AlexNet_Weights] = None, progress: bool = True, **kwargs: Any) -&gt; AlexNet:
+    &quot;&quot;&quot;AlexNet model architecture from `One weird trick for parallelizing convolutional neural networks &lt;https://arxiv.org/abs/1404.5997&gt;`__.
+
+    .. note::
+        AlexNet was originally introduced in the `ImageNet Classification with
+        Deep Convolutional Neural Networks
+        &lt;https://papers.nips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html&gt;`__
+        paper. Our implementation is based instead on the &quot;One weird trick&quot;
+        paper above.
+
+    Args:
+        weights (:class:`~torchvision.models.AlexNet_Weights`, optional): The
+            pretrained weights to use. See
+            :class:`~torchvision.models.AlexNet_Weights` below for
+            more details, and possible values. By default, no pre-trained
+            weights are used.
+        progress (bool, optional): If True, displays a progress bar of the
+            download to stderr. Default is True.
+        **kwargs: parameters passed to the ``torchvision.models.squeezenet.AlexNet``
+            base class. Please refer to the `source code
+            &lt;https://github.com/pytorch/vision/blob/main/torchvision/models/alexnet.py&gt;`_
+            for more details about this class.
+
+    .. autoclass:: torchvision.models.AlexNet_Weights
+        :members:
+    &quot;&quot;&quot;
+
+    weights = AlexNet_Weights.verify(weights)
+
+    if weights is not None:
+        _ovewrite_named_param(kwargs, &quot;num_classes&quot;, len(weights.meta[&quot;categories&quot;]))
+
+    model = AlexNet(**kwargs)
+
+    if weights is not None:
+        model.load_state_dict(weights.get_state_dict(progress=progress, check_hash=True))
+
+    return model
+</code></pre>
+<h2 id="class-alexnetnnmodule">class AlexNet(nn.Module)</h2>
+<p>用 Sequential 把多个网络层组合起来。</p>
+<pre><code class="language-python">
+class AlexNet(nn.Module):
+    def __init__(self, num_classes: int = 1000, dropout: float = 0.5) -&gt; None:
+        super().__init__()
+        _log_api_usage_once(self)
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(64, 192, kernel_size=5, padding=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(192, 384, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(384, 256, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+        )
+        self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=dropout),
+            nn.Linear(256 * 6 * 6, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=dropout),
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            nn.Linear(4096, num_classes),
+        )
+
+    def forward(self, x: torch.Tensor) -&gt; torch.Tensor:
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        return x
+</code></pre>
+<h2 id="alexnet_weights">AlexNet_Weights</h2>
+<p>IMAGENET1K_V1 指的是 ImageNet 竞赛，1K 表示 1000 个类别，V1 是版本号。</p>
+<p>IMAGENET1K_V1 是一个 Weights 对象，其属性包括 url（下载模型参数的 URL）和 pth（表示 PyTorch 模型文件）。</p>
+<p><strong><code>transforms</code></strong>：一个函数或函数包装器（这里用 <code>partial</code> 包装了 <code>ImageClassification</code>）。它指定了使用这些权重时所需的输入预处理方式，例如裁剪尺寸为 224。这确保了用户使用这些权重时，输入数据与训练时的分布一致。</p>
+<p><code>meta</code> 是一个字典，用于存放与权重相关的各种信息，例如模型参数量、准确率、文件大小等。</p>
+<pre><code class="language-python">meta={
+    &quot;num_params&quot;: 61100840,  # 模型的参数总数
+    &quot;min_size&quot;: (63, 63),  # 模型支持的最小输入尺寸
+    &quot;categories&quot;: _IMAGENET_CATEGORIES,  # 分类类别名称（1000 个 ImageNet 类别）
+    &quot;recipe&quot;: &quot;https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg&quot;,  # 训练时的配方（参考训练代码）
+    &quot;_metrics&quot;: {
+        &quot;ImageNet-1K&quot;: {
+            &quot;acc@1&quot;: 56.522,  # Top-1 准确率
+            &quot;acc@5&quot;: 79.066,  # Top-5 准确率
+        }
+    },
+    &quot;_ops&quot;: 0.714,  # 模型的操作复杂度（以 GMACs 为单位，十亿次乘加运算）
+    &quot;_file_size&quot;: 233.087,  # 模型权重文件的大小（单位：MB）
+    &quot;_docs&quot;: &quot;&quot;&quot;
+        These weights reproduce closely the results of the paper using a simplified training recipe.
+    &quot;&quot;&quot;,  # 权重的文档说明
+},
+</code></pre>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/"><span class="l">上一篇</span>图像识别 - 目标检测 - R-CNN - Fast R-CNN - Faster R-CNN - YOLO（You Only Look Once）- YOLO 的统一模型</a><a href="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E5%85%A8%E8%BF%9E%E6%8E%A5%E5%B1%82%20-%20%E5%8D%B7%E7%A7%AF%E5%B1%82%20-%20%E5%8D%B7%E7%A7%AF%E5%B1%82%E7%9A%84%E8%AE%A1%E7%AE%97%20-%20%E5%A4%9A%E8%BE%93%E5%85%A5%E9%80%9A%E9%81%93%20-%20%E5%A4%9A%E8%BE%93%E5%87%BA%E9%80%9A%E9%81%93%20-%20%E6%84%9F%E5%8F%97%E9%87%8E/"><span class="l">下一篇</span>图像识别 - 全连接层 - 卷积层 - 卷积层的计算 - 多输入通道 - 多输出通道 - 感受野 - 填充 - VALID 与 SAME - 步幅 - 池化 - CNN 架构</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#transformstotensor">transforms.ToTensor()</a><a class="d3" href="#transformstotensor-的作用">transforms.ToTensor() 的作用</a><a class="d3" href="#1-为什么需要-totensor">1. 为什么需要 ToTensor()？</a><a class="d3" href="#2-totensor-转换了什么">2. ToTensor() 转换了什么</a><a class="d3" href="#3-示例代码">3. 示例代码</a><a class="d3" href="#4-常见用途">4. 常见用途</a><a class="d3" href="#5-注意事项">5. 注意事项</a><a class="d3" href="#6-示例对比">6. 示例对比</a><a class="d2" href="#alexnet-函数">alexnet 函数</a><a class="d2" href="#class-alexnetnnmodule">class AlexNet(nn.Module)</a><a class="d2" href="#alexnet_weights">AlexNet_Weights</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

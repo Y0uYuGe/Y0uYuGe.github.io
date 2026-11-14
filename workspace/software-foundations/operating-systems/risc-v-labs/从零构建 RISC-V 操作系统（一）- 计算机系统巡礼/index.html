@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建 RISC-V 操作系统（一）- 计算机系统巡礼 · Y0uYuGe</title>
+<meta name="description" content="把机器指令取到寄存器中，然后翻译，再执行，接着再取指令，如此循环往复。它感觉像是一个中间人，防止应用程序直接访问硬件带来的一些不良影响。此时它指向第一个位置的内容，并把该位置的内容放入指令寄存器。先编译链接一个 C 文件，得到的可执行文件存放在磁盘上。第 3 条使用第三种格式（最高两位在这里没有意义，因为没有被用到）。指令集架构（ISA）则是操作系统到硬件的接口。PC 指向将要运行（即将运行）的指令的地址。把常用的东西放得离 CPU 更近。a+b 的实现可以分为图中所示的四个步骤。依次执行内存中的指令。第 1、2、4 条使用第一种格式。翻译指令寄存器中的内容。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems">操作系统</a><span class="sep">›</span><a href="/#/software-foundations/operating-systems/risc-v-labs">RISC-V 实验</a></nav>
+    <h1>从零构建 RISC-V 操作系统（一）- 计算机系统巡礼</h1>
+    <div class="meta"><time>2023-12-02</time><span class="tag">#risc-v</span></div>
+    <article class="post-body">
+<h1 id="计算机的硬件组成">计算机的硬件组成</h1>
+<p>所有硬件都通过总线相连
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-001-b249782852.png" alt="图片"></p>
+<h1 id="两种体系结构">两种体系结构</h1>
+<p>总线的数量不同，Memory 中存放的内容也不同
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-002-1cd4f3058c.png" alt="图片"></p>
+<h1 id="程序的存储与执行">程序的存储与执行</h1>
+<p>先编译链接一个 C 文件，得到的可执行文件存放在磁盘上
+只有在即将运行时才会被加载到内存中
+把机器指令取到寄存器中，然后翻译，再执行，接着再取指令，如此循环往复
+由晶振驱动，也就是时钟频率；时钟频率越快，循环就越快
+依次执行内存中的指令</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-003-fa12ff8fb1.png" alt="图片"><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-004-a111260066.png" alt="图片">
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-005-36143f9ba8.png" alt="图片"></p>
+<h1 id="编程语言的设计与演进">编程语言的设计与演进</h1>
+<h2 id="一台迷你计算机">一台迷你计算机</h2>
+<p>假设现在要实现 a+b
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-006-dc0ef1936f.png" alt="图片">
+a+b 的实现可以分为图中所示的四个步骤
+指令的编码各不相同
+第 1、2、4 条使用第一种格式
+第 3 条使用第三种格式（最高两位在这里没有意义，因为没有被用到）</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-007-ece73a44f9.png" alt="图片">
+PC 指向将要运行（即将运行）的指令的地址
+此时它指向第一个位置的内容，并把该位置的内容放入指令寄存器
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-008-fbaed1ce69.png" alt="图片">
+翻译指令寄存器中的内容
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-009-faa4f4fbb7.png" alt="图片">
+执行第一条指令
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-010-e11e88ff13.png" alt="图片">
+执行第二条指令
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-011-26db6df583.png" alt="图片">
+执行第三条指令
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-012-2a938b3226.png" alt="图片">
+执行第四条指令
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-013-44b8536f14.png" alt="图片"></p>
+<h1 id="编程语言的演进">编程语言的演进</h1>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-014-9876c05c5a.png" alt="图片"></p>
+<h1 id="存储设备的层次结构">存储设备的层次结构</h1>
+<p>把常用的东西放得离 CPU 更近
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-015-17352b874d.png" alt="图片"></p>
+<h1 id="操作系统">操作系统</h1>
+<p>系统调用是应用程序到操作系统的接口
+指令集架构（ISA）则是操作系统到硬件的接口</p>
+<p>操作系统的作用</p>
+<ul>
+<li>防止有错误的应用程序直接访问硬件而导致硬件出问题</li>
+<li>为应用程序提供简单一致的抽象接口，以访问复杂多样的外设硬件</li>
+</ul>
+<p>感觉它像是一个中间人，防止应用程序直接访问硬件带来的一些不良影响
+<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E4%B8%80%EF%BC%89-%20%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%B7%A1%E7%A4%BC/assets/csdn-134756291/image-016-ab64e62385.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/"><span class="l">上一篇</span>从零构建 RISC-V 操作系统（十）——Trap 与 Exception（控制流、mtvec、mepc、mcause、mtval、mstatus、完整 Trap 流程）</a><a href="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/"><span class="l">下一篇</span>手把手写 RISC-V 操作系统 11 - 外部设备中断</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

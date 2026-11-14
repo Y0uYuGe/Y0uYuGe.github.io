@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - CPU 的功能和结构 · Y0uYuGe</title>
+<meta name="description" content="ALU 上方的寄存器存放 ALU 的运算结果；等结果稳定后（或者说 B 的信号稳定后），再打开结果与 CPU 内部总线之间的连接，最终通过 CPU 内部总线把结果送到指定的寄存器。微操作信号发生器每收到一次时序系统的信号，就发出该微操作的信号，执行一个微操作。指令译码器选中某一根输出线，微操作信号发生器根据该信号产生微操作序列。中断处理可能处理 I/O 中断，也可能处理由异常引起的中断。绿色的 in 信号同样根据某些输入决定数据能否写入寄存器。CPU 内部总线：CPU 内部各部件传送数据的公共通路。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8">中央处理器</a></nav>
+    <h1>计算机组成原理 - CPU 的功能和结构</h1>
+    <div class="meta"><time>2023-12-18</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<h1 id="cpu-的功能">CPU 的功能</h1>
+<p>  时序控制即提供每条指令对应的各个操作信号的先后顺序</p>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-001-494ba61801.png" alt="图片"></p>
+<h1 id="运算器和控制器的功能">运算器和控制器的功能</h1>
+<p>中断处理可能处理 I/O 中断，也可能处理由异常引起的中断 
+在这里插入图片描述
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-002-fd7f4dba59.png" alt="图片"></p>
+<h1 id="运算器的基本结构">运算器的基本结构</h1>
+<p>要运算的数据放在寄存器中
+H 为高位，L 为低位
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-003-086b7deb38.png" alt="图片"></p>
+<h2 id="专用数据通路方式">专用数据通路方式</h2>
+<p>这里所有寄存器同时向左右两边发送数据，所以需要进行选择
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-004-7e24149b1a.png" alt="图片">
+MUX 根据某些输入决定输出哪一路
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-005-794acd0a8a.png" alt="图片">
+三态门
+Rout 输入决定这一路能否输出
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-006-31492a2701.png" alt="图片">
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-007-a0d7b1d510.png" alt="图片"></p>
+<h2 id="cpu-内部单总线方式">CPU 内部单总线方式</h2>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-008-0bd1f27550.png" alt="图片"></p>
+<p>暂存寄存器可以暂存从主存或某些寄存器读出的数据</p>
+<p>ALU 上方的寄存器存放 ALU 的运算结果；等结果稳定后（或者说 B 的信号稳定后），再打开结果与 CPU 内部总线之间的连接，最终通过 CPU 内部总线把结果送到指定的寄存器</p>
+<p>绿色的 in 信号同样根据某些输入决定数据能否写入寄存器</p>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-009-7484c00a63.png" alt="图片"></p>
+<h1 id="控制器的基本结构">控制器的基本结构</h1>
+<p>CPU 内部总线
+指令中的地址码信息需要输出到 CPU 内部总线上
+ 指令译码器选中某一根输出线，微操作信号发生器根据该信号产生微操作序列
+微操作信号发生器每收到一次时序系统的信号，就发出该微操作的信号，执行一个微操作</p>
+<p>MAR：主存中某个内容的存储地址
+CPU 内部总线：CPU 内部各部件传送数据的公共通路
+地址总线和数据总线：CPU 与其他部件之间传送数据的公共通路
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-010-8a74d3f673.png" alt="图片"></p>
+<h1 id="cpu-的基本结构">CPU 的基本结构</h1>
+<p>可编程：可以通过汇编语言改变寄存器的值
+PC：跳转指令
+PSW：产生标志位，跳转指令也需要读取
+ACC：一些运算会改变 ACC 的值
+R0 R1 R2 R3：可以通过汇编修改</p>
+<p>红色表示可见，灰色表示不可见
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-011-9b215e02dd.png" alt="图片">
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-012-ebdb40013c.png" alt="图片">
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-013-b7298eec28.png" alt="图片"></p>
+<h1 id="小结">小结</h1>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-014-f65b48a788.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/"><span class="l">上一篇</span>计算机组成原理 - 指令周期的数据流</a><a href="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E6%95%B0%E6%8D%AE%E9%80%9A%E8%B7%AF%EF%BC%88%E5%8D%95%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84%E4%B8%8E%E4%B8%93%E7%94%A8%E9%80%9A%E8%B7%AF%E7%BB%93%E6%9E%84%EF%BC%89/"><span class="l">下一篇</span>计算机组成原理 - CPU 数据通路（单总线结构与专用通路结构）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

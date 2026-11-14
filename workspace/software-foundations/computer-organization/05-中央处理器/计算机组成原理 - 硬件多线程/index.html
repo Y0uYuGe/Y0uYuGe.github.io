@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - 硬件多线程 · Y0uYuGe</title>
+<meta name="description" content="在不支持硬件多线程的处理器中，处理器只能处理一个指令流水线（一个程序或线程）。要切换到另一个指令流水线（另一个程序或线程），必须把当前指令流水线的环境（寄存器信息）保存到主存中，切换回来时再从主存取出之前保存的寄存器信息来恢复寄存器的值。细粒度多线程每个时钟周期从一个线程中取两条指令，取出的两条指令之间没有依赖关系，因此可以发射到两个 CPU 上同时运行，但每个时钟周期都会切换线程。这里指令是并行的——多条指令同时运行——线程也是并行的——多个线程同时运行。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A1%AC%E4%BB%B6%E5%A4%9A%E7%BA%BF%E7%A8%8B" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8">中央处理器</a></nav>
+    <h1>计算机组成原理 - 硬件多线程</h1>
+    <div class="meta"><time>2023-12-28</time><span class="tag">#计算机组成原理</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A1%AC%E4%BB%B6%E5%A4%9A%E7%BA%BF%E7%A8%8B/assets/csdn-135210401/image-001-c1190be89d.png" alt=""></p>
+<h1 id="支持与不支持硬件多线程">支持与不支持硬件多线程</h1>
+<p>在不支持硬件多线程的处理器中，处理器只能处理一个指令流水线（一个程序或线程）。要切换到另一个指令流水线（另一个程序或线程），必须把当前指令流水线的环境（寄存器信息）保存到主存中，切换回来时再从主存中取出之前保存的寄存器信息，恢复寄存器的值
+支持硬件多线程相当于有多个 CPU，不同的 CPU 可以处理不同的指令序列（程序或线程）
+<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A1%AC%E4%BB%B6%E5%A4%9A%E7%BA%BF%E7%A8%8B/assets/csdn-135210401/image-002-fb3fc2c166.png" alt="图片"></p>
+<h1 id="三种硬件多线程">三种硬件多线程</h1>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A1%AC%E4%BB%B6%E5%A4%9A%E7%BA%BF%E7%A8%8B/assets/csdn-135210401/image-003-37547b7c25.png" alt="图片"></p>
+<p>细粒度多线程每个时钟周期从一个线程中取两条指令，取出的两条指令之间没有依赖关系，因此可以发射到两个 CPU 上同时运行，但每个时钟周期都会切换线程</p>
+<p>粗粒度多线程连续多个时钟周期运行同一个线程的指令序列。每次指令仍然可以并行运行，只有在流水线阻塞时才会切换线程
+流水线阻塞：Cache 缺失，即下一条指令不在 Cache 中，必须从主存中取。这时就要为取到的指令重新建立流水线环境（寄存器等）</p>
+<p>同时多线程
+每个时钟周期运行两个线程，一个 CPU 处理一个线程。
+这里指令是并行的——多条指令同时运行——线程也是并行的——多个线程同时运行</p>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A1%AC%E4%BB%B6%E5%A4%9A%E7%BA%BF%E7%A8%8B/assets/csdn-135210401/image-004-c2cfae8e35.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A1%AC%E5%B8%83%E7%BA%BF%E6%8E%A7%E5%88%B6%E5%99%A8%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%99%A8/"><span class="l">上一篇</span>计算机组成原理 - 硬布线控制器与微程序控制器</a><a href="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%EF%BC%88%E5%AE%9A%E4%B9%89%E3%80%81%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95%E3%80%81%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E3%80%81%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%E3%80%81%E5%88%86%E7%B1%BB%E3%80%81%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF%EF%BC%89/"><span class="l">下一篇</span>计算机组成原理 - 指令流水线（定义、表示方法、性能指标、影响因素、分类、多发技术）</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

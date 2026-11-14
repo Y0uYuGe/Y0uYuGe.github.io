@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机网络 - 停止等待协议（停止等待协议属于哪一层？起源、前提与应用；无差错情况；有差错情况——数据帧丢失或检测出错、ACK 丢失、ACK 迟到；停止等待协议的性能分析） · Y0uYuGe</title>
+<meta name="description" content="这样的设计足以满足停止等待协议的基本需求，因为该协议的核心在于确认机制，而不在于能够处理大量的帧编号。如果迟到的 ACK 0 在发送方超时重传之后才到达，就说明帧 0 已经完成，发送方开始发送帧 1。接收方再次收到重传的帧 0 时，会重发 ACK 0；发送方在发出帧 1 之后再次收到 ACK 0 时，由于已经收到过 ACK 0，就会将其丢弃。如果迟到的 ACK 0 在帧 1 发出之后才到达发送方，此时发送方已经收到过 ACK 0，正在等待 ACK 1，因此会丢弃迟到的 ACK 0。只有在收到确认之后，发送方才能丢弃刚刚发送的那个帧的副本。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks">计算机网络</a><span class="sep">›</span><a href="/#/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82">数据链路层</a></nav>
+    <h1>计算机网络 - 停止等待协议（停止等待协议属于哪一层？起源、前提与应用；无差错情况；有差错情况——数据帧丢失或检测出错、ACK 丢失、ACK 迟到；停止等待协议的性能分析）</h1>
+    <div class="meta"><time>2024-02-08</time><span class="tag">#计算机网络</span><span class="tag">#网络</span><span class="tag">#服务器</span></div>
+    <article class="post-body">
+<h1 id="停止等待协议属于哪一层">停止等待协议属于哪一层？</h1>
+<p>停止等待协议是一种数据链路层协议。</p>
+<p>停止等待协议是数据通信中的一种基础协议，属于 OSI 模型的第二层——数据链路层。该协议的主要特点是简单但效率低，因为它要求发送方每发送一个数据包后就停下来，等待接收方的确认。只有收到确认后，发送方才能继续发送下一个数据包。如果传输过程中出现差错或丢失，发送方会重传同一个数据包，直到收到确认为止。</p>
+<blockquote>
+<p>过去网络质量较差，因此链路层需要使用停止等待协议来保证数据的可靠性
+如今随着网络质量的提高，链路层负责差错控制，使数据传输更快、出错更少，而由传输层负责可靠传输</p>
+</blockquote>
+<h1 id="起源前提与应用">起源、前提与应用</h1>
+<p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0/assets/csdn-136073950/image-001-eca65f4983.png" alt="图片"></p>
+<h1 id="停止等待协议---无差错情况">停止等待协议 - 无差错情况</h1>
+<p>0 和 1 只是序号；编号相同的帧不一定是同一个帧
+ACK 0：帧 0 的确认帧
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0/assets/csdn-136073950/image-002-bba7866137.png" alt="图片"></p>
+<h2 id="编号">编号</h2>
+<p>在停止等待协议中，帧的编号范围通常是 0 和 1。</p>
+<p>停止等待协议是一种基本的数据链路层协议，它使用帧编号来区分不同的数据帧，并保证数据的有序传输。在该协议中，帧编号通常只需要 1 位，也就是说编号范围是 0 和 1。这样的设计足以满足停止等待协议的基本需求，因为该协议的核心在于确认机制，而不在于能够处理大量的帧编号。</p>
+<h1 id="停止等待协议---有差错情况">停止等待协议 - 有差错情况</h1>
+<h2 id="数据帧丢失或检测出错">数据帧丢失或检测出错</h2>
+<p>如果在收到确认帧之前超时计时器就到期了，发送方会在计时器到期后重传该帧（自动重传）</p>
+<p>RTT：往返传播时延（从发送到收到确认所经历的时间）</p>
+<p>超时计时器所设置的重传时间应当大于帧传输的平均 RTT。原因：这样可以确保在确认帧即将到达时，发送方不会重传</p>
+<p>保留一个副本（帧的拷贝）便于重传
+只有在收到确认之后，发送方才能丢弃刚刚发送的那个帧的副本</p>
+<ul>
+<li>编号：解决帧丢失和帧重复的问题</li>
+<li>帧丢失：发送方发送一个帧之后，等待接收方的确认。如果确认丢失，发送方会在超时后重传同一个帧。由于每个帧都有编号，接收方可以识别出重复帧，将其丢弃，并发送新的确认来告知发送方之前的数据已经收到。</li>
+<li>帧重复：如果确认迟到，发送方可能会误以为前一个帧没有发送成功，于是再次发送同一个帧。这时，接收方通过帧编号识别出它是重复帧，将其丢弃，并再次发送确认。</li>
+</ul>
+<p>帧出错：接收方检测到差错后丢弃该帧，并且不返回确认
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0/assets/csdn-136073950/image-003-039631df57.png" alt="图片"></p>
+<h2 id="ack-丢失">ACK 丢失</h2>
+<p>被丢弃的重复帧是第二次发送的那个帧
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0/assets/csdn-136073950/image-004-a03c8f6cd9.png" alt="图片"></p>
+<h2 id="ack-迟到">ACK 迟到</h2>
+<p>被丢弃的重复帧是第二次发送的那个帧</p>
+<p>如果迟到的 ACK 0 在帧 1 发出之后才到达发送方，此时发送方已经收到过 ACK 0，正在等待 ACK 1，因此会丢弃迟到的 ACK 0</p>
+<p>如果迟到的 ACK 0 在发送方超时重传之后才到达，就说明帧 0 已经完成，发送方开始发送帧 1。接收方再次收到重传的帧 0 时，会重发 ACK 0；发送方在发出帧 1 之后再次收到 ACK 0 时，由于已经收到过 ACK 0，就会将其丢弃
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0/assets/csdn-136073950/image-005-fe86c63b22.png" alt="图片"></p>
+<h1 id="停止等待协议的性能分析">停止等待协议的性能分析</h1>
+<p>确认帧：只包含控制信息而不包含数据，因此比数据帧短</p>
+<p>T0：发送方从把第一个比特放到链路上，到把最后一个比特放到链路上所经历的时延（发送时延）</p>
+<p>数据放到链路上之后，接下来是它在链路上传播所花的时间</p>
+<p>发送周期：从发送第一个比特的那一刻起，直到发送方收到确认帧的最后一个比特为止
+<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0/assets/csdn-136073950/image-006-48b15d8c57.png" alt="图片"></p>
+<h2 id="信道利用率">信道利用率</h2>
+<p> <img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0/assets/csdn-136073950/image-007-ae5062228d.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%88%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%80%E5%B1%82%EF%BC%9F%E8%B5%B7%E6%BA%90%E3%80%81%E5%89%8D%E6%8F%90%E4%B8%8E%E5%BA%94%E7%94%A8%EF%BC%9B%E6%97%A0%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%EF%BC%9B%E6%9C%89%E5%B7%AE%E9%94%99%E6%83%85%E5%86%B5%E2%80%94%E2%80%94%E6%95%B0/assets/csdn-136073950/image-008-169c637284.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/"><span class="l">上一篇</span>计算机网络 - 数据链路层概述（功能概述、链路、数据链路、物理信道、逻辑信道）</a><a href="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E9%80%89%E6%8B%A9%E9%87%8D%E4%BC%A0%E5%8D%8F%E8%AE%AE%EF%BC%88GBN%20%E5%8D%8F%E8%AE%AE%E7%9A%84%E7%BC%BA%E7%82%B9%E3%80%81%E9%80%89%E6%8B%A9%E9%87%8D%E4%BC%A0%E5%8D%8F%E8%AE%AE%E4%B8%AD%E7%9A%84%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81SR%20%E5%8F%91%E9%80%81%E6%96%B9%E5%BF%85%E9%A1%BB%E5%93%8D%E5%BA%94%E7%9A%84%E4%B8%89/"><span class="l">下一篇</span>计算机网络 - 选择重传协议（GBN 协议的缺点、选择重传协议中的滑动窗口、SR 发送方必须响应的三件事、SR 接收方必须做的事、SR 的运行过程、滑动窗口长度、SR 协议要点总结）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#编号">编号</a><a class="d2" href="#数据帧丢失或检测出错">数据帧丢失或检测出错</a><a class="d2" href="#ack-丢失">ACK 丢失</a><a class="d2" href="#ack-迟到">ACK 迟到</a><a class="d2" href="#信道利用率">信道利用率</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

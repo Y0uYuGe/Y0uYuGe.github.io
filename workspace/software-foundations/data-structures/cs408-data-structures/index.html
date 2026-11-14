@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cs408-data-structures · Y0uYuGe</title>
+<meta name="description" content="AtlasSearch puts data structures to work in a persistent local document search engine with Boolean queries, phrase matching, suggestions, and graph exploration.">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/data-structures/cs408-data-structures" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/data-structures">数据结构</a></nav>
+    <h1>cs408-data-structures</h1>
+    <div class="meta"><time>2026-10-20</time><span class="tag">#Data Structures</span><span class="tag">#Algorithms</span><span class="tag">#CS408</span></div>
+    <article class="post-body">
+<h2 id="overview">Overview</h2>
+<p>AtlasSearch is a local document-search engine that gives core data structures practical responsibilities. Inverted indexes support Boolean retrieval, KMP checks phrases, a Trie provides prefix suggestions, and an AVL tree supports document-length ranges. Graph algorithms explore document relationships, while Huffman coding and checked snapshots support backup and recovery.</p>
+<h2 id="search-your-own-notes">Search your own notes</h2>
+<p>With Python 3.11+, run these commands in the repository:</p>
+<pre><code class="language-console">python -m atlas_search --db .atlas init
+python -m atlas_search --db .atlas index examples/corpus
+python -m atlas_search --db .atlas search &quot;tree AND NOT graph&quot;
+</code></pre>
+<p>Replace the sample corpus with your own UTF-8 notes. The <a href="https://github.com/Y0uYuGe/cs408-data-structures#readme">README</a> links the course, original exercises, algorithm implementations, and verification commands.</p>
+<h2 id="current-scope">Current scope</h2>
+<p>The engine persists documents and indexes, with integrity checks and recovery behavior. Tokenization and ranking follow explicit teaching rules. The course topic map separates implemented algorithms from theory material.</p>
+<h2 id="source">Source</h2>
+<p><a href="https://github.com/Y0uYuGe/cs408-data-structures">GitHub repository</a></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><span></span></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#overview">Overview</a><a class="d2" href="#search-your-own-notes">Search your own notes</a><a class="d2" href="#current-scope">Current scope</a><a class="d2" href="#source">Source</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

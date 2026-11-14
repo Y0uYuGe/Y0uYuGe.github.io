@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理——存储系统的基本概念 · Y0uYuGe</title>
+<meta name="description" content="打开一个程序时，程序代码被调入主存，然后 CPU 开始读取并运行主存中的代码。虚拟存储系统：看到的比实际大小大得多。Cache 也是分层的。Cache 和主存都可以被 CPU 直接访问。辅存以前是机械硬盘，现在多用固态硬盘。开机时需要把辅存中的数据读入主存，辅存读取速度越快，开机也就越快。光存储器：CD、DVD 之类。磁带：需要转动磁带，通过磁头的对应位置来读取。随机存取存储器：主存、Cache。直接存取存储器：机械硬盘——即既有存取时间相同的位置，也有存取时间不同的位置。存储速度：可以理解为存储一个存储字的一位所需的时间。主……">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F">存储系统</a></nav>
+    <h1>计算机组成原理——存储系统的基本概念</h1>
+    <div class="meta"><time>2023-11-30</time><span class="tag">#学习</span></div>
+    <article class="post-body">
+<h1 id="现代计算机的结构">现代计算机的结构</h1>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-001-1eb44a1c44.png" alt="图片"></p>
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-002-1d507791c9.png" alt="图片"></p>
+<h1 id="存储器的层次结构">存储器的层次结构</h1>
+<p>打开一个程序时，程序代码被调入主存，然后 CPU 开始读取并运行主存中的代码。
+虚拟存储系统：看到的比实际大小大得多
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-003-5b3196033d.png" alt="图片"></p>
+<h1 id="各种存储器的速度与价格">各种存储器的速度与价格</h1>
+<p>Cache 也是分层的
+Cache 和主存都可以被 CPU 直接访问
+辅存以前是机械硬盘，现在多用固态硬盘
+开机时需要把辅存中的数据读入主存，辅存读取速度越快，开机也就越快
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-004-1f83284531.png" alt="图片"></p>
+<h1 id="存储器的分类按层次">存储器的分类（按层次）</h1>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-005-b6c2d2a76e.png" alt="图片"></p>
+<h1 id="存储器的分类按存储介质">存储器的分类（按存储介质）</h1>
+<p>光存储器：CD、DVD 之类
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-006-95168f60b3.png" alt="图片"></p>
+<h1 id="存储器的分类按存取方式">存储器的分类（按存取方式）</h1>
+<p>磁带：需要转动磁带，通过磁头的对应位置来读取
+随机存取存储器：主存、Cache
+直接存取存储器：机械硬盘——即既有存取时间相同的位置，也有存取时间不同的位置
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-007-9e9c28bfea.png" alt="图片"></p>
+<h1 id="存储器的分类按信息的可更改性">存储器的分类（按信息的可更改性）</h1>
+<p> <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-008-ef9d8a94b4.png" alt="图片"></p>
+<h1 id="存储器的分类按信息的可保存性">存储器的分类（按信息的可保存性）</h1>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-009-72623eabea.png" alt="图片"></p>
+<h1 id="存储器的性能指标">存储器的性能指标</h1>
+<p>存储速度：可以理解为存储一个存储字的一位所需的时间
+主存带宽（数据传输率）：每秒进出主存的最大信息量，单位可以是字/秒、字节/秒等
+ <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-010-d5d7d74098.png" alt="图片"></p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/assets/csdn-134707215/image-011-8278b1b07d.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E5%8D%8A%E5%AF%BC%E4%BD%93%E9%9A%8F%E6%9C%BA%E5%AD%98%E5%82%A8%E5%99%A8/"><span class="l">上一篇</span>计算机组成原理——半导体随机存储器</a><a href="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/Cache/"><span class="l">下一篇</span>Cache</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

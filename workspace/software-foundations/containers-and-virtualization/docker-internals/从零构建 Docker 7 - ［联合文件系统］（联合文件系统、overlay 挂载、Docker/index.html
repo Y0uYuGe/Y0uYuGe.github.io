@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零构建 Docker 7 - ［联合文件系统］（联合文件系统、overlay 挂载、Docker 的 overlay2、镜像与容器与 overlay2、疑问） · Y0uYuGe</title>
+<meta name="description" content="然后在 merged 中删除 1.txt；发现 diff 中多了一个 whiteout 的 1.txt 文件。修改 merged 中 2.txt 的内容；发现 diff 中多了一个修改后的 2.txt 文件。在 merged 中新建一个 4.txt，upper 中也出现了一个同样的 4.txt。它还可以存放 init 层和 container 层；一个完整的容器分为 3 层：image 层、init 层、container 层。docker 创建容器时会创建 init 层和 container 层。lowerdir：只读层，对应当前层以下所有层的文件。upperdir：读写层，当前层的文件。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization">容器与虚拟化</a><span class="sep">›</span><a href="/#/software-foundations/containers-and-virtualization/docker-internals">Docker 原理</a></nav>
+    <h1>从零构建 Docker 7 - ［联合文件系统］（联合文件系统、overlay 挂载、Docker 的 overlay2、镜像与容器与 overlay2、疑问）</h1>
+    <div class="meta"><time>2024-04-02</time><span class="tag">#docker</span><span class="tag">#eureka</span><span class="tag">#java</span></div>
+    <article class="post-body">
+<p><a href="https://cloud.tencent.com/developer/article/2272892">https://cloud.tencent.com/developer/article/2272892</a></p>
+<h1 id="联合文件系统">联合文件系统</h1>
+<ul>
+<li>它把多个目录合并成一个目录</li>
+<li>它使用一种叫写时复制（COW）的机制。如果要修改的文件位于只读层，UnionFS 会把该文件拷贝到最上层的可写层，再在那里进行修改。这样可以保证底层文件系统保持不变，变化只发生在最上层。</li>
+</ul>
+<h1 id="overlay-挂载">overlay 挂载</h1>
+<p>使用 mount 命令挂载到某个位置；需要指定 lowerdir、upperdir、workdir、merged_dir</p>
+<pre><code class="language-bash">mount -t overlay overlay -o lowerdir=lower1:lower2:lower3,upperdir=upper,workdir=work merged_dir
+</code></pre>
+<p>这条命令把 lower1、lower2、lower3、upper、work 这几个目录的内容放到 merged_dir 目录中</p>
+<p>lowerdir：只读层，对应当前层以下所有层的文件
+upperdir：读写层，当前层的文件
+workdir：不用管它
+merged_dir：合并结果存放的位置</p>
+<p>此时，如果修改某个文件的内容，如果该文件来自 lowerdir，那么修改之后，upperdir 中会出现一个带有修改内容的文件，但 lowerdir 中的内容不会改变</p>
+<p>此时，如果从 merged_dir 中删除某个文件，如果该文件来自 lowerdir，那么在 merged_dir 中删除之后，upperdir 中会出现一个 whiteout 文件（标记该文件已经消失），但 lowerdir 中的文件不会改变</p>
+<h1 id="sudo-docker-info">sudo docker info</h1>
+<p>查看 docker 相关的配置信息</p>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-001-670c8026ed.png" alt="图片"></p>
+<p>存储 Docker 镜像的文件系统是 extfs。d_type 支持为 true。</p>
+<p>Docker 镜像和容器数据存放在 &quot;/ var / snap / docker / common / var-lib-docker&quot; 目录下。具体来说，镜像位于 &quot;/ var / snap / docker / common / var-lib-docker / image&quot; 目录，而容器数据和其他相关文件位于 &quot;/ var / snap / docker / common / var-lib-docker&quot; 目录。</p>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-002-3aad3dd6ac.png" alt="图片"></p>
+<h1 id="docker-的-overlay2">docker 的 overlay2</h1>
+<p>docker 拉取镜像时，镜像位于</p>
+<pre><code class="language-bash">/var/snap/docker/common/var-lib-docker/overlay2
+</code></pre>
+<p>查看这个目录
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-003-827b160d6b.png" alt="图片">
+除了 l 目录之外，其他都是镜像层</p>
+<ul>
+<li>diff：该镜像层的文件</li>
+<li>link：当前镜像层 diff 在 l 目录下对应符号链接的名字</li>
+<li>lower：该镜像层以下所有层的符号链接名字（对应 diff，即以下所有镜像的全部文件）</li>
+</ul>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-004-cc08296abe.png" alt="图片"></p>
+<h1 id="镜像容器与-overlay2">镜像、容器与 overlay2</h1>
+<p>实际上，<code>/var/snap/docker/common/var-lib-docker/overlay2</code> 还可以存放 init 层和 container 层。一个完整的容器分为 3 层：image 层、init 层、container 层。docker 创建容器时会创建 init 层和 container 层</p>
+<p> overlay2 使用联合挂载技术，把 image 层的 diff、init 层的 diff 以及 container 层的 diff 挂载到 container 层的 merged 目录上</p>
+<ul>
+<li>init 层：做容器所需的一些配置；因为 image 层是只读层不能修改，所以用 init 来做配置</li>
+<li>image 层：对应 container 层以下的镜像</li>
+<li>container 层：对应挂载后 merge 所在的目录</li>
+</ul>
+<p>此时对应的 overlay 挂载层级如下</p>
+<ul>
+<li>lowerdir：container 层以下镜像的 diff 文件</li>
+<li>upperdir：container 层的 diff 文件</li>
+<li>merged：container 层的 merged</li>
+</ul>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-005-8eed029bfe.png" alt="图片">
+container 层把 init 层和 image 层中同名的内容合并到 container 层的 merged 层中
+<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-006-635e492b50.png" alt="图片"></p>
+<h1 id="动手实践">动手实践</h1>
+<p><a href="https://github.com/FULLK/llkdocker/tree/main/unionfilesystem">https://github.com/FULLK/llkdocker/tree/main/unionfilesystem</a></p>
+<p>创建五个文件夹</p>
+<ul>
+<li>lower1：1.txt</li>
+<li>lower2：2.txt</li>
+<li>upper：3.txt</li>
+<li>work：无</li>
+<li>merged：无</li>
+</ul>
+<pre><code class="language-bash">sudo mount -t overlay overlay -olowerdir=lower1:lower2,upperdir=upper,workdir=work merged
+挂载到merged上去
+</code></pre>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-007-34709272f7.png" alt="图片"></p>
+<p>然后在 merged 中删除 1.txt；发现 diff 中多了一个 whiteout 的 1.txt 文件。修改 merged 中 2.txt 的内容；发现 diff 中多了一个修改后的 2.txt 文件。在 merged 中新建一个 4.txt，upper 中也出现了一个同样的 4.txt</p>
+<pre><code class="language-bash">llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ sudo tree -L 2 
+.
+├── lower1
+│   └── 1.txt
+├── lower2
+│   └── 2.txt
+├── merged
+│   ├── 1.txt
+│   ├── 2.txt
+│   └── 3.txt
+├── upper
+│   └── 3.txt
+└── work
+    └── work
+
+6 directories, 6 files
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ cat ./merged/1.txt
+from lower 1 
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ rm ./merged/1.txt
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ sudo tree -L 2 
+.
+├── lower1
+│   └── 1.txt
+├── lower2
+│   └── 2.txt
+├── merged
+│   ├── 2.txt
+│   └── 3.txt
+├── upper
+│   ├── 1.txt
+│   └── 3.txt
+└── work
+    └── work
+
+6 directories, 6 files
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ cd merged
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem/merged$ touch 4.txt
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem/merged$ sudo tree -L 2 
+.
+├── 2.txt
+├── 3.txt
+└── 4.txt
+
+0 directories, 3 files
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem/merged$ cd ../
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ sudo tree -L 2 
+.
+├── lower1
+│   └── 1.txt
+├── lower2
+│   └── 2.txt
+├── merged
+│   ├── 2.txt
+│   ├── 3.txt
+│   └── 4.txt
+├── upper
+│   ├── 1.txt
+│   ├── 3.txt
+│   └── 4.txt
+└── work
+    └── work
+
+6 directories, 8 files
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ editor merged/2.txt
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ sudo tree -L 2 
+.
+├── lower1
+│   └── 1.txt
+├── lower2
+│   └── 2.txt
+├── merged
+│   ├── 2.txt
+│   ├── 3.txt
+│   └── 4.txt
+├── upper
+│   ├── 1.txt
+│   ├── 2.txt
+│   ├── 3.txt
+│   └── 4.txt
+└── work
+    └── work
+
+6 directories, 9 files
+llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ 
+</code></pre>
+<h1 id="疑问">疑问</h1>
+<p>也就是说，docker 运行容器后，会把 image 层、init 层以及当前 container 层的 diff 挂载到 container 层的 merged 上，但我发现 merged 里面没有内容
+而且 mount | grep overlay2 也没有找到 docker 启动容器时应该挂载的那个 merged</p>
+<p>有大佬说我需要参考源码才能知道最新的流程。这里先放一放，等后面遇到如何实现的时候再回来看</p>
+<p><a href="https://github.com/microsoft/docker/blob/master/volume/volume.go#L18">https://github.com/microsoft/docker/blob/master/volume/volume.go#L18</a></p>
+<p><a href="https://github.com/microsoft/docker/blob/master/daemon/graphdriver/overlay/overlay.go#L234">https://github.com/microsoft/docker/blob/master/daemon/graphdriver/overlay/overlay.go#L234</a></p>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-008-b7b70a798c.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/"><span class="l">上一篇</span>从零构建 Docker - 15 - 【实现 mydocker run -d 支持容器后台运行】</a><a href="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/"><span class="l">下一篇</span>从零构建 Docker 第 11 篇 - ［用 pivotRoot 实现文件系统隔离］</a></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

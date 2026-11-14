@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>程序中断方式 · Y0uYuGe</title>
+<meta name="description" content="计算机组成原理 - 程序中断（基本概念、中断分类、流程） 概述 中断的基本概念 中断隐指令会修改 PC 的值，使其指向中断服务程序 每条指令执行完毕后，在指令周期末尾检查是否有需要处理的中断信号。如果有，则执行中断服务程序（即中断响应） CPU 运行程序时执行的 JMP 和 Ca">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F">输入/输出系统</a></nav>
+    <h1>程序中断方式</h1>
+    <div class="meta"><time>2024-01-14</time></div>
+    <article class="post-body">
+<h1 id="计算机组成原理---程序中断基本概念中断分类流程">计算机组成原理 - 程序中断（基本概念、中断分类、流程）</h1>
+<h2 id="概述">概述</h2>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135435746/image-001-6ba65b5ad5.png" alt="图片"></p>
+<h2 id="中断的基本概念">中断的基本概念</h2>
+<p>中断隐指令会修改 PC 的值，使其指向中断服务程序
+每条指令执行完毕后，在指令周期末尾检查是否有需要处理的中断信号。如果有，则执行中断服务程序（即中断响应）</p>
+<p>CPU 运行程序时执行的 JMP 和 Call 指令仍然属于该程序的进程，而中断与原程序不属于同一个进程。
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135435746/image-002-cd7317d552.png" alt="图片"></p>
+<h2 id="中断请求的分类">中断请求的分类</h2>
+<p>原子操作可以一气呵成地执行某些连续的指令；关中断是指即使有外部中断到来，当前指令也继续执行，因此可以辅助 CPU 执行某些需要连续运行的指令</p>
+<p>注意不可屏蔽中断
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135435746/image-003-deb858fff5.png" alt="图片"></p>
+<h2 id="中断请求标记">中断请求标记</h2>
+<p>每个触发器可以记录一位二进制的 0 或 1
+中断请求标记接收来自各个设备的中断请求信号
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135435746/image-004-52ff96c601.png" alt="图片"></p>
+<h2 id="中断判优---实现方式">中断判优 - 实现方式</h2>
+<p>   软件实现是按优先级顺序逐个查询
+   软件比硬件慢
+   <img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135435746/image-005-c3af8cfae4.png" alt="图片"></p>
+<h2 id="中断判优---优先级设置">中断判优 - 优先级设置</h2>
+<p>掉电属于硬件故障
+系统调用属于软中断
+高速设备优先于低速设备，可以这样理解：尽快响应它的中断请求，因为它速度快，能干更多的事（类似老板先处理高效率员工的事情，让该员工能做更多事）
+输入优先于输出，是因为输入设备会更新接口数据缓冲寄存器中的内容，如果其中断没有被尽快响应（数据没能及时取走，输入设备再次输入时，数据缓冲寄存器会被再次更新），就会丢失输入信息。而输出设备的响应可以慢一些，因为它要等 CPU 把数据放入数据缓冲区后才工作——数据放得晚，它就工作得晚，不会造成数据丢失或其他故障
+实时设备：响应必须及时、迅速
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135435746/image-006-bc8455f120.png" alt="图片"></p>
+<h2 id="中断处理过程---中断隐指令">中断处理过程 - 中断隐指令</h2>
+<p>此时保存断点一般是存入栈中，通常是内核栈
+排队电路的输出是从各个中断信号中选出的一个信号，它对应一个中断源信号。随后由中断向量地址形成部件生成中断向量地址，存放在中断向量地址处的指令可以跳转到中断处理程序的入口地址（中断向量就是中断处理程序的地址）</p>
+<p>为什么要采用中断向量地址的形式？如果由中断向量地址形成部件直接生成中断处理程序的地址，那么当中断处理程序的地址发生变化时，就需要修改中断形成部件的电路结构，才能生成相应修改后的中断处理程序地址，非常麻烦。
+采用中断向量地址的形式，如果中断处理程序的地址发生变化，只需要修改中断向量地址处 JMP 指令的操作数即可
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135435746/image-007-cc3c0238ec.png" alt="图片"></p>
+<h2 id="中断处理过程---中断服务程序">中断处理过程 - 中断服务程序</h2>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135435746/image-008-c903171226.png" alt="图片"></p>
+<h2 id="总结">总结</h2>
+<p>关中断和将程序断点压栈，两者谁先谁后都可以</p>
+<p>关中断可以让中断服务程序一气呵成地执行，不被其他中断打断，直到中断服务程序结束时再开中断
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135435746/image-009-667de72669.png" alt="图片"></p>
+<h1 id="计算机组成原理---程序中断方式的完整流程">计算机组成原理 - 程序中断方式的完整流程</h1>
+<h2 id="程序中断方式的完整流程">程序中断方式的完整流程</h2>
+<p>首先，CPU 通过执行 IO 指令启动外部设备，然后外部设备就可以开始做准备工作（准备 CPU 想要的数据或信息）。在外部设备准备期间，CPU 可以继续执行原程序的内容
+当 IO 设备完成工作后，会向 CPU 发出中断请求，表示自己的准备工作已完成；此时刚执行完的指令对应 K，中断处理完后返回执行第 K+1 条指令</p>
+<p>中断服务程序还包括让 IO 设备恢复工作（比如输出 n 个字符时，如果是逐个字符发起中断，那么中断服务程序还要恢复 IO 设备的工作，或者说继续执行之前的 IO 指令，因为它还没执行完），以及让外设准备下一个数据
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135654097/image-001-a0e32a3212.png" alt="图片"></p>
+<h2 id="例题">例题</h2>
+<p>CPI 即 clock per instruction——每条指令平均所需的时钟周期数</p>
+<p>中断响应其实可以理解为中断隐指令——CPU 响应中断所做的准备工作，为执行中断服务程序做准备</p>
+<p>这里要先启动 D 工作，然后 D 把字符送入 IO 端口，接着请求中断，随后是中断响应，然后运行中断服务程序
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135654097/image-002-9acf7e4904.png" alt="图片"></p>
+<h2 id="总结-1">总结</h2>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135654097/image-003-64d13a8613.png" alt="图片">
+程序中断方式的完整流程主要包括以下几个步骤：</p>
+<ol>
+<li><p>中断源发出中断请求。中断源可以是硬件设备（如键盘、鼠标、定时器等），也可以是软件（如系统调用、异常处理等）。</p>
+</li>
+<li><p>判断处理器当前是否允许中断，以及该中断源是否被屏蔽。这是为了防止不必要的中断干扰 CPU 的正常工作。</p>
+</li>
+<li><p>优先级排队。如果多个中断同时发生，则根据预先设定的优先级决定先处理哪个中断。</p>
+</li>
+<li><p>处理器执行完当前指令，或者如果当前指令无法完成，则立即停止当前程序，保护断点地址和处理器当前状态，转去执行相应的中断服务程序。这就是中断响应阶段，包括保存现场和跳转到中断服务程序的入口地址。</p>
+</li>
+<li><p>执行中断服务程序。在这一阶段，CPU 处理接收到的中断，比如执行设备驱动程序、管理用户进程等。</p>
+</li>
+<li><p>返回原程序继续执行。中断处理完毕后，CPU 返回原来被中断的地方，继续执行原程序。</p>
+</li>
+</ol>
+<h1 id="计算机组成原理---多重中断单重中断多重中断中断屏蔽">计算机组成原理 - 多重中断（单重中断、多重中断、中断屏蔽）</h1>
+<h2 id="多重中断套娃警告">多重中断（套娃警告）</h2>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135581852/image-001-8217b7293e.png" alt="图片"></p>
+<h2 id="单重中断和多重中断">单重中断和多重中断</h2>
+<p>保护现场和恢复现场必须在关中断之后执行，必须一气呵成，不能被其他中断打断</p>
+<p>屏蔽字：屏蔽某些中断</p>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135581852/image-002-07498004d6.png" alt="图片"></p>
+<h2 id="中断屏蔽技术">中断屏蔽技术</h2>
+<p>硬件排队电路的优先级是固定的</p>
+<p>每个中断源的屏蔽字由所有中断源的屏蔽触发器组成
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135581852/image-003-ce52393687.png" alt="图片">
+发生中断时，将该中断源对应的屏蔽字送入各中断源的屏蔽触发器，从而使被屏蔽的中断源即使提出中断请求也会被屏蔽
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135581852/image-004-7854ded164.png" alt="图片"></p>
+<h3 id="例题-1">例题</h3>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135581852/image-005-9870a34c2d.png" alt="图片"></p>
+<h2 id="总结-2">总结</h2>
+<p>中断向量是中断服务程序的地址
+向量地址是跳转到中断服务程序地址的那条指令的地址
+程序运行轨迹根据中断和屏蔽字来判断程序执行的先后顺序和时长</p>
+<h2 id="拓展">拓展</h2>
+<p>INTA 信号送到中断控制器，从而让中断控制器得到中断类型号
+不同的中断类型对应不同的中断请求输入信号</p>
+<p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135581852/image-006-aacfae052b.png" alt="图片">
+首先，中断请求寄存器的各个寄存器连接着各个 IO 设备。当 IO 设备发出中断请求时，经控制逻辑 INT 输出到 CPU 的 INTR 接口。若 CPU 处于开中断状态，则通过 INTA 向中断控制器发回反馈信号。随后经过中断控制器的中断判优以及中断服务寄存器的处理，得到中断向量地址，并通过数据总线将中断类型号传给 CPU</p>
+<p>向量地址就是中断类型号</p>
+<p>中断屏蔽寄存器存放各个中断的屏蔽字
+<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F/assets/csdn-135581852/image-007-dded0dfaf7.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/"><span class="l">下一篇</span>计算机组成原理 - 程序查询方式（流程图、演示过程、例题、定时查询、独占查询）</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#概述">概述</a><a class="d2" href="#中断的基本概念">中断的基本概念</a><a class="d2" href="#中断请求的分类">中断请求的分类</a><a class="d2" href="#中断请求标记">中断请求标记</a><a class="d2" href="#中断判优---实现方式">中断判优 - 实现方式</a><a class="d2" href="#中断判优---优先级设置">中断判优 - 优先级设置</a><a class="d2" href="#中断处理过程---中断隐指令">中断处理过程 - 中断隐指令</a><a class="d2" href="#中断处理过程---中断服务程序">中断处理过程 - 中断服务程序</a><a class="d2" href="#总结">总结</a><a class="d2" href="#程序中断方式的完整流程">程序中断方式的完整流程</a><a class="d2" href="#例题">例题</a><a class="d2" href="#总结-1">总结</a><a class="d2" href="#多重中断套娃警告">多重中断（套娃警告）</a><a class="d2" href="#单重中断和多重中断">单重中断和多重中断</a><a class="d2" href="#中断屏蔽技术">中断屏蔽技术</a><a class="d3" href="#例题-1">例题</a><a class="d2" href="#总结-2">总结</a><a class="d2" href="#拓展">拓展</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>

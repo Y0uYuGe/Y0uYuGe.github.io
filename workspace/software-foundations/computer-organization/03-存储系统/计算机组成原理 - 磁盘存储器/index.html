@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计算机组成原理 - 磁盘存储器 · Y0uYuGe</title>
+<meta name="description" content="机械硬盘，即磁盘：写入时利用电流产生磁场写入磁盘；读取时利用磁性载体运动时产生的电场获取数据。磁性材料容易受到外部磁场的干扰。下图中，磁性载体上 N 和 S 的先后顺序代表对应存储的二进制位。磁性材料一圈一圈地涂覆在主轴盘片上。柱面是各记录面上的磁道所构成的圆柱面。格式化容量一般小于非格式化容量，因为在格式化容量中，部分扇区需要作为其他扇区的备份。每条磁道记录的信息量相同，但由于最内圈磁道的位密度最高，其制造工艺也最先进。磁盘控制器时间是从发出信号到磁盘控制器开始响应所需的时间。传输是指旋转记录面，读出对应扇区的数据。">
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/software-foundations">软件基础</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization">计算机组成原理</a><span class="sep">›</span><a href="/#/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F">存储系统</a></nav>
+    <h1>计算机组成原理 - 磁盘存储器</h1>
+    <div class="meta"><time>2023-11-24</time><span class="tag">#性能优化</span></div>
+    <article class="post-body">
+<h1 id="概述">概述</h1>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-001-ce8be7f580.png" alt="图片"></p>
+<h1 id="外部存储器">外部存储器</h1>
+<p>机械硬盘，即磁盘</p>
+<h2 id="磁盘存储器">磁盘存储器</h2>
+<p>  写入时利用电流产生磁场写入磁盘
+  读取时利用磁性载体运动时产生的电场获取数据
+  磁性材料容易受到外部磁场的干扰
+  下图中，磁性载体上 N 和 S 的先后顺序代表对应存储的二进制位
+  <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-002-342e01ca6d.png" alt="图片"></p>
+<p> 磁性材料一圈一圈地涂覆在主轴盘片上
+ <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-003-0dcc478543.png" alt="图片">
+ 柱面是各记录面上的磁道所构成的圆柱面
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-004-5fb0d4329d.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-005-545fbe2180.png" alt="图片"></p>
+<h2 id="磁盘性能指标">磁盘性能指标</h2>
+<p>格式化容量一般小于非格式化容量，因为在格式化容量中，部分扇区需要作为其他扇区的备份 
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-006-4aa81ef79a.png" alt="图片">
+每条磁道记录的信息量相同，但由于最内圈磁道的位密度最高，其制造工艺也最先进
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-007-27ba090e7d.png" alt="图片">
+磁盘控制器时间是从发出信号到磁盘控制器开始响应所需的时间
+传输是指旋转记录面，读出对应扇区的数据</p>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-008-8c9d4b115e.png" alt="图片">
+ <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-009-6ebf5d7ce5.png" alt="图片"></p>
+<h2 id="磁盘地址">磁盘地址</h2>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-010-ca7eb812ae.png" alt="图片"></p>
+<h2 id="磁盘的工作原理">磁盘的工作原理</h2>
+<p> <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-011-f3cfe0af41.png" alt="图片">
+并行：多个位同时传输
+串行：逐位传输
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-012-80e97864fa.png" alt="图片"></p>
+<h2 id="磁盘阵列">磁盘阵列</h2>
+<p>磁盘阵列可以理解为把一整份数据的不同部分存放到不同的磁盘上
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-013-2903d3ca15.png" alt="图片"></p>
+<p>冗余是指是否有备份；校验是指检验数据是否发生了变化
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-014-c053619443.png" alt="图片"><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-015-3f1c13d4a8.png" alt="图片">
+RAID2 采用海明码校验方式，因此与 RAID1 相比，用于校验和冗余的磁盘更少
+<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-016-9d45fd91f4.png" alt="图片">
+RAID 级别的数字越高，安全性和可靠性越高</p>
+<h1 id="总结">总结</h1>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A3%81%E7%9B%98%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134598282/image-017-f90e68e5c3.png" alt="图片"></p>
+
+    </article>
+    
+    <nav class="pn"><span></span><a href="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%88%86%E9%A1%B5%E5%AD%98%E5%82%A8%E5%99%A8/"><span class="l">下一篇</span>计算机组成原理 - 分页存储器</a></nav>
+  </main>
+  <aside class="toc"><div class="toc-h">目录</div><a class="d2" href="#磁盘存储器">磁盘存储器</a><a class="d2" href="#磁盘性能指标">磁盘性能指标</a><a class="d2" href="#磁盘地址">磁盘地址</a><a class="d2" href="#磁盘的工作原理">磁盘的工作原理</a><a class="d2" href="#磁盘阵列">磁盘阵列</a></aside>
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>
