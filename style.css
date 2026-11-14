@@ -253,7 +253,6 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 .mde .vditor-reset a { color: var(--accent); text-decoration: none; }
 .mde .vditor-reset a:hover { text-decoration: underline; }
 .mde .vditor-toolbar { display: none; }
-.mde:focus-within .vditor-toolbar { display: flex; position: sticky; top: 0; z-index: 3; padding: 2px 0 !important; margin-bottom: 6px; background: var(--card); border: none; border-bottom: 1px solid var(--line); }
 .mde .vditor-toolbar__item { padding: 0 1px; }
 .mde .vditor-toolbar__item .vditor-tooltipped { width: 24px; height: 24px; padding: 4px; }
 .mde .vditor-toolbar__item svg { width: 14px; height: 14px; }
@@ -456,3 +455,8 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 .tcrumbs { margin-left: 2px; }
 #panel-top .titlerow.agent .meta { flex: none; mask-image: none; }
 .ag-status { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+
+/* 编辑时不弹格式工具条（它会把正文往下推，点进去就跳一下）：用 Markdown 写法或 Cmd+B / Cmd+I / Cmd+K */
+.mde .vditor-toolbar { display: none !important; }
+/* 正文开头和标题一样的那一行不重复显示 */
+.dup-title { display: none !important; }

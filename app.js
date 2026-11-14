@@ -671,6 +671,7 @@ async function renderPanel(force) {
         onSave: (md) => ed.run(() => ({ body: '\n' + md + '\n', line: 0 }), { keepPop: true }),
       });
       editor.el.classList.add('doc-editor');
+      editor.ready.then(() => hideDupTitle(editor.el.querySelector('.vditor-reset'), m.title || n.name));
       if (S.find) { const q = S.find; S.find = null; editor.ready.then(() => highlightFind(editor.el, q)); }
       body.appendChild(editor.el);
     }
@@ -787,6 +788,7 @@ async function renderBlogPanel(n, force) {
     if (heads.length > 2) body.querySelector('.read-toc').innerHTML = '<div class="toc-h">目录</div>' + heads.map((h) => `<a data-anchor="${esc(h.id)}" class="d${h.tagName[1]}">${esc(h.textContent)}</a>`).join('');
   }
   enhance(body.querySelector('.blog-body'));
+  hideDupTitle(body.querySelector('.blog-body'), m.title || n.name);
   if (S.find) { const q = S.find; S.find = null; highlightFind(body.querySelector('.blog-body'), q); }
 }
 // 面板正文里点到别的文章：在导图上跳过去，不离开首页
@@ -1375,6 +1377,13 @@ $('#panel').addEventListener('click', async (e) => {
   }
 });
 // 名字和路径放一行：先是名字，后面跟着灰色的路径（点哪一级就去哪），面板顶上不再单独占一行
+// 正文第一行的标题如果和面板顶上的名字一样，就不重复显示（只是不显示，文件不改）
+const normTitle = (t) => String(t || '').replace(/[\s\p{P}\p{S}]/gu, '').toLowerCase();
+function hideDupTitle(root, title) {
+  const first = root?.querySelector(':scope > h1, :scope > h2, :scope > .vditor-reset > h1, :scope > .vditor-reset > h2');
+  if (first && !first.previousElementSibling && normTitle(first.textContent) === normTitle(title)) first.classList.add('dup-title');
+}
+
 function inlineCrumbs() {
   const c = $('#crumbs').innerHTML.trim(), h1 = $('#panel-top .titlerow h1');
   $('#crumbs').innerHTML = '';
@@ -1396,11 +1405,12 @@ $('#panel-top').addEventListener('click', (e) => {
 });
 $('#wide').onclick = () => $('#panel').classList.toggle('wide');
 
-// 中间的分隔条：任何时候都能拖；平时和放大后各记各的宽度
+// 中间的分隔条：任何时候都能拖
 function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
 function applyWidths() {
   const panel = $('#panel');
-  const w = S.reading ? store.get('readWidth', Math.round(innerWidth * 0.72)) : store.get('panelWidth', 0);
+  // ⤢ 最大化：右边撑到只给导图留一条窄边；平时用你拖出来的宽度
+  const w = S.reading ? innerWidth - 260 : store.get('panelWidth', 0);
   panel.style.width = w ? clamp(w, 320, innerWidth - 200) + 'px' : '';
 }
 {
@@ -1414,7 +1424,9 @@ function applyWidths() {
   bar.addEventListener('pointerup', () => {
     bar.onpointermove = null;
     document.body.classList.remove('resizing');
-    store.set(S.reading ? 'readWidth' : 'panelWidth', panel.offsetWidth);
+    // 拖动后的宽度就是新的日常宽度；最大化时拖动等于退出最大化
+    store.set('panelWidth', panel.offsetWidth);
+    if (S.reading) setReading(false);
     S.noteMap?.render();
   });
   addEventListener('resize', applyWidths);
