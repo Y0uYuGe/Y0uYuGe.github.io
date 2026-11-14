@@ -236,12 +236,9 @@ function mapTree() {
 
 function renderMap() {
   if (!index.has(S.focus)) S.focus = '';
-  if (S.leftView === 'tree') renderTree();
-  else {
-    map.setData(mapTree());
-    map.render();
-    if (S.sel !== null && index.has(S.sel)) map.select(S.sel, false);
-  }
+  map.setData(mapTree());
+  map.render();
+  if (S.sel !== null && index.has(S.sel)) map.select(S.sel, false);
   const chain = [];
   for (let c = index.get(S.focus); c && c.path; c = c.parent) chain.unshift(c);
   $('#focus-crumbs').innerHTML = chain.length
@@ -249,58 +246,6 @@ function renderMap() {
     : '';
   document.querySelectorAll('#map-tools [data-level]').forEach((b) => b.classList.toggle('on', +b.dataset.level === S.level));
 }
-
-// ---------- 左边：导图 / 目录 ----------
-// 同一棵树的两种看法：数据都来自 mapTree()，所以展开了哪些、选中哪个、搜索过滤、挂着的 AI 都是同步的
-S.leftView = store.get('leftView', 'map');
-function setLeftView(v) {
-  const was = S.leftView;
-  S.leftView = v;
-  store.set('leftView', v);
-  document.body.classList.toggle('left-tree', v === 'tree');
-  applyWidths();
-  $('#tree').hidden = v !== 'tree';
-  document.querySelectorAll('#left-view [data-left]').forEach((b) => b.classList.toggle('on', b.dataset.left === v));
-  if (!S.data) return;
-  renderMap();
-  if (v === 'map' && was !== 'map') requestAnimationFrame(() => { map.fit(); if (S.sel) map.reveal(S.sel); });
-}
-function renderTree() {
-  const box = $('#tree');
-  const row = (v, depth) => {
-    const pad = `padding-left:${depth * 14 + 6}px`;
-    if (v.a) return `<div class="tr-row tr-agent${S.agent === v.a.id ? ' sel' : ''}" data-agent="${esc(v.a.id)}" style="${pad}"><span class="tr-caret"></span>${agentNode(v.a, v.from)}</div>`;
-    const n = v.n;
-    const caret = n.children.length ? `<span class="tr-caret" data-toggle="${esc(v.id)}">${v.collapsed ? '▸' : '▾'}</span>` : '<span class="tr-caret"></span>';
-    let label = `${isPinned(n.path) && n.path ? '<span class="pin">📌</span>' : ''}<span class="tr-name" title="${esc(n.name)}">${esc(depth ? shortName(n) : n.name)}</span>`;
-    if (n.note?.status) label += `<span class="status">${esc(n.note.status)}</span>`;
-    if (S.mode === 'local' && n.blog?.on) label += `<span class="pub${n.blog.how === 'self' ? '' : ' faint'}">🌐</span>`;
-    if (n.children.length && v.collapsed) label += `<span class="tr-n">${n.children.length}</span>`;
-    const cls = ['tr-row', v.id === S.sel && !S.agent && 'sel', v.hit && 'hit', n.note && 'has-note'].filter(Boolean).join(' ');
-    return `<div class="${cls}" data-path="${esc(v.id)}" style="${pad}">${caret}${label}</div>` + (v.collapsed ? '' : v.children.map((c) => row(c, depth + 1)).join(''));
-  };
-  const top = box.scrollTop;
-  box.innerHTML = row(mapTree(), 0);
-  box.scrollTop = top;
-  if (S.treeSel !== S.sel) { S.treeSel = S.sel; box.querySelector('.tr-row.sel')?.scrollIntoView({ block: 'nearest' }); }
-}
-$('#left-view').addEventListener('click', (e) => { const b = e.target.closest('[data-left]'); if (b) setLeftView(b.dataset.left); });
-$('#tree').addEventListener('click', (e) => {
-  const t = e.target.closest('[data-toggle]');
-  if (t) return toggle(t.dataset.toggle);
-  const ag = e.target.closest('[data-agent]');
-  if (ag) return openAgent(ag.dataset.agent);
-  const r = e.target.closest('[data-path]');
-  if (r) openNode(r.dataset.path);
-});
-$('#tree').addEventListener('dblclick', (e) => {
-  const r = e.target.closest('[data-path]');
-  if (!r) return;
-  const n = index.get(r.dataset.path);
-  if (S.mode === 'blog' && n?.url) location.hash = '#/' + n.path + '?read'; // 博客：双击文章整页阅读
-  else if (n?.children.length) toggle(n.path);
-});
-setLeftView(S.leftView);
 
 function saveOpen() { store.set('open', [...S.open]); }
 function toggle(p) {
@@ -715,20 +660,25 @@ async function renderPanel(force) {
   body.innerHTML = '';
 
   if (S.tab === 'note') {
+    // 有内容的笔记先显示笔记、下面列出本节内容；没有笔记或笔记是空的，先列本节内容，下面留着可以直接写
+    const list = childList(n);
+    const empty = !note || note.virtual || !note.body.trim();
+    if (note && S.noteView === 'map') return renderNoteMap(n, note);
+    if (empty && list) body.insertAdjacentHTML('beforeend', list);
     if (note) {
-      if (S.noteView === 'map') return renderNoteMap(n, note);
       const ed = noteEditor(n, note, () => {});
       const editor = mdEditor({
         md: note.body,
         base: n.path,
         editable: local,
-        empty: note.virtual ? `这个文件夹还没有笔记。直接在这里写关于「${n.name}」的内容，会自动保存为 ${n.dir}.md` : '写点什么…',
+        empty: note.virtual ? `${list ? '这个文件夹还没有笔记，' : ''}在这里写关于「${n.name}」的内容，会自动保存为 ${n.dir}.md` : '写点什么…',
         onSave: (md) => ed.run(() => ({ body: '\n' + md + '\n', line: 0 }), { keepPop: true }),
       });
       editor.el.classList.add('doc-editor');
       if (S.find) { const q = S.find; S.find = null; editor.ready.then(() => highlightFind(editor.el, q)); }
       body.appendChild(editor.el);
     }
+    if (!empty && list) body.insertAdjacentHTML('beforeend', list);
     if (!n.path) body.insertAdjacentHTML('beforeend', recentList());
   } else if (S.tab === 'files') {
     renderFiles(n, files);
@@ -827,10 +777,7 @@ async function renderBlogPanel(n, force) {
   const body = $('#panel-body');
   body.className = '';
   body.scrollTop = 0;
-  const kids = n.children.filter((c) => c.url || c.children.length);
-  const list = kids.length && n.path ? `<div class="section list"><h4>本节文章</h4>${kids.map((c) =>
-    `<a href="#/${esc(c.path)}"><span class="t">${esc(c.name)}</span>${c.note?.date ? `<span class="d">${esc(c.note.date)}</span>` : ''}
-     ${c.note?.excerpt ? `<div class="e">${esc(c.note.excerpt)}</div>` : ''}</a>`).join('')}</div>` : '';
+  const list = childList(n);
   if (!n.url) { body.innerHTML = list + (n.path ? '' : recentList()); return; }
   body.innerHTML = '<p class="empty">加载中…</p>';
   if (S.noteView === 'map' && n.file) {
@@ -880,6 +827,15 @@ $('#panel-body').addEventListener('click', (e) => {
   e.preventDefault();
   location.hash = '#/' + p + (S.reading ? '?read' : '');
 });
+
+// 「本节内容」：文件夹下面的子文件夹 / 文章。没有笔记（或笔记是空的）时它就是主要内容，有笔记时放在笔记下面。工作台和博客一样
+function childList(n) {
+  const kids = S.mode === 'blog' ? n.children.filter((c) => c.url || c.children.length) : n.children;
+  if (!kids.length || !n.path) return '';
+  return `<div class="section list"><h4>本节内容 · ${kids.length}</h4>${kids.map((c) =>
+    `<a href="#/${esc(c.path)}"><span class="t">${esc(c.name)}</span><span class="d">${c.note?.date && (S.mode === 'local' || c.url) ? esc(c.note.date) : c.children.length ? c.children.length + ' 项' : ''}</span>
+     ${c.note?.excerpt && (S.mode === 'local' || c.url) ? `<div class="e">${esc(c.note.excerpt)}</div>` : ''}</a>`).join('')}</div>`;
+}
 
 function recentList() {
   const all = [...index.values()].filter((n) => n.note && n.path).sort((a, b) => (b.note.date > a.note.date ? 1 : b.note.date < a.note.date ? -1 : b.note.mtime - a.note.mtime));
@@ -1398,41 +1354,26 @@ function closePanel() {
 $('#close').onclick = closePanel;
 $('#wide').onclick = () => $('#panel').classList.toggle('wide');
 
-// 中间的分隔条：任何时候都能拖。三种情况各记各的宽度：
-//   左边是目录 → 拖的是目录栏宽度；整页阅读 → 拖的是放大后的文章区；平时 → 拖的是右边面板
+// 中间的分隔条：任何时候都能拖；平时和整页阅读各记各的宽度
 function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
-function treeMode() { return S.leftView === 'tree' && S.view === 'map'; }
 function applyWidths() {
-  const panel = $('#panel'), left = $('#map-view');
-  if (treeMode()) {
-    left.style.flex = `0 0 ${clamp(store.get('treeWidth', 340), 200, innerWidth - 360)}px`;
-    panel.style.flex = '1';
-    panel.style.width = '';
-  } else {
-    left.style.flex = '';
-    panel.style.flex = '';
-    const w = S.reading ? store.get('readWidth', Math.round(innerWidth * 0.72)) : store.get('panelWidth', 0);
-    panel.style.width = w ? clamp(w, 320, innerWidth - 200) + 'px' : '';
-  }
+  const panel = $('#panel');
+  const w = S.reading ? store.get('readWidth', Math.round(innerWidth * 0.72)) : store.get('panelWidth', 0);
+  panel.style.width = w ? clamp(w, 320, innerWidth - 200) + 'px' : '';
 }
 {
-  const panel = $('#panel'), bar = $('#resizer'), left = $('#map-view');
+  const panel = $('#panel'), bar = $('#resizer');
   applyWidths();
   bar.addEventListener('pointerdown', (e) => {
     bar.setPointerCapture(e.pointerId);
     document.body.classList.add('resizing');
-    bar.onpointermove = (ev) => {
-      if (treeMode()) left.style.flex = `0 0 ${clamp(ev.clientX - left.getBoundingClientRect().left, 200, innerWidth - 360)}px`;
-      else panel.style.width = clamp(innerWidth - ev.clientX, 320, innerWidth - 200) + 'px';
-    };
+    bar.onpointermove = (ev) => { panel.style.width = clamp(innerWidth - ev.clientX, 320, innerWidth - 200) + 'px'; };
   });
   bar.addEventListener('pointerup', () => {
     bar.onpointermove = null;
     document.body.classList.remove('resizing');
-    if (treeMode()) store.set('treeWidth', left.offsetWidth);
-    else store.set(S.reading ? 'readWidth' : 'panelWidth', panel.offsetWidth);
+    store.set(S.reading ? 'readWidth' : 'panelWidth', panel.offsetWidth);
     S.noteMap?.render();
-    if (S.leftView === 'map') map.drawMini();
   });
   addEventListener('resize', applyWidths);
 }

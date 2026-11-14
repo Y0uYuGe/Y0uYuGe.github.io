@@ -161,7 +161,7 @@ main { flex: 1; display: flex; min-height: 0; }
 .list a { display: block; padding: 6px 0; border-bottom: 1px solid var(--line); color: var(--fg); text-decoration: none; }
 .list a:hover .t { color: var(--accent); }
 .list .d, .d { color: var(--muted); font-size: 12px; margin-left: 8px; }
-.list .e { color: var(--muted); font-size: 13px; }
+.list .e { color: var(--muted); font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } /* 摘要最多两行 */
 .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
 .file { border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 13px; overflow: hidden; }
 .file img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; display: block; margin-bottom: 6px; }
@@ -422,25 +422,6 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 #panel-body { padding: 10px 16px 40px; }
 #panel-top .titlerow h1.title { flex: 0 1 auto; min-width: 35%; }
 #panel-top .titlerow .meta { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; mask-image: linear-gradient(to right, #000 85%, transparent); }
-
-/* 左边的「目录」：和导图同一棵树 */
-#tree { position: absolute; inset: 0; overflow: auto; padding: 52px 10px 24px; font-size: 13.5px; }
-body.left-tree #map, body.left-tree #fit-btn { display: none !important; }
-#left-view { margin-right: 6px; }
-#left-view button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-.tr-row { display: flex; align-items: center; gap: 4px; padding-top: 2px; padding-bottom: 2px; padding-right: 8px; border-radius: 5px; cursor: pointer; white-space: nowrap; line-height: 1.5; }
-.tr-row:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
-.tr-row.sel { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-weight: 600; }
-.tr-row.hit .tr-name { background: color-mix(in srgb, #ffd43b 45%, transparent); border-radius: 3px; }
-.tr-row:not(.has-note) .tr-name { color: var(--muted); }
-.tr-row.sel .tr-name { color: inherit; }
-.tr-caret { width: 14px; flex: none; text-align: center; color: var(--muted); font-size: 11px; }
-.tr-caret[data-toggle]:hover { color: var(--accent); }
-.tr-name { overflow: hidden; text-overflow: ellipsis; }
-.tr-row .status { font-size: 11px; color: var(--muted); margin-left: 4px; }
-.tr-n { font-size: 11px; color: var(--muted); margin-left: 2px; }
-.tr-agent { font-size: 12.5px; }
-/* 目录比导图窄得多：左边收成窄栏，剩下的都给文章 */
 
 /* 博客正文：和工作台编辑器（.mde .vditor-reset）同一套排版，两边看起来一样 */
 .blog-body a { color: var(--accent); text-decoration: none; }
