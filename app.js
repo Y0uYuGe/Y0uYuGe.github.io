@@ -155,6 +155,10 @@ function folderMenu(n) {
     { label: `在${finder}中显示`, run: () => post('api/open', { path: p }).catch((err) => alert(err.message)) },
     { label: '复制路径', run: () => navigator.clipboard.writeText(abs).then(() => flash('已复制：' + abs)) },
     '-',
+    // 和任何 IDE 并排用：用装在这台电脑上的 IDE 打开这个文件夹，或者在终端里打开
+    ...(S.data.editors || []).map((app) => ({ label: `用 ${app} 打开`, run: () => post('api/openwith', { path: p, app }).catch((err) => alert(err.message)) })),
+    { label: '在终端中打开', run: () => post('api/launch', { path: p, tool: '终端' }).catch((err) => alert(err.message)) },
+    '-',
     { label: '新建子文件夹', key: 'Tab', run: () => newFolder(p) },
     p && { label: '重命名', key: 'F2', run: () => { map.select(p); map.edit(p); } },
     '-',
@@ -172,8 +176,8 @@ function folderMenu(n) {
 function agentMenu(a) {
   return [
     { label: '打开', run: () => openAgent(a.id) },
-    { label: '写入笔记…', run: () => { openAgent(a.id); agentToNote(); } },
-    a.sextant && { label: a.sextant.kind === 'mission' ? '删除任务' : '结束会话', run: () => { openAgent(a.id); endAgent(); } },
+    { label: '写入笔记…', run: () => agentToNote(a.id) },
+    a.sextant && { label: a.sextant.kind === 'mission' ? '删除任务' : '结束会话', run: () => endAgent(a.id) },
   ];
 }
 $('#map').addEventListener('contextmenu', (e) => {
@@ -588,11 +592,12 @@ const liquid = (s) => s
 
 
 function panelKeyOf(n, sessions) {
-  return JSON.stringify([n.path, n.note?.mtime, sessions.map((a) => a.id + a.status + a.title), S.tab, S.noteView, !!S.reading]);
+  return JSON.stringify([n.path, n.note?.mtime, S.tab === 'ai' ? sessions.map((a) => a.id + a.status + a.title) : 0, S.tab, S.noteView, !!S.reading]);
 }
 
 async function renderPanel(force) {
   if (S.agent) return renderAgentPanel(force);
+  renderDock(index.get(S.sel));
   if (S.agentView) { S.agentView = null; S.agentLive?.destroy(); S.agentLive = null; force = true; }
   const n = index.get(S.sel);
   if (!n) return;
@@ -894,14 +899,99 @@ $('#ai-btn').onclick = () => {
 // ---------- 导图上的 AI：点了在右边只看它的终端 / 蜂群图（工作台自己画，见 agents.js） ----------
 // S.agent：选中的 AI 的 id；'new:<文件夹>' 表示在这个文件夹新建会话或蜂群任务
 const SX_AGENT = { claude: 'claude-code', 'claude-code': 'claude-code', codex: 'codex', qoder: 'qoder' };
+// 打开一个 AI：工作台里在面板下半部分打开（上半部分的笔记留着，可以边看边写）
 function openAgent(id) {
-  S.agent = id;
   S.panelClosed = false;
+  if (S.mode === 'local') {
+    const a = S.data.agents.find((x) => x.id === id);
+    const folder = id.startsWith('new:') ? id.slice(4) : a ? owner(a.path) : S.sel || '';
+    S.dockAgent = id;
+    if (S.sel !== folder) { location.hash = '#/' + folder; return; }
+    renderMap();
+    return renderDock(index.get(folder), true);
+  }
+  S.agent = id;
   S.panelKey = '';
   renderMap();
   renderPanel(true);
 }
 function closeAgent() { S.agent = null; S.panelKey = ''; renderMap(); renderPanel(true); }
+
+// ---------- 面板下半部分：这个文件夹的 AI（边看 AI 边记笔记） ----------
+// 上半部分是笔记；下半部分每个会话一个标签，选中的显示它的终端（或蜂群图 / 最后的回复），「＋ AI」新开一个。
+// 只有换了选中的会话才重建终端，状态变化只更新标签，所以不会断线重连
+function renderDock(n, force) {
+  const dock = $('#dock'), bar = $('#dock-resizer');
+  if (S.mode !== 'local' || !n || S.agent || S.tab === 'ai') {
+    dock.hidden = bar.hidden = true;
+    S.dockLive?.destroy(); S.dockLive = null; S.dockKey = '';
+    return;
+  }
+  const list = agentsUnder(n.path).filter((a) => a.status !== 'done').sort(byStatus);
+  let cur = S.dockAgent;
+  if (cur && !cur.startsWith('new:') && !S.data.agents.some((a) => a.id === cur)) cur = null;
+  if (cur?.startsWith('new:') && cur.slice(4) !== n.path) cur = null;
+  if (cur && !cur.startsWith('new:') && !agentsUnder(n.path).some((a) => a.id === cur)) cur = null;
+  const a = cur && !cur.startsWith('new:') ? S.data.agents.find((x) => x.id === cur) : null;
+  // 选中的会话已经结束了，也留在标签里，方便「接着这个会话」
+  const tabs = a && !list.includes(a) ? [...list, a] : list;
+  dock.hidden = false;
+  dock.classList.toggle('collapsed', !cur);
+  bar.hidden = !cur;
+  $('#dock-tabs').innerHTML = tabs.map((x) => {
+    const kind = x.sextant?.kind === 'mission' ? '蜂群' : TOOL[x.tool] || x.tool;
+    return `<button class="dtab${x.id === cur ? ' on' : ''}" data-dock="${esc(x.id)}" title="${esc(STATUS[x.status])} · ${esc(agentTitle(x))}"><span class="ag-dot ag-${x.status}"></span>${esc(kind)} · ${esc(agentTitle(x).slice(0, 18))}</button>`;
+  }).join('') + `<button class="dtab dnew${cur?.startsWith('new:') ? ' on' : ''}" data-dock="new:${esc(n.path)}">＋ AI</button>`
+    + (tabs.length ? '' : '<span class="hint">这里还没有 AI</span>')
+    + `<span class="dacts">${a ? '<button data-dock-act="note" title="把它的结论写进这个文件夹的笔记">写入笔记</button>' : ''}${a?.sextant?.kind === 'session' ? '<button data-dock-act="end">结束</button>' : ''}${cur ? '<button class="icon" data-dock-act="hide" title="收起">▾</button>' : ''}</span>`;
+  const key = cur ? cur + (a ? ':' + (a.sextant ? 'sx' : 'log:' + a.status) : '') + ':' + sx().up : '';
+  if (!force && key === S.dockKey) return;
+  S.dockKey = key;
+  S.dockLive?.destroy(); S.dockLive = null;
+  const body = $('#dock-body');
+  body.innerHTML = '';
+  if (!cur) return;
+  if ((cur.startsWith('new:') || a?.sextant) && !sx().up) {
+    body.innerHTML = `<div class="empty pad">AI 的终端由后台的 sextant 运行，它现在没在运行。${sx().canStart ? ' <button data-sx-start>启动 sextant</button>' : ''}</div>`;
+  } else if (cur.startsWith('new:')) {
+    S.dockLive = AG.newForm(body, sx().url, absPath(n.path), n.path ? n.name : S.data.tree.name, { onDone: async (id) => { S.dockAgent = id; await refresh(); renderDock(index.get(S.sel), true); }, onCancel: () => { S.dockAgent = null; renderDock(n, true); } });
+  } else if (a?.sextant?.kind === 'mission') S.dockLive = AG.missionView(body, sx().url, a.sextant.ref);
+  else if (a?.sextant) S.dockLive = AG.terminalView(body, sx().url, a.sextant.ref);
+  else if (a) {
+    // 自己在终端里开的 Claude / Codex：这里没有它的终端，显示最后的提问和回复；停下后可以在这里接着聊
+    const can = SX_AGENT[a.tool] && a.sessionId && a.status !== 'running' && sx().up;
+    body.innerHTML = `<div class="ag-log pad">${a.status === 'running' ? '<p class="hint">这个会话开在别的终端里，这里看不到它的终端；停下后可以在这里接着聊。</p>' : can ? '<p><button data-dock-act="resume">在这里打开终端，接着这个会话</button></p>' : ''}
+      ${a.prompt ? `<h4>最后的提问</h4><div class="q">${esc(a.prompt)}</div>` : ''}${a.reply ? `<h4>最后的回复</h4><div class="r">${esc(a.reply)}</div>` : ''}</div>`;
+  }
+}
+$('#dock').addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-dock], [data-dock-act]');
+  if (!t) return;
+  const n = index.get(S.sel);
+  if (t.dataset.dock) { S.dockAgent = t.dataset.dock; return renderDock(n); }
+  const act = t.dataset.dockAct, id = S.dockAgent;
+  if (act === 'hide') { S.dockAgent = null; return renderDock(n); }
+  if (act === 'note') return agentToNote(id);
+  if (act === 'end') return endAgent(id);
+  if (act === 'resume') {
+    const a = S.data.agents.find((x) => x.id === id);
+    try { const s = await post('api/agent/resume', { agent: SX_AGENT[a.tool], id: a.sessionId, cwd: a.cwd, title: a.title }); await refresh(); S.dockAgent = 'sx-session:' + s.name; renderDock(index.get(S.sel), true); }
+    catch (err) { alert(err.message); }
+  }
+});
+// 上下拖动：笔记和 AI 各占多少
+{
+  const bar = $('#dock-resizer'), dock = $('#dock');
+  const h = store.get('dockHeight', 0);
+  if (h) dock.style.height = h + 'px';
+  bar.addEventListener('pointerdown', (e) => {
+    bar.setPointerCapture(e.pointerId);
+    document.body.classList.add('resizing-v');
+    const panel = $('#panel').getBoundingClientRect();
+    bar.onpointermove = (ev) => { dock.style.height = Math.max(120, Math.min(panel.height - 160, panel.bottom - ev.clientY)) + 'px'; };
+  });
+  bar.addEventListener('pointerup', () => { bar.onpointermove = null; document.body.classList.remove('resizing-v'); store.set('dockHeight', dock.offsetHeight); });
+}
 
 function renderAgentPanel(force) {
   const id = S.agent;
@@ -974,8 +1064,8 @@ async function resumeAgent(a) {
   } catch (err) { alert(err.message); }
 }
 // AI 结论写入笔记：会话取最后的提问和回复，蜂群任务取目标、发现和进度；先在小窗里给你改
-async function agentToNote() {
-  const a = S.data.agents.find((x) => x.id === S.agent);
+async function agentToNote(id = S.agent) {
+  const a = S.data.agents.find((x) => x.id === id);
   if (!a) return;
   const folder = owner(a.path);
   const kind = a.sextant?.kind === 'mission' ? '蜂群任务' : TOOL[a.tool] || a.tool;
@@ -997,8 +1087,8 @@ async function agentToNote() {
   });
 }
 
-async function endAgent() {
-  const a = S.data.agents.find((x) => x.id === S.agent);
+async function endAgent(id = S.agent) {
+  const a = S.data.agents.find((x) => x.id === id);
   if (!a?.sextant) return;
   const mission = a.sextant.kind === 'mission';
   if (!confirm(mission ? `删除蜂群任务「${agentTitle(a)}」？` : `结束会话「${agentTitle(a)}」？agent 进程会被关掉。`)) return;

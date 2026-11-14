@@ -467,3 +467,24 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 #panel-top .titlerow { padding-bottom: 0; }
 #panel-top .titlerow .tcrumbs { max-width: 55%; }
 #pub-dlg button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* 面板下半部分：这个文件夹的 AI（和上面的笔记同时看） */
+#dock { flex: none; height: 45%; min-height: 34px; display: flex; flex-direction: column; border-top: 1px solid var(--line); background: var(--card); }
+#dock.collapsed { height: auto !important; }
+#dock-resizer { flex: none; height: 5px; cursor: row-resize; background: var(--line); opacity: .5; }
+#dock-resizer:hover { opacity: 1; background: var(--accent); }
+body.resizing-v { cursor: row-resize; user-select: none; }
+body.resizing-v iframe, body.resizing-v .xterm { pointer-events: none; }
+#dock-tabs { flex: none; display: flex; align-items: center; gap: 4px; padding: 4px 8px; overflow-x: auto; scrollbar-width: none; font-size: 12px; border-bottom: 1px solid var(--line); }
+#dock.collapsed #dock-tabs { border-bottom: none; }
+#dock-tabs .hint { margin-left: 6px; }
+.dtab { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; font-size: 12px; border-radius: 6px; border: 1px solid transparent; background: none; color: var(--muted); white-space: nowrap; }
+.dtab:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent); }
+.dtab.on { color: var(--fg); background: color-mix(in srgb, var(--accent) 14%, transparent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.dtab.dnew { color: var(--accent); }
+.dacts { margin-left: auto; display: flex; gap: 4px; flex: none; }
+.dacts button { height: 22px; padding: 0 8px; font-size: 12px; border: none; background: none; color: var(--muted); }
+.dacts button:hover { color: var(--fg); }
+#dock-body { flex: 1; min-height: 0; display: flex; overflow: auto; }
+#dock-body > * { flex: 1; min-width: 0; }
+#dock.collapsed #dock-body { display: none; }
