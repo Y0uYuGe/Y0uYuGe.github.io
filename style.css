@@ -436,20 +436,6 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 #ctx .sep { height: 1px; background: var(--line); margin: 4px 6px; }
 #panel-top .bacts button[data-wide] { font-size: 15px; padding: 0 7px; color: var(--fg); }
 
-/* 面板「文件」：目录树 + 打开的 md */
-#panel-body.has-files { display: flex; flex-direction: column; padding: 4px 8px 8px; overflow: hidden; }
-.ftree { flex: 1 1 auto; min-height: 120px; overflow: auto; font-size: 13px; }
-.has-files:has(.fview:not([hidden])) .ftree { flex: 0 0 36%; border-bottom: 1px solid var(--line); }
-.fview { flex: 1 1 auto; overflow: auto; padding: 6px 8px 24px; }
-.fhead { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
-.frow { display: flex; align-items: center; gap: 4px; padding-top: 2px; padding-bottom: 2px; padding-right: 8px; border-radius: 5px; cursor: pointer; white-space: nowrap; }
-.frow:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
-.frow.sel { background: color-mix(in srgb, var(--accent) 14%, transparent); }
-.fcaret { width: 12px; flex: none; color: var(--muted); font-size: 10px; text-align: center; }
-.fic { width: 18px; flex: none; text-align: center; font-size: 12px; }
-.fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.fsize { color: var(--muted); font-size: 11px; flex: none; }
-
 /* AI 标签页：按状态分组的列表 */
 .ai-head { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px; }
 .ai-group h4 { display: flex; align-items: center; gap: 6px; }
