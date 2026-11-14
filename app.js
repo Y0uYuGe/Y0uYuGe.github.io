@@ -109,10 +109,10 @@ const map = new MindMap($('#map'), {
   minimap: false,
   render: workspaceNode,
   nodeClass: nodeClassOf,
-  onSelect: (v) => (v.a ? openAgent(v.a.id) : v.id === PINS ? null : openNode(v.id)),
+  onSelect: (v) => (v.a ? openAgent(v.a.id) : openNode(v.id)),
   onToggle: (v) => { if (!v.a) toggle(v.id); },
   onActivate: (v) => {
-    if (v.a || v.id === PINS) return;
+    if (v.a) return;
     if (S.mode === 'blog' && v.n.url) { setReading(true); openNode(v.id); return; } // 博客：双击文章就放大来看
     if (v.n.children.length && v.id !== S.focus) setFocus(v.id);
   },
@@ -123,7 +123,7 @@ const map = new MindMap($('#map'), {
   onKey: (e, v) => {
     const ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && e.key.toLowerCase() === 'f') { $('#search').focus(); return true; }
-    if (v.a || v.id === PINS) return ['Tab', 'Enter', 'F2'].includes(e.key); // AI 节点、「正在做」的根不能新建子文件夹、改名
+    if (v.a) return ['Tab', 'Enter', 'F2'].includes(e.key); // AI 节点不能新建子文件夹、改名
     if (S.mode !== 'local') return e.key === 'F2'; // 只读模式不能改名
     if (e.key === 'F2' && !v.id) return true; // 根目录不能改名
     if (e.key === 'Tab') { newFolder(v.id); return true; }
@@ -180,7 +180,7 @@ $('#map').addEventListener('contextmenu', (e) => {
   if (S.mode !== 'local') return;
   const el = e.target.closest('.mm-node');
   const v = el && map.node(el.dataset.id);
-  if (!v || v.id === PINS) return;
+  if (!v) return;
   e.preventDefault();
   showCtx(v.a ? agentMenu(v.a) : folderMenu(v.n), e.clientX, e.clientY);
 });
@@ -259,8 +259,7 @@ function workspaceNode(v) {
   const n = v.n;
   const short = shortName(n);
   const t = short.length > 34 ? short.slice(0, 33) + '…' : short;
-  const from = v.pinTop ? crumbOf(n) : '';
-  let h = `${from ? `<span class="pin-from">${esc(from)} ›</span>` : ''}${isPinned(n.path) && n.path && !v.pinTop ? '<span class="pin" title="已固定到「正在做」">📌</span>' : ''}<span class="mm-label" title="${esc(n.name)}">${esc(t)}</span>`;
+  let h = `${isPinned(n.path) && n.path ? '<span class="pin" title="已固定到「正在做」">📌</span>' : ''}<span class="mm-label" title="${esc(n.name)}">${esc(t)}</span>`;
   if (n.note?.status) h += `<span class="status">${esc(n.note.status)}</span>`;
   if (S.mode === 'local') {
     if (n.blog?.on) h += `<span class="pub${n.blog.how === 'self' ? '' : ' faint'}" title="${BLOG_HOW[n.blog.how]}">🌐</span>`;
@@ -306,10 +305,17 @@ function mapTree() {
     const kids = n.children.map((c) => conv(c, false)).filter(Boolean);
     return match(n) || kids.length || isRoot ? { id: n.path, n, hit: match(n), collapsed: false, children: kids } : null;
   };
+  // 「📌 正在做」：把大图修剪成只剩通向固定文件夹的路径——上级都展开、共同的上级合并；固定文件夹下面照常展开收起
   if (S.view === 'work' && S.mode === 'local') {
     const pins = S.pins.filter((p) => index.has(p));
-    const root = { name: pins.length ? '📌 正在做' : '📌 正在做（在导图上点文件夹，面板里点 📌 固定到这里）', dir: '', path: PINS, note: null, children: pins.map((p) => index.get(p)) };
-    return { id: PINS, n: root, collapsed: false, children: pins.map((p) => conv(index.get(p), false)).filter(Boolean).map((v) => ({ ...v, pinTop: true })) };
+    const prune = (n) => {
+      if (inPins(n.path)) return conv(n, false);
+      if (n.path && !pins.some((x) => x.startsWith(n.path + '/'))) return null;
+      return { id: n.path, n, collapsed: false, children: n.children.map(prune).filter(Boolean) };
+    };
+    const root = prune(S.data.tree);
+    if (!pins.length) root.n = { ...S.data.tree, name: '📌 还没有固定的文件夹（导图上右键文件夹 →「📌 固定到正在做」）' };
+    return root;
   }
   return conv(index.get(S.focus) || S.data.tree, true);
 }
@@ -548,9 +554,10 @@ document.addEventListener('click', async (e) => {
 
 // ---------- 📌 正在做：从大图里把固定的几个分支拎出来，放在同一张导图里 ----------
 S.pins = store.get('pins', []);
-const PINS = '@pins'; // 「正在做」那张图的根（不是真实文件夹）
 
 const isPinned = (p) => S.pins.includes(p);
+const inPins = (p) => S.pins.some((x) => p === x || p.startsWith(x + '/'));
+const onPinPath = (p) => inPins(p) || S.pins.some((x) => p === '' || x.startsWith(p + '/'));
 function togglePin(p) {
   S.pins = isPinned(p) ? S.pins.filter((x) => x !== p) : [...S.pins, p];
   store.set('pins', S.pins);
@@ -1443,7 +1450,7 @@ function route() {
   S.wantPath = index.has(p) ? null : p;
   if (!index.has(p)) p = '';
   // 在「📌 正在做」里打开不属于固定分支的节点（比如搜索结果）：回到「全部笔记」，不然图上找不到它
-  if (S.view === 'work' && p && !S.pins.some((x) => p === x || p.startsWith(x + '/'))) setView('map');
+  if (S.view === 'work' && p && !onPinPath(p)) setView('map');
   if (S.sel !== p) S.tab = 'note';
   if (S.wantTab) { S.tab = S.wantTab; S.wantTab = null; }
   if (S.sel !== null) S.panelClosed = false; // 用户选了节点：打开面板

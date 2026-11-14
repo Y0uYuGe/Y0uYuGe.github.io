@@ -423,8 +423,6 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 .blog-body table { border-collapse: collapse; display: block; overflow: auto; margin: 0 0 .7em; }
 .blog-body th, .blog-body td { border: 1px solid var(--line); padding: 4px 10px; }
 
-/* 「📌 正在做」里每个固定分支前面：它原来在哪 */
-.pin-from { color: var(--muted); font-size: 11px; font-weight: normal; margin-right: 4px; white-space: nowrap; }
 
 /* 右键菜单 */
 #ctx { position: fixed; z-index: 60; min-width: 200px; padding: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); font-size: 13px; }
