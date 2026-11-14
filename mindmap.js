@@ -255,7 +255,9 @@ export class MindMap {
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
         const r = el.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
-        const k = Math.min(2.5, Math.max(0.2, this.view.k * Math.exp(-e.deltaY * 0.0025)));
+        // 每次最多缩放约 7%：鼠标滚轮一格的 deltaY 很大（约 100），不限制的话一下变化太大；触控板捏合本来就是小步
+        const d = Math.max(-30, Math.min(30, e.deltaY));
+        const k = Math.min(2.5, Math.max(0.2, this.view.k * Math.exp(-d * 0.0025)));
         this.view.x = mx - (mx - this.view.x) * (k / this.view.k);
         this.view.y = my - (my - this.view.y) * (k / this.view.k);
         this.view.k = k;
@@ -309,8 +311,8 @@ export class MindMap {
     const n = this.node(this.sel) || this.root;
     if (this.opts.onKey?.(e, n)) { e.preventDefault(); return; }
     const ctrl = e.ctrlKey || e.metaKey;
-    if (ctrl && (e.key === '=' || e.key === '+')) { e.preventDefault(); return this.zoom(1.2); }
-    if (ctrl && e.key === '-') { e.preventDefault(); return this.zoom(1 / 1.2); }
+    if (ctrl && (e.key === '=' || e.key === '+')) { e.preventDefault(); return this.zoom(1.1); }
+    if (ctrl && e.key === '-') { e.preventDefault(); return this.zoom(1 / 1.1); }
     if (ctrl && e.key === '0') { e.preventDefault(); return this.fit(); }
     if (ctrl && e.key === '/') { e.preventDefault(); if (n.children.length) this.opts.onToggle?.(n); return; }
     if (e.key === 'Home') { e.preventDefault(); this.select(this.root.id); this.opts.onSelect?.(this.root); return; }

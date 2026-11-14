@@ -37,10 +37,7 @@ a { color: var(--accent); }
 #work-count { margin-left: 4px; font-size: 12px; }
 #work-count.live::before { content: "●"; color: var(--running); margin-right: 2px; }
 #search { width: 240px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
-#ai-btn { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
-#ai-btn .ag-dot { margin-right: 2px; }
-#pub-btn { margin-left: 8px; }
-#ai-btn[hidden] + #pub-btn { margin-left: auto; }
+#pub-btn { margin-left: auto; }
 #banner { background: color-mix(in srgb, var(--warn) 12%, var(--card)); border-bottom: 1px solid var(--line); padding: 6px 16px; font-size: 13px; }
 #banner .move { padding: 2px 0; }
 #banner .move button { margin-left: 6px; }
@@ -488,3 +485,19 @@ body.resizing-v iframe, body.resizing-v .xterm { pointer-events: none; }
 #dock-body { flex: 1; min-height: 0; display: flex; overflow: auto; }
 #dock-body > * { flex: 1; min-width: 0; }
 #dock.collapsed #dock-body { display: none; }
+
+.ai-acts { display: none; gap: 2px; flex: none; }
+.ai-row:hover .ai-acts { display: inline-flex; }
+.ai-row:hover .d { display: none; }
+.ai-acts button { height: 22px; padding: 0 7px; font-size: 12px; border: none; background: none; color: var(--accent); }
+.ai-acts button:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+/* 导图节点上的 AI 小圆点 */
+.ai-dot { display: inline-flex; align-items: center; justify-content: center; min-width: 9px; height: 9px; margin-left: 5px; border-radius: 9px; font-size: 10px; line-height: 1; color: #fff; flex: none; }
+.ai-dot:not(:empty) { min-width: 15px; height: 15px; padding: 0 4px; }
+.ai-dot.ag-running { background: var(--running); }
+.ai-dot.ag-waiting { background: var(--waiting); }
+
+.dnew-wrap { display: inline-flex; flex: none; }
+.dnew-wrap .dnew { border-radius: 6px 0 0 6px; }
+.dnew-wrap .dmore { border-radius: 0 6px 6px 0; padding: 0 5px; }

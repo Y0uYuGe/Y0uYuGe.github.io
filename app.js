@@ -23,7 +23,7 @@ const S = {
 const index = new Map(); // path -> 工作区节点
 const byUrl = new Map(); // 博客：文章页地址 -> 节点 path
 
-const STATUS = { running: '进行中', waiting: '等你回复', todo: '待办', done: '已结束' };
+const STATUS = { running: '进行中', waiting: '等你回复', todo: '未开始', done: '已结束' };
 const STATUS_ORDER = ['running', 'waiting', 'todo', 'done'];
 
 // ---------- 数据 ----------
@@ -75,7 +75,7 @@ function accept(text) {
   S.mapKey = mapKey;
   if (first) { $('#brand').textContent = d.site.title; document.title = d.site.title; }
   updateWorkCount();
-  updateAiBtn();
+  notifyWaiting(d.agents, first);
   renderBanner();
   if (S.sel === null || (S.wantPath && index.has(S.wantPath))) route();
   else { if (mapChanged) renderMap(); renderPanel(); }
@@ -234,6 +234,14 @@ async function renameFolder(p, name) {
   } catch (err) { alert(err.message); renderMap(); }
 }
 
+// 节点上的 AI 小圆点：橙 = 有 AI 等你回复，绿 = 有 AI 在跑；不止一个时带数字（收起的文件夹算上里面所有的）
+function aiDot(list) {
+  const run = list.filter((a) => a.status === 'running').length, wait = list.filter((a) => a.status === 'waiting').length;
+  if (!run && !wait) return '';
+  const n = run + wait, tip = [run && `${run} 个 AI 在跑`, wait && `${wait} 个等你回复`].filter(Boolean).join('，');
+  return `<span class="ai-dot ag-${wait ? 'waiting' : 'running'}" title="${tip}">${n > 1 ? n : ''}</span>`;
+}
+
 // 节点上的 agent 状态徽标：自己的用实心，折叠起来的子孙用描边
 function badges(list, faint) {
   const c = {};
@@ -270,7 +278,7 @@ function workspaceNode(v) {
     if (S.data.moves.some((m) => m.to === n.path)) h += '<span class="moved" title="这个文件夹刚被移动过">↪</span>';
   }
   // 收起的文件夹：下面的 AI 有几个在跑、几个等你、几个待办（展开时 AI 就挂在下面）
-  if (S.mode === 'local' && v.closed) h += badges(agentsUnder(n.path));
+  if (S.mode === 'local') h += aiDot(v.closed ? agentsUnder(n.path) : agentsAt(n.path));
   if (n.children.length && !S.query) h += `<span class="mm-toggle">${v.closed ? n.children.length : '−'}</span>`;
   return h;
 }
@@ -286,16 +294,8 @@ function agentNode(a, from) {
 // AI 会话 / 蜂群任务挂在它所在文件夹下面，当子节点显示。
 // 文件夹收起时，里面（任意深的子文件夹）在跑的 AI 也直接挂在它下面，标上在哪个子文件夹——不管收得多深都看得见
 const byStatus = (x, y) => STATUS_ORDER.indexOf(x.status) - STATUS_ORDER.indexOf(y.status) || y.mtime - x.mtime;
-function withAgents(v) {
-  if (S.mode !== 'local') return v;
-  const list = (v.closed ? agentsUnder(v.id) : agentsAt(v.id)).filter((a) => a.status !== 'done').sort(byStatus);
-  if (!list.length) return v;
-  const ag = list.map((a) => {
-    const o = owner(a.path);
-    return { id: '@' + a.id, a, from: o !== v.id ? index.get(o)?.name : '', children: [] };
-  });
-  return { ...v, collapsed: false, children: [...ag, ...(v.closed ? [] : v.children)] };
-}
+// 导图上不再挂 AI 胶囊：AI 只在节点上用一个小圆点表示（见 aiDot），具体内容在面板下面的 AI 栏
+function withAgents(v) { return v; }
 
 // 工作区树 -> 导图数据（只含展开的部分；搜索时只留命中项和它们的上级）
 function mapTree() {
@@ -644,7 +644,7 @@ async function renderPanel(force) {
   if (S.noteView !== 'map') S.noteView = 'doc';
   const cur = S.tab === 'files' ? 'files' : S.noteView;
   const pv = (k, label, tip) => `<button data-pv="${k}" class="${cur === k ? 'on' : ''}" title="${tip}">${label}</button>`;
-  const views = `<span class="seg pv">${note ? pv('doc', '文档', '直接编辑，停下 0.8 秒自动保存') + pv('map', '导图', '标题就是主题：点主题在旁边打开它的笔记 · Tab 子主题 · Enter 同级 · F2 改字 · ? 全部快捷键') : ''}${local ? pv('ai', aiTabLabel(n), '这个文件夹（含子文件夹）里的 AI：在跑的、等你回复的、已结束的') : ''}</span>`;
+  const views = `<span class="seg pv">${note ? pv('doc', '文档', '直接编辑，停下 0.8 秒自动保存') + pv('map', '导图', '标题就是主题：点主题在旁边打开它的笔记 · Tab 子主题 · Enter 同级 · F2 改字 · ? 全部快捷键') : ''}</span>`;
   // 「文档 / 导图 / 附件」放在标题这一行的右边（和博客一样），工具按钮在下一行
   const wide = n.path ? `${S.reading ? '<button data-wide title="还原宽度（Esc）">⤡</button>' : '<button data-wide title="放大：右边拉宽，导图留在左边（也可以在导图上双击）">⤢</button>'}` : '';
   const finder = local ? `<button data-reveal="${esc(n.path)}" title="在${PATH_SEP() === '/' ? '访达' : '资源管理器'}中打开${''}">📂</button>` : '';
@@ -682,8 +682,6 @@ async function renderPanel(force) {
     }
     if (!empty && list) body.insertAdjacentHTML('beforeend', list);
     if (!n.path) body.insertAdjacentHTML('beforeend', recentList());
-  } else if (S.tab === 'ai') {
-    renderAiList(n);
   }
   body.scrollTop = scroll;
 }
@@ -844,57 +842,35 @@ function recentList() {
      ${n.note.excerpt ? `<div class="e">${esc(n.note.excerpt)}</div>` : ''}</a>`).join('')}</div>`;
 }
 
-// ---------- AI 的状态管理：每个文件夹的「AI」标签页 + 顶栏总览 ----------
+// ---------- AI：导图上的小圆点 + 面板下面的 AI 栏 ----------
+// 会话的名字：有标题用标题；sextant 新开的会话标题就是 agent 名，那就叫「新会话 14:05」
+const agentLabel = (a) => {
+  const t = agentTitle(a);
+  if (t && t !== '（无标题）' && t !== a.tool && !/^(claude|claude-code|codex)$/i.test(t)) return t;
+  const d = new Date(a.mtime), pad = (x) => String(x).padStart(2, '0');
+  return `新会话 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 const ago = (t) => {
   const m = Math.round((Date.now() - t) / 60000);
   return m < 1 ? '刚刚' : m < 60 ? m + ' 分钟前' : m < 1440 ? Math.round(m / 60) + ' 小时前' : new Date(t).toLocaleDateString('zh-CN');
 };
 const active = (list) => list.filter((a) => a.status === 'running' || a.status === 'waiting');
-function aiTabLabel(n) {
-  const a = active(agentsUnder(n.path)).length;
-  return a ? `AI <b class="ai-n">${a}</b>` : 'AI';
-}
-function renderAiList(n) {
-  const list = agentsUnder(n.path).sort(byStatus);
-  const groups = [['running', '进行中'], ['waiting', '等你回复'], ['todo', '待办'], ['done', '已结束（最近 24 小时）']];
-  let h = `<div class="ai-head"><button class="primary" data-ai-new>＋ 新建</button><span class="hint">在「${esc(n.path ? n.name : S.data.tree.name)}」里开一个 AI 会话或蜂群任务</span></div>`;
-  if (!list.length) h += '<p class="empty pad">这里还没有 AI。</p>';
-  for (const [st, label] of groups) {
-    const g = list.filter((a) => a.status === st);
-    if (!g.length) continue;
-    h += `<div class="section ai-group"><h4><span class="ag-dot ag-${st}"></span>${label} · ${g.length}</h4>${g.map((a) => {
-      const where = owner(a.path), sub = where !== n.path ? index.get(where)?.name || where : '';
-      const kind = a.sextant?.kind === 'mission' ? '蜂群' : TOOL[a.tool] || a.tool;
-      return `<div class="ai-row" data-ai="${esc(a.id)}" title="${esc(a.reply || a.prompt || '')}"><span class="ag-tool">${esc(kind)}</span><span class="t">${esc(agentTitle(a))}</span>${sub ? `<span class="sub">${esc(sub)}</span>` : ''}<span class="d">${ago(a.mtime)}</span></div>`;
-    }).join('')}</div>`;
+// AI 停下来等你回复时发系统通知；点通知直接打开这个会话（第一次加载不提醒以前的）
+function notifyWaiting(agents, first) {
+  const prev = S.prevStatus || new Map();
+  S.prevStatus = new Map(agents.map((a) => [a.id, a.status]));
+  if (first || S.mode !== 'local' || !('Notification' in window)) return;
+  for (const a of agents) {
+    if (a.status !== 'waiting' || prev.get(a.id) === 'waiting' || (!prev.has(a.id) && a.mtime < Date.now() - 60000)) continue;
+    const go = () => {
+      if (Notification.permission !== 'granted') return;
+      const folder = index.get(owner(a.path));
+      const n = new Notification(`${TOOL[a.tool] || a.tool} 等你回复`, { body: `${folder?.path ? folder.name : S.data.tree.name} · ${agentLabel(a)}`, tag: a.id });
+      n.onclick = () => { window.focus(); openAgent(a.id); };
+    };
+    Notification.permission === 'default' ? Notification.requestPermission().then(go) : go();
   }
-  $('#panel-body').innerHTML = h;
 }
-$('#panel-body').addEventListener('click', (e) => {
-  if (e.target.closest('[data-ai-new]')) return openAgent('new:' + (S.sel || ''));
-  const r = e.target.closest('[data-ai]');
-  if (r) openAgent(r.dataset.ai);
-});
-$('#panel-body').addEventListener('contextmenu', (e) => {
-  const r = e.target.closest('[data-ai]');
-  const a = r && S.data.agents.find((x) => x.id === r.dataset.ai);
-  if (!a) return;
-  e.preventDefault();
-  showCtx(agentMenu(a), e.clientX, e.clientY);
-});
-// 顶栏：整个工作区有 AI 在跑或等你时显示，点了打开全部 AI 的列表
-function updateAiBtn() {
-  const b = $('#ai-btn');
-  const run = S.data.agents.filter((a) => a.status === 'running').length, wait = S.data.agents.filter((a) => a.status === 'waiting').length;
-  b.hidden = S.mode !== 'local' || !(run + wait);
-  b.innerHTML = [run && `<span class="ag-dot ag-running"></span>${run} 在跑`, wait && `<span class="ag-dot ag-waiting"></span>${wait} 等你`].filter(Boolean).join('　');
-}
-$('#ai-btn').onclick = () => {
-  if (S.view !== 'map') setView('map');
-  if (S.agent) closeAgent();
-  if (S.sel === '') { S.tab = 'ai'; S.panelClosed = false; S.panelKey = ''; renderPanel(true); }
-  else { S.wantTab = 'ai'; location.hash = '#/'; }
-};
 
 // ---------- 导图上的 AI：点了在右边只看它的终端 / 蜂群图（工作台自己画，见 agents.js） ----------
 // S.agent：选中的 AI 的 id；'new:<文件夹>' 表示在这个文件夹新建会话或蜂群任务
@@ -938,11 +914,15 @@ function renderDock(n, force) {
   dock.hidden = false;
   dock.classList.toggle('collapsed', !cur);
   bar.hidden = !cur;
+  const hidden = new Set(store.get('hiddenAgents', []));
+  const history = agentsUnder(n.path).filter((x) => x.status === 'done' && x.id !== cur && !hidden.has(x.id));
   $('#dock-tabs').innerHTML = tabs.map((x) => {
     const kind = x.sextant?.kind === 'mission' ? '蜂群' : TOOL[x.tool] || x.tool;
-    return `<button class="dtab${x.id === cur ? ' on' : ''}" data-dock="${esc(x.id)}" title="${esc(STATUS[x.status])} · ${esc(agentTitle(x))}"><span class="ag-dot ag-${x.status}"></span>${esc(kind)} · ${esc(agentTitle(x).slice(0, 18))}</button>`;
-  }).join('') + `<button class="dtab dnew${cur?.startsWith('new:') ? ' on' : ''}" data-dock="new:${esc(n.path)}">＋ AI</button>`
-    + (tabs.length ? '' : '<span class="hint">这里还没有 AI</span>')
+    const where = owner(x.path) !== n.path ? ` · ${index.get(owner(x.path))?.name || ''}` : '';
+    return `<button class="dtab${x.id === cur ? ' on' : ''}" data-dock="${esc(x.id)}" title="${esc(kind)} · ${esc(STATUS[x.status])}${esc(where)}"><span class="ag-dot ag-${x.status}"></span>${esc(agentLabel(x).slice(0, 20))}</button>`;
+  }).join('') + `<span class="dnew-wrap"><button class="dtab dnew" data-dock-act="quick" title="在「${esc(n.path ? n.name : S.data.tree.name)}」里开一个 Claude">＋ AI</button><button class="dtab dnew dmore" data-dock-act="more" title="选别的 agent / 蜂群任务">▾</button></span>`
+    + (history.length ? `<button class="dtab" data-dock-act="history" title="已结束的会话（7 天内）">历史 ${history.length}</button>` : '')
+    + (tabs.length || history.length ? '' : '<span class="hint">这里还没有 AI</span>')
     + `<span class="dacts">${a ? '<button data-dock-act="note" title="把它的结论写进这个文件夹的笔记">写入笔记</button>' : ''}${a?.sextant?.kind === 'session' ? '<button data-dock-act="end">结束</button>' : ''}${cur ? '<button class="icon" data-dock-act="hide" title="收起">▾</button>' : ''}</span>`;
   const key = cur ? cur + (a ? ':' + (a.sextant ? 'sx' : 'log:' + a.status) : '') + ':' + sx().up : '';
   if (!force && key === S.dockKey) return;
@@ -971,6 +951,28 @@ $('#dock').addEventListener('click', async (e) => {
   if (t.dataset.dock) { S.dockAgent = t.dataset.dock; return renderDock(n); }
   const act = t.dataset.dockAct, id = S.dockAgent;
   if (act === 'hide') { S.dockAgent = null; return renderDock(n); }
+  // ＋ AI：直接在这个文件夹开一个 Claude，不用填表
+  if (act === 'quick') return quickAgent(n, 'claude-code');
+  if (act === 'more') {
+    const r = t.getBoundingClientRect();
+    let list = [];
+    try { list = (await (await fetch(sx().url + '/adapters')).json()).filter((x) => x.available).map((x) => x.name); } catch {}
+    return showCtx([
+      ...list.map((name) => ({ label: `开一个 ${TOOL[name] || name}`, run: () => quickAgent(n, name) })),
+      '-',
+      { label: '蜂群任务…（多个 agent 一起探索）', run: () => { S.dockAgent = 'new:' + n.path; renderDock(n, true); } },
+    ], r.left, r.bottom + 4);
+  }
+  if (act === 'history') {
+    const r = t.getBoundingClientRect();
+    const hidden = new Set(store.get('hiddenAgents', []));
+    const done = agentsUnder(n.path).filter((x) => x.status === 'done' && !hidden.has(x.id)).sort((x, y) => y.mtime - x.mtime);
+    return showCtx([
+      ...done.slice(0, 30).map((x) => ({ label: `${agentLabel(x)} · ${ago(x.mtime)}`, run: () => { S.dockAgent = x.id; renderDock(n, true); } })),
+      '-',
+      { label: '清空历史（只是不再显示）', run: () => { store.set('hiddenAgents', [...new Set([...hidden, ...done.map((x) => x.id)])].slice(-1000)); renderDock(n, true); } },
+    ], r.left, r.bottom + 4);
+  }
   if (act === 'note') return agentToNote(id);
   if (act === 'end') return endAgent(id);
   if (act === 'resume') {
@@ -979,6 +981,19 @@ $('#dock').addEventListener('click', async (e) => {
     catch (err) { alert(err.message); }
   }
 });
+// 在这个文件夹直接开一个 agent 会话（sextant 托管），开好就在下面显示它的终端
+async function quickAgent(n, agent) {
+  if (!sx().up) { S.dockAgent = 'new:' + n.path; return renderDock(n, true); } // 让它显示「启动 sextant」
+  try {
+    const r = await fetch(sx().url + '/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ agent, dir: absPath(n.path) }) });
+    const s = await r.json();
+    if (!r.ok) throw new Error(s.error || r.status);
+    S.dockAgent = 'sx-session:' + s.name;
+    await refresh();
+    renderDock(index.get(S.sel), true);
+  } catch (err) { alert('开不了：' + err.message); }
+}
+
 // 上下拖动：笔记和 AI 各占多少
 {
   const bar = $('#dock-resizer'), dock = $('#dock');
