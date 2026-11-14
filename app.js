@@ -427,7 +427,7 @@ function renderResults(q, r) {
   results.innerHTML = h;
   const b = searchBox.getBoundingClientRect();
   results.style.top = b.bottom + 6 + 'px';
-  results.style.left = b.left + 'px';
+  results.style.left = Math.max(8, Math.min(b.left, b.right - results.offsetWidth)) + 'px'; // 和搜索框右边对齐
   results.hidden = false;
   markSel();
 }
@@ -626,6 +626,7 @@ async function renderPanel(force) {
     if (tags) top = top.replace('<div class="meta">', '<div class="meta">' + tags);
   }
   $('#panel-top').innerHTML = top;
+  inlineCrumbs();
 
   // 视图切换：文档 / 导图 / 附件，放在按钮行右边（不再单独占两行）
   if (S.noteView !== 'map') S.noteView = 'doc';
@@ -743,6 +744,7 @@ async function renderBlogPanel(n, force) {
   let top = `<div class="titlerow"><h1 class="title" title="${esc(n.path ? m.title || n.name : S.data.site.title)}">${esc(n.path ? m.title || n.name : S.data.site.title)}</h1><div class="meta">${meta}</div>${acts}</div>`;
   if (!n.path && S.data.site.subtitle) top += `<div class="hint">${esc(S.data.site.subtitle)}</div>`;
   $('#panel-top').innerHTML = top;
+  inlineCrumbs();
   $('#tabs').hidden = true;
   $('#panel').hidden = !!S.panelClosed;
   $('#resizer').hidden = !!S.panelClosed;
@@ -900,7 +902,7 @@ function renderAgentPanel(force) {
 
   const chain = [];
   for (let c = index.get(folder); c; c = c.parent) chain.unshift(c);
-  $('#crumbs').innerHTML = chain.map((c) => `<a href="#/${esc(c.path)}">${esc(c.name)}</a>`).join(' / ') + ' / <b>' + (isNew ? '新建' : 'AI') + '</b>';
+  $('#crumbs').innerHTML = chain.map((c) => `<a href="#/${esc(c.path)}">${esc(c.name)}</a>`).join(' / ');
   // 和笔记面板同一个样子：面包屑（点文件夹名回去）；标题、状态、类型、时间一行，右边是操作
   let title, meta = '', acts = '';
   if (isNew) { title = '新建 AI'; meta = `<span>会话或蜂群任务 · 在「${esc(index.get(folder)?.name || folder || '工作区')}」里</span>`; }
@@ -908,14 +910,16 @@ function renderAgentPanel(force) {
   else {
     const kind = a.sextant?.kind === 'mission' ? '蜂群任务' : (TOOL[a.tool] || a.tool) + ' 会话';
     title = agentTitle(a);
-    meta = `<span class="ag-dot ag-${a.status}"></span><span>${STATUS[a.status]}</span><span class="chip">${esc(kind)}</span><span>${ago(a.mtime)}</span>`;
+    // 一行放不下所有信息：状态最要紧，类型和时间放到悬停提示里
+    meta = `<span class="ag-status" title="${esc(kind)} · ${ago(a.mtime)}"><span class="ag-dot ag-${a.status}"></span>${STATUS[a.status]}</span>`;
     acts += '<button data-agent-note title="把它的结论追加到这个文件夹笔记的「记录」里（先给你看、可以改）">写入笔记</button>';
     if (a.sextant?.kind === 'session') acts += '<button data-agent-end title="结束这个 agent 进程">结束会话</button>';
     if (a.sextant?.kind === 'mission') acts += '<button data-agent-end title="从 sextant 里删除这个任务">删除任务</button>';
   }
   acts += `<button data-reveal="${esc(folder)}" title="在${PATH_SEP() === '/' ? '访达' : '资源管理器'}中打开${'它的工作目录'}">📂</button>`;
-  let top = `<div class="titlerow"><h1 class="title" title="${esc(title)}">${esc(title)}</h1><div class="meta">${meta}</div><span class="bacts">${acts}</span></div>`;
+  let top = `<div class="titlerow agent"><h1 class="title" title="${esc(title)}">${esc(title)}</h1><div class="meta">${meta}</div><span class="bacts">${acts}</span></div>`;
   $('#panel-top').innerHTML = top;
+  inlineCrumbs();
   $('#tabs').hidden = true;
   $('#panel').hidden = !!S.panelClosed;
   $('#resizer').hidden = !!S.panelClosed;
@@ -1363,12 +1367,19 @@ $('#panel').addEventListener('click', async (e) => {
     setTimeout(refresh, 300);
   }
 });
+// 路径和名字放一行：面包屑挪到标题前面（灰色小字），面板顶上不再单独占一行
+function inlineCrumbs() {
+  const c = $('#crumbs').innerHTML.trim(), row = $('#panel-top .titlerow');
+  $('#crumbs').innerHTML = '';
+  if (c && row) row.insertAdjacentHTML('afterbegin', `<span class="tcrumbs">${c}<span class="sep">/</span></span>`);
+}
+
 function closePanel() {
   if (S.reading) { setReading(false); return; }
   S.panelClosed = true; $('#panel').hidden = true; $('#resizer').hidden = true; }
 $('#close').onclick = closePanel;
-$('#crumbs').addEventListener('click', (e) => {
-  const link = e.target.closest('a[href^="#/"]');
+$('#panel-top').addEventListener('click', (e) => {
+  const link = e.target.closest('.tcrumbs a[href^="#/"]');
   if (!link || !S.agent) return;
   // 在 AI 面板里点面包屑：回到那个文件夹（地址没变时 hashchange 不会触发，要自己关掉）
   e.preventDefault();
