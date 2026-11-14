@@ -36,7 +36,8 @@ a { color: var(--accent); }
 #views { margin-left: 8px; }
 #work-count { margin-left: 4px; font-size: 12px; }
 #work-count.live::before { content: "●"; color: var(--running); margin-right: 2px; }
-#search { margin-left: auto; width: 220px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
+#search { width: 240px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
+#pub-btn { margin-left: auto; }
 #banner { background: color-mix(in srgb, var(--warn) 12%, var(--card)); border-bottom: 1px solid var(--line); padding: 6px 16px; font-size: 13px; }
 #banner .move { padding: 2px 0; }
 #banner .move button { margin-left: 6px; }
@@ -192,7 +193,6 @@ body.blog #views, body.blog #pub-btn { display: none; }
 #pub-dlg pre { white-space: pre-wrap; font-size: 12px; background: var(--soft); padding: 8px; border-radius: 6px; }
 .pub { margin-left: 4px; font-size: 11px; }
 .pub.faint { opacity: .45; }
-select[data-blog] { font-size: 12px; }
 /* 手机上的博客首页：导图换成可折叠目录 */
 #m-tree { display: none; }
 @media (max-width: 760px) {
@@ -332,7 +332,6 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 #panel-top .actions .pv button.on { color: var(--fg); font-weight: 600; background: color-mix(in srgb, var(--fg) 8%, transparent); }
 
 /* 搜索结果：搜索框下面一列，名字命中在上，正文命中带上下文 */
-#search { width: 260px; }
 #search-results { position: fixed; z-index: 50; width: min(460px, 90vw); max-height: 70vh; overflow: auto; background: var(--card);
   border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.14); padding: 4px; }
 .sr-group { font-size: 11px; color: var(--muted); padding: 8px 10px 4px; }
@@ -386,7 +385,8 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 .read-pn a { max-width: 48%; text-decoration: none; }
 .read-pn a:last-child { text-align: right; }
 .read-pn .l { display: block; font-size: 12px; color: var(--muted); }
-@media (max-width: 1350px) { .read-toc { display: none; } }
+#panel-body { container-type: inline-size; }
+@container (max-width: 1000px) { .read-toc { display: none; } } /* 右边够宽才显示本文目录 */
 /* 博客面板顶部紧凑：标题、标签、日期、按钮一行 */
 /* 面板顶部（工作台和博客一样）：面包屑一行；标题、标签、日期、「文档 / 导图」一行；工作台再多一行工具按钮 */
 #panel-top { padding: 0 16px; }
@@ -428,3 +428,13 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 
 /* 「📌 正在做」里每个固定分支前面：它原来在哪 */
 .pin-from { color: var(--muted); font-size: 11px; font-weight: normal; margin-right: 4px; white-space: nowrap; }
+
+/* 右键菜单 */
+#ctx { position: fixed; z-index: 60; min-width: 200px; padding: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); font-size: 13px; }
+#ctx .it { display: flex; justify-content: space-between; gap: 16px; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+#ctx .it:hover { background: var(--accent); color: #fff; }
+#ctx .it.on span:first-child::after { content: " ✓"; }
+#ctx .k { color: var(--muted); font-size: 12px; }
+#ctx .it:hover .k { color: inherit; }
+#ctx .sep { height: 1px; background: var(--line); margin: 4px 6px; }
+#panel-top .bacts button[data-wide] { font-size: 15px; padding: 0 7px; color: var(--fg); }

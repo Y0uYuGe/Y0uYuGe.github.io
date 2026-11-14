@@ -112,7 +112,7 @@ const map = new MindMap($('#map'), {
   onToggle: (v) => { if (!v.a) toggle(v.id); },
   onActivate: (v) => {
     if (v.a || v.id === PINS) return;
-    if (S.mode === 'blog' && v.n.url) { location.hash = '#/' + v.id + '?read'; return; } // 博客：双击文章直接整页阅读
+    if (S.mode === 'blog' && v.n.url) { setReading(true); openNode(v.id); return; } // 博客：双击文章就放大来看
     if (v.n.children.length && v.id !== S.focus) setFocus(v.id);
   },
   editText: (v) => v.n?.dir,
@@ -129,6 +129,74 @@ const map = new MindMap($('#map'), {
     if (e.key === 'Enter' && !e.shiftKey) { newFolder(v.id ? v.n.parent.path : ''); return true; }
     return false;
   },
+});
+
+// ---------- 右键菜单（工作台里）：节点相关的操作都在这里 ----------
+const ctx = document.createElement('div');
+ctx.id = 'ctx';
+ctx.hidden = true;
+document.body.appendChild(ctx);
+const closeCtx = () => { ctx.hidden = true; };
+addEventListener('click', closeCtx);
+addEventListener('blur', closeCtx);
+addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCtx(); });
+const setBlogOf = (p, on) => post('api/blog/set', { path: p, on }).then(() => { S.panelKey = ''; refresh(); }).catch((err) => alert(err.message));
+function expandAll(p) {
+  const walk = (n) => { if (n.children.length) { S.open.add(n.path); n.children.forEach(walk); } };
+  walk(index.get(p));
+  saveOpen();
+  renderMap();
+}
+function folderMenu(n) {
+  const p = n.path, abs = absPath(p), finder = PATH_SEP() === '/' ? '访达' : '资源管理器';
+  const cur = n.blog?.how === 'self' ? (n.blog.on ? 'on' : 'off') : '';
+  return [
+    { label: `在${finder}中显示`, run: () => post('api/open', { path: p }).catch((err) => alert(err.message)) },
+    { label: '复制路径', run: () => navigator.clipboard.writeText(abs).then(() => flash('已复制：' + abs)) },
+    '-',
+    { label: '新建子文件夹', key: 'Tab', run: () => newFolder(p) },
+    p && { label: '重命名', key: 'F2', run: () => { map.select(p); map.edit(p); } },
+    '-',
+    { label: '＋ 在这里开 AI', run: () => openAgent('new:' + p) },
+    p && { label: isPinned(p) ? '📌 取消固定' : '📌 固定到「正在做」', run: () => togglePin(p) },
+    '-',
+    { label: '🌐 公开', on: cur === 'on', run: () => setBlogOf(p, true) },
+    { label: '🌐 不公开', on: cur === 'off', run: () => setBlogOf(p, false) },
+    { label: `🌐 随上级（${inheritedBlog(n) ? '公开' : '不公开'}）`, on: cur === '', run: () => setBlogOf(p, null) },
+    '-',
+    n.children.length && { label: '展开全部', run: () => expandAll(p) },
+    n.children.length && S.open.has(p) && p && { label: '收起', run: () => toggle(p) },
+  ];
+}
+function agentMenu(a) {
+  return [
+    { label: '打开', run: () => openAgent(a.id) },
+    { label: '写入笔记…', run: () => { openAgent(a.id); agentToNote(); } },
+    a.sextant && { label: a.sextant.kind === 'mission' ? '删除任务' : '结束会话', run: () => { openAgent(a.id); endAgent(); } },
+  ];
+}
+$('#map').addEventListener('contextmenu', (e) => {
+  if (S.mode !== 'local') return;
+  const el = e.target.closest('.mm-node');
+  const v = el && map.node(el.dataset.id);
+  if (!v || v.id === PINS) return;
+  e.preventDefault();
+  // 去掉空项、开头结尾和连续的分隔线
+  const items = (v.a ? agentMenu(v.a) : folderMenu(v.n)).filter(Boolean).filter((x, i, arr) => x !== '-' || (i > 0 && arr[i - 1] !== '-'));
+  while (items[items.length - 1] === '-') items.pop();
+  ctx.innerHTML = items.map((x, i) => x === '-' ? '<div class="sep"></div>' : `<div class="it${x.on ? ' on' : ''}" data-i="${i}"><span>${esc(x.label)}</span>${x.key ? `<span class="k">${x.key}</span>` : ''}</div>`).join('');
+  ctx.items = items;
+  ctx.hidden = false;
+  const w = ctx.offsetWidth, h = ctx.offsetHeight;
+  ctx.style.left = Math.min(e.clientX, innerWidth - w - 8) + 'px';
+  ctx.style.top = Math.min(e.clientY, innerHeight - h - 8) + 'px';
+});
+ctx.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const it = ctx.items?.[+e.target.closest('[data-i]')?.dataset.i];
+  if (!it) return;
+  closeCtx();
+  it.run();
 });
 
 // 新建文件夹（同时建同名笔记），建好后直接进入改名
@@ -250,7 +318,6 @@ function renderMap() {
   $('#focus-crumbs').innerHTML = chain.length
     ? `<a data-focus="">${esc(S.data.tree.name)}</a>` + chain.map((c) => ` / <a data-focus="${esc(c.path)}">${esc(c.name)}</a>`).join('')
     : '';
-  document.querySelectorAll('#map-tools [data-level]').forEach((b) => b.classList.toggle('on', +b.dataset.level === S.level));
 }
 
 function saveOpen() { store.set('open', [...S.open]); }
@@ -281,12 +348,9 @@ function expandTo(level) {
 }
 
 $('#map-tools').addEventListener('click', (e) => {
-  const lv = e.target.closest('[data-level]');
-  if (lv) return expandTo(+lv.dataset.level);
   const f = e.target.closest('[data-focus]');
   if (f) setFocus(f.dataset.focus);
 });
-$('#fit-btn').onclick = () => map.fit();
 // ---------- 搜索：节点名字 + 笔记正文 ----------
 // 输入时：导图只留命中的节点（名字或正文命中）；下面弹出结果，名字命中马上出，正文命中稍后到。
 // 点结果：打开那篇笔记，滚到这个词并高亮。↑↓ 选、Enter 打开、Esc 清空。
@@ -357,7 +421,7 @@ function renderResults(q, r) {
   results.innerHTML = h;
   const b = searchBox.getBoundingClientRect();
   results.style.top = b.bottom + 6 + 'px';
-  results.style.right = innerWidth - b.right + 'px';
+  results.style.left = b.left + 'px';
   results.hidden = false;
   markSel();
 }
@@ -420,8 +484,7 @@ function highlightFind(root, q) {
 function openNode(p) {
   S.panelClosed = false;
   if (S.agent) { S.agent = null; S.panelKey = ''; renderMap(); }
-  // 整页阅读时在左边导图上点另一篇文章：继续整页阅读
-  const h = '#/' + p + (S.reading && (S.mode === 'local' || index.get(p)?.url) ? '?read' : '');
+  const h = '#/' + p;
   if (location.hash === h || decodeURIComponent(location.hash) === h) { S.panelKey = ''; renderPanel(true); }
   else location.hash = h;
 }
@@ -551,17 +614,10 @@ async function renderPanel(force) {
   top += (n.note?.tags || []).map((t) => `<span class="chip">#${esc(t)}</span>`).join('');
   if (n.note?.date) top += `<span>${esc(n.note.date)}</span>`;
   top += '</div></div>';
-  if (local) {
-    const dirPath = n.path;
-    // 一行小按钮：在这里开 AI、用 VS Code / 访达打开、博客里公开吗、固定到「正在做」
-    const finder = PATH_SEP() === '/' ? '访达' : '资源管理器';
-    top += '<div class="actions">';
-    top += '<button class="primary" data-newmission title="在这个文件夹开一个 AI：单个 agent 的会话，或多个 agent 的蜂群任务">＋ AI</button>';
-    top += `<a href="${vscodeUrl(absPath(n.path))}"><button title="用 VS Code 打开这个文件夹">VS Code</button></a>`;
-    top += `<button data-open="${esc(dirPath)}" title="在${finder}中打开 ${esc(absPath(dirPath))}">${finder}</button>`;
-    top += blogSelect(n);
-    if (n.path) top += `<button data-pin="${esc(n.path)}" class="${isPinned(n.path) ? 'pinned' : ''}" title="${isPinned(n.path) ? '已固定到「📌 正在做」，点击取消' : '固定到顶栏的「📌 正在做」'}">📌${isPinned(n.path) ? ' 已固定' : ''}</button>`;
-    top += '</div>';
+  // 状态小标签：博客里公开吗、是否固定（操作都在导图的右键菜单里）
+  if (local && n.path) {
+    const tags = (n.blog?.on ? '<span class="chip" title="会出现在博客里">🌐 公开</span>' : '') + (isPinned(n.path) ? '<span class="chip" title="已固定到「📌 正在做」">📌</span>' : '');
+    if (tags) top = top.replace('<div class="meta">', '<div class="meta">' + tags);
   }
   $('#panel-top').innerHTML = top;
 
@@ -572,7 +628,7 @@ async function renderPanel(force) {
   const pv = (k, label, tip) => `<button data-pv="${k}" class="${cur === k ? 'on' : ''}" title="${tip}">${label}</button>`;
   const views = note || files.length ? `<span class="seg pv">${note ? pv('doc', '文档', '直接编辑，停下 0.8 秒自动保存') + pv('map', '导图', '标题就是主题：点主题在旁边打开它的笔记 · Tab 子主题 · Enter 同级 · F2 改字 · ? 全部快捷键') : ''}${files.length ? pv('files', `附件 ${files.length}`, '文件夹里的图片、PDF 等') : ''}</span>` : '';
   // 「文档 / 导图 / 附件」放在标题这一行的右边（和博客一样），工具按钮在下一行
-  const wide = n.path ? (S.reading ? `<a href="#/${esc(n.path)}" title="恢复原来的宽度（Esc）"><button>⤡ 退出整页</button></a>` : `<a href="#/${esc(n.path)}?read" title="文章区放大，导图留在左边"><button class="primary">⤢ 整页阅读</button></a>`) : '';
+  const wide = n.path ? `${S.reading ? '<button data-wide title="还原宽度（Esc）">⤡</button>' : '<button data-wide title="放大：右边拉宽，导图留在左边（也可以在导图上双击）">⤢</button>'}` : '';
   if (views || wide) $('#panel-top .titlerow').insertAdjacentHTML('beforeend', `<span class="bacts">${views}${wide}</span>`);
   $('#tabs').hidden = true;
 
@@ -619,21 +675,6 @@ function inheritedBlog(n) {
   for (let c = n.parent; c; c = c.parent) if (c.blog?.how === 'self') return c.blog.on;
   return false;
 }
-function blogSelect(n) {
-  const cur = n.blog?.how === 'self' ? (n.blog.on ? 'on' : 'off') : '';
-  const inh = inheritedBlog(n) ? '显示' : '不显示';
-  const o = (v, label) => `<option value="${v}"${cur === v ? ' selected' : ''}>${label}</option>`;
-  return `<select data-blog="${esc(n.path)}" title="这个文件夹（和下面所有子文件夹）在博客里公开吗">${o('', '🌐 随上级·' + (inh === '显示' ? '公开' : '不公开'))}${o('on', '🌐 公开')}${o('off', '🌐 不公开')}</select>`;
-}
-$('#panel').addEventListener('change', async (e) => {
-  const sel = e.target.closest('[data-blog]');
-  if (!sel) return;
-  const on = sel.value === '' ? null : sel.value === 'on';
-  try { await post('api/blog/set', { path: sel.dataset.blog, on }); S.panelKey = ''; await refresh(); }
-  catch (err) { alert(err.message); }
-});
-
-// 发布：生成并列出这次的改动（不上传）→ 你点「确认上传」→ 后台推送，这里显示进度
 $('#pub-btn').onclick = async () => {
   const dlg = document.createElement('div');
   dlg.id = 'pub-dlg';
@@ -673,11 +714,12 @@ function setReading(on) {
   if (on) { S.panelClosed = false; S.panelKey = ''; }
   else S.panelKey = '';
   applyWidths();
+  if (S.data && S.sel !== null) renderPanel(true);
   // 导图区域变宽 / 变窄了：让选中的节点留在视野里
   requestAnimationFrame(() => { map.drawMini(); if (S.sel !== null) map.reveal(S.sel); });
 }
 
-// 博客模式的右侧面板：文章正文取自文章页（构建时已渲染好），只读；「整页阅读」打开文章页
+// 博客模式的右侧面板：文章正文取自文章页（构建时已渲染好），只读；右上角 ⤢ 放大 / ⤡ 还原
 async function renderBlogPanel(n, force) {
   const key = 'b:' + n.path + (S.reading ? ':read' : '');
   if (!force && S.panelKey === key) return;
@@ -687,13 +729,11 @@ async function renderBlogPanel(n, force) {
   for (let c = n; c; c = c.parent) chain.unshift(c);
   $('#crumbs').innerHTML = chain.slice(0, -1).map((c) => `<a href="#/${esc(c.path)}">${esc(c.name)}</a>`).join(' / ');
   const m = n.note || {};
-  // 一行放下：标题、标签、日期，右边是「文档 / 导图」和整页阅读开关
+  // 一行放下：标题、标签、日期，右边是「文档 / 导图」和 ⤢ 放大
   if (S.noteView !== 'map') S.noteView = 'doc';
   const pv = (k, label) => `<button data-pv="${k}" class="${S.noteView === k ? 'on' : ''}">${label}</button>`;
   const meta = (m.tags || []).map((t) => `<span class="chip">#${esc(t)}</span>`).join('') + (m.date ? `<span>${esc(m.date)}</span>` : '');
-  const acts = n.url ? `<span class="bacts"><span class="seg pv">${pv('doc', '文档')}${pv('map', '导图')}</span>${S.reading
-    ? `<a href="#/${esc(n.path)}" title="恢复原来的宽度（Esc）"><button>⤡ 退出整页</button></a>`
-    : `<a href="#/${esc(n.path)}?read" title="文章区放大，导图留在左边（也可以在导图上双击文章）"><button class="primary">⤢ 整页阅读</button></a>`}</span>` : '';
+  const acts = n.path ? `<span class="bacts">${n.url ? `<span class="seg pv">${pv('doc', '文档')}${pv('map', '导图')}</span>` : ''}${S.reading ? '<button data-wide title="还原宽度（Esc）">⤡</button>' : '<button data-wide title="放大：右边拉宽，导图留在左边（也可以在导图上双击）">⤢</button>'}</span>` : '';
   let top = `<div class="titlerow"><h1 class="title" title="${esc(n.path ? m.title || n.name : S.data.site.title)}">${esc(n.path ? m.title || n.name : S.data.site.title)}</h1><div class="meta">${meta}</div>${acts}</div>`;
   if (!n.path && S.data.site.subtitle) top += `<div class="hint">${esc(S.data.site.subtitle)}</div>`;
   $('#panel-top').innerHTML = top;
@@ -721,16 +761,16 @@ async function renderBlogPanel(n, force) {
     html = doc.querySelector('.post-body')?.innerHTML || '';
   } catch {}
   if (S.panelNode !== n.path) return;
-  if (S.reading) {
-    // 整页阅读：正文居中，右边是目录，底部是同一节的上一篇 / 下一篇
+  {
+    // 正文 + 右边的本文目录（够宽才显示）+ 底部同一节的上一篇 / 下一篇
     const sibs = (n.parent?.children || []).filter((c) => c.url);
     const i = sibs.indexOf(n), prev = sibs[i - 1], next = sibs[i + 1];
-    const pn = (x, label) => x ? `<a href="#/${esc(x.path)}?read"><span class="l">${label}</span>${esc(x.name)}</a>` : '<span></span>';
+    const pn = (x, label) => x ? `<a href="#/${esc(x.path)}"><span class="l">${label}</span>${esc(x.name)}</a>` : '<span></span>';
     body.innerHTML = `<div class="read-wrap"><div class="read-main"><div class="post-body blog-body">${html || '<p class="empty">加载失败</p>'}</div>${list}
       <nav class="read-pn">${pn(prev, '上一篇')}${pn(next, '下一篇')}</nav></div><aside class="read-toc"></aside></div>`;
     const heads = [...body.querySelectorAll('.blog-body h2[id], .blog-body h3[id]')];
     if (heads.length > 2) body.querySelector('.read-toc').innerHTML = '<div class="toc-h">目录</div>' + heads.map((h) => `<a data-anchor="${esc(h.id)}" class="d${h.tagName[1]}">${esc(h.textContent)}</a>`).join('');
-  } else body.innerHTML = `<div class="post-body blog-body">${html || '<p class="empty">加载失败</p>'}</div>` + list;
+  }
   enhance(body.querySelector('.blog-body'));
   if (S.find) { const q = S.find; S.find = null; highlightFind(body.querySelector('.blog-body'), q); }
 }
@@ -751,7 +791,7 @@ $('#panel-body').addEventListener('click', (e) => {
   const p = u.origin === location.origin ? byUrl.get(u.pathname) : undefined;
   if (p === undefined) return;
   e.preventDefault();
-  location.hash = '#/' + p + (S.reading ? '?read' : '');
+  location.hash = '#/' + p;
 });
 
 // 「本节内容」：文件夹下面的子文件夹 / 文章。没有笔记（或笔记是空的）时它就是主要内容，有笔记时放在笔记下面。工作台和博客一样
@@ -926,7 +966,10 @@ function showHelp(kind) {
   $('#help').onclick = (e) => { if (e.target.id === 'help' || e.target.classList.contains('hclose')) $('#help').remove(); };
 }
 addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && S.reading && !$('#help')) { location.hash = '#/' + S.sel; return; }
+  // 展开到第几层：1 / 2 / 3，0 = 全部（不在输入框里、没按修饰键时）
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+  if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && /^[0-3]$/.test(e.key) && S.data && !S.agent) { expandTo(+e.key || 99); return; }
+  if (e.key === 'Escape' && S.reading && !$('#help') && !typing) { setReading(false); return; }
   if (e.key === 'Escape' && $('#help')) $('#help').remove();
   if (e.key === '?' && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && !e.target.isContentEditable && !e.target.closest?.('.mm')) showHelp();
 });
@@ -1259,10 +1302,9 @@ $('#panel').addEventListener('click', async (e) => {
     else { S.tab = 'note'; S.noteView = t.dataset.pv; store.set('noteView', S.noteView); }
     return renderPanel(true);
   }
-  if (t.dataset.pin) return togglePin(t.dataset.pin);
   if (t.dataset.open !== undefined) return post('api/open', { path: t.dataset.open }).catch((err) => alert(err.message));
   if (t.dataset.launch) return post('api/launch', { path: S.sel, tool: t.dataset.launch });
-  if (t.hasAttribute('data-newmission')) return openAgent('new:' + S.sel);
+  if (t.closest('[data-wide]')) return setReading(!S.reading);
   if (t.hasAttribute('data-agent-back')) return closeAgent();
   if (t.hasAttribute('data-agent-end')) return endAgent();
   if (t.hasAttribute('data-agent-note')) return agentToNote();
@@ -1274,12 +1316,12 @@ $('#panel').addEventListener('click', async (e) => {
   }
 });
 function closePanel() {
-  if (S.reading) { location.hash = '#/' + S.sel; return; }
+  if (S.reading) { setReading(false); return; }
   S.panelClosed = true; $('#panel').hidden = true; $('#resizer').hidden = true; }
 $('#close').onclick = closePanel;
 $('#wide').onclick = () => $('#panel').classList.toggle('wide');
 
-// 中间的分隔条：任何时候都能拖；平时和整页阅读各记各的宽度
+// 中间的分隔条：任何时候都能拖；平时和放大后各记各的宽度
 function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
 function applyWidths() {
   const panel = $('#panel');
@@ -1328,10 +1370,7 @@ function route() {
     return openAgent(id);
   }
   let p = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-  // 博客的整页阅读：#/文章路径?read，不离开首页（导图只是藏起来，返回是瞬间的）
-  const reading = p.endsWith('?read');
-  if (reading) p = p.slice(0, -5);
-  setReading(reading && (S.mode === 'local' ? index.has(p) : !!index.get(p)?.url));
+  if (p.endsWith('?read')) p = p.slice(0, -5); // 以前的「整页阅读」链接
   // 地址里的节点暂时不在树上（比如刚新建的文件夹还没扫描到）：先显示根节点，扫描到后再跳过去
   S.wantPath = index.has(p) ? null : p;
   if (!index.has(p)) p = '';

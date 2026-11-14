@@ -16,7 +16,6 @@
     <button data-view="map" title="整个工作区的所有文件夹和笔记">全部笔记</button>
     <button data-view="work" title="你用 📌 固定的、正在做的几个文件夹">📌 正在做<span id="work-count"></span></button>
   </nav>
-  <input id="search" type="search" placeholder="搜索标题和正文…" autocomplete="off">
   <button id="pub-btn" title="生成博客：先在本机预览、看这次改了什么，确认后才上传">🌐 博客</button>
 </header>
 <div id="banner" hidden></div>
@@ -25,9 +24,8 @@
   <section id="map-view">
     <div id="map"></div>
     <div id="map-tools" class="floating">
+      <input id="search" type="search" placeholder="搜索标题和正文…" autocomplete="off">
       <span id="focus-crumbs"></span>
-      <span class="seg" title="展开到第几层"><button data-level="1">1</button><button data-level="2">2</button><button data-level="3">3</button><button data-level="99">全部</button></span>
-      <button id="fit-btn" title="适应窗口">⤢</button>
     </div>
   </section>
   <div id="resizer" hidden></div>
