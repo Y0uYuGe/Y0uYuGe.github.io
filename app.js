@@ -1376,7 +1376,6 @@ $('#panel').addEventListener('click', async (e) => {
     setTimeout(refresh, 300);
   }
 });
-// 名字和路径放一行：先是名字，后面跟着灰色的路径（点哪一级就去哪），面板顶上不再单独占一行
 // 正文第一行的标题如果和面板顶上的名字一样，就不重复显示（只是不显示，文件不改）
 const normTitle = (t) => String(t || '').replace(/[\s\p{P}\p{S}]/gu, '').toLowerCase();
 function hideDupTitle(root, title) {
@@ -1384,10 +1383,14 @@ function hideDupTitle(root, title) {
   if (first && !first.previousElementSibling && normTitle(first.textContent) === normTitle(title)) first.classList.add('dup-title');
 }
 
+// 面板顶部两行：第一行是路径（点哪一级就去哪）、标签、日期、按钮；第二行是标题，像博客文章一样单独一行
 function inlineCrumbs() {
-  const c = $('#crumbs').innerHTML.trim(), h1 = $('#panel-top .titlerow h1');
+  const c = $('#crumbs').innerHTML.trim(), row = $('#panel-top .titlerow');
   $('#crumbs').innerHTML = '';
-  if (c && h1) h1.insertAdjacentHTML('afterend', `<span class="tcrumbs">${c}</span>`);
+  if (!row) return;
+  row.insertAdjacentHTML('afterbegin', `<span class="tcrumbs">${c}</span>`);
+  const h1 = row.querySelector('h1');
+  if (h1) { h1.classList.add('ptitle'); row.after(h1); }
 }
 
 function closePanel() {

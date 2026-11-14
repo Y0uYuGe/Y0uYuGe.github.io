@@ -460,3 +460,9 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 .mde .vditor-toolbar { display: none !important; }
 /* 正文开头和标题一样的那一行不重复显示 */
 .dup-title { display: none !important; }
+
+/* 标题单独一行（像博客文章），上面一行是路径和其它信息 */
+#panel-top .titlerow:last-child { border-bottom: none; }
+#panel-top h1.title.ptitle { font-size: 22px; line-height: 1.35; white-space: normal; overflow: visible; max-width: none; margin: 2px 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+#panel-top .titlerow { padding-bottom: 0; }
+#panel-top .titlerow .tcrumbs { max-width: 55%; }
