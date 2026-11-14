@@ -181,16 +181,19 @@ $('#map').addEventListener('contextmenu', (e) => {
   const v = el && map.node(el.dataset.id);
   if (!v || v.id === PINS) return;
   e.preventDefault();
-  // 去掉空项、开头结尾和连续的分隔线
-  const items = (v.a ? agentMenu(v.a) : folderMenu(v.n)).filter(Boolean).filter((x, i, arr) => x !== '-' || (i > 0 && arr[i - 1] !== '-'));
+  showCtx(v.a ? agentMenu(v.a) : folderMenu(v.n), e.clientX, e.clientY);
+});
+// 在 (x, y) 弹出菜单；items 里 false 会被去掉，'-' 是分隔线
+function showCtx(list, x, y) {
+  const items = list.filter(Boolean).filter((it, i, arr) => it !== '-' || (i > 0 && arr[i - 1] !== '-'));
   while (items[items.length - 1] === '-') items.pop();
-  ctx.innerHTML = items.map((x, i) => x === '-' ? '<div class="sep"></div>' : `<div class="it${x.on ? ' on' : ''}" data-i="${i}"><span>${esc(x.label)}</span>${x.key ? `<span class="k">${x.key}</span>` : ''}</div>`).join('');
+  if (!items.length) return;
+  ctx.innerHTML = items.map((it, i) => it === '-' ? '<div class="sep"></div>' : `<div class="it${it.on ? ' on' : ''}" data-i="${i}"><span>${esc(it.label)}</span>${it.key ? `<span class="k">${it.key}</span>` : ''}</div>`).join('');
   ctx.items = items;
   ctx.hidden = false;
-  const w = ctx.offsetWidth, h = ctx.offsetHeight;
-  ctx.style.left = Math.min(e.clientX, innerWidth - w - 8) + 'px';
-  ctx.style.top = Math.min(e.clientY, innerHeight - h - 8) + 'px';
-});
+  ctx.style.left = Math.min(x, innerWidth - ctx.offsetWidth - 8) + 'px';
+  ctx.style.top = Math.min(y, innerHeight - ctx.offsetHeight - 8) + 'px';
+}
 ctx.addEventListener('click', (e) => {
   e.stopPropagation();
   const it = ctx.items?.[+e.target.closest('[data-i]')?.dataset.i];
@@ -622,11 +625,10 @@ async function renderPanel(force) {
   $('#panel-top').innerHTML = top;
 
   // 视图切换：文档 / 导图 / 附件，放在按钮行右边（不再单独占两行）
-  if (S.tab === 'files' && !files.length) S.tab = 'note';
   if (S.noteView !== 'map') S.noteView = 'doc';
   const cur = S.tab === 'files' ? 'files' : S.noteView;
   const pv = (k, label, tip) => `<button data-pv="${k}" class="${cur === k ? 'on' : ''}" title="${tip}">${label}</button>`;
-  const views = note || files.length ? `<span class="seg pv">${note ? pv('doc', '文档', '直接编辑，停下 0.8 秒自动保存') + pv('map', '导图', '标题就是主题：点主题在旁边打开它的笔记 · Tab 子主题 · Enter 同级 · F2 改字 · ? 全部快捷键') : ''}${files.length ? pv('files', `附件 ${files.length}`, '文件夹里的图片、PDF 等') : ''}</span>` : '';
+  const views = `<span class="seg pv">${note ? pv('doc', '文档', '直接编辑，停下 0.8 秒自动保存') + pv('map', '导图', '标题就是主题：点主题在旁边打开它的笔记 · Tab 子主题 · Enter 同级 · F2 改字 · ? 全部快捷键') : ''}${local ? pv('files', '文件', '这个文件夹里的所有文件：md 在这里打开来改，其它双击用默认程序打开') : ''}</span>`;
   // 「文档 / 导图 / 附件」放在标题这一行的右边（和博客一样），工具按钮在下一行
   const wide = n.path ? `${S.reading ? '<button data-wide title="还原宽度（Esc）">⤡</button>' : '<button data-wide title="放大：右边拉宽，导图留在左边（也可以在导图上双击）">⤢</button>'}` : '';
   if (views || wide) $('#panel-top .titlerow').insertAdjacentHTML('beforeend', `<span class="bacts">${views}${wide}</span>`);
@@ -663,7 +665,7 @@ async function renderPanel(force) {
     if (!empty && list) body.insertAdjacentHTML('beforeend', list);
     if (!n.path) body.insertAdjacentHTML('beforeend', recentList());
   } else if (S.tab === 'files') {
-    renderFiles(n, files);
+    renderFiles(n);
   }
   body.scrollTop = scroll;
 }
@@ -922,18 +924,86 @@ async function endAgent() {
   catch (err) { alert(err.message); }
 }
 
-function renderFiles(n, files) {
+// ---------- 文件：这个文件夹的目录树（像访达）。md 在下面直接打开来改；其它文件用默认程序打开 ----------
+S.fopen = new Set(store.get('fopen', [])); // 展开了的子文件夹
+const FILE_ICON = [[/\.md$/i, '📝'], [/\.(png|jpe?g|gif|svg|webp|bmp|ico|heic)$/i, '🖼'], [/\.pdf$/i, '📕'], [/\.(zip|tar|gz|tgz|7z|rar|xz|bz2)$/i, '📦'],
+  [/\.(docx?|xlsx?|pptx?|key|numbers|pages|csv)$/i, '📄'], [/\.(xmind|mm)$/i, '🧠'], [/\.(mp4|mov|mkv|avi|mp3|wav|m4a|flac)$/i, '🎞'],
+  [/\.(py|js|mjs|cjs|ts|c|h|cc|cpp|hpp|go|rs|java|kt|sh|bash|zsh|json|ya?ml|toml|ini|html?|css|sql|rb|php|lua|asm|s|swift)$/i, '⚙️']];
+const fileIcon = (e) => (e.dir ? '📁' : FILE_ICON.find(([re]) => re.test(e.name))?.[1] || '📃');
+const human = (b) => (b >= 1 << 20 ? (b / (1 << 20)).toFixed(1) + ' MB' : b >= 1024 ? Math.ceil(b / 1024) + ' KB' : b + ' B');
+const openFile = (p) => post('api/open', { path: p }).then(() => flash('已用默认程序打开')).catch((err) => alert(err.message));
+const copyPath = (p) => { const abs = absPath(p); navigator.clipboard.writeText(abs).then(() => flash('已复制：' + abs)); };
+
+function renderFiles(n) {
   const body = $('#panel-body');
-  const base = n.path ? n.path + '/' : '';
-  const isImg = (f) => /\.(png|jpe?g|gif|svg|webp)$/i.test(f);
-  body.insertAdjacentHTML('beforeend', `<div class="files">${files.map((f) => {
-    const url = 'files/' + encodeURI(base + f.name);
-    const size = f.size > 1 << 20 ? (f.size / (1 << 20)).toFixed(1) + ' MB' : Math.ceil(f.size / 1024) + ' KB';
-    return `<div class="file">${isImg(f.name) ? `<a href="${url}" target="_blank"><img src="${url}" loading="lazy"></a>` : ''}
-      <div class="fname">${esc(f.name)} <span class="d">${size}</span></div>
-      <div class="factions">${/\.pdf$/i.test(f.name) ? `<button data-preview="${url}">预览</button>` : ''}
-        <button data-open="${esc(base + f.name)}">用默认程序打开</button></div></div>`;
-  }).join('')}</div><div id="preview"></div>`);
+  body.className = 'has-files';
+  body.innerHTML = '<div class="ftree"></div><div class="fview" hidden></div>';
+  const tree = body.querySelector('.ftree'), view = body.querySelector('.fview');
+  const cache = new Map();
+  const load = async (rel) => {
+    if (!cache.has(rel)) cache.set(rel, await (await fetch('api/files?path=' + encodeURIComponent(rel), { cache: 'no-store' })).json());
+    return cache.get(rel);
+  };
+  const paint = async () => {
+    const rows = [];
+    const walk = async (rel, depth) => {
+      for (const e of await load(rel)) {
+        const p = rel ? rel + '/' + e.name : e.name;
+        rows.push({ e, p, depth });
+        if (e.dir && S.fopen.has(p)) await walk(p, depth + 1);
+      }
+    };
+    await walk(n.path, 0);
+    if (S.panelNode !== n.path || !tree.isConnected) return;
+    tree.innerHTML = rows.length ? rows.map(({ e, p, depth }) => `<div class="frow${S.fsel === p ? ' sel' : ''}" data-f="${esc(p)}"${e.dir ? ' data-dir="1"' : ''} style="padding-left:${depth * 16 + 6}px">
+      <span class="fcaret">${e.dir ? (S.fopen.has(p) ? '▾' : '▸') : ''}</span><span class="fic">${fileIcon(e)}</span><span class="fname" title="${esc(e.name)}">${esc(e.name)}</span>${e.dir ? '' : `<span class="fsize">${human(e.size)}</span>`}</div>`).join('')
+      : '<p class="empty pad">这个文件夹是空的</p>';
+  };
+  // md：在下面打开，所见即所得地改，停下自动保存（和笔记一样）
+  const openMd = async (p) => {
+    const { note } = await (await fetch('api/note?path=' + encodeURIComponent(p), { cache: 'no-store' })).json();
+    if (!note || S.panelNode !== n.path) return;
+    let mtime = note.mtime;
+    view.hidden = false;
+    view.innerHTML = `<div class="fhead"><span>📝 ${esc(p.slice(n.path ? n.path.length + 1 : 0))}</span><button class="icon" data-fclose title="关闭">×</button></div>`;
+    const ed = mdEditor({
+      md: note.body,
+      base: p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '',
+      editable: true,
+      onSave: async (md) => {
+        try { mtime = (await post('api/note/save', { path: p, body: '\n' + md + '\n', mtime })).mtime; }
+        catch (err) { flash(err.message); }
+      },
+    });
+    view.appendChild(ed.el);
+    view.querySelector('[data-fclose]').onclick = () => { ed.destroy(); view.hidden = true; view.innerHTML = ''; S.fsel = null; paint(); };
+  };
+  const pick = (r) => { S.fsel = r.dataset.f; tree.querySelectorAll('.frow.sel').forEach((x) => x.classList.remove('sel')); r.classList.add('sel'); };
+  tree.onclick = (ev) => {
+    const r = ev.target.closest('[data-f]');
+    if (!r) return;
+    const p = r.dataset.f;
+    if (r.dataset.dir) { S.fopen.has(p) ? S.fopen.delete(p) : S.fopen.add(p); store.set('fopen', [...S.fopen]); return paint(); }
+    pick(r);
+    if (/\.md$/i.test(p)) openMd(p);
+  };
+  tree.ondblclick = (ev) => { const r = ev.target.closest('[data-f]'); if (r && !r.dataset.dir) openFile(r.dataset.f); };
+  tree.oncontextmenu = (ev) => {
+    const r = ev.target.closest('[data-f]');
+    if (!r) return;
+    ev.preventDefault();
+    pick(r);
+    const p = r.dataset.f, md = /\.md$/i.test(p), dir = !!r.dataset.dir;
+    const finder = PATH_SEP() === '/' ? '访达' : '资源管理器';
+    showCtx([
+      md && { label: '在这里打开', run: () => openMd(p) },
+      { label: dir ? `在${finder}中打开` : '用默认程序打开', run: () => openFile(p) },
+      { label: `在${finder}中显示`, run: () => post('api/reveal', { path: p }).catch((err) => alert(err.message)) },
+      { label: '复制路径', run: () => copyPath(p) },
+    ], ev.clientX, ev.clientY);
+  };
+  paint();
+  if (S.fsel && /\.md$/i.test(S.fsel) && S.fsel.startsWith(n.path ? n.path + '/' : '')) openMd(S.fsel);
 }
 
 // ---------- 笔记编辑（导图） ----------
@@ -942,10 +1012,12 @@ const HELP = {
   map: [
     ['导航', '方向键 移动　Home 回到中心主题　空格 展开/收起　Ctrl+/ 展开/收起'],
     ['视图', 'Ctrl+= 放大　Ctrl+- 缩小　Ctrl+0 适应窗口　滚轮平移　Ctrl+滚轮缩放　Ctrl+F 搜索'],
+    ['层级', '数字键 1 / 2 / 3 展开到第几层　0 全部展开'],
     ['分支', '双击 只看这个分支　Esc 退出'],
+    ['右键', '节点上右键：在访达中显示、复制路径、新建、重命名、开 AI、📌 固定、🌐 公开设置'],
     ['搜索', 'Ctrl+F 到搜索框　节点名字和笔记正文都搜　↑↓ 选　Enter 打开并跳到这个词（高亮）　Esc 清空'],
     ['文件夹', 'Tab 新建子文件夹　Enter 新建同级文件夹　F2 重命名（同时改同名笔记）'],
-    ['AI', '虚线小胶囊是 AI：绿点在跑、橙点等你回复　点它右边只显示它的终端（会话）或蜂群图（任务）　文件夹收起时，里面在跑的 AI 也挂在它下面　面板上「＋ Claude / ＋ Codex / ＋ 蜂群任务」在这个文件夹开新的'],
+    ['AI', '虚线小胶囊是 AI：绿点在跑、橙点等你回复　点它右边是它的终端（会话）或蜂群图（任务）　右键文件夹「＋ 在这里开 AI」'],
   ],
   notemap: [
     ['编辑', 'Tab 加子主题　Enter 加同级（后面）　Shift+Enter 加同级（前面）　F2 / 空格 / 双击 改字　Delete 删除'],
@@ -1291,7 +1363,6 @@ $('#panel-body').addEventListener('click', async (e) => {
   const t = e.target;
   if (t.hasAttribute('data-help')) return showHelp();
   if (t.dataset.nv) { S.noteView = t.dataset.nv; store.set('noteView', S.noteView); return renderPanel(true); }
-  if (t.dataset.preview) { $('#preview').innerHTML = `<iframe src="${t.dataset.preview}"></iframe>`; return; }
 });
 
 $('#panel').addEventListener('click', async (e) => {
