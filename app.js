@@ -62,6 +62,11 @@ function accept(text) {
   } else d.tree = S.data.tree;
   d.agents = d.agents || [];
   d.moves = d.moves || [];
+  // 在访达里挪动过的文件夹：📌 跟到新位置（导图里改名的已经在 renameFolder 里处理）
+  for (const m of d.moves) {
+    const fix = (p) => (p === m.from || p.startsWith(m.from + '/') ? m.to + p.slice(m.from.length) : p);
+    if (S.pins?.some((p) => fix(p) !== p)) { S.pins = S.pins.map(fix); store.set('pins', S.pins); }
+  }
   const first = !S.data;
   S.data = d;
   // 导图上看得见的才算变化：AI 的增减、状态、标题、位置（时间戳、最后一句回复变了不重画导图）
@@ -104,7 +109,11 @@ const map = new MindMap($('#map'), {
   nodeClass: nodeClassOf,
   onSelect: (v) => (v.a ? openAgent(v.a.id) : openNode(v.id)),
   onToggle: (v) => { if (!v.a) toggle(v.id); },
-  onActivate: (v) => { if (!v.a && v.n.children.length && v.id !== S.focus) setFocus(v.id); },
+  onActivate: (v) => {
+    if (v.a) return;
+    if (S.mode === 'blog' && v.n.url) { location.hash = '#/' + v.id + '?read'; return; } // 博客：双击文章直接整页阅读
+    if (v.n.children.length && v.id !== S.focus) setFocus(v.id);
+  },
   editText: (v) => v.n?.dir,
   onRename: (v, name) => renameFolder(v.id, name),
   onHelp: () => showHelp(),
@@ -294,11 +303,10 @@ searchBox.oninput = () => {
   clearTimeout(SR.timer);
   if (!q) { results.hidden = true; return; }
   renderResults(q, null);
-  if (S.mode !== 'local') return;
   SR.timer = setTimeout(async () => {
     const my = ++SR.seq;
     let r;
-    try { r = await (await fetch('api/search?q=' + encodeURIComponent(q))).json(); } catch { return; }
+    try { r = S.mode === 'local' ? await (await fetch('api/search?q=' + encodeURIComponent(q))).json() : await blogSearch(q); } catch { return; }
     if (my !== SR.seq || searchBox.value.trim() !== q) return;
     S.contentHits = new Set(r.hits.map((h) => h.path));
     renderMap();
@@ -306,6 +314,26 @@ searchBox.oninput = () => {
     renderResults(q, r);
   }, 120);
 };
+
+// 博客的全文搜索：第一次搜索时下载 search.json（每篇的纯文本），之后都在浏览器里搜；结果格式和本地服务的一样
+let blogIndex;
+async function blogSearch(q) {
+  blogIndex ||= fetch('search.json').then((r) => r.json()).then((list) => list.map((d) => ({ ...d, low: d.x.toLowerCase() })));
+  const list = await blogIndex, ql = q.toLowerCase(), hits = [];
+  for (const d of list) {
+    let i = d.low.indexOf(ql);
+    if (i < 0) continue;
+    const first = i;
+    let count = 0;
+    while (i >= 0 && count < 999) { count++; i = d.low.indexOf(ql, i + ql.length); }
+    const head = (d.x.slice(0, first).match(/^#{1,6}\s+(.+)$/gm) || []).pop()?.replace(/^#+\s+/, '').slice(0, 40) || '';
+    const st = Math.max(0, first - 36);
+    const snippet = (st ? '…' : '') + d.x.slice(st, first + ql.length + 70).replace(/[#*`>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+    hits.push({ path: d.p, count, head, snippet });
+  }
+  hits.sort((a, b) => b.count - a.count);
+  return { q, hits: hits.slice(0, 80), total: hits.length };
+}
 
 function renderResults(q, r) {
   const ql = q.toLowerCase();
@@ -646,7 +674,7 @@ async function renderPanel(force) {
       body.appendChild(editor.el);
     }
     if (local && isInboxSel()) body.insertAdjacentHTML('beforeend', captureHTML());
-    if (inbox.length) body.insertAdjacentHTML('beforeend', `<div class="section"><h4>${isInboxSel() ? '收件箱' : '收件箱中的相关记录'}</h4>${entriesHTML(inbox.slice(0, 50))}</div>`);
+    if (inbox.length) body.insertAdjacentHTML('beforeend', `<div class="section"><h4>${isInboxSel() ? '收件箱' : '收件箱中的相关记录'}</h4>${entriesHTML(inbox.slice(0, 50), isInboxSel() ? null : n)}</div>`);
     if (!n.path) body.insertAdjacentHTML('beforeend', recentList());
   } else if (S.tab === 'files') {
     renderFiles(n, files);
@@ -687,9 +715,61 @@ $('#blog-btn').onclick = async () => {
   b.disabled = false; b.textContent = '🌐 博客预览';
 };
 
+// 发布：生成并列出这次的改动（不上传）→ 你点「确认上传」→ 后台推送，这里显示进度
+$('#pub-btn').onclick = async () => {
+  const dlg = document.createElement('div');
+  dlg.id = 'pub-dlg';
+  dlg.innerHTML = '<div class="box"><h3>发布到博客</h3><p class="msg">正在生成，并和线上对比…</p></div>';
+  document.body.appendChild(dlg);
+  const box = dlg.firstChild, close = () => { clearInterval(dlg.timer); dlg.remove(); };
+  dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.dataset.close !== undefined) close(); });
+  let r;
+  try { r = await post('api/blog/publish/prepare', {}); }
+  catch (err) { box.innerHTML = `<h3>发布到博客</h3><p>没法生成：</p><pre>${esc(err.message)}</pre><div class="row"><button data-close>关闭</button></div>`; return; }
+  if (!r.total) { box.innerHTML = `<h3>发布到博客</h3><p>和线上完全一样，没有要上传的。</p><div class="row"><a href="${esc(r.url)}" target="_blank">${esc(r.url)}</a><button data-close>关闭</button></div>`; return; }
+  const list = (k, label) => r[k].length ? `<h4>${label} ${r[k].length} 篇</h4><ul>${r[k].slice(0, 200).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
+  const grp = Object.entries(r.groups).sort().map(([top, c]) => `${esc(top)}：${Object.entries(c).filter(([, v]) => v).map(([k, v]) => k + ' ' + v).join('，')}`).join('<br>');
+  box.innerHTML = `<h3>发布到博客</h3>
+    <p>公开的文章共 ${r.notes} 篇。这次相对线上：</p>
+    <div class="arts">${list('added', '新增文章') + list('changed', '修改文章') + list('removed', '删除文章') || '<p class="msg">文章没有变化（只有页面文件变了）</p>'}</div>
+    <details><summary class="grp">共 ${r.total} 个文件</summary><p class="grp">${grp}</p></details>
+    <div class="row"><button class="primary" data-push>确认上传</button><button data-close>取消</button><span class="msg">上传到 ${esc(r.remote)}</span></div>`;
+  box.querySelector('[data-push]').onclick = async () => {
+    try { await post('api/blog/publish/push', {}); } catch (err) { box.querySelector('.msg').textContent = '失败：' + err.message; return; }
+    box.querySelector('.row').innerHTML = '<span class="msg">上传中…</span>';
+    dlg.timer = setInterval(async () => {
+      const st = await (await fetch('api/blog/publish/status')).json();
+      const row = box.querySelector('.row');
+      if (st.state === 'pushing') row.innerHTML = `<span class="msg">上传中… 已用 ${Math.round((Date.now() - st.started) / 1000)} 秒</span>`;
+      else if (st.state === 'done') { clearInterval(dlg.timer); row.innerHTML = `<span>✅ 已上传，一两分钟后生效：<a href="${esc(st.url)}" target="_blank">${esc(st.url)}</a></span><button data-close>关闭</button>`; }
+      else if (st.state === 'error') { clearInterval(dlg.timer); row.innerHTML = `<span>上传失败</span><button data-close>关闭</button>`; row.insertAdjacentHTML('afterend', `<pre>${esc(st.log)}</pre>`); }
+    }, 2000);
+  };
+};
+
+// 整页阅读左边的目录树：和导图同一棵树，当前文章所在的分支展开、本篇高亮；点别的文章直接切过去
+function readNav(cur) {
+  const onPath = new Set();
+  for (let c = cur; c; c = c.parent) onPath.add(c.path);
+  const item = (c) => {
+    const label = c.url ? `<a href="#/${esc(c.path)}?read" class="${c === cur ? 'cur' : ''}">${esc(c.name)}</a>` : `<span>${esc(c.name)}</span>`;
+    if (!c.children.length) return `<li>${label}</li>`;
+    return `<li><details${onPath.has(c.path) ? ' open' : ''}><summary>${label}</summary><ul>${c.children.map(item).join('')}</ul></details></li>`;
+  };
+  return `<a class="back" href="#/${esc(cur.path)}">◎ 回到导图</a><ul>${S.data.tree.children.map(item).join('')}</ul>`;
+}
+
+function setReading(on) {
+  if (S.reading === on) return;
+  S.reading = on;
+  document.body.classList.toggle('reading', on);
+  if (on) { S.panelClosed = false; S.panelKey = ''; }
+  else requestAnimationFrame(() => { S.panelKey = ''; map.drawMini(); });
+}
+
 // 博客模式的右侧面板：文章正文取自文章页（构建时已渲染好），只读；「整页阅读」打开文章页
 async function renderBlogPanel(n, force) {
-  const key = 'b:' + n.path;
+  const key = 'b:' + n.path + (S.reading ? ':read' : '');
   if (!force && S.panelKey === key) return;
   S.panelKey = key;
   S.panelNode = n.path;
@@ -701,7 +781,10 @@ async function renderBlogPanel(n, force) {
   top += (m.tags || []).map((t) => `<span class="chip">#${esc(t)}</span>`).join('');
   if (m.date) top += `<span>${esc(m.date)}</span>`;
   top += '</div></div>';
-  if (n.url) top += `<div class="actions"><a href="${esc(n.url)}"><button class="primary">整页阅读 ↗</button></a></div>`;
+  if (S.noteView !== 'map') S.noteView = 'doc';
+  const pv = (k, label) => `<button data-pv="${k}" class="${S.noteView === k ? 'on' : ''}">${label}</button>`;
+  if (n.url && S.reading) top += `<div class="actions"><a href="#/${esc(n.path)}"><button class="primary">← 返回导图</button></a><span class="seg pv">${pv('doc', '文档')}${pv('map', '导图')}</span><a href="${esc(n.url)}" target="_blank" title="这篇文章单独的网页，适合分享给别人"><button>🔗 分享链接</button></a></div>`;
+  else if (n.url) top += `<div class="actions"><span class="seg pv">${pv('doc', '文档')}${pv('map', '导图')}</span><a href="#/${esc(n.path)}?read"><button class="primary">整页阅读</button></a></div>`;
   else if (!n.path && S.data.site.subtitle) top += `<div class="hint">${esc(S.data.site.subtitle)}</div>`;
   $('#panel-top').innerHTML = top;
   $('#tabs').hidden = true;
@@ -716,25 +799,56 @@ async function renderBlogPanel(n, force) {
      ${c.note?.excerpt ? `<div class="e">${esc(c.note.excerpt)}</div>` : ''}</a>`).join('')}</div>` : '';
   if (!n.url) { body.innerHTML = list + (n.path ? '' : recentList()); return; }
   body.innerHTML = '<p class="empty">加载中…</p>';
+  if (S.noteView === 'map' && n.file) {
+    // 文章导图：取笔记原文，标题就是主题（和工作台里的「导图」同一套，只读）
+    let md = '';
+    try { md = await (await fetch(n.url + encodeURIComponent(n.file))).text(); } catch {}
+    if (S.panelNode !== n.path) return;
+    const m = /^\uFEFF?---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(md);
+    body.innerHTML = '';
+    return renderNoteMap(n, { body: m ? md.slice(m[0].length) : md, meta: {}, offset: 0 });
+  }
   let html = '';
   try {
     const doc = new DOMParser().parseFromString(await (await fetch(n.url)).text(), 'text/html');
     html = doc.querySelector('.post-body')?.innerHTML || '';
   } catch {}
   if (S.panelNode !== n.path) return;
-  body.innerHTML = `<div class="post-body blog-body">${html || '<p class="empty">加载失败</p>'}</div>` + list;
+  if (S.reading) {
+    // 整页阅读：正文居中，右边是目录，底部是同一节的上一篇 / 下一篇
+    const sibs = (n.parent?.children || []).filter((c) => c.url);
+    const i = sibs.indexOf(n), prev = sibs[i - 1], next = sibs[i + 1];
+    const pn = (x, label) => x ? `<a href="#/${esc(x.path)}?read"><span class="l">${label}</span>${esc(x.name)}</a>` : '<span></span>';
+    body.innerHTML = `<div class="read-wrap"><nav class="read-nav">${readNav(n)}</nav><div class="read-main"><div class="post-body blog-body">${html || '<p class="empty">加载失败</p>'}</div>${list}
+      <nav class="read-pn">${pn(prev, '上一篇')}${pn(next, '下一篇')}</nav></div><aside class="read-toc"></aside></div>`;
+    const heads = [...body.querySelectorAll('.blog-body h2[id], .blog-body h3[id]')];
+    // 只滚左边目录，让本篇在中间（scrollIntoView 会把整个面板也带着滚）
+    const nav = body.querySelector('.read-nav'), cur = nav.querySelector('.cur');
+    if (cur) nav.scrollTop = cur.offsetTop - nav.offsetTop - nav.clientHeight / 2;
+    body.scrollTop = 0;
+    if (heads.length > 2) body.querySelector('.read-toc').innerHTML = '<div class="toc-h">目录</div>' + heads.map((h) => `<a data-anchor="${esc(h.id)}" class="d${h.tagName[1]}">${esc(h.textContent)}</a>`).join('');
+  } else body.innerHTML = `<div class="post-body blog-body">${html || '<p class="empty">加载失败</p>'}</div>` + list;
   enhance(body.querySelector('.blog-body'));
+  if (S.find) { const q = S.find; S.find = null; highlightFind(body.querySelector('.blog-body'), q); }
 }
 // 面板正文里点到别的文章：在导图上跳过去，不离开首页
 $('#panel-body').addEventListener('click', (e) => {
   if (S.mode !== 'blog') return;
+  // 目录和文内的 #锚点：在面板里滚动过去（不能改地址栏的 #，那是导图的路由）
+  const anchor = e.target.closest('[data-anchor], a[href^="#"]:not([href^="#/"])');
+  if (anchor) {
+    e.preventDefault();
+    const id = anchor.dataset.anchor || decodeURIComponent(anchor.getAttribute('href').slice(1));
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
   const a = e.target.closest('a[href]');
   if (!a || a.target === '_blank') return;
   const u = new URL(a.href, location.href);
   const p = u.origin === location.origin ? byUrl.get(u.pathname) : undefined;
   if (p === undefined) return;
   e.preventDefault();
-  location.hash = '#/' + p;
+  location.hash = '#/' + p + (S.reading ? '?read' : '');
 });
 
 function recentList() {
@@ -786,6 +900,7 @@ function renderAgentPanel(force) {
     top = `<h1 class="title">${esc(agentTitle(a))}</h1><div class="meta"><span class="ag-dot ag-${a.status}"></span><span>${STATUS[a.status]}</span><span class="chip">${esc(kind)}</span><span>${new Date(a.mtime).toLocaleString('zh-CN', { hour12: false })}</span></div>`;
   }
   top += `<div class="actions"><button data-agent-back>← 回到「${esc(index.get(folder)?.name || '工作区')}」</button>`;
+  if (a) top += '<button data-agent-note title="把它的结论追加到这个文件夹笔记的「记录」里（先给你看、可以改）">写入笔记</button>';
   if (a?.sextant?.kind === 'session') top += '<button data-agent-end title="结束这个 agent 进程">结束会话</button>';
   if (a?.sextant?.kind === 'mission') top += '<button data-agent-end title="从 sextant 里删除这个任务">删除任务</button>';
   top += '</div>';
@@ -823,6 +938,30 @@ async function resumeAgent(a) {
     openAgent('sx-session:' + s.name);
   } catch (err) { alert(err.message); }
 }
+// AI 结论写入笔记：会话取最后的提问和回复，蜂群任务取目标、发现和进度；先在小窗里给你改
+async function agentToNote() {
+  const a = S.data.agents.find((x) => x.id === S.agent);
+  if (!a) return;
+  const folder = owner(a.path);
+  const kind = a.sextant?.kind === 'mission' ? '蜂群任务' : TOOL[a.tool] || a.tool;
+  let content = '';
+  if (a.sextant?.kind === 'mission') {
+    try {
+      const d = await (await fetch(sx().url + '/missions/' + encodeURIComponent(a.sextant.ref))).json();
+      const fs = (d.graph?.findings || []).map((f) => '- ' + f.summary);
+      content = [d.goal_spec?.text && '目标：' + d.goal_spec.text, d.progress && '进度：' + d.progress, fs.length && '发现：\n' + fs.join('\n')].filter(Boolean).join('\n\n');
+    } catch { content = a.prompt || ''; }
+  } else content = [a.prompt && '> ' + a.prompt.trim().split('\n').join('\n> '), a.reply].filter(Boolean).join('\n\n');
+  const d = new Date(), pad = (x) => String(x).padStart(2, '0');
+  const head = `### ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${kind}：${agentTitle(a)}`;
+  editDialog(`写入「${index.get(folder)?.name || folder || '工作区'}」的笔记`, head + '\n\n' + (content || '（这里写结论）'), async (text) => {
+    await post('api/note/append', { path: folder, text });
+    flash('已写入笔记的「记录」');
+    S.panelKey = '';
+    refresh();
+  });
+}
+
 async function endAgent() {
   const a = S.data.agents.find((x) => x.id === S.agent);
   if (!a?.sextant) return;
@@ -876,6 +1015,7 @@ function showHelp(kind) {
   $('#help').onclick = (e) => { if (e.target.id === 'help' || e.target.classList.contains('hclose')) $('#help').remove(); };
 }
 addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && S.reading && !$('#help')) { location.hash = '#/' + S.sel; return; }
   if (e.key === 'Escape' && $('#help')) $('#help').remove();
   if (e.key === '?' && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && !e.target.isContentEditable && !e.target.closest?.('.mm')) showHelp();
 });
@@ -965,7 +1105,8 @@ function loadVditor() {
   return vditorReady;
 }
 const editors = new Set(); // 还开着的编辑器：面板重画前先保存并销毁
-(window.requestIdleCallback || setTimeout)(() => loadVditor().catch(() => {}), { timeout: 4000 });
+// 工作台里提前在空闲时加载编辑器；博客用不着（只有文章导图的主题浮层用到时才加载）
+(window.requestIdleCallback || setTimeout)(() => { if (S.mode === 'local') loadVditor().catch(() => {}); }, { timeout: 4000 });
 
 // 笔记里点链接：网址开新标签；file:/// 本地资料用资源管理器 / 默认程序打开；
 // 相对路径：指向别的笔记就跳到那个节点，其它文件用默认程序打开
@@ -978,6 +1119,7 @@ function openLink(url, base) {
   const m = /^(?:(.*)\/)?([^/]+)\.md$/i.exec(p);
   if (m && (m[1] || '').split('/').pop() === m[2] && index.has(m[1] || '')) location.hash = '#/' + m[1];
   else if (index.has(p)) location.hash = '#/' + p;
+  else if (S.mode === 'blog') window.open((index.get(base || '')?.url || '/') + url, '_blank'); // 博客：笔记旁边的附件
   else post('api/open', { path: p }).catch(fail);
 }
 
@@ -987,7 +1129,7 @@ function mdEditor({ md, base, editable, onSave, onLayout = () => {}, onEscape = 
   let vd = null, saved = md.trim(), timer = 0, gone = false;
   const dark = matchMedia('(prefers-color-scheme: dark)').matches;
   // 笔记里的相对路径图片按笔记所在文件夹找
-  const linkBase = 'files/' + (base ? base.split('/').map(encodeURIComponent).join('/') + '/' : '');
+  const linkBase = S.mode === 'blog' ? index.get(base)?.url || '' : 'files/' + (base ? base.split('/').map(encodeURIComponent).join('/') + '/' : '');
   const flush = () => {
     clearTimeout(timer);
     if (!vd || !editable) return;
@@ -1213,6 +1355,7 @@ $('#panel').addEventListener('click', async (e) => {
   if (t.hasAttribute('data-newmission')) return openAgent('new:' + S.sel);
   if (t.hasAttribute('data-agent-back')) return closeAgent();
   if (t.hasAttribute('data-agent-end')) return endAgent();
+  if (t.hasAttribute('data-agent-note')) return agentToNote();
   if (t.hasAttribute('data-agent-resume')) { const a = S.data.agents.find((x) => x.id === S.agent); if (a) resumeAgent(a); return; }
   if (t.hasAttribute('data-create')) {
     const r = await post('api/note/create', { path: S.sel });
@@ -1220,7 +1363,9 @@ $('#panel').addEventListener('click', async (e) => {
     setTimeout(refresh, 300);
   }
 });
-function closePanel() { S.panelClosed = true; $('#panel').hidden = true; $('#resizer').hidden = true; }
+function closePanel() {
+  if (S.reading) { location.hash = '#/' + S.sel; return; }
+  S.panelClosed = true; $('#panel').hidden = true; $('#resizer').hidden = true; }
 $('#close').onclick = closePanel;
 $('#wide').onclick = () => $('#panel').classList.toggle('wide');
 
@@ -1279,7 +1424,46 @@ async function capture(text) {
   throw new Error('写入冲突，请重试');
 }
 
-const entriesHTML = (list) => list.map((e) => `<div class="entry"><div class="when">${esc(e.date)} ${esc(e.time)}</div><div class="text">${esc(e.text)}</div></div>`).join('');
+// 记录列表。工作台里每条带「归入笔记」：在某个文件夹的面板里就归入这个文件夹；在收件箱里归入它 #标签 对应的文件夹，没有标签就问你
+const tagNode = (e) => e.tags.map((t) => [...index.values()].find((n) => n.path && (n.dir === t || n.name === t))).find(Boolean);
+function entriesHTML(list, target) {
+  S.entries = list;
+  return list.map((e, i) => {
+    const to = target || tagNode(e);
+    const btn = S.mode === 'local' ? `<button class="file-btn" data-file-entry="${i}" data-to="${esc(to?.path || '')}" title="追加到笔记的「记录」里，收件箱里这条标为已归入">${to ? `归入「${esc(to.name)}」` : '归入笔记…'}</button>` : '';
+    return `<div class="entry"><div class="when">${esc(e.date)} ${esc(e.time)}${btn}</div><div class="text">${esc(e.text)}</div></div>`;
+  }).join('');
+}
+$('#panel-body').addEventListener('click', async (ev) => {
+  const b = ev.target.closest('[data-file-entry]');
+  if (!b) return;
+  const e = S.entries[+b.dataset.fileEntry];
+  let to = b.dataset.to;
+  if (!to) {
+    const name = prompt('归入哪个文件夹？输入文件夹名（导图上显示的名字或文件夹名）');
+    if (!name) return;
+    const hit = [...index.values()].filter((n) => n.path && (n.name === name.trim() || n.dir === name.trim()));
+    if (!hit.length) return alert('没有找到叫「' + name + '」的文件夹');
+    to = hit[0].path;
+  }
+  try { await post('api/inbox/file', { ...e, path: to }); flash(`已归入「${index.get(to)?.name || to}」的记录`); S.panelKey = ''; refresh(); }
+  catch (err) { alert(err.message); }
+});
+
+// 可以先改再保存的小窗：AI 结论写入笔记用
+function editDialog(title, text, onSave) {
+  const dlg = document.createElement('div');
+  dlg.id = 'pub-dlg';
+  dlg.innerHTML = `<div class="box"><h3>${esc(title)}</h3><textarea class="note-edit"></textarea>
+    <div class="row"><button class="primary" data-ok>写入</button><button data-close>取消</button><span class="msg">会追加到这个文件夹笔记的「记录」一节</span></div></div>`;
+  dlg.querySelector('textarea').value = text;
+  document.body.appendChild(dlg);
+  dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.dataset.close !== undefined) dlg.remove(); });
+  dlg.querySelector('[data-ok]').onclick = async () => {
+    try { await onSave(dlg.querySelector('textarea').value); dlg.remove(); } catch (err) { dlg.querySelector('.msg').textContent = '失败：' + err.message; }
+  };
+  dlg.querySelector('textarea').focus();
+}
 
 function captureHTML() {
   if (S.mode === 'blog' && !ghCfg()) {
@@ -1360,6 +1544,10 @@ function route() {
     return renderCapturePanel();
   }
   let p = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+  // 博客的整页阅读：#/文章路径?read，不离开首页（导图只是藏起来，返回是瞬间的）
+  const reading = S.mode === 'blog' && p.endsWith('?read');
+  if (reading) p = p.slice(0, -5);
+  setReading(reading && !!index.get(p)?.url);
   if (S.mode === 'local' && p === S.data.inboxPath && !index.has(p)) {
     S.sel = p; renderMap(); S.panelKey = ''; return renderPanel();
   }
