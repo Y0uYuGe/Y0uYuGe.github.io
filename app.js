@@ -690,13 +690,24 @@ function inheritedBlog(n) {
   for (let c = n.parent; c; c = c.parent) if (c.blog?.how === 'self') return c.blog.on;
   return false;
 }
+// 「🌐 博客」：先生成并打开本机预览；看满意了再点「检查改动并上传」，列出这次改了哪些文章，确认后才上传
 $('#pub-btn').onclick = async () => {
+  const tab = window.open('about:blank', '_blank'); // 先开标签页（等生成完再开会被浏览器拦）
   const dlg = document.createElement('div');
   dlg.id = 'pub-dlg';
-  dlg.innerHTML = '<div class="box"><h3>博客</h3><p class="msg">正在按 🌐 设置生成，并和线上对比…</p></div>';
+  dlg.innerHTML = '<div class="box"><h3>博客</h3><p class="msg">正在按 🌐 设置生成…</p></div>';
   document.body.appendChild(dlg);
   const box = dlg.firstChild, close = () => { clearInterval(dlg.timer); dlg.remove(); };
   dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.dataset.close !== undefined) close(); });
+  let b;
+  try { b = await post('api/blog/build', {}); }
+  catch (err) { tab?.close(); box.innerHTML = `<h3>博客</h3><p>没法生成：</p><pre>${esc(err.message)}</pre><div class="row"><button data-close>关闭</button></div>`; return; }
+  if (tab) tab.location = b.preview;
+  box.innerHTML = `<h3>博客</h3><p>已生成 ${b.notes} 篇文章，${tab ? '本机预览已在新标签页打开' : `<a href="${esc(b.preview)}" target="_blank">打开本机预览 ↗</a>`}（和上传后的样子一样）。</p>
+    ${b.broken ? `<p class="msg">注意：有 ${b.broken} 个坏链接，修好之前不能上传</p>` : ''}
+    <div class="row"><button class="primary" data-check${b.broken ? ' disabled' : ''}>检查改动并上传…</button><button data-close>关闭</button></div>`;
+  await new Promise((ok) => { box.querySelector('[data-check]').onclick = ok; });
+  box.innerHTML = '<h3>博客</h3><p class="msg">正在和线上对比…</p>';
   let r;
   try { r = await post('api/blog/publish/prepare', {}); }
   catch (err) { box.innerHTML = `<h3>博客</h3><p>没法生成：</p><pre>${esc(err.message)}</pre><div class="row"><button data-close>关闭</button></div>`; return; }
@@ -914,7 +925,7 @@ function renderAgentPanel(force) {
   $('#crumbs').innerHTML = chain.map((c) => `<a href="#/${esc(c.path)}">${esc(c.name)}</a>`).join(' / ');
   // 和笔记面板同一个样子：面包屑（点文件夹名回去）；标题、状态、类型、时间一行，右边是操作
   let title, meta = '', acts = '';
-  if (isNew) { title = '新建 AI'; meta = `<span>会话或蜂群任务 · 在「${esc(index.get(folder)?.name || folder || '工作区')}」里</span>`; }
+  if (isNew) { title = '新建 AI'; meta = `<span>会话或蜂群任务 · 在「${esc(index.get(folder)?.name || folder || S.data.tree.name)}」里</span>`; }
   else if (!a) title = '这个 AI 已经结束';
   else {
     const kind = a.sextant?.kind === 'mission' ? '蜂群任务' : (TOOL[a.tool] || a.tool) + ' 会话';
@@ -978,7 +989,7 @@ async function agentToNote() {
   } else content = [a.prompt && '> ' + a.prompt.trim().split('\n').join('\n> '), a.reply].filter(Boolean).join('\n\n');
   const d = new Date(), pad = (x) => String(x).padStart(2, '0');
   const head = `### ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${kind}：${agentTitle(a)}`;
-  editDialog(`写入「${index.get(folder)?.name || folder || '工作区'}」的笔记`, head + '\n\n' + (content || '（这里写结论）'), async (text) => {
+  editDialog(`写入「${index.get(folder)?.name || folder || S.data.tree.name}」的笔记`, head + '\n\n' + (content || '（这里写结论）'), async (text) => {
     await post('api/note/append', { path: folder, text });
     flash('已写入笔记的「记录」');
     S.panelKey = '';
@@ -1302,7 +1313,7 @@ function renderNoteMap(n, note) {
   });
   const op = (fn, editNew) => (v) => ed.run((d) => fn(d, ed.find(v.id) || d.root), { editNew });
   mm = new MindMap(box, {
-    layout: 'right',
+    layout: 'both', // 左右两边展开（像 XMind），同样的内容宽度减半，窄面板里也能看到深层标题
     minimap: false,
     render: (v) => `<span class="mm-label">${esc(NM.plain(v.x.text) || '（空）')}</span>${v.collapsed ? `<span class="mm-toggle">${v.children.length}</span>` : ''}`,
     nodeClass: (v) => 'note-' + v.x.kind,
@@ -1343,7 +1354,7 @@ function renderNoteMap(n, note) {
   const sel = (S.noteSel && S.noteSel.path === n.path && ed.find(S.noteSel.id)) || ed.doc.root;
   mm.select(sel.id, false);
   // 第一次打开这份笔记的导图时适应窗口（太大就按能看清的大小显示）
-  if (S.noteMapFitted !== n.path) { S.noteMapFitted = n.path; requestAnimationFrame(() => { mm.fit(0.75); mm.reveal(sel.id); }); }
+  if (S.noteMapFitted !== n.path) { S.noteMapFitted = n.path; requestAnimationFrame(() => { mm.fit(0.55); mm.reveal(sel.id); }); } // 尽量整张图都放得下
   mm.el.focus({ preventScroll: true });
   S.noteMap = mm;
 }

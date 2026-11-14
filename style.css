@@ -466,3 +466,4 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 #panel-top h1.title.ptitle { font-size: 22px; line-height: 1.35; white-space: normal; overflow: visible; max-width: none; margin: 2px 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 #panel-top .titlerow { padding-bottom: 0; }
 #panel-top .titlerow .tcrumbs { max-width: 55%; }
+#pub-dlg button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
