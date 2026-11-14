@@ -235,9 +235,12 @@ function mapTree() {
 
 function renderMap() {
   if (!index.has(S.focus)) S.focus = '';
-  map.setData(mapTree());
-  map.render();
-  if (S.sel !== null && index.has(S.sel)) map.select(S.sel, false);
+  if (S.leftView === 'tree') renderTree();
+  else {
+    map.setData(mapTree());
+    map.render();
+    if (S.sel !== null && index.has(S.sel)) map.select(S.sel, false);
+  }
   const chain = [];
   for (let c = index.get(S.focus); c && c.path; c = c.parent) chain.unshift(c);
   $('#focus-crumbs').innerHTML = chain.length
@@ -245,6 +248,57 @@ function renderMap() {
     : '';
   document.querySelectorAll('#map-tools [data-level]').forEach((b) => b.classList.toggle('on', +b.dataset.level === S.level));
 }
+
+// ---------- 左边：导图 / 目录 ----------
+// 同一棵树的两种看法：数据都来自 mapTree()，所以展开了哪些、选中哪个、搜索过滤、挂着的 AI 都是同步的
+S.leftView = store.get('leftView', 'map');
+function setLeftView(v) {
+  const was = S.leftView;
+  S.leftView = v;
+  store.set('leftView', v);
+  document.body.classList.toggle('left-tree', v === 'tree');
+  $('#tree').hidden = v !== 'tree';
+  document.querySelectorAll('#left-view [data-left]').forEach((b) => b.classList.toggle('on', b.dataset.left === v));
+  if (!S.data) return;
+  renderMap();
+  if (v === 'map' && was !== 'map') requestAnimationFrame(() => { map.fit(); if (S.sel) map.reveal(S.sel); });
+}
+function renderTree() {
+  const box = $('#tree');
+  const row = (v, depth) => {
+    const pad = `padding-left:${depth * 14 + 6}px`;
+    if (v.a) return `<div class="tr-row tr-agent${S.agent === v.a.id ? ' sel' : ''}" data-agent="${esc(v.a.id)}" style="${pad}"><span class="tr-caret"></span>${agentNode(v.a, v.from)}</div>`;
+    const n = v.n;
+    const caret = n.children.length ? `<span class="tr-caret" data-toggle="${esc(v.id)}">${v.collapsed ? '▸' : '▾'}</span>` : '<span class="tr-caret"></span>';
+    let label = `${isPinned(n.path) && n.path ? '<span class="pin">📌</span>' : ''}<span class="tr-name" title="${esc(n.name)}">${esc(depth ? shortName(n) : n.name)}</span>`;
+    if (n.note?.status) label += `<span class="status">${esc(n.note.status)}</span>`;
+    if (S.mode === 'local' && n.blog?.on) label += `<span class="pub${n.blog.how === 'self' ? '' : ' faint'}">🌐</span>`;
+    if (n.children.length && v.collapsed) label += `<span class="tr-n">${n.children.length}</span>`;
+    const cls = ['tr-row', v.id === S.sel && !S.agent && 'sel', v.hit && 'hit', n.note && 'has-note'].filter(Boolean).join(' ');
+    return `<div class="${cls}" data-path="${esc(v.id)}" style="${pad}">${caret}${label}</div>` + (v.collapsed ? '' : v.children.map((c) => row(c, depth + 1)).join(''));
+  };
+  const top = box.scrollTop;
+  box.innerHTML = row(mapTree(), 0);
+  box.scrollTop = top;
+  if (S.treeSel !== S.sel) { S.treeSel = S.sel; box.querySelector('.tr-row.sel')?.scrollIntoView({ block: 'nearest' }); }
+}
+$('#left-view').addEventListener('click', (e) => { const b = e.target.closest('[data-left]'); if (b) setLeftView(b.dataset.left); });
+$('#tree').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-toggle]');
+  if (t) return toggle(t.dataset.toggle);
+  const ag = e.target.closest('[data-agent]');
+  if (ag) return openAgent(ag.dataset.agent);
+  const r = e.target.closest('[data-path]');
+  if (r) openNode(r.dataset.path);
+});
+$('#tree').addEventListener('dblclick', (e) => {
+  const r = e.target.closest('[data-path]');
+  if (!r) return;
+  const n = index.get(r.dataset.path);
+  if (S.mode === 'blog' && n?.url) location.hash = '#/' + n.path + '?read'; // 博客：双击文章整页阅读
+  else if (n?.children.length) toggle(n.path);
+});
+setLeftView(S.leftView);
 
 function saveOpen() { store.set('open', [...S.open]); }
 function toggle(p) {

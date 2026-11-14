@@ -452,3 +452,25 @@ body.blog #panel-head { padding: 4px 10px 2px 16px; }
 body.blog #panel-body { padding: 10px 16px 40px; }
 body.blog #panel-top .titlerow h1.title { flex: 0 1 auto; min-width: 35%; }
 body.blog #panel-top .titlerow .meta { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; mask-image: linear-gradient(to right, #000 85%, transparent); }
+
+/* 左边的「目录」：和导图同一棵树 */
+#tree { position: absolute; inset: 0; overflow: auto; padding: 52px 10px 24px; font-size: 13.5px; }
+body.left-tree #map, body.left-tree #layout-btn, body.left-tree #fit-btn { display: none !important; }
+#left-view { margin-right: 6px; }
+#left-view button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tr-row { display: flex; align-items: center; gap: 4px; padding-top: 2px; padding-bottom: 2px; padding-right: 8px; border-radius: 5px; cursor: pointer; white-space: nowrap; line-height: 1.5; }
+.tr-row:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.tr-row.sel { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-weight: 600; }
+.tr-row.hit .tr-name { background: color-mix(in srgb, #ffd43b 45%, transparent); border-radius: 3px; }
+.tr-row:not(.has-note) .tr-name { color: var(--muted); }
+.tr-row.sel .tr-name { color: inherit; }
+.tr-caret { width: 14px; flex: none; text-align: center; color: var(--muted); font-size: 11px; }
+.tr-caret[data-toggle]:hover { color: var(--accent); }
+.tr-name { overflow: hidden; text-overflow: ellipsis; }
+.tr-row .status { font-size: 11px; color: var(--muted); margin-left: 4px; }
+.tr-n { font-size: 11px; color: var(--muted); margin-left: 2px; }
+.tr-agent { font-size: 12.5px; }
+/* 目录比导图窄得多：左边收成窄栏，剩下的都给文章 */
+body.left-tree #map-view { flex: 0 0 340px; }
+body.left-tree #panel, body.left-tree.reading #panel { flex: 1; width: auto !important; }
+body.left-tree #resizer { display: none !important; }

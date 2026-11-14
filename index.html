@@ -26,7 +26,9 @@
 <main>
   <section id="map-view">
     <div id="map"></div>
+    <div id="tree" hidden></div>
     <div id="map-tools" class="floating">
+      <span class="seg" id="left-view" title="左边的看法：导图 / 目录（同一棵树，展开和选中都同步）"><button data-left="map">导图</button><button data-left="tree">目录</button></span>
       <span id="focus-crumbs"></span>
       <span class="seg" title="展开到第几层"><button data-level="1">1</button><button data-level="2">2</button><button data-level="3">3</button><button data-level="99">全部</button></span>
       <button id="layout-btn" title="切换布局：右侧展开 / 左右平衡">⇆</button>
