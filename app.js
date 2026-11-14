@@ -634,7 +634,8 @@ async function renderPanel(force) {
   const views = `<span class="seg pv">${note ? pv('doc', '文档', '直接编辑，停下 0.8 秒自动保存') + pv('map', '导图', '标题就是主题：点主题在旁边打开它的笔记 · Tab 子主题 · Enter 同级 · F2 改字 · ? 全部快捷键') : ''}${local ? pv('ai', aiTabLabel(n), '这个文件夹（含子文件夹）里的 AI：在跑的、等你回复的、已结束的') : ''}</span>`;
   // 「文档 / 导图 / 附件」放在标题这一行的右边（和博客一样），工具按钮在下一行
   const wide = n.path ? `${S.reading ? '<button data-wide title="还原宽度（Esc）">⤡</button>' : '<button data-wide title="放大：右边拉宽，导图留在左边（也可以在导图上双击）">⤢</button>'}` : '';
-  if (views || wide) $('#panel-top .titlerow').insertAdjacentHTML('beforeend', `<span class="bacts">${views}${wide}</span>`);
+  const finder = local ? `<button data-reveal="${esc(n.path)}" title="在${PATH_SEP() === '/' ? '访达' : '资源管理器'}中打开${''}">📂</button>` : '';
+  $('#panel-top .titlerow').insertAdjacentHTML('beforeend', `<span class="bacts">${views}${finder}${wide}</span>`);
   $('#tabs').hidden = true;
 
   $('#panel').hidden = !!S.panelClosed;
@@ -900,18 +901,20 @@ function renderAgentPanel(force) {
   const chain = [];
   for (let c = index.get(folder); c; c = c.parent) chain.unshift(c);
   $('#crumbs').innerHTML = chain.map((c) => `<a href="#/${esc(c.path)}">${esc(c.name)}</a>`).join(' / ') + ' / <b>' + (isNew ? '新建' : 'AI') + '</b>';
-  let top;
-  if (isNew) top = `<h1 class="title">新建</h1><div class="meta"><span>蜂群任务，或者一个 agent 的会话 · 在「${esc(index.get(folder)?.name || folder)}」里</span></div>`;
-  else if (!a) top = `<h1 class="title">这个 AI 已经结束</h1>`;
+  // 和笔记面板同一个样子：面包屑（点文件夹名回去）；标题、状态、类型、时间一行，右边是操作
+  let title, meta = '', acts = '';
+  if (isNew) { title = '新建 AI'; meta = `<span>会话或蜂群任务 · 在「${esc(index.get(folder)?.name || folder || '工作区')}」里</span>`; }
+  else if (!a) title = '这个 AI 已经结束';
   else {
     const kind = a.sextant?.kind === 'mission' ? '蜂群任务' : (TOOL[a.tool] || a.tool) + ' 会话';
-    top = `<h1 class="title">${esc(agentTitle(a))}</h1><div class="meta"><span class="ag-dot ag-${a.status}"></span><span>${STATUS[a.status]}</span><span class="chip">${esc(kind)}</span><span>${new Date(a.mtime).toLocaleString('zh-CN', { hour12: false })}</span></div>`;
+    title = agentTitle(a);
+    meta = `<span class="ag-dot ag-${a.status}"></span><span>${STATUS[a.status]}</span><span class="chip">${esc(kind)}</span><span>${ago(a.mtime)}</span>`;
+    acts += '<button data-agent-note title="把它的结论追加到这个文件夹笔记的「记录」里（先给你看、可以改）">写入笔记</button>';
+    if (a.sextant?.kind === 'session') acts += '<button data-agent-end title="结束这个 agent 进程">结束会话</button>';
+    if (a.sextant?.kind === 'mission') acts += '<button data-agent-end title="从 sextant 里删除这个任务">删除任务</button>';
   }
-  top += `<div class="actions"><button data-agent-back>← 回到「${esc(index.get(folder)?.name || '工作区')}」</button>`;
-  if (a) top += '<button data-agent-note title="把它的结论追加到这个文件夹笔记的「记录」里（先给你看、可以改）">写入笔记</button>';
-  if (a?.sextant?.kind === 'session') top += '<button data-agent-end title="结束这个 agent 进程">结束会话</button>';
-  if (a?.sextant?.kind === 'mission') top += '<button data-agent-end title="从 sextant 里删除这个任务">删除任务</button>';
-  top += '</div>';
+  acts += `<button data-reveal="${esc(folder)}" title="在${PATH_SEP() === '/' ? '访达' : '资源管理器'}中打开${'它的工作目录'}">📂</button>`;
+  let top = `<div class="titlerow"><h1 class="title" title="${esc(title)}">${esc(title)}</h1><div class="meta">${meta}</div><span class="bacts">${acts}</span></div>`;
   $('#panel-top').innerHTML = top;
   $('#tabs').hidden = true;
   $('#panel').hidden = !!S.panelClosed;
@@ -1349,7 +1352,8 @@ $('#panel').addEventListener('click', async (e) => {
   if (t.dataset.open !== undefined) return post('api/open', { path: t.dataset.open }).catch((err) => alert(err.message));
   if (t.dataset.launch) return post('api/launch', { path: S.sel, tool: t.dataset.launch });
   if (t.closest('[data-wide]')) return setReading(!S.reading);
-  if (t.hasAttribute('data-agent-back')) return closeAgent();
+  const rv = t.closest('[data-reveal]');
+  if (rv) return post('api/open', { path: rv.dataset.reveal }).catch((err) => alert(err.message));
   if (t.hasAttribute('data-agent-end')) return endAgent();
   if (t.hasAttribute('data-agent-note')) return agentToNote();
   if (t.hasAttribute('data-agent-resume')) { const a = S.data.agents.find((x) => x.id === S.agent); if (a) resumeAgent(a); return; }
@@ -1363,6 +1367,15 @@ function closePanel() {
   if (S.reading) { setReading(false); return; }
   S.panelClosed = true; $('#panel').hidden = true; $('#resizer').hidden = true; }
 $('#close').onclick = closePanel;
+$('#crumbs').addEventListener('click', (e) => {
+  const link = e.target.closest('a[href^="#/"]');
+  if (!link || !S.agent) return;
+  // 在 AI 面板里点面包屑：回到那个文件夹（地址没变时 hashchange 不会触发，要自己关掉）
+  e.preventDefault();
+  const p = decodeURIComponent(link.getAttribute('href').slice(2));
+  S.agent = null;
+  if (S.sel === p) closeAgent(); else location.hash = '#/' + p;
+});
 $('#wide').onclick = () => $('#panel').classList.toggle('wide');
 
 // 中间的分隔条：任何时候都能拖；平时和放大后各记各的宽度
