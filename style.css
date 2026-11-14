@@ -37,7 +37,10 @@ a { color: var(--accent); }
 #work-count { margin-left: 4px; font-size: 12px; }
 #work-count.live::before { content: "●"; color: var(--running); margin-right: 2px; }
 #search { width: 240px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
-#pub-btn { margin-left: auto; }
+#ai-btn { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
+#ai-btn .ag-dot { margin-right: 2px; }
+#pub-btn { margin-left: 8px; }
+#ai-btn[hidden] + #pub-btn { margin-left: auto; }
 #banner { background: color-mix(in srgb, var(--warn) 12%, var(--card)); border-bottom: 1px solid var(--line); padding: 6px 16px; font-size: 13px; }
 #banner .move { padding: 2px 0; }
 #banner .move button { margin-left: 6px; }
@@ -446,3 +449,14 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 .fic { width: 18px; flex: none; text-align: center; font-size: 12px; }
 .fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .fsize { color: var(--muted); font-size: 11px; flex: none; }
+
+/* AI 标签页：按状态分组的列表 */
+.ai-head { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px; }
+.ai-group h4 { display: flex; align-items: center; gap: 6px; }
+.ai-row { display: flex; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.ai-row:hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.ai-row .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-row .sub { font-size: 11px; color: var(--muted); background: var(--soft); border-radius: 8px; padding: 0 6px; white-space: nowrap; }
+.ai-row .d { font-size: 11px; color: var(--muted); white-space: nowrap; margin-left: 0; }
+.ai-n { font-weight: 600; color: var(--running); margin-left: 2px; }
+.ai-head button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }

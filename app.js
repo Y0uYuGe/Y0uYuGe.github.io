@@ -23,7 +23,7 @@ const S = {
 const index = new Map(); // path -> 工作区节点
 const byUrl = new Map(); // 博客：文章页地址 -> 节点 path
 
-const STATUS = { running: '进行中', waiting: '待处理', todo: '待办', done: '已完成' };
+const STATUS = { running: '进行中', waiting: '等你回复', todo: '待办', done: '已结束' };
 const STATUS_ORDER = ['running', 'waiting', 'todo', 'done'];
 
 // ---------- 数据 ----------
@@ -75,6 +75,7 @@ function accept(text) {
   S.mapKey = mapKey;
   if (first) { $('#brand').textContent = d.site.title; document.title = d.site.title; }
   updateWorkCount();
+  updateAiBtn();
   renderBanner();
   if (S.sel === null || (S.wantPath && index.has(S.wantPath))) route();
   else { if (mapChanged) renderMap(); renderPanel(); }
@@ -265,6 +266,8 @@ function workspaceNode(v) {
     if (n.blog?.on) h += `<span class="pub${n.blog.how === 'self' ? '' : ' faint'}" title="${BLOG_HOW[n.blog.how]}">🌐</span>`;
     if (S.data.moves.some((m) => m.to === n.path)) h += '<span class="moved" title="这个文件夹刚被移动过">↪</span>';
   }
+  // 收起的文件夹：下面的 AI 有几个在跑、几个等你、几个待办（展开时 AI 就挂在下面）
+  if (S.mode === 'local' && v.closed) h += badges(agentsUnder(n.path));
   if (n.children.length && !S.query) h += `<span class="mm-toggle">${v.closed ? n.children.length : '−'}</span>`;
   return h;
 }
@@ -578,7 +581,7 @@ const liquid = (s) => s
 
 
 function panelKeyOf(n, sessions) {
-  return JSON.stringify([n.path, n.note?.mtime, sessions.length, S.tab, S.noteView, !!S.reading]);
+  return JSON.stringify([n.path, n.note?.mtime, sessions.map((a) => a.id + a.status + a.title), S.tab, S.noteView, !!S.reading]);
 }
 
 async function renderPanel(force) {
@@ -628,7 +631,7 @@ async function renderPanel(force) {
   if (S.noteView !== 'map') S.noteView = 'doc';
   const cur = S.tab === 'files' ? 'files' : S.noteView;
   const pv = (k, label, tip) => `<button data-pv="${k}" class="${cur === k ? 'on' : ''}" title="${tip}">${label}</button>`;
-  const views = `<span class="seg pv">${note ? pv('doc', '文档', '直接编辑，停下 0.8 秒自动保存') + pv('map', '导图', '标题就是主题：点主题在旁边打开它的笔记 · Tab 子主题 · Enter 同级 · F2 改字 · ? 全部快捷键') : ''}${local ? pv('files', '文件', '这个文件夹里的所有文件：md 在这里打开来改，其它双击用默认程序打开') : ''}</span>`;
+  const views = `<span class="seg pv">${note ? pv('doc', '文档', '直接编辑，停下 0.8 秒自动保存') + pv('map', '导图', '标题就是主题：点主题在旁边打开它的笔记 · Tab 子主题 · Enter 同级 · F2 改字 · ? 全部快捷键') : ''}${local ? pv('files', '文件', '这个文件夹里的所有文件：md 在这里打开来改，其它双击用默认程序打开') : ''}${local ? pv('ai', aiTabLabel(n), '这个文件夹（含子文件夹）里的 AI：在跑的、等你回复的、已结束的') : ''}</span>`;
   // 「文档 / 导图 / 附件」放在标题这一行的右边（和博客一样），工具按钮在下一行
   const wide = n.path ? `${S.reading ? '<button data-wide title="还原宽度（Esc）">⤡</button>' : '<button data-wide title="放大：右边拉宽，导图留在左边（也可以在导图上双击）">⤢</button>'}` : '';
   if (views || wide) $('#panel-top .titlerow').insertAdjacentHTML('beforeend', `<span class="bacts">${views}${wide}</span>`);
@@ -664,6 +667,8 @@ async function renderPanel(force) {
     }
     if (!empty && list) body.insertAdjacentHTML('beforeend', list);
     if (!n.path) body.insertAdjacentHTML('beforeend', recentList());
+  } else if (S.tab === 'ai') {
+    renderAiList(n);
   } else if (S.tab === 'files') {
     renderFiles(n);
   }
@@ -812,6 +817,58 @@ function recentList() {
     `<a href="#/${esc(n.path)}"><span class="t">${esc(n.note.title || n.name)}</span><span class="d">${esc(n.note.date)}</span>
      ${n.note.excerpt ? `<div class="e">${esc(n.note.excerpt)}</div>` : ''}</a>`).join('')}</div>`;
 }
+
+// ---------- AI 的状态管理：每个文件夹的「AI」标签页 + 顶栏总览 ----------
+const ago = (t) => {
+  const m = Math.round((Date.now() - t) / 60000);
+  return m < 1 ? '刚刚' : m < 60 ? m + ' 分钟前' : m < 1440 ? Math.round(m / 60) + ' 小时前' : new Date(t).toLocaleDateString('zh-CN');
+};
+const active = (list) => list.filter((a) => a.status === 'running' || a.status === 'waiting');
+function aiTabLabel(n) {
+  const a = active(agentsUnder(n.path)).length;
+  return a ? `AI <b class="ai-n">${a}</b>` : 'AI';
+}
+function renderAiList(n) {
+  const list = agentsUnder(n.path).sort(byStatus);
+  const groups = [['running', '进行中'], ['waiting', '等你回复'], ['todo', '待办'], ['done', '已结束（最近 24 小时）']];
+  let h = `<div class="ai-head"><button class="primary" data-ai-new>＋ 新建</button><span class="hint">在「${esc(n.path ? n.name : S.data.tree.name)}」里开一个 AI 会话或蜂群任务</span></div>`;
+  if (!list.length) h += '<p class="empty pad">这里还没有 AI。</p>';
+  for (const [st, label] of groups) {
+    const g = list.filter((a) => a.status === st);
+    if (!g.length) continue;
+    h += `<div class="section ai-group"><h4><span class="ag-dot ag-${st}"></span>${label} · ${g.length}</h4>${g.map((a) => {
+      const where = owner(a.path), sub = where !== n.path ? index.get(where)?.name || where : '';
+      const kind = a.sextant?.kind === 'mission' ? '蜂群' : TOOL[a.tool] || a.tool;
+      return `<div class="ai-row" data-ai="${esc(a.id)}" title="${esc(a.reply || a.prompt || '')}"><span class="ag-tool">${esc(kind)}</span><span class="t">${esc(agentTitle(a))}</span>${sub ? `<span class="sub">${esc(sub)}</span>` : ''}<span class="d">${ago(a.mtime)}</span></div>`;
+    }).join('')}</div>`;
+  }
+  $('#panel-body').innerHTML = h;
+}
+$('#panel-body').addEventListener('click', (e) => {
+  if (e.target.closest('[data-ai-new]')) return openAgent('new:' + (S.sel || ''));
+  const r = e.target.closest('[data-ai]');
+  if (r) openAgent(r.dataset.ai);
+});
+$('#panel-body').addEventListener('contextmenu', (e) => {
+  const r = e.target.closest('[data-ai]');
+  const a = r && S.data.agents.find((x) => x.id === r.dataset.ai);
+  if (!a) return;
+  e.preventDefault();
+  showCtx(agentMenu(a), e.clientX, e.clientY);
+});
+// 顶栏：整个工作区有 AI 在跑或等你时显示，点了打开全部 AI 的列表
+function updateAiBtn() {
+  const b = $('#ai-btn');
+  const run = S.data.agents.filter((a) => a.status === 'running').length, wait = S.data.agents.filter((a) => a.status === 'waiting').length;
+  b.hidden = S.mode !== 'local' || !(run + wait);
+  b.innerHTML = [run && `<span class="ag-dot ag-running"></span>${run} 在跑`, wait && `<span class="ag-dot ag-waiting"></span>${wait} 等你`].filter(Boolean).join('　');
+}
+$('#ai-btn').onclick = () => {
+  if (S.view !== 'map') setView('map');
+  if (S.agent) closeAgent();
+  if (S.sel === '') { S.tab = 'ai'; S.panelClosed = false; S.panelKey = ''; renderPanel(true); }
+  else { S.wantTab = 'ai'; location.hash = '#/'; }
+};
 
 // ---------- 导图上的 AI：点了在右边只看它的终端 / 蜂群图（工作台自己画，见 agents.js） ----------
 // S.agent：选中的 AI 的 id；'new:<文件夹>' 表示在这个文件夹新建会话或蜂群任务
@@ -1448,6 +1505,7 @@ function route() {
   // 在「📌 正在做」里打开不属于固定分支的节点（比如搜索结果）：回到「全部笔记」，不然图上找不到它
   if (S.view === 'work' && p && !S.pins.some((x) => p === x || p.startsWith(x + '/'))) setView('map');
   if (S.sel !== p) S.tab = 'note';
+  if (S.wantTab) { S.tab = S.wantTab; S.wantTab = null; }
   if (S.sel !== null) S.panelClosed = false; // 用户选了节点：打开面板
   S.agent = null; // 选了文件夹：右边回到文件夹
   S.sel = p;
