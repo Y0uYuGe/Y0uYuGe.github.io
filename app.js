@@ -1374,11 +1374,11 @@ $('#panel').addEventListener('click', async (e) => {
     setTimeout(refresh, 300);
   }
 });
-// 路径和名字放一行：面包屑挪到标题前面（灰色小字），面板顶上不再单独占一行
+// 名字和路径放一行：先是名字，后面跟着灰色的路径（点哪一级就去哪），面板顶上不再单独占一行
 function inlineCrumbs() {
-  const c = $('#crumbs').innerHTML.trim(), row = $('#panel-top .titlerow');
+  const c = $('#crumbs').innerHTML.trim(), h1 = $('#panel-top .titlerow h1');
   $('#crumbs').innerHTML = '';
-  if (c && row) row.insertAdjacentHTML('afterbegin', `<span class="tcrumbs">${c}<span class="sep">/</span></span>`);
+  if (c && h1) h1.insertAdjacentHTML('afterend', `<span class="tcrumbs">${c}</span>`);
 }
 
 function closePanel() {

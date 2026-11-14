@@ -395,7 +395,7 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 #panel-top .bacts button.primary { background: var(--accent); color: #fff; }
 #panel-head { padding: 4px 10px 2px 16px; }
 #panel-body { padding: 10px 16px 40px; }
-#panel-top .titlerow h1.title { flex: 0 1 auto; min-width: 35%; }
+#panel-top .titlerow h1.title { flex: 0 1 auto; min-width: 0; max-width: 60%; } /* 名字按实际长度，路径紧跟在后面 */
 #panel-top .titlerow .meta { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; mask-image: linear-gradient(to right, #000 85%, transparent); }
 
 /* 博客正文：和工作台编辑器（.mde .vditor-reset）同一套排版，两边看起来一样 */
@@ -453,6 +453,6 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 .tcrumbs { flex: 0 1 auto; min-width: 0; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12.5px; }
 .tcrumbs a { color: var(--muted); text-decoration: none; }
 .tcrumbs a:hover { color: var(--accent); }
-.tcrumbs .sep { margin: 0 4px; }
+.tcrumbs { margin-left: 2px; }
 #panel-top .titlerow.agent .meta { flex: none; mask-image: none; }
 .ag-status { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
