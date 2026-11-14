@@ -23,22 +23,16 @@
 <h2 id="main">main</h2>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-001-a08abc1805.png" alt="图片"></p>
 <h2 id="work">work</h2>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-002-c020761aef.png" alt="图片">
-这里的符号转换漏洞很明显：当 nbytes 作为有符号数为 -1 时，可以导致溢出</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-002-c020761aef.png" alt="图片"><br>这里的符号转换漏洞很明显：当 nbytes 作为有符号数为 -1 时，可以导致溢出</p>
 <h2 id="read_int">read_int</h2>
-<p>将输入字符转换为 int 类型（负数字符也会被转换）
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-003-26bf9e446c.png" alt="图片"></p>
+<p>将输入字符转换为 int 类型（负数字符也会被转换）<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-003-26bf9e446c.png" alt="图片"></p>
 <h2 id="read_n">read_n</h2>
-<p>将字符输入到字符数组中
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-004-162ea82599.png" alt="图片"></p>
+<p>将字符输入到字符数组中<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-004-162ea82599.png" alt="图片"></p>
 <h1 id="思路">思路</h1>
 <h2 id="onegadget">onegadget</h2>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-005-9b1e530327.png" alt="图片">
-ROPgadget</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-006-c2cea2f526.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-007-c990d15d92.png" alt="图片"></p>
-<p>先用 patchelf 替换库
-然后通过输入字符 -1 绕过检查——-1 对应 0xffffffff（32 位）——下一次读取便会导致溢出。构造 payload：先用 puts 函数的地址覆盖返回地址，接着是 work 函数的地址（作为 puts 的返回地址），然后是 puts 的参数，即 puts 的 GOT 表地址。第一次调用 work 即可泄露 puts 地址（先用 one_gadget 寻找可用的 gadget；我最终选择了 0x6749f 处的这个，因为 esi 通常满足其要求，而针对 eax 的 gadget 比较容易找到，如上图所示），从而得到 libc 基地址。然后在第二次调用 work 时，再次输入字符 -1，并用 pop eax; ret 这条 gadget 的地址覆盖返回地址，紧接着是 0，最后是 onegadget 地址——成功获取 shell</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-005-9b1e530327.png" alt="图片"><br>ROPgadget</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-006-c2cea2f526.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/HWS-CTF%20%E7%AC%AC7%E5%AD%A3%20%E5%B1%B1%E4%B8%9C%E5%A4%A7%E5%AD%A6%E7%AB%99-PWN-%5Binverse%5D/assets/csdn-134496650/image-007-c990d15d92.png" alt="图片"></p>
+<p>先用 patchelf 替换库<br>然后通过输入字符 -1 绕过检查——-1 对应 0xffffffff（32 位）——下一次读取便会导致溢出。构造 payload：先用 puts 函数的地址覆盖返回地址，接着是 work 函数的地址（作为 puts 的返回地址），然后是 puts 的参数，即 puts 的 GOT 表地址。第一次调用 work 即可泄露 puts 地址（先用 one_gadget 寻找可用的 gadget；我最终选择了 0x6749f 处的这个，因为 esi 通常满足其要求，而针对 eax 的 gadget 比较容易找到，如上图所示），从而得到 libc 基地址。然后在第二次调用 work 时，再次输入字符 -1，并用 pop eax; ret 这条 gadget 的地址覆盖返回地址，紧接着是 0，最后是 onegadget 地址——成功获取 shell</p>
 <h1 id="exp">exp</h1>
 <pre><code class="language-python">from pwn import*
 #context(os=&quot;linux&quot;,arch=&quot;i386&quot;,log_level=&quot;debug&quot;)

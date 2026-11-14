@@ -37,98 +37,58 @@
 <p>（3）智能体获得能力的过程，其实就是不断试错探索的过程。探索和利用是强化学习里面非常核心的问题。探索指尝试一些新的动作，这些新的动作有可能会使我们得到更多的奖励，也有可能使我们“一无所有”；利用指采取已知的可以获得最多奖励的动作，重复执行这个动作，因为我们知道这样做可以获得一定的奖励。因此，我们需要在探索和利用之间进行权衡，这也是在监督学习里面没有的情况。</p>
 <p>（4）在强化学习过程中，没有非常强的监督者，只有奖励信号，并且奖励信号是延迟的，即环境会在很久以后告诉我们之前采取的动作到底是不是有效的。因为我们没有得到即时反馈，所以智能体使用强化学习来学习就非常困难。当我们采取一个动作后，如果使用监督学习，我们就可以立刻获得一个指导，比如，我们现在采取了一个错误的动作，正确的动作应该是什么。而在强化学习里面，环境可能会告诉我们这个动作是错误的，但是它并没有告诉我们正确的动作是什么。而且更困难的是，它可能是在一两分钟过后才告诉我们这个动作是错误的。所以这也是强化学习和监督学习不同的地方。</p>
 <h2 id="奖励函数">奖励函数</h2>
-<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-001-2909ca6f9b.png" alt="图片">
-第一个价值函数：在给定策略下，从当前状态开始到未来结束，表示所有可能情况下，各个结局的累积奖励（每一项乘以折扣因子的相应次方）的平均值
-第二个价值函数：在给定策略下，从当前状态并采取某个动作开始到未来结束，表示所有可能情况下，各个结局的累积奖励（每一项乘以折扣因子的相应次方）的平均值</p>
+<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-001-2909ca6f9b.png" alt="图片"><br>第一个价值函数：在给定策略下，从当前状态开始到未来结束，表示所有可能情况下，各个结局的累积奖励（每一项乘以折扣因子的相应次方）的平均值<br>第二个价值函数：在给定策略下，从当前状态并采取某个动作开始到未来结束，表示所有可能情况下，各个结局的累积奖励（每一项乘以折扣因子的相应次方）的平均值</p>
 <p>（一种“情况”表示从当前状态到未来结束的过程；在此期间可能采取不同的动作，从而产生不同的情况，经过多步累积就得到这个期望）</p>
 <h2 id="强化学习的两种类型">强化学习的两种类型</h2>
 <p>我们可以根据智能体学习的东西对智能体进行分类。基于价值的智能体显式地学习价值函数，隐式地学习它的策略。策略是从学到的价值函数里面推算出来的。基于策略的智能体直接学习策略，给它一个状态，它就会输出对应动作的概率。基于策略的智能体并没有学习价值函数。把基于价值的智能体和基于策略的智能体结合起来就有了演员-评论员智能体（actor-critic agent）。这一类智能体把策略和价值函数都学习了，然后通过两者的交互得到最佳的动作。</p>
 <p>问：基于策略和基于价值的强化学习方法有什么区别？</p>
 <p>答：对于一个状态转移概率已知的马尔可夫决策过程，我们可以使用动态规划算法来求解。从决策方式来看，强化学习又可以划分为基于策略的方法和基于价值的方法。决策方式是智能体在给定状态下从动作集合中选择一个动作的依据，它是静态的，不随状态变化而变化。在基于策略的强化学习方法中，智能体会制定一套动作策略（确定在给定状态下需要采取何种动作），并根据这个策略进行操作。强化学习算法直接对策略进行优化，使制定的策略能够获得最大的奖励。而在基于价值的强化学习方法中，智能体不需要制定显式的策略，它维护一个价值表格或价值函数，并通过这个价值表格或价值函数来选取价值最大的动作。基于价值迭代的方法只能应用在不连续的、离散的环境下（如围棋或某些游戏领域）。对于动作集合规模庞大、动作连续的场景（如机器人控制），它们很难学习到较好的结果（此时基于策略迭代的方法能够根据设定的策略来选择连续的动作）。基于价值的强化学习算法有 Q 学习（Q-learning）、Sarsa 等，而基于策略的强化学习算法有策略梯度（Policy Gradient，PG）算法等。此外，演员-评论员算法同时使用策略和价值评估来做出决策。其中，智能体会根据策略做出动作，而价值函数会对做出的动作给出价值，这样可以在原有的策略梯度算法的基础上加速学习过程，取得更好的效果。</p>
 <h2 id="两种策略探索与利用">两种策略：探索与利用</h2>
-<p>探索即我们去探索环境，通过尝试不同的动作来得到最佳的策略（带来最大奖励的策略）。
-利用即我们不去尝试新的动作，而是采取已知的可以带来很大奖励的动作。</p>
+<p>探索即我们去探索环境，通过尝试不同的动作来得到最佳的策略（带来最大奖励的策略）。<br>利用即我们不去尝试新的动作，而是采取已知的可以带来很大奖励的动作。</p>
 <h2 id="使用-gym-库">使用 gym 库</h2>
 <h1 id="马尔可夫">马尔可夫</h1>
 <p>S 是状态，A 是动作，R 是奖励值</p>
 <h2 id="马尔可夫过程">马尔可夫过程</h2>
-<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-002-65bd52412a.png" alt="图片">
-只包含状态（或者说状态转移矩阵）</p>
+<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-002-65bd52412a.png" alt="图片"><br>只包含状态（或者说状态转移矩阵）</p>
 <p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-003-e66788824c.png" alt="图片"></p>
 <h2 id="马尔可夫奖励过程mrp">马尔可夫奖励过程（MRP）</h2>
-<p>它多了一个奖励函数。奖励函数 R 是一个期望，表示当我们到达某一个状态的时候，可以获得多大的奖励。这里另外定义了折扣因子
-γ 。如果状态数是有限的，那么 R 可以是一个向量（即向量的不同标量值代表不同状态的奖励值）</p>
+<p>它多了一个奖励函数。奖励函数 R 是一个期望，表示当我们到达某一个状态的时候，可以获得多大的奖励。这里另外定义了折扣因子<br>γ 。如果状态数是有限的，那么 R 可以是一个向量（即向量的不同标量值代表不同状态的奖励值）</p>
 <p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-004-1449ffe8ee.png" alt="图片"></p>
 <p>奖励函数 R(s) 表示在状态 s 下获得的期望奖励。</p>
 <p>状态价值函数：从当前状态开始，未来各种可能回合的回报的平均值</p>
 <h3 id="折扣因子">折扣因子</h3>
 <ol>
-<li>避免无穷大的奖励
-在某些马尔可夫过程中，智能体可能陷入循环状态，导致累积奖励变得无穷大。例如，假设智能体在一个没有终止状态的环境中可以无限地获得小的正奖励。如果没有折扣因子，累积奖励将趋向于无穷大，这在数学上是无法处理的。通过引入折扣因子 γ（其中 0≤γ&lt;1），未来的奖励会被逐渐减小，从而避免累积奖励无穷大的问题。</li>
-<li>处理不确定性
-在实际应用中，我们通常无法完全准确地模拟环境。未来的奖励可能受到许多因素的影响，包括环境的随机性、模型的不准确性以及智能体的决策误差。通过引入折扣因子，我们可以更关注当前的奖励，而不是过度依赖对未来的预测。这体现了我们对未来的不确定性——我们希望尽快获得奖励，而不是在未来某个不确定的时间点获得。</li>
-<li>反映奖励的实际价值
-在许多实际场景中，即时奖励比未来的奖励更有价值。例如，现在的一笔钱通常比未来某个时间点的同样数额的钱更有价值，因为现在的钱可以立即使用，而未来的钱可能会受到通货膨胀等因素的影响。同样，在强化学习中，智能体可能更倾向于获得即时奖励，而不是未来的奖励。</li>
-<li>鼓励即时奖励
-折扣因子还可以用来调整智能体的行为策略。通过设置不同的折扣因子，我们可以鼓励智能体更关注即时奖励或未来奖励。例如：
-γ=0：智能体只关心当前的奖励，完全忽略未来的奖励。这适用于只关注即时效果的场景。
-γ=1：智能体对未来的奖励和当前的奖励同等重视，没有折扣。这适用于未来奖励与当前奖励同样重要的场景。
-0&lt;γ&lt;1：智能体在即时奖励和未来奖励之间进行权衡。折扣因子越小，智能体越偏向即时奖励；折扣因子越大，智能体越偏向未来奖励。</li>
+<li>避免无穷大的奖励<br>在某些马尔可夫过程中，智能体可能陷入循环状态，导致累积奖励变得无穷大。例如，假设智能体在一个没有终止状态的环境中可以无限地获得小的正奖励。如果没有折扣因子，累积奖励将趋向于无穷大，这在数学上是无法处理的。通过引入折扣因子 γ（其中 0≤γ&lt;1），未来的奖励会被逐渐减小，从而避免累积奖励无穷大的问题。</li>
+<li>处理不确定性<br>在实际应用中，我们通常无法完全准确地模拟环境。未来的奖励可能受到许多因素的影响，包括环境的随机性、模型的不准确性以及智能体的决策误差。通过引入折扣因子，我们可以更关注当前的奖励，而不是过度依赖对未来的预测。这体现了我们对未来的不确定性——我们希望尽快获得奖励，而不是在未来某个不确定的时间点获得。</li>
+<li>反映奖励的实际价值<br>在许多实际场景中，即时奖励比未来的奖励更有价值。例如，现在的一笔钱通常比未来某个时间点的同样数额的钱更有价值，因为现在的钱可以立即使用，而未来的钱可能会受到通货膨胀等因素的影响。同样，在强化学习中，智能体可能更倾向于获得即时奖励，而不是未来的奖励。</li>
+<li>鼓励即时奖励<br>折扣因子还可以用来调整智能体的行为策略。通过设置不同的折扣因子，我们可以鼓励智能体更关注即时奖励或未来奖励。例如：<br>γ=0：智能体只关心当前的奖励，完全忽略未来的奖励。这适用于只关注即时效果的场景。<br>γ=1：智能体对未来的奖励和当前的奖励同等重视，没有折扣。这适用于未来奖励与当前奖励同样重要的场景。<br>0&lt;γ&lt;1：智能体在即时奖励和未来奖励之间进行权衡。折扣因子越小，智能体越偏向即时奖励；折扣因子越大，智能体越偏向未来奖励。</li>
 </ol>
 <h3 id="贝尔曼方程">贝尔曼方程</h3>
-<p>详细证明见
-<a href="https://datawhalechina.github.io/easy-rl/#/chapter2/chapter2?id=_222-%E8%B4%9D%E5%B0%94%E6%9B%BC%E6%96%B9%E7%A8%8B">https://datawhalechina.github.io/easy-rl/#/chapter2/chapter2?id=_222-%e8%b4%9d%e5%b0%94%e6%9b%bc%e6%96%b9%e7%a8%8b</a></p>
+<p>详细证明见<br><a href="https://datawhalechina.github.io/easy-rl/#/chapter2/chapter2?id=_222-%E8%B4%9D%E5%B0%94%E6%9B%BC%E6%96%B9%E7%A8%8B">https://datawhalechina.github.io/easy-rl/#/chapter2/chapter2?id=_222-%e8%b4%9d%e5%b0%94%e6%9b%bc%e6%96%b9%e7%a8%8b</a></p>
 <p>注意，价值函数和奖励函数是不同的东西！！！</p>
-<p>贝尔曼方程就是当前状态与未来状态的迭代关系，表示当前状态的价值函数可以通过下个状态的价值函数来计算。
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-005-bfce623e30.png" alt="图片"></p>
+<p>贝尔曼方程就是当前状态与未来状态的迭代关系，表示当前状态的价值函数可以通过下个状态的价值函数来计算。<br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-005-bfce623e30.png" alt="图片"></p>
 <h3 id="计算马尔可夫奖励过程价值的迭代算法">计算马尔可夫奖励过程价值的迭代算法</h3>
-<p>N 是轨迹的数量（一条轨迹就是一个未来可能状态的序列）
-这里计算未来各种轨迹的回报，最后求和取平均作为价值
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-006-a5ec474da6.png" alt="图片">
-另一种方法是不断迭代贝尔曼方程，直到价值函数几乎不再变化，这时就得到了某个状态的价值</p>
+<p>N 是轨迹的数量（一条轨迹就是一个未来可能状态的序列）<br>这里计算未来各种轨迹的回报，最后求和取平均作为价值<br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-006-a5ec474da6.png" alt="图片"><br>另一种方法是不断迭代贝尔曼方程，直到价值函数几乎不再变化，这时就得到了某个状态的价值</p>
 <p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-007-93d2c1abb6.png" alt="图片"></p>
 <h2 id="马尔可夫决策过程mdp">马尔可夫决策过程（MDP）</h2>
 <p>马尔可夫决策过程在马尔可夫奖励过程的基础上加入了动作。它描述了智能体在每个状态下可以采取的动作，以及这些动作如何影响状态转移和奖励。</p>
 <p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-008-d9c4e4a340.png" alt="图片"></p>
-<p>简单来说：从状态到动作有一个概率，从动作到下一个状态也有一个概率
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-009-ea3bb296ba.png" alt="图片">
-此时每个状态和每个动作都有一个（确定的）奖励函数。某个状态的奖励函数，是该状态与各个可能动作配对的奖励函数，以该状态下对应动作发生的概率为权重的加权和</p>
+<p>简单来说：从状态到动作有一个概率，从动作到下一个状态也有一个概率<br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-009-ea3bb296ba.png" alt="图片"><br>此时每个状态和每个动作都有一个（确定的）奖励函数。某个状态的奖励函数，是该状态与各个可能动作配对的奖励函数，以该状态下对应动作发生的概率为权重的加权和</p>
 <h3 id="马尔可夫决策过程与马尔可夫过程马尔可夫奖励过程的区别">马尔可夫决策过程与马尔可夫过程/马尔可夫奖励过程的区别</h3>
-<p>马尔可夫过程/马尔可夫奖励过程：状态直接转移，状态转移概率
-马尔可夫决策过程：还多了一个动作概率，以及状态-动作对转移到下一个状态的概率</p>
+<p>马尔可夫过程/马尔可夫奖励过程：状态直接转移，状态转移概率<br>马尔可夫决策过程：还多了一个动作概率，以及状态-动作对转移到下一个状态的概率</p>
 <h3 id="马尔可夫决策过程中的价值函数">马尔可夫决策过程中的价值函数</h3>
-<p>价值函数
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-010-f24d0967a5.png" alt="图片">
-动作的价值函数也称为 Q 函数（Q-Function），它表示在状态 s 下采取动作 a 之后能够获得的期望累积奖励。它考虑了状态和动作的组合，对期望回报提供了更细粒度的估计。</p>
-<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-011-c39b0d9ac3.png" alt="图片">
-两者的关系如下<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-012-ae7cf871ff.png" alt="图片">
-前面提到，Q 函数（Q-Function）表示在状态 s 下采取动作 a 之后能够获得的期望累积奖励；也可以理解为当前的即时奖励加上下一个状态的价值函数（即累积期望）。当然，这里下一个状态的价值函数又可以分解为各状态-动作价值函数与各动作概率的加权和
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-013-90541a4c00.png" alt="图片">
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-014-e1ee35987b.png" alt="图片"></p>
+<p>价值函数<br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-010-f24d0967a5.png" alt="图片"><br>动作的价值函数也称为 Q 函数（Q-Function），它表示在状态 s 下采取动作 a 之后能够获得的期望累积奖励。它考虑了状态和动作的组合，对期望回报提供了更细粒度的估计。</p>
+<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-011-c39b0d9ac3.png" alt="图片"><br>两者的关系如下<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-012-ae7cf871ff.png" alt="图片"><br>前面提到，Q 函数（Q-Function）表示在状态 s 下采取动作 a 之后能够获得的期望累积奖励；也可以理解为当前的即时奖励加上下一个状态的价值函数（即累积期望）。当然，这里下一个状态的价值函数又可以分解为各状态-动作价值函数与各动作概率的加权和<br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-013-90541a4c00.png" alt="图片"><br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-014-e1ee35987b.png" alt="图片"></p>
 <h3 id="备份图">备份图</h3>
-<p>它是表示状态与动作如何交替的图；空心圆圈代表状态，实心圆圈代表状态-动作对。
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-015-cb014f3b57.png" alt="图片"></p>
-<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-016-933736e9a5.png" alt="图片">
-可以看出，s 的状态价值函数等于两个状态-动作价值函数的加权和，再加上动作价值对应的奖励</p>
+<p>它是表示状态与动作如何交替的图；空心圆圈代表状态，实心圆圈代表状态-动作对。<br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-015-cb014f3b57.png" alt="图片"></p>
+<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-016-933736e9a5.png" alt="图片"><br>可以看出，s 的状态价值函数等于两个状态-动作价值函数的加权和，再加上动作价值对应的奖励</p>
 <p>  <img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-017-813b6c995c.png" alt="图片"></p>
 <h3 id="策略评估预测控制">策略评估/预测/控制</h3>
-<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-018-39c559b312.png" alt="图片">
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-019-bbb4263951.png" alt="迭代贝尔曼方程得到的价值函数">
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-020-285cc14945.png" alt="图片">
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-021-3bb688562d.png" alt="图片"></p>
+<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-018-39c559b312.png" alt="图片"><br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-019-bbb4263951.png" alt="迭代贝尔曼方程得到的价值函数"><br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-020-285cc14945.png" alt="图片"><br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-021-3bb688562d.png" alt="图片"></p>
 <h3 id="马尔可夫决策过程的控制方法">马尔可夫决策过程的控制方法</h3>
 <p>寻找最佳策略的过程就是马尔可夫决策过程的控制过程</p>
-<p>策略搜索：
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-022-3291cc09f3.png" alt="图片">
-策略迭代：
-第一个步骤是策略评估。当前我们在优化策略 π（一个具体的策略，比如每一步怎么走），在优化过程中得到一个最新的策略。我们先保证这个策略不变，然后估计它的价值，即给定当前的策略函数来估计状态价值函数。
- 第二个步骤是策略改进。得到状态价值函数后，我们可以进一步推算出它的 Q 函数。得到 Q 函数后，我们直接对 Q 函数进行最大化，通过在 Q 函数上做贪心搜索来进一步改进策略。
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-023-c87cf1ef37.png" alt="图片">
-这两个步骤一直在迭代进行。</p>
-<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-024-222aeff508.png" alt="图片">
-价值迭代：<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-025-973ad73140.png" alt="图片">
-它初始化各个价值函数，然后不断迭代价值函数，没有策略评估这一步
-<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-026-d56830fff1.png" alt="图片"></p>
+<p>策略搜索：<br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-022-3291cc09f3.png" alt="图片"><br>策略迭代：<br>第一个步骤是策略评估。当前我们在优化策略 π（一个具体的策略，比如每一步怎么走），在优化过程中得到一个最新的策略。我们先保证这个策略不变，然后估计它的价值，即给定当前的策略函数来估计状态价值函数。<br> 第二个步骤是策略改进。得到状态价值函数后，我们可以进一步推算出它的 Q 函数。得到 Q 函数后，我们直接对 Q 函数进行最大化，通过在 Q 函数上做贪心搜索来进一步改进策略。<br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-023-c87cf1ef37.png" alt="图片"><br>这两个步骤一直在迭代进行。</p>
+<p><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-024-222aeff508.png" alt="图片"><br>价值迭代：<img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-025-973ad73140.png" alt="图片"><br>它初始化各个价值函数，然后不断迭代价值函数，没有策略评估这一步<br><img src="/workspace/embodied-ai/reinforcement-learning/assets/csdn-145379134/image-026-d56830fff1.png" alt="图片"></p>
 <h1 id="关键词习题面试题">关键词/习题/面试题</h1>
 <p><a href="https://datawhalechina.github.io/easy-rl/#/chapter2/chapter2_questions&keywords?id=%E5%85%B3%E9%94%AE%E8%AF%8D">https://datawhalechina.github.io/easy-rl/#/chapter2/chapter2_questions&amp;keywords?id=%e5%85%b3%e9%94%ae%e8%af%8d</a></p>
 

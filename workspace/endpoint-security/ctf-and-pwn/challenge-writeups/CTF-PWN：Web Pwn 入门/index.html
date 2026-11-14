@@ -27,8 +27,7 @@
 <ol>
 <li>扩展模块的生命周期：</li>
 </ol>
-<p>a) 模块初始化（MINIT）：PHP 解释器启动时会加载相关模块，并调用各模块的 MINIT 方法；该方法只调用一次。
-示例：假设有一个数据库连接池扩展。</p>
+<p>a) 模块初始化（MINIT）：PHP 解释器启动时会加载相关模块，并调用各模块的 MINIT 方法；该方法只调用一次。<br>示例：假设有一个数据库连接池扩展。</p>
 <pre><code class="language-c">PHP_MINIT_FUNCTION(db_pool)
 {
     // 初始化连接池
@@ -37,8 +36,7 @@
 }
 </code></pre>
 <p>此函数只在 PHP 启动时调用一次，用于初始化连接池。</p>
-<p>b) 请求初始化（RINIT）：每次请求到达时触发。SAPI 层将控制权交给 PHP 层；PHP 初始化执行本次请求脚本所需的环境变量、函数列表等，并调用所有模块的 RINIT 函数。
-示例：一个会话管理扩展。</p>
+<p>b) 请求初始化（RINIT）：每次请求到达时触发。SAPI 层将控制权交给 PHP 层；PHP 初始化执行本次请求脚本所需的环境变量、函数列表等，并调用所有模块的 RINIT 函数。<br>示例：一个会话管理扩展。</p>
 <pre><code class="language-c">PHP_RINIT_FUNCTION(session_manager)
 {
     // 为每个请求创建新的会话
@@ -47,8 +45,7 @@
 }
 </code></pre>
 <p>此函数在每次 HTTP 请求开始时调用，为每个请求创建新会话。</p>
-<p>c) 请求关闭（RSHUTDOWN）：请求结束时，PHP 自动运行清理流程，依次调用各模块的 RSHUTDOWN 方法，清理程序运行期间使用的符号表。
-示例：用于清理请求专属资源的扩展。</p>
+<p>c) 请求关闭（RSHUTDOWN）：请求结束时，PHP 自动运行清理流程，依次调用各模块的 RSHUTDOWN 方法，清理程序运行期间使用的符号表。<br>示例：用于清理请求专属资源的扩展。</p>
 <pre><code class="language-c">PHP_RSHUTDOWN_FUNCTION(resource_cleaner)
 {
     // 清理请求期间分配的资源
@@ -57,8 +54,7 @@
 }
 </code></pre>
 <p>每次请求结束时调用，用于清理该请求使用的资源。</p>
-<p>d) 模块关闭（MSHUTDOWN）：服务器关闭时，PHP 调用各模块的 MSHUTDOWN 方法来释放内存。
-示例：关闭数据库连接池。</p>
+<p>d) 模块关闭（MSHUTDOWN）：服务器关闭时，PHP 调用各模块的 MSHUTDOWN 方法来释放内存。<br>示例：关闭数据库连接池。</p>
 <pre><code class="language-c">PHP_MSHUTDOWN_FUNCTION(db_pool)
 {
     // 关闭连接池
@@ -70,14 +66,11 @@
 <ol start="2">
 <li>PHP 运行模式：</li>
 </ol>
-<p>a) CLI 运行模式（单进程 SAPI）：
-示例：</p>
+<p>a) CLI 运行模式（单进程 SAPI）：<br>示例：</p>
 <pre><code class="language-bash">php script.php
 </code></pre>
 <p>该命令启动 PHP 解释器，执行 script.php 后退出。整个过程只有一次 MINIT 和一次 MSHUTDOWN，RINIT 和 RSHUTDOWN 也会因脚本执行而各调用一次。</p>
-<p>b) CGI 运行模式（通常为多进程 SAPI）：
-示例：Apache 配合 mod_cgi。
-HTTP 请求到达时，Apache 为每个请求 fork 一个新的 PHP 进程。</p>
+<p>b) CGI 运行模式（通常为多进程 SAPI）：<br>示例：Apache 配合 mod_cgi。<br>HTTP 请求到达时，Apache 为每个请求 fork 一个新的 PHP 进程。</p>
 <pre><code>[Apache] &lt;- HTTP Request
     |
     ├── [PHP Process 1] (MINIT -&gt; RINIT -&gt; Execute -&gt; RSHUTDOWN -&gt; MSHUTDOWN)
@@ -113,8 +106,7 @@ HTTP 请求到达时，Apache 为每个请求 fork 一个新的 PHP 进程。</p
 7ffff411f000-7ffff4123000 r--p 00012000 08:05 280080                     /usr/lib/x86_64-linux-gnu/libexslt.so.0.8.20
 7ffff4123000-7ffff4124000 r--p 00015000 08:05 280080                     /usr/lib/x86_64-linux-gnu/libexslt.so.0.8.20
 </code></pre>
-<p>c) FastCGI 运行模式（多进程 SAPI，但进程可以复用）：
-示例：Nginx 配合 PHP-FPM。</p>
+<p>c) FastCGI 运行模式（多进程 SAPI，但进程可以复用）：<br>示例：Nginx 配合 PHP-FPM。</p>
 <pre><code>[Nginx] &lt;- HTTP Requests
     |
     ├── [PHP-FPM Process 1] (MINIT -&gt; [RINIT -&gt; Execute -&gt; RSHUTDOWN] x N -&gt; MSHUTDOWN)
@@ -123,16 +115,12 @@ HTTP 请求到达时，Apache 为每个请求 fork 一个新的 PHP 进程。</p
 </code></pre>
 <p>PHP-FPM 进程处理多个请求后才会退出，因此 MINIT 和 MSHUTDOWN 仅在进程启动和终止时各调用一次，而 RINIT 和 RSHUTDOWN 会在每次请求时调用。</p>
 <h1 id="php-扩展模块">PHP 扩展模块</h1>
-<p><a href="https://blog.yanjingang.com/?p=3070">小猪教你开发 PHP 扩展</a>
-在 Linux 环境中，PHP 扩展通常是 .so 文件。扩展模块的存放路径可以按下图方式查看：
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-001-fa850f78e1.png" alt="图片"></p>
+<p><a href="https://blog.yanjingang.com/?p=3070">小猪教你开发 PHP 扩展</a><br>在 Linux 环境中，PHP 扩展通常是 .so 文件。扩展模块的存放路径可以按下图方式查看：<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-001-fa850f78e1.png" alt="图片"></p>
 <h2 id="搭建-php-环境">搭建 PHP 环境</h2>
 <pre><code class="language-bash">sudo apt install php php-dev # 安装php，以及php开发包头
 php -v # 查看php版本 直到当前对应的版本是7.4.3
 </code></pre>
-<p>根据版本下载对应源码。
-<a href="https://github.com/php/php-src/tree/PHP-7.4.3">https://github.com/php/php-src/tree/PHP-7.4.3</a>
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-002-d0c1e515c6.png" alt="图片"></p>
+<p>根据版本下载对应源码。<br><a href="https://github.com/php/php-src/tree/PHP-7.4.3">https://github.com/php/php-src/tree/PHP-7.4.3</a><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-002-d0c1e515c6.png" alt="图片"></p>
 <pre><code class="language-bash">git clone https://github.com/php/php-src.git
 cd  php-src
 git checkout PHP-7.4.3
@@ -334,15 +322,13 @@ z  - the actual zval (zval*)
 </code></pre>
 <p>然后在生成的 Makefile 中，在下图位置设置编译参数：关闭栈保护，并去掉 -O2 优化，否则会加入 FORTIFY 保护，使 memcpy 函数增加长度检查，变成 __memcpy_chk 函数。</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-005-c7f33f94c4.png" alt="图片"></p>
-<p>设置好后，直接使用 make 命令编译。编译完成后，当前目录会生成 ./modules 目录，其中包含所需的 .so 扩展文件。将其复制到 PHP 扩展目录，然后配置 php.ini 启用该扩展。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-006-582cc8ed6b.png" alt="图片"></p>
+<p>设置好后，直接使用 make 命令编译。编译完成后，当前目录会生成 ./modules 目录，其中包含所需的 .so 扩展文件。将其复制到 PHP 扩展目录，然后配置 php.ini 启用该扩展。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-006-582cc8ed6b.png" alt="图片"></p>
 <pre><code class="language-bash">/etc/php/7.4/apache2/php.ini
 /etc/php/7.4/cli/php.ini # 通常调试时使用CLI模式，所以只配置了该目录下的php.ini文件
 </code></pre>
 <pre><code class="language-bash">sudo cp hello.so /usr/lib/php/20190902/ # 将扩展库赋值到php搜索扩展库的路径中
 </code></pre>
-<p>注意，题目在 php.ini 中禁用了部分函数。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-007-806df28c29.png" alt="图片"></p>
+<p>注意，题目在 php.ini 中禁用了部分函数。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-007-806df28c29.png" alt="图片"></p>
 <h2 id="测试">测试</h2>
 <pre><code class="language-bash">&lt;?php
 phpinfo()
@@ -350,8 +336,7 @@ $a = &quot;abcd&quot;;
 easy_phppwn($a);
 ?&gt;
 </code></pre>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-008-94e0a16ab0.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-009-17fe67c425.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-008-94e0a16ab0.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-009-17fe67c425.png" alt="图片"></p>
 <h1 id="安全检查">安全检查</h1>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-010-701b2cf5e4.png" alt="图片"></p>
 <h1 id="调试">调试</h1>
@@ -424,12 +409,10 @@ In file: /home/llk/Desktop/tools/php-src/ext/hello/hello.c:12
 b* __libc_start_main+128 会调用一个函数去解析php
 该函数然后call rax会进入另一个函数
 </code></pre>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-011-7ffa0aa257.png" alt="图片">
-在另一个函数内部，最终通过 <code>call qword ptr [rdx+0x10]</code> 加载库。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-011-7ffa0aa257.png" alt="图片"><br>在另一个函数内部，最终通过 <code>call qword ptr [rdx+0x10]</code> 加载库。</p>
 <pre><code class="language-bash">b*pie+0x247861  和php版本有关
 </code></pre>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-012-6138e8617b.png" alt="图片">
-此后才能在库内的函数上设置断点。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-012-6138e8617b.png" alt="图片"><br>此后才能在库内的函数上设置断点。</p>
 <p><strong>或者</strong></p>
 <p>在 docker 中安装 gdbserver 后运行：</p>
 <pre><code class="language-bash">gdbserver :1234 php -S 0:8080 exp.php
@@ -730,14 +713,9 @@ easy_phppwn($payload)
 <pre><code class="language-bash">llk@ubuntu:~/Desktop/tools/php-src/ext/hello/modules$ sudo nc -lvvp 6666 -n
 Listening on 0.0.0.0 6666
 </code></pre>
-<p>在 gdb 中：
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-014-4dc8c6b1bc.png" alt="图片">
-本地宿主机：
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-015-3843c1cdd8.png" alt="图片"></p>
+<p>在 gdb 中：<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-014-4dc8c6b1bc.png" alt="图片"><br>本地宿主机：<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-015-3843c1cdd8.png" alt="图片"></p>
 <h1 id="堆">堆</h1>
-<p><a href="https://hornos3.github.io/2024/07/01/PHP-pwn-%E5%AD%A6%E4%B9%A0-2/">https://hornos3.github.io/2024/07/01/PHP-pwn-%E5%AD%A6%E4%B9%A0-2/</a>
-<a href="https://xz.aliyun.com/t/15166?time__1311=GqjxuQi=DQ=0yRx%2bxCqiKTRDAr36eWqT4D#toc-1">https://xz.aliyun.com/t/15166?time__1311=GqjxuQi%3DDQ%3D0yRx%2BxCqiKTRDAr36eWqT4D#toc-1</a>
-<a href="https://deepunk.icu/php-pwn/#Payload">https://deepunk.icu/php-pwn/#Payload</a></p>
+<p><a href="https://hornos3.github.io/2024/07/01/PHP-pwn-%E5%AD%A6%E4%B9%A0-2/">https://hornos3.github.io/2024/07/01/PHP-pwn-%E5%AD%A6%E4%B9%A0-2/</a><br><a href="https://xz.aliyun.com/t/15166?time__1311=GqjxuQi=DQ=0yRx%2bxCqiKTRDAr36eWqT4D#toc-1">https://xz.aliyun.com/t/15166?time__1311=GqjxuQi%3DDQ%3D0yRx%2BxCqiKTRDAr36eWqT4D#toc-1</a><br><a href="https://deepunk.icu/php-pwn/#Payload">https://deepunk.icu/php-pwn/#Payload</a></p>
 <h2 id="php-堆源码">PHP 堆源码</h2>
 <p>zend_alloc 以 CHUNK 为单位向操作系统分配内存，每个 CHUNK 包含 2MB 内存。超过整个 chunk 大小的分配属于巨大分配（huge allocation），zend_alloc 使用 mmap 为其分配内存。ZendMM 中经常使用 PAGE 的概念，一页通常包含 4KB 内存，也就是说，一个 chunk 包含 512 页。小于页面大小 3/4 的分配属于小块分配（small allocation），其余则是大块分配（large allocation）。</p>
 <pre><code class="language-c">_emalloc-&gt;zend_mm_alloc_heap
@@ -992,8 +970,7 @@ static zend_never_inline void *zend_mm_alloc_small_slow(zend_mm_heap *heap, uint
 <pre><code class="language-c">
 Z zval**类型
 </code></pre>
-<p>然后找一个扩展库，找到该结构体的定义，并在 IDA 中创建结构体。
-这里存在 off by null。</p>
+<p>然后找一个扩展库，找到该结构体的定义，并在 IDA 中创建结构体。<br>这里存在 off by null。</p>
 <pre><code class="language-c">unsigned __int64 __fastcall zif_addHacker(__int64 a1, __int64 a2)
 {
   __int64 index; // rbp
@@ -1052,11 +1029,7 @@ LABEL_9:
 }
 </code></pre>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/CTF-PWN%EF%BC%9AWeb%20Pwn%20%E5%85%A5%E9%97%A8/assets/csdn-141128519/image-016-68261f3022.png" alt="图片"></p>
-<p>这里选择一个对应 bin 尚未初始化的大小，使取得的第一个块按页对齐，即低字节为零字节。
-随后，在第一次 addHacker 分配时，第一个 chunk 的零字节溢出会修改当前位于链表首部的 chunk 的 next 字段低字节。
-接着再次调用 addHacker，此次申请的第二个 chunk 会被分配到第一次分配时第一个 chunk 所在的位置。
-现在可以修改原先第一个 chunk 的 chunk2ptr 和 size（editHacker 需要使用），再将其覆盖为 efree 的 GOT 地址。
-随后使用 editHacker 将其改为 system。最后，通过 addHacker 将命令存入第二个申请的 chunk，再对最后一次 addHacker 的索引执行 removeHacker。</p>
+<p>这里选择一个对应 bin 尚未初始化的大小，使取得的第一个块按页对齐，即低字节为零字节。<br>随后，在第一次 addHacker 分配时，第一个 chunk 的零字节溢出会修改当前位于链表首部的 chunk 的 next 字段低字节。<br>接着再次调用 addHacker，此次申请的第二个 chunk 会被分配到第一次分配时第一个 chunk 所在的位置。<br>现在可以修改原先第一个 chunk 的 chunk2ptr 和 size（editHacker 需要使用），再将其覆盖为 efree 的 GOT 地址。<br>随后使用 editHacker 将其改为 system。最后，通过 addHacker 将命令存入第二个申请的 chunk，再对最后一次 addHacker 的索引执行 removeHacker。</p>
 <h2 id="exp-1">exp</h2>
 <pre><code class="language-php">&lt;?php
 $heap_base = 0;

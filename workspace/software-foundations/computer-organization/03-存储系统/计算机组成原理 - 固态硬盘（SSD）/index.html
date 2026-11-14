@@ -21,27 +21,14 @@
 <h1 id="概述">概述</h1>
 <p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-001-2cbc553f85.png" alt="图片"></p>
 <h1 id="机械硬盘与固态硬盘">机械硬盘与固态硬盘</h1>
-<p>固态硬盘采用闪存技术，属于电可擦除 ROM
-下图右侧的黑色方块就是一个个闪存芯片
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-002-c63cdadf00.png" alt="图片"></p>
+<p>固态硬盘采用闪存技术，属于电可擦除 ROM<br>下图右侧的黑色方块就是一个个闪存芯片<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-002-c63cdadf00.png" alt="图片"></p>
 <h1 id="ssd-的结构">SSD 的结构</h1>
-<p>块大小 16KB<del>512KB
-页大小 512B</del>4KB
-SSD 以页为单位进行读写
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-003-d93245f616.png" alt="图片"></p>
-<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-004-f2ad13d5c7.png" alt="图片">
-以页为单位读写
-以块为单位擦除；每个页只能写入一次，但可以无限次读取
-如果某个页已经写入了数据，想要修改该页的数据，需要先把该页所在块中的其他页复制到另一个闪存芯片，然后在另一个闪存芯片的对应页上写入，再把该块复制回原块的位置。因为每个页只能写入一次，如果想要第二次写入，就必须擦除整个块
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-005-a7dd06f59b.png" alt="图片"></p>
+<p>块大小 16KB<del>512KB<br>页大小 512B</del>4KB<br>SSD 以页为单位进行读写<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-003-d93245f616.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-004-f2ad13d5c7.png" alt="图片"><br>以页为单位读写<br>以块为单位擦除；每个页只能写入一次，但可以无限次读取<br>如果某个页已经写入了数据，想要修改该页的数据，需要先把该页所在块中的其他页复制到另一个闪存芯片，然后在另一个闪存芯片的对应页上写入，再把该块复制回原块的位置。因为每个页只能写入一次，如果想要第二次写入，就必须擦除整个块<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-005-a7dd06f59b.png" alt="图片"></p>
 <h1 id="ssd-相比机械硬盘的特点">SSD 相比机械硬盘的特点</h1>
-<p>SSD 通过电路定位物理地址，属于随机存取，也就是访问任意地址的时间都相等。
-机械硬盘通过磁臂定位物理地址，访问不同地址的时间不同，因为磁臂可能需要移动到不同的位置，所需的时间也可能不同
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-006-a64eec9b7f.png" alt="图片"></p>
+<p>SSD 通过电路定位物理地址，属于随机存取，也就是访问任意地址的时间都相等。<br>机械硬盘通过磁臂定位物理地址，访问不同地址的时间不同，因为磁臂可能需要移动到不同的位置，所需的时间也可能不同<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-006-a64eec9b7f.png" alt="图片"></p>
 <h1 id="磨损均衡">磨损均衡</h1>
-<p>为了应对 SSD 因擦除次数过多而磨损的问题，即反复写入同一个块中的某个页会导致整个块被擦除，引入了磨损均衡技术（保证每个块被擦除的次数大致相同）
-也就是说，闪存转换层把逻辑地址映射到不同的物理地址；当发现某个块被擦除次数过多时，就把该逻辑地址映射到的物理地址改为擦除次数较少的块，这样擦除次数少的块就会被擦除
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-007-38dd1dbabc.png" alt="图片"></p>
+<p>为了应对 SSD 因擦除次数过多而磨损的问题，即反复写入同一个块中的某个页会导致整个块被擦除，引入了磨损均衡技术（保证每个块被擦除的次数大致相同）<br>也就是说，闪存转换层把逻辑地址映射到不同的物理地址；当发现某个块被擦除次数过多时，就把该逻辑地址映射到的物理地址改为擦除次数较少的块，这样擦除次数少的块就会被擦除<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-007-38dd1dbabc.png" alt="图片"></p>
 <h1 id="例题">例题</h1>
 <p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%9B%BA%E6%80%81%E7%A1%AC%E7%9B%98%EF%BC%88SSD%EF%BC%89/assets/csdn-134605454/image-008-b1fdc8fa7b.png" alt="图片"></p>
 

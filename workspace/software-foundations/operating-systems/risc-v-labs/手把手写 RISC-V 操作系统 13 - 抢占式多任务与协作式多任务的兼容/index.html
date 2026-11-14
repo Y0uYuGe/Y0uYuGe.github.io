@@ -21,32 +21,24 @@
 <h1 id="抢占式多任务">抢占式多任务</h1>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-001-d5095c72ce.png" alt="图片"></p>
 <h1 id="流程">流程</h1>
-<p>抢占式多任务由定时器中断触发，最终在中断处理函数中切换到下一个进程
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-002-58b79ad3bb.png" alt="图片"></p>
+<p>抢占式多任务由定时器中断触发，最终在中断处理函数中切换到下一个进程<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-002-58b79ad3bb.png" alt="图片"></p>
 <h1 id="具体代码流程">具体代码流程</h1>
-<p>在上下文中加入 pc 寄存器
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-003-008e0c2f56.png" alt="图片">
-寄存器保存上下文，并调整切换逻辑</p>
-<p>将 mepc 存入当前上下文中 pc 寄存器的位置
-切换时，把下一个上下文中 pc 位置的寄存器值赋给 mepc
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-004-464f118ec7.png" alt="图片"></p>
+<p>在上下文中加入 pc 寄存器<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-003-008e0c2f56.png" alt="图片"><br>寄存器保存上下文，并调整切换逻辑</p>
+<p>将 mepc 存入当前上下文中 pc 寄存器的位置<br>切换时，把下一个上下文中 pc 位置的寄存器值赋给 mepc<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-004-464f118ec7.png" alt="图片"></p>
 <h1 id="协作式多任务的兼容软件中断">协作式多任务的兼容（软件中断）</h1>
 <p>实现主动让出 CPU</p>
 <p>仍然由 CLINT 实现</p>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-005-438ce040a6.png" alt=" "></p>
 <h1 id="msip-寄存器">msip 寄存器</h1>
-<p>  <img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-006-dfedc7a6e1.png" alt=" ">
-  RISC-V 规范定义了多种处理器模式，其中 Machine 模式是最高特权模式，用于实现操作系统内核或 hypervisor 等核心功能。在 Machine 模式下，处理器提供了一系列内存映射的控制与状态寄存器（CSR），可以像访问普通内存区域一样直接通过内存地址访问。</p>
+<p>  <img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-006-dfedc7a6e1.png" alt=" "><br>  RISC-V 规范定义了多种处理器模式，其中 Machine 模式是最高特权模式，用于实现操作系统内核或 hypervisor 等核心功能。在 Machine 模式下，处理器提供了一系列内存映射的控制与状态寄存器（CSR），可以像访问普通内存区域一样直接通过内存地址访问。</p>
 <p><code>mip</code> 是 Machine Interrupt Pending 寄存器，是一个 CSR，用于指示当前有哪些中断事件处于挂起状态。其中 <code>mip.MSIP</code> 是 Machine Software Interrupt Pending 位，专门用于指示是否有机器级软件中断请求正在等待处理。</p>
 <p>在 RISC-V 架构中，当一个 hart（硬件线程）需要向另一个 hart 发送软件中断时，可以通过向对方的 MSIP 位写入 1 来发起中断请求。MSIP 映射到 MSIP 寄存器上的某一位，而该寄存器被映射到内存，即 MSIP 是内存映射的，这意味着可以通过内存访问指令（如 load/store 指令）读写该位，从而触发或清除中断。</p>
 <p>具体来说，当 <code>mip.MSIP = 1</code> 时，表示有机器级软件中断处于挂起状态；当 <code>mip.MSIP = 0</code> 时，表示没有这样的中断挂起。这样，处理器就能在硬件层面支持高效的中断通信与管理。</p>
 <h1 id="流程-1">流程</h1>
 <ol>
-<li><p>写 MSIP 触发软件中断，中断号为 3
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-007-1cdc0edf68.png" alt="图片"></p>
+<li><p>写 MSIP 触发软件中断，中断号为 3<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-007-1cdc0edf68.png" alt="图片"></p>
 </li>
-<li><p>进入中断处理函数，之后的上下文切换流程与抢占式多任务相同，只是触发切换的方式不同
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-008-6aeb4e7a33.png" alt="图片"></p>
+<li><p>进入中断处理函数，之后的上下文切换流程与抢占式多任务相同，只是触发切换的方式不同<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-008-6aeb4e7a33.png" alt="图片"></p>
 </li>
 </ol>
 <h1 id="代码">代码</h1>
@@ -56,8 +48,7 @@
 <li>通过 mstatus 中的 pmie 恢复 mstatus 中的 pie</li>
 </ol>
 <p>所以需要提前对 mstatus 做相应的设置</p>
-<p>相关代码说明见代码注释
-<a href="https://github.com/FULLK/risllkos/tree/main/Fullkenerl8">https://github.com/FULLK/risllkos/tree/main/Fullkenerl8</a></p>
+<p>相关代码说明见代码注释<br><a href="https://github.com/FULLK/risllkos/tree/main/Fullkenerl8">https://github.com/FULLK/risllkos/tree/main/Fullkenerl8</a></p>
 <h1 id="结果">结果</h1>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2013%20-%20%E6%8A%A2%E5%8D%A0%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%8D%8F%E4%BD%9C%E5%BC%8F%E5%A4%9A%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%85%BC%E5%AE%B9/assets/csdn-137965983/image-009-33a4382753.png" alt="图片"></p>
 

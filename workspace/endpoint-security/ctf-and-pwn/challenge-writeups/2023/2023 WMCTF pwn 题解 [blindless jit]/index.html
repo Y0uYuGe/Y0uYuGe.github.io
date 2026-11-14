@@ -20,12 +20,9 @@
     <article class="post-body">
 <p><del>考古一下 2023 WMCTF，当时我连 CTF 是什么都不知道</del> </p>
 <h1 id="blindless">blindless</h1>
-<p><a href="https://akaieurus.github.io/2023/08/23/house-of-blindness/">https://akaieurus.github.io/2023/08/23/house-of-blindness/</a>
-保护全开</p>
+<p><a href="https://akaieurus.github.io/2023/08/23/house-of-blindness/">https://akaieurus.github.io/2023/08/23/house-of-blindness/</a><br>保护全开</p>
 <h2 id="ida-结构体命名">IDA 结构体命名</h2>
-<p>在这里命名结构体时发现一个问题：原本是 char [5]，如果把它拆成一个 char 和一个 char 数组，它们仍然相邻。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20WMCTF%20pwn%20%E9%A2%98%E8%A7%A3%20%5Bblindless%20jit%5D/assets/csdn-141783145/image-001-ce88f96da7.png" alt="图片">
-但如果是一个 char 和一个四字节数据类型，它们就不会紧挨在一起 <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20WMCTF%20pwn%20%E9%A2%98%E8%A7%A3%20%5Bblindless%20jit%5D/assets/csdn-141783145/image-002-17903a115b.png" alt="图片"></p>
+<p>在这里命名结构体时发现一个问题：原本是 char [5]，如果把它拆成一个 char 和一个 char 数组，它们仍然相邻。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20WMCTF%20pwn%20%E9%A2%98%E8%A7%A3%20%5Bblindless%20jit%5D/assets/csdn-141783145/image-001-ce88f96da7.png" alt="图片"><br>但如果是一个 char 和一个四字节数据类型，它们就不会紧挨在一起 <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20WMCTF%20pwn%20%E9%A2%98%E8%A7%A3%20%5Bblindless%20jit%5D/assets/csdn-141783145/image-002-17903a115b.png" alt="图片"></p>
 <h2 id="逆向分析">逆向分析</h2>
 <pre><code class="language-c">int __cdecl executeBrainfuck(char *code)
 {
@@ -100,11 +97,9 @@
 <p>随后发现，使用该 libc 时，libc 基址和 ld 基址之间的相对偏移固定……换成 libc 2.35 试了一下却不行，不知道为什么。</p>
 <p>既然相对偏移固定，就将 datasize 控制为 0x200000，使其被分配到 libc 地址之前的固定偏移处，再将 data_ptr 改到 ld，进而修改 ld 内部的数据。</p>
 <h3 id="方法一">方法一</h3>
-<p>直接修改 _rtld_global 中的 <code>_dl_rtld_lock_recursive </code> 或 <code>_dl_rtld_unlock_recursive </code>，将低三字节改为 onegadget，然后爆破。
-<a href="https://www.cnblogs.com/JmpCliff/articles/17647402.html">https://www.cnblogs.com/JmpCliff/articles/17647402.html</a></p>
+<p>直接修改 _rtld_global 中的 <code>_dl_rtld_lock_recursive </code> 或 <code>_dl_rtld_unlock_recursive </code>，将低三字节改为 onegadget，然后爆破。<br><a href="https://www.cnblogs.com/JmpCliff/articles/17647402.html">https://www.cnblogs.com/JmpCliff/articles/17647402.html</a></p>
 <h3 id="方法二">方法二</h3>
-<p>劫持 fini：修改 <code>l-&gt;l_info[DT_FINI] (0xa8 relative to link_map)</code>，使对应偏移信息加上 PIE 基址等于后门地址，同时不修改 PIE 基址信息。
-由于 l-&gt;l_info[DT_FINI] 是 PIE 地址，可以将其改为存放后续偏移（后门偏移）的位置减 8；由于偏移超过 12 位，还需要爆破 4 位。</p>
+<p>劫持 fini：修改 <code>l-&gt;l_info[DT_FINI] (0xa8 relative to link_map)</code>，使对应偏移信息加上 PIE 基址等于后门地址，同时不修改 PIE 基址信息。<br>由于 l-&gt;l_info[DT_FINI] 是 PIE 地址，可以将其改为存放后续偏移（后门偏移）的位置减 8；由于偏移超过 12 位，还需要爆破 4 位。</p>
 <pre><code class="language-bash">main            0x559bf8bf6084 0x1209
 
  [13]     0x559bf8bf3558-&gt;0x559bf8bf3565 at 0x00001558: .fini ALLOC LOAD READONLY CODE HAS_CONTENTS
@@ -141,19 +136,11 @@ while True:
     p.close()
 </code></pre>
 <h1 id="jit">jit</h1>
-<p><a href="https://lst-oss.github.io/2023/08/23/jit-pwn/#2023-wmctf-jit">jit-pwn_</a>
-<a href="https://www.cnblogs.com/JmpCliff/articles/17647402.html">WM CTF 2023 pwn</a>
-<a href="https://roderickchan.github.io/zh-cn/2023-02-02-2023%E8%A5%BF%E6%B9%96%E8%AE%BA%E5%89%91%E5%88%9D%E8%B5%9Bpwn-jit/">2023 西湖论剑初赛 pwn-jit</a>
-<a href="https://blog.xmcve.com/2023/08/22/WMCTF-2023-Writeup/#title-16">WMCTF 2023 题解</a>
-<a href="https://mp.weixin.qq.com/s/1dBr_4y2RVf_hZyXIpcqyw">PWN｜西湖论剑·2022中国杭州网络安全技能大赛初赛官方Write Up</a>
-<a href="https://github.com/iovisor/bpf-docs/blob/master/eBPF.md">非官方 eBPF 规范</a>
-保护全开</p>
+<p><a href="https://lst-oss.github.io/2023/08/23/jit-pwn/#2023-wmctf-jit">jit-pwn_</a><br><a href="https://www.cnblogs.com/JmpCliff/articles/17647402.html">WM CTF 2023 pwn</a><br><a href="https://roderickchan.github.io/zh-cn/2023-02-02-2023%E8%A5%BF%E6%B9%96%E8%AE%BA%E5%89%91%E5%88%9D%E8%B5%9Bpwn-jit/">2023 西湖论剑初赛 pwn-jit</a><br><a href="https://blog.xmcve.com/2023/08/22/WMCTF-2023-Writeup/#title-16">WMCTF 2023 题解</a><br><a href="https://mp.weixin.qq.com/s/1dBr_4y2RVf_hZyXIpcqyw">PWN｜西湖论剑·2022中国杭州网络安全技能大赛初赛官方Write Up</a><br><a href="https://github.com/iovisor/bpf-docs/blob/master/eBPF.md">非官方 eBPF 规范</a><br>保护全开</p>
 <h2 id="strtolv9-endptr-16">strtol(v9, &amp;endptr, 16)</h2>
 <ul>
-<li>将 v9 指向的字符串按十六进制（基数为 16）解析，并转换为 long 类型的值。
-转换结束位置的表示方式：</li>
-<li>&amp;endptr 是指向 char 指针的指针。strtol 会更新 endptr，使其指向 v9 中第一个无效数字字符。
-例如，若 v9 是 &quot;1A3Fxyz&quot;，转换结束后 *endptr 将指向 &#39;x&#39;，因为 &#39;x&#39; 不是有效的十六进制字符。</li>
+<li>将 v9 指向的字符串按十六进制（基数为 16）解析，并转换为 long 类型的值。<br>转换结束位置的表示方式：</li>
+<li>&amp;endptr 是指向 char 指针的指针。strtol 会更新 endptr，使其指向 v9 中第一个无效数字字符。<br>例如，若 v9 是 &quot;1A3Fxyz&quot;，转换结束后 *endptr 将指向 &#39;x&#39;，因为 &#39;x&#39; 不是有效的十六进制字符。</li>
 </ul>
 <h2 id="__errno_location-和-__throw_out_of_range">__errno_location 和 __throw_out_of_range</h2>
 <pre><code class="language-cpp">v8 = __errno_location();
@@ -229,11 +216,9 @@ if ( *v10 == 0x22 || (unsigned __int64)(convert_bytes + 0x80000000LL) &gt; 0xFFF
 </ol>
 <h3 id="为什么要执行上面的代码">为什么要执行上面的代码？</h3>
 <ul>
-<li><p><strong>检测和处理 <code>strtol</code> 错误</strong>：
-将 <code>errno</code> 设置为 <code>0</code>，就可以在调用 <code>strtol</code> 后判断是否发生了新错误。如果 <code>strtol</code> 执行出错，<code>errno</code> 会被设置为相应的错误码。</p>
+<li><p><strong>检测和处理 <code>strtol</code> 错误</strong>：<br>将 <code>errno</code> 设置为 <code>0</code>，就可以在调用 <code>strtol</code> 后判断是否发生了新错误。如果 <code>strtol</code> 执行出错，<code>errno</code> 会被设置为相应的错误码。</p>
 </li>
-<li><p><strong>恢复 <code>errno</code> 的原值</strong>：
-检查 <code>strtol</code> 的结果并处理可能的错误后，如果没有发生新错误，就恢复 <code>errno</code> 原来的值，以免丢失 <code>errno</code> 在调用 <code>strtol</code> 之前的状态。</p>
+<li><p><strong>恢复 <code>errno</code> 的原值</strong>：<br>检查 <code>strtol</code> 的结果并处理可能的错误后，如果没有发生新错误，就恢复 <code>errno</code> 原来的值，以免丢失 <code>errno</code> 在调用 <code>strtol</code> 之前的状态。</p>
 </li>
 </ul>
 <h3 id="示例代码说明">示例代码说明</h3>
@@ -411,8 +396,7 @@ c:   48 8b 47 18             mov    rax,QWORD PTR [rdi+0x18]
 </ol>
 <p>网络数据包到达时，内核调用这段编译后的机器码，快速检查每个 TCP 数据包。如果是 SYN 数据包，就将计数器加一。</p>
 <h2 id="漏洞-1">漏洞</h2>
-<p><a href="https://github.com/iovisor/bpf-docs/blob/master/eBPF.md">非官方 eBPF 规范</a>
-题目提示这是一个 eBPF JIT。</p>
+<p><a href="https://github.com/iovisor/bpf-docs/blob/master/eBPF.md">非官方 eBPF 规范</a><br>题目提示这是一个 eBPF JIT。</p>
 <p><del>逆了半天毫无头绪，想死的心都有了</del> </p>
 <p>本质上仍是一个虚拟机，只是输入的是它的指令字节码，最终会被转换为 x86 机器码。</p>
 <p>本着逆向越难、漏洞越好找的原则，直接测试哪些指令能用，再寻找已有的缺陷。</p>

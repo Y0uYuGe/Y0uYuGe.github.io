@@ -135,27 +135,21 @@
 <ul>
 <li><p>挂载操作在子进程（容器）开始运行之前实现</p>
 </li>
-<li><p>先挂载 overlayfs，再 bind mount 数据卷，使宿主机上的 volume 同步到 merged 中容器数据卷的位置
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-001-11d70858e0.png" alt="图片"></p>
+<li><p>先挂载 overlayfs，再 bind mount 数据卷，使宿主机上的 volume 同步到 merged 中容器数据卷的位置<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-001-11d70858e0.png" alt="图片"></p>
 </li>
 <li><p>此时如果在容器内、在与宿主机绑定的容器数据卷中创建一个文件</p>
 </li>
-<li><p>注意，因为是先挂载 overlayfs、之后才做 bind mount，此时 bind mount 挂载点已经不属于 overlayfs 了，所以在 bind mount 内部做的修改不会经过 overlayfs 机制（如果 bind mount 挂载点在 lower 层，由于它是 bind mount，实际上相当于没有挂载进 overlayfs，所以 overlayfs 机制对该挂载点不生效；就好像 lower 层的 bind mount 挂载点变了而 upper 层没变，merged 的 bind mount 挂载点也变了）
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-002-69b534a101.png" alt="图片">
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-003-8f95adcc96.png" alt="图片"></p>
+<li><p>注意，因为是先挂载 overlayfs、之后才做 bind mount，此时 bind mount 挂载点已经不属于 overlayfs 了，所以在 bind mount 内部做的修改不会经过 overlayfs 机制（如果 bind mount 挂载点在 lower 层，由于它是 bind mount，实际上相当于没有挂载进 overlayfs，所以 overlayfs 机制对该挂载点不生效；就好像 lower 层的 bind mount 挂载点变了而 upper 层没变，merged 的 bind mount 挂载点也变了）<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-002-69b534a101.png" alt="图片"><br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-003-8f95adcc96.png" alt="图片"></p>
 </li>
 <li><p>卸载操作在子进程结束之后实现</p>
 </li>
 <li><p>此时要先卸载 bind mount 挂载点，因为 bind mount 挂载点在 overlayfs 内部；如果先卸载 overlayfs，会发现里面还有挂载点，卸载就会失败</p>
 </li>
-<li><p>退出后查看宿主机上的挂载点，发现已成功卸载
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-004-2b5f6e4b21.png" alt="图片"></p>
+<li><p>退出后查看宿主机上的挂载点，发现已成功卸载<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-004-2b5f6e4b21.png" alt="图片"></p>
 </li>
-<li><p>bind mount 的内容也保留在了宿主机上
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-005-629b3f4702.png" alt="图片"></p>
+<li><p>bind mount 的内容也保留在了宿主机上<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-005-629b3f4702.png" alt="图片"></p>
 </li>
-<li><p>重新启动容器，此时得益于 bind mount，容器内数据卷的内容被保留下来并生效
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-006-8f2afccd33.png" alt="图片"></p>
+<li><p>重新启动容器，此时得益于 bind mount，容器内数据卷的内容被保留下来并生效<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%20-%2013%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-v%20%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD%5D/assets/csdn-138813928/image-006-8f2afccd33.png" alt="图片"></p>
 </li>
 </ul>
 

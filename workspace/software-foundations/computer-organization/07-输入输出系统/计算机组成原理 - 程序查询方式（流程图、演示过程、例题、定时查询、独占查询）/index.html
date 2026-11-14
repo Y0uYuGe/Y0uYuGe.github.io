@@ -20,8 +20,7 @@
     <article class="post-body">
 <h1 id="概述">概述</h1>
 <h1 id="io-方式介绍">IO 方式介绍</h1>
-<p>每输出一个字，状态即视为完成，CPU 取走数据寄存器中的内容
-<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-001-cd7ab5d1e7.png" alt="图片"></p>
+<p>每输出一个字，状态即视为完成，CPU 取走数据寄存器中的内容<br><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-001-cd7ab5d1e7.png" alt="图片"></p>
 <h1 id="程序查询方式">程序查询方式</h1>
 <p><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-002-bc6aa5ff97.png" alt="图片"></p>
 <p>这里模拟打印三个字符</p>
@@ -37,17 +36,11 @@
 <p>最后一个字符打印完成后，打印机向接口发送完成信号，接口再传给状态寄存器。同时，CPU 内部有一个计数器，用来记录是否已经打印了规定的字符数。当发现全部打印完毕，且最后一次打印信号已经完成时，CPU 向打印机发出停止命令字（当然也要先经过驱动程序）并写入控制寄存器</p>
 <p>IO 控制逻辑（IO 接口）随后把这个停止控制信号发送给外设接口控制逻辑，再通过控制总线发送给打印机，打印机便停止工作</p>
 <h1 id="程序查询方式流程图">程序查询方式流程图</h1>
-<p>传递参数：计数器需要计数到多少才算传输完成，以及要传输的数据
-CPU 与 IO 设备串行工作，即二者的工作相互依赖
-<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-003-f293bdab74.png" alt="图片"></p>
+<p>传递参数：计数器需要计数到多少才算传输完成，以及要传输的数据<br>CPU 与 IO 设备串行工作，即二者的工作相互依赖<br><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-003-f293bdab74.png" alt="图片"></p>
 <h1 id="程序查询方式---例题">程序查询方式 - 例题</h1>
-<p>慢速 IO 设备在程序查询方式下对 CPU 影响很小
-快速 IO 设备在程序查询方式下对 CPU 影响很大
-CPU 实际上可以采用定时查询（查询不占用全部时间，查询与程序执行交替进行）或独占查询
-<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-004-87f159c838.png" alt="图片"></p>
+<p>慢速 IO 设备在程序查询方式下对 CPU 影响很小<br>快速 IO 设备在程序查询方式下对 CPU 影响很大<br>CPU 实际上可以采用定时查询（查询不占用全部时间，查询与程序执行交替进行）或独占查询<br><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-004-87f159c838.png" alt="图片"></p>
 <h1 id="总结">总结</h1>
-<p>下图中，上面的程序查询方式就是独占查询方式
-<img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-005-e848b8d19f.png" alt="图片"></p>
+<p>下图中，上面的程序查询方式就是独占查询方式<br><img src="/workspace/software-foundations/computer-organization/07-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F%EF%BC%88%E6%B5%81%E7%A8%8B%E5%9B%BE%E3%80%81%E6%BC%94%E7%A4%BA%E8%BF%87%E7%A8%8B%E3%80%81%E4%BE%8B%E9%A2%98%E3%80%81%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2%E3%80%81%E7%8B%AC%E5%8D%A0%E6%9F%A5%E8%AF%A2%EF%BC%89/assets/csdn-135411880/image-005-e848b8d19f.png" alt="图片"></p>
 
     </article>
     

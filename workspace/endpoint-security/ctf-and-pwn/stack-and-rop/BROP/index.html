@@ -35,8 +35,7 @@
 </ol>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-001-2e6e6ed0b5.png" alt="图片"></p>
 <h2 id="攻击思路">攻击思路</h2>
-<p>如今大多数应用都开启了 ASLR、NX 和 Canary 保护。我们要做的就是想办法绕过这些防御
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-002-5f67c4bc86.png" alt="图片"></p>
+<p>如今大多数应用都开启了 ASLR、NX 和 Canary 保护。我们要做的就是想办法绕过这些防御<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-002-5f67c4bc86.png" alt="图片"></p>
 <ol>
 <li>爆破确定栈溢出长度</li>
 <li>爆破 canary。由上面的条件 2 可知，每次崩溃重启后 canary 都不变，所以可以逐字节爆破。每个字节 8 位，有 256 种可能，逐一尝试，如果没有报错就说明该字节正确，接着爆破下一个字节。所以 32 位需要 1024 次尝试，64 位需要 2048 次尝试</li>
@@ -58,42 +57,20 @@
 <blockquote>
 <p>开启 PIE 后，ELF 内部的相对偏移保持不变，但每次加载的基址都会变化。</p>
 </blockquote>
-<p>probe 是用于爆破枚举的地址，即被探测的地址
-stop 是不会让程序崩溃的地址
-trap 是会让程序崩溃的地址</p>
+<p>probe 是用于爆破枚举的地址，即被探测的地址<br>stop 是不会让程序崩溃的地址<br>trap 是会让程序崩溃的地址</p>
 <p>从栈上的返回地址开始布置不同的 stop 和 trap，就可以识别出所执行的指令，因为执行到 stop 程序不会崩溃，而执行到 trap 程序会崩溃，由此可以判断该指令序列的 ret 位于何处</p>
 <ul>
-<li>probe, stop, traps, traps……
-不断改变 probe 进行尝试。不崩溃的就是一个不改变栈顶、最终执行 ret 指令的指令序列
-ret
-xor eax，eax；ret
-push eax；pop ebx；ret</li>
-<li>probe, trap, stop, trap, trap……
- 通过不断改变 probe 的值，可以找到这样的指令流：从栈顶弹出一个元素，然后在不改变栈顶的情况下再执行一次 ret
- pop rax；ret
- pop rdi；push rax；pop rsi；ret</li>
-<li>probe, trap, trap, trap, trap, trap, trap, stop, trap, trap……
-  此时可以找到一条含 ret 的指令，在 ret 之前栈顶位置减少了 6 个单位
-  pop rax；pop rdi；pop rsi；pop rdx；pop rbx；pop r14；ret</li>
+<li>probe, stop, traps, traps……<br>不断改变 probe 进行尝试。不崩溃的就是一个不改变栈顶、最终执行 ret 指令的指令序列<br>ret<br>xor eax，eax；ret<br>push eax；pop ebx；ret</li>
+<li>probe, trap, stop, trap, trap……<br> 通过不断改变 probe 的值，可以找到这样的指令流：从栈顶弹出一个元素，然后在不改变栈顶的情况下再执行一次 ret<br> pop rax；ret<br> pop rdi；push rax；pop rsi；ret</li>
+<li>probe, trap, trap, trap, trap, trap, trap, stop, trap, trap……<br>  此时可以找到一条含 ret 的指令，在 ret 之前栈顶位置减少了 6 个单位<br>  pop rax；pop rdi；pop rsi；pop rdx；pop rbx；pop r14；ret</li>
 </ul>
-<p><strong>不过要注意，如果 probe 是 _start 函数的起始地址，那么永远都不会崩溃</strong>
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-003-2efce3e58b.png" alt="图片"></p>
+<p><strong>不过要注意，如果 probe 是 _start 函数的起始地址，那么永远都不会崩溃</strong><br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-003-2efce3e58b.png" alt="图片"></p>
 <h2 id="构造函数参数">构造函数参数</h2>
-<p>如果此时需要使用 write，就需要如下 gadget
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-004-250b44c00e.png" alt="图片">
-参数可以通过 libc_csu_init 来构造
-libc_csu_init 中有一个一次弹出 6 个寄存器的 gadget，这在程序中并不常见。所以如果找到了这样的 gadget，那么它很可能就是我们需要的 gadget。然后可以利用错位（偏移）来构造想要的 gadget
-![`](./assets/csdn-135170114/image-005-21ccbb4c56.png)
-寻找 gadget 时，针对不同的指令需要不同的 probe、stop、trap 排列 
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-006-46f1caecd0.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-007-df0f7186b7.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-008-6979a6d35c.png" alt="图片"></p>
+<p>如果此时需要使用 write，就需要如下 gadget<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-004-250b44c00e.png" alt="图片"><br>参数可以通过 libc_csu_init 来构造<br>libc_csu_init 中有一个一次弹出 6 个寄存器的 gadget，这在程序中并不常见。所以如果找到了这样的 gadget，那么它很可能就是我们需要的 gadget。然后可以利用错位（偏移）来构造想要的 gadget<br>![`](./assets/csdn-135170114/image-005-21ccbb4c56.png)<br>寻找 gadget 时，针对不同的指令需要不同的 probe、stop、trap 排列<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-006-46f1caecd0.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-007-df0f7186b7.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-008-6979a6d35c.png" alt="图片"></p>
 <h2 id="利用-plt">利用 PLT</h2>
-<p>当 probe 落在 PLT 中某个函数的范围内时，就会执行该函数
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-009-2f7370c021.png" alt="图片"></p>
+<p>当 probe 落在 PLT 中某个函数的范围内时，就会执行该函数<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-009-2f7370c021.png" alt="图片"></p>
 <h3 id="构造-rdx-参数的-gadget">构造 rdx 参数的 gadget</h3>
-<p>这里需要的 gadget 必须有 pop rdx，并且还要以 ret 或其他能间接把值传给 rdx 的指令结尾——但这样的 gadget 几乎不存在
-不过可以利用调用 strcmp 函数后 rdx 中存放字符串长度值这一特性来修改 rdx <strong>（存疑）</strong></p>
+<p>这里需要的 gadget 必须有 pop rdx，并且还要以 ret 或其他能间接把值传给 rdx 的指令结尾——但这样的 gadget 几乎不存在<br>不过可以利用调用 strcmp 函数后 rdx 中存放字符串长度值这一特性来修改 rdx <strong>（存疑）</strong></p>
 <blockquote>
 <p>我们知道，strcmp(para1, para2) 只有在 para1 和 para2 都是有效地址时才能正确执行。我们已经知道两个可用的 gadget：csu_gadget1 + 7 和 csu_gadget1 + 9。因此，可以分别把这两个地址作为 para1 和 para2，然后仍然用 probe 判断是否执行成功。如果执行成功，就找到了 strcmp()。当然也可能找到 strncmp() 和 strcasecmp()，但它们与 strcmp() 的效果是一样的。</p>
 </blockquote>
@@ -103,8 +80,7 @@ libc_csu_init 中有一个一次弹出 6 个寄存器的 gadget，这在程序�
 <h3 id="dump-二进制文件内容">dump 二进制文件内容</h3>
 <p>然后构造参数，用输出函数把二进制文件所有地址的内容都输出出来。此时就相当于不再是&quot;盲&quot;的了——你拿到了源文件。现在知道了 PLT 表中的所有函数，就可以调用 read 等不同的函数</p>
 <h3 id="利用-plt-表项跳转到对应-got-地址这一特点">利用 PLT 表项跳转到对应 GOT 地址这一特点</h3>
-<p>拿到二进制文件后，找到输出函数的 PLT 表项，定位其中引用输出函数 GOT 表项地址的跳转指令，然后再次输出，参数为输出函数在 GOT 表中的地址。这样就得到了输出函数的真实地址，进而得到 libc 基址，并计算出 /bin/sh 和 system 的地址。如果做不到，也可以用 read 或 write 函数以自己构造的参数写入可写内存（这样地址就是已知的），然后调用 syscall 或 system——只不过 syscall 需要额外构造参数
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-011-1b8a162453.png" alt="图片"></p>
+<p>拿到二进制文件后，找到输出函数的 PLT 表项，定位其中引用输出函数 GOT 表项地址的跳转指令，然后再次输出，参数为输出函数在 GOT 表中的地址。这样就得到了输出函数的真实地址，进而得到 libc 基址，并计算出 /bin/sh 和 system 的地址。如果做不到，也可以用 read 或 write 函数以自己构造的参数写入可写内存（这样地址就是已知的），然后调用 syscall 或 system——只不过 syscall 需要额外构造参数<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135170114/image-011-1b8a162453.png" alt="图片"></p>
 <h1 id="ctf-pwn-栈溢出-中级rop-brop-2">CTF-PWN-栈溢出-中级ROP-[BROP-2]</h1>
 <h2 id="2016-hctf-出题人失踪了">2016 HCTF 出题人失踪了</h2>
 <pre><code class="language-bash">socat tcp-l:9999,reuseaddr,fork exec:./brop
@@ -113,8 +89,7 @@ reuseaddr：它允许在主进程终止后立即重启，即使一些子套接�
 fork：转发到的服务器 IP 和端口 这里是转发给brop处理
 </code></pre>
 <blockquote>
-<p>puts() 函数用于将一个字符串输出到标准输出设备（屏幕）并换行。
-具体来说，它把字符串输出到屏幕上，并将 &#39;\0&#39; 转换为回车换行。调用方式为：puts(str)，其中 str 是字符数组名或字符串指针。实际上，数组名就是一个指针。</p>
+<p>puts() 函数用于将一个字符串输出到标准输出设备（屏幕）并换行。<br>具体来说，它把字符串输出到屏幕上，并将 &#39;\0&#39; 转换为回车换行。调用方式为：puts(str)，其中 str 是字符数组名或字符串指针。实际上，数组名就是一个指针。</p>
 </blockquote>
 <h3 id="爆破栈溢出长度">爆破栈溢出长度</h3>
 <p>不断尝试不同的长度。可以发现没有 canary，因为如果溢出到了 canary，报错信息中会提到 canary。最终得到栈溢出长度为 72</p>
@@ -156,16 +131,11 @@ fork：转发到的服务器 IP 和端口 这里是转发给brop处理
 </code></pre>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-002-fe09ba0844.png" alt="图片"></p>
 <h3 id="寻找-rop_gadget">寻找 rop_gadget</h3>
-<p>接下来需要找到能控制寄存器的 gadget
-libc_csu_init 的末尾有一个连续 pop 六次的 gadget，这种 gadget 比较少见，并且可以通过错位得到 pop rdi 操作
-所以可以先找到连续 pop 6 次的 gadget 的地址，再通过偏移得到 pop rdi; ret 和 pop rsi; ret 的地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-003-8b17d1b6bb.png" alt="图片">
-那么对应的 gadget 布局为</p>
+<p>接下来需要找到能控制寄存器的 gadget<br>libc_csu_init 的末尾有一个连续 pop 六次的 gadget，这种 gadget 比较少见，并且可以通过错位得到 pop rdi 操作<br>所以可以先找到连续 pop 6 次的 gadget 的地址，再通过偏移得到 pop rdi; ret 和 pop rsi; ret 的地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-003-8b17d1b6bb.png" alt="图片"><br>那么对应的 gadget 布局为</p>
 <ul>
 <li>probe, trap, trap, trap, trap, trap, trap, stop</li>
 </ul>
-<p>所以如果此时某个 probe 没有崩溃，它应该就是 libc_csu_init 中连续 pop 6 次的 gadget 的地址
-但也不一定——有小概率是其他情况，比如连续 pop 七次，而 ret 时栈顶恰好有一个合适的地址。所以要再检查一次</p>
+<p>所以如果此时某个 probe 没有崩溃，它应该就是 libc_csu_init 中连续 pop 6 次的 gadget 的地址<br>但也不一定——有小概率是其他情况，比如连续 pop 七次，而 ret 时栈顶恰好有一个合适的地址。所以要再检查一次</p>
 <pre><code class="language-python">def get_brop_gadget(stop_addr,addr,length): # 找到能连续pop6次并ret的指令的地址
         try:
             f=remote(&quot;127.0.0.1&quot;,9999)
@@ -204,10 +174,7 @@ def ensure_brop_gadget(stop_addr,length): #综合get和check
         
 </code></pre>
 <h3 id="寻找输出函数">寻找输出函数</h3>
-<p>不同输出函数的参数个数不同。由于 puts 只有一个参数 rdi，所以先尝试 puts 函数
-另外，在没有开启 PIE 的情况下，0x400000 处是 ELF 文件的文件头，其内容为字符 \x7ELF
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-004-c97f7d318b.png" alt="图片">
-所以可以把 0x400000 作为 rdi 的值，然后不断尝试 probe，直到输出 \x7ELF 字符，就说明找到了输出函数 puts</p>
+<p>不同输出函数的参数个数不同。由于 puts 只有一个参数 rdi，所以先尝试 puts 函数<br>另外，在没有开启 PIE 的情况下，0x400000 处是 ELF 文件的文件头，其内容为字符 \x7ELF<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-004-c97f7d318b.png" alt="图片"><br>所以可以把 0x400000 作为 rdi 的值，然后不断尝试 probe，直到输出 \x7ELF 字符，就说明找到了输出函数 puts</p>
 <pre><code class="language-python">def find_put_plt(stop_addr,pop_rdi_ret,buffer_length): #找到find的plt表的位置
     addr=0x400500
     while 1:
@@ -228,13 +195,7 @@ def ensure_brop_gadget(stop_addr,length): #综合get和check
 </code></pre>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-005-5266955a4b.png" alt="图片"></p>
 <h3 id="dump-二进制文件">dump 二进制文件</h3>
-<p>现在把参数改为程序中的地址，调用输出函数把程序的全部内容输出出来，写入自己创建的文件中。最后对该文件进行反汇编，找到输出函数 PLT 地址对应的 PLT 表项，再找到跳转到输出函数 GOT 地址的指令，从而找到输出函数在 GOT 表中的地址
-这里先 dump 0x400000 到 0x401000，看能否得到 PLT 表，果然得到了左上角所示的 binary_file
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-006-4eb6bc65ef.png" alt="图片">
-放入 IDA 中
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-007-28092143ca.png" alt="图片">
-找到 PLT 表，再找到输出函数的 GOT 表项
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-008-ea0a6f2011.png" alt="图片"></p>
+<p>现在把参数改为程序中的地址，调用输出函数把程序的全部内容输出出来，写入自己创建的文件中。最后对该文件进行反汇编，找到输出函数 PLT 地址对应的 PLT 表项，再找到跳转到输出函数 GOT 地址的指令，从而找到输出函数在 GOT 表中的地址<br>这里先 dump 0x400000 到 0x401000，看能否得到 PLT 表，果然得到了左上角所示的 binary_file<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-006-4eb6bc65ef.png" alt="图片"><br>放入 IDA 中<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-007-28092143ca.png" alt="图片"><br>找到 PLT 表，再找到输出函数的 GOT 表项<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-008-ea0a6f2011.png" alt="图片"></p>
 <pre><code class="language-python">def leak_file(stop_addr,pop_rdi_ret,buffer_length,put_plt_addr): # 泄露二进制文件然后能找到plt中puts的内容有其got地址的相关信息
    
     addr=0x400000
@@ -295,8 +256,7 @@ payload=b&quot;g&quot;*buffer_length+p64(pop_rdi_ret)+p64(binsh_addr)+p64(system
 f.sendlineafter(b&quot;WelCome my friend,Do you know password?\n&quot;,payload)
 f.interactive()
 </code></pre>
-<p>攻击成功
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-009-e39cbb176b.png" alt="图片"></p>
+<p>攻击成功<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/BROP/assets/csdn-135232787/image-009-e39cbb176b.png" alt="图片"></p>
 <h3 id="exp">exp</h3>
 <pre><code class="language-python">from pwn import *
 context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)

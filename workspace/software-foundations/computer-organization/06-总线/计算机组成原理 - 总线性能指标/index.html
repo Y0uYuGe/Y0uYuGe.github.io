@@ -21,26 +21,17 @@
 <h1 id="概述">概述</h1>
 <p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-001-7ca2df10fc.png" alt="图片"></p>
 <h1 id="总线周期总线时钟周期总线工作频率总线时钟频率">总线周期、总线时钟周期、总线工作频率、总线时钟频率</h1>
-<p>总线周期是通过总线传输一组数据所需的时间
-申请阶段：总线仲裁，决定由哪个设备使用总线
-寻址阶段：地址通过地址总线传送
-传输阶段：内容通过数据总线传送
-结束阶段：释放总线使用权，供其他设备使用</p>
-<p>总线时钟周期即 CPU 的时钟周期
-某些情况下，总线传输会在时钟周期的上升沿和下降沿各发生一次，此时一个总线时钟周期包含多个总线周期
-<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-002-4c877091e9.png" alt="图片"></p>
+<p>总线周期是通过总线传输一组数据所需的时间<br>申请阶段：总线仲裁，决定由哪个设备使用总线<br>寻址阶段：地址通过地址总线传送<br>传输阶段：内容通过数据总线传送<br>结束阶段：释放总线使用权，供其他设备使用</p>
+<p>总线时钟周期即 CPU 的时钟周期<br>某些情况下，总线传输会在时钟周期的上升沿和下降沿各发生一次，此时一个总线时钟周期包含多个总线周期<br><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-002-4c877091e9.png" alt="图片"></p>
 <h1 id="总线宽度总线带宽">总线宽度、总线带宽</h1>
-<p>总线宽度通常指数据总线的宽度
-<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-003-42d9471389.png" alt="图片"></p>
+<p>总线宽度通常指数据总线的宽度<br><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-003-42d9471389.png" alt="图片"></p>
 <h1 id="例题">例题</h1>
 <p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-004-1ee9bc650c.png" alt="图片"></p>
 <h1 id="串行总线与并行总线的速度带宽比较">串行总线与并行总线的速度（带宽）比较</h1>
 <p>串行总线的工作频率可以不断提高，尽管其总线宽度小于并行总线</p>
 <p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-005-6915d7bde8.png" alt="图片"></p>
 <h1 id="总线复用信号线数量">总线复用、信号线数量</h1>
-<p>总线复用是指一组总线同时充当两种总线
-信号线是只能传输一位的线路
-<img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-006-16cd87607a.png" alt="图片"></p>
+<p>总线复用是指一组总线同时充当两种总线<br>信号线是只能传输一位的线路<br><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-006-16cd87607a.png" alt="图片"></p>
 <h1 id="总结">总结</h1>
 <p><img src="/workspace/software-foundations/computer-organization/06-%E6%80%BB%E7%BA%BF/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87/assets/csdn-135308398/image-007-238e3fde55.png" alt="图片"></p>
 

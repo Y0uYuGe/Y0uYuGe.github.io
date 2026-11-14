@@ -52,13 +52,9 @@
 <h4 id="示例">示例</h4>
 <p>假设我们有一个函数，需要统计某个字符在字符串中出现的次数：</p>
 <ul>
-<li><p><strong>使用 <code>std::string</code></strong>：
-<code>cpp std::string str = &quot;Hello, World!&quot;; std::size_t count = std::count(str.begin(), str.end(), &#39;o&#39;); </code>
-这里即使传入的是临时字符串字面量，str 仍会在栈上创建一个副本。</p>
+<li><p><strong>使用 <code>std::string</code></strong>：<br><code>cpp std::string str = &quot;Hello, World!&quot;; std::size_t count = std::count(str.begin(), str.end(), &#39;o&#39;); </code><br>这里即使传入的是临时字符串字面量，str 仍会在栈上创建一个副本。</p>
 </li>
-<li><p><strong>使用 <code>std::string_view</code></strong>：
-<code>cpp std::string_view view = &quot;Hello, View!&quot;; std::size_t count = std::count(view.begin(), view.end(), &#39;e&#39;); </code>
-string_view` 直接引用原始字符串数据，没有额外的内存分配或复制操作，因此效率更高。</p>
+<li><p><strong>使用 <code>std::string_view</code></strong>：<br><code>cpp std::string_view view = &quot;Hello, View!&quot;; std::size_t count = std::count(view.begin(), view.end(), &#39;e&#39;); </code><br>string_view` 直接引用原始字符串数据，没有额外的内存分配或复制操作，因此效率更高。</p>
 </li>
 </ul>
 <p>总之，<code>std::string</code> 提供完整的字符串管理，包括内存分配和所有权，适用于需要修改字符串或独立存储字符串数据的场景。<code>std::string_view</code> 作为高效的只读视图，适用于不需要修改字符串且希望避免复制开销的情况。</p>
@@ -275,9 +271,7 @@ p.interactive()
 </code></pre>
 <h1 id="2023-n1ctf-n1proxy">2023 N1CTF-n1proxy</h1>
 <h2 id="参考资料">参考资料</h2>
-<p><a href="https://github.com/Nu1LCTF/n1ctf-2023/tree/main/pwn/n1proxy">https://github.com/Nu1LCTF/n1ctf-2023/tree/main/pwn/n1proxy</a>
-<a href="https://eqqie.cn/index.php/tag/Rust-Pwn">https://eqqie.cn/index.php/tag/Rust-Pwn</a>
-<a href="https://github.com/importcjj/rust-miniproxy/blob/master/docs/SOCKS5%E5%8D%8F%E8%AE%AE.md">https://github.com/importcjj/rust-miniproxy/blob/master/docs/SOCKS5%E5%8D%8F%E8%AE%AE.md</a></p>
+<p><a href="https://github.com/Nu1LCTF/n1ctf-2023/tree/main/pwn/n1proxy">https://github.com/Nu1LCTF/n1ctf-2023/tree/main/pwn/n1proxy</a><br><a href="https://eqqie.cn/index.php/tag/Rust-Pwn">https://eqqie.cn/index.php/tag/Rust-Pwn</a><br><a href="https://github.com/importcjj/rust-miniproxy/blob/master/docs/SOCKS5%E5%8D%8F%E8%AE%AE.md">https://github.com/importcjj/rust-miniproxy/blob/master/docs/SOCKS5%E5%8D%8F%E8%AE%AE.md</a></p>
 <h2 id="rsa">rsa</h2>
 <p>一个 RSA 密钥对通常由两部分组成：公钥和私钥。公钥可以安全地分发给任何人，用于加密数据或验证签名。私钥必须保密，用于解密数据或生成签名。在某些情况下，你可能拥有一个只包含公钥的密钥对象，也可能拥有一个同时包含公钥和私钥的密钥对象。</p>
 <h2 id="握手">握手</h2>
@@ -1600,11 +1594,9 @@ fn main() -&gt; Result&lt;()&gt; {
 </code></pre>
 <p>存在以下的生命周期问题：</p>
 <ol>
-<li><p><strong><code>Vec</code> 与裸指针之间的关系</strong>：
-当你创建一个 <code>Vec&lt;u8&gt;</code> 并立即通过 <code>as_mut_ptr()</code> 获取它的裸指针时，这个裸指针指向的是 <code>Vec</code> 内部的内存。然而，<code>Vec</code> 和裸指针的生命周期并没有被显式关联起来。<code>Vec</code> 的生命周期局限于创建它的那个作用域，而裸指针的生命周期则是不确定的，因为它逃出了 Rust 的生命周期管理系统。</p>
+<li><p><strong><code>Vec</code> 与裸指针之间的关系</strong>：<br>当你创建一个 <code>Vec&lt;u8&gt;</code> 并立即通过 <code>as_mut_ptr()</code> 获取它的裸指针时，这个裸指针指向的是 <code>Vec</code> 内部的内存。然而，<code>Vec</code> 和裸指针的生命周期并没有被显式关联起来。<code>Vec</code> 的生命周期局限于创建它的那个作用域，而裸指针的生命周期则是不确定的，因为它逃出了 Rust 的生命周期管理系统。</p>
 </li>
-<li><p><strong><code>Vec</code> 的自动释放</strong>：
-因为 <code>Vec</code> 是在一个局部作用域中创建的，当该作用域结束时，<code>Vec</code> 会被自动 drop，其内存也随之被回收。如果此时裸指针仍在使用，它就会变成一个悬挂指针，指向一块已经失效的内存。</p>
+<li><p><strong><code>Vec</code> 的自动释放</strong>：<br>因为 <code>Vec</code> 是在一个局部作用域中创建的，当该作用域结束时，<code>Vec</code> 会被自动 drop，其内存也随之被回收。如果此时裸指针仍在使用，它就会变成一个悬挂指针，指向一块已经失效的内存。</p>
 </li>
 </ol>
 <p>在 Rust 中，表达式 <code>vec![0u8; recv_size]</code> 创建的 <code>Vec&lt;u8&gt;</code>，其生命周期绑定在创建它的那个作用域上。</p>
@@ -1615,16 +1607,10 @@ fn main() -&gt; Result&lt;()&gt; {
 </code></pre>
 <p>这里，<code>vec![0u8; recv_size]</code> 是在 <code>iovec</code> 结构体初始化的上下文中创建的。这意味着这个 <code>Vec&lt;u8&gt;</code> 的生命周期绑定在包含 <code>iovec</code> 初始化那一行代码的代码块上（也就是被花括号包围的那段代码区域）。一旦这个代码块执行完毕，这个 <code>Vec&lt;u8&gt;</code> 的生命周期也就随之结束，其内存被释放。</p>
 <p>然而，这一行中由 <code>vec![0u8; recv_size]</code> 创建的 <code>Vec&lt;u8&gt;</code> 的生命周期，可能和 <code>iovec</code> 的生命周期产生冲突，因为 <code>iovec</code> 的 <code>iov_base</code> 字段被设置为指向这个 <code>Vec</code> 的裸指针。当 <code>Vec&lt;u8&gt;</code> 的生命周期结束时，它的内存被释放，但 <code>iovec</code> 可能仍然持有指向这块已释放内存的裸指针，这就导致了悬挂指针。</p>
-<p>我写了一些代码来测试这一点
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-001-1694889935.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-002-a62969cd1a.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-003-75072155fe.png" alt="图片"><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-004-b36d1305cd.png" alt="图片"></p>
+<p>我写了一些代码来测试这一点<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-001-1694889935.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-002-a62969cd1a.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-003-75072155fe.png" alt="图片"><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-004-b36d1305cd.png" alt="图片"></p>
 <p>core::slice::raw::from_raw_parts <a href="core::slice::raw::from_raw_parts">core::slice::raw::from_raw_parts</a> 不会分配堆块</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-005-a87011389b.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-006-9a58dffe9a.png" alt="图片">
-res.to_vec() 会另外分配一个大小相同的堆块，并把 res 这个切片中的数据拷贝到这块新内存中。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-007-3c32a84f52.png" alt="图片">
-在后面的 <code>vec![recv_data.len().to_le_bytes().to_vec(), recv_data.to_vec()].concat() </code> 中，<code> recv_data.to_vec()</code> 又会分配一个大小相同的块并拷贝之前的数据，所以在 free 之后会连续发生两次分配</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-005-a87011389b.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-006-9a58dffe9a.png" alt="图片"><br>res.to_vec() 会另外分配一个大小相同的堆块，并把 res 这个切片中的数据拷贝到这块新内存中。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-007-3c32a84f52.png" alt="图片"><br>在后面的 <code>vec![recv_data.len().to_le_bytes().to_vec(), recv_data.to_vec()].concat() </code> 中，<code> recv_data.to_vec()</code> 又会分配一个大小相同的块并拷贝之前的数据，所以在 free 之后会连续发生两次分配</p>
 <h2 id="代码审计">代码审计</h2>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-008-25d0b006fc.png" alt="图片"></p>
 <h2 id="漏洞点libc-227so">漏洞点：libc-2.27.so</h2>
@@ -1698,26 +1684,16 @@ let res_msg = vec![res_msg, key_exchange_sign.to_vec()].concat();
 <li>到下一次 UAF 时，发送相关命令；这一次写入被释放 chunk 的内容就是这个命令。随后分配返回原来的 chunk，res.to_vec() 创建一个新 chunk 并拷贝原 chunk 的内容，也就是这个命令；当它的生命周期结束时，就会调用 system(command)</li>
 </ol>
 <h2 id="调试">调试</h2>
-<p>把它载入 IDA，通过汇编设置断点，但后面的汇编我实在看不懂，所以只能在 read 和 write 处设置断点
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-009-708967f580.png" alt="图片"></p>
-<p><a href="https://blog.csdn.net/counsellor/article/details/125882904">https://blog.csdn.net/counsellor/article/details/125882904</a>
-至于签名有多少字节、signature.len() 取多少字节等问题，可以用相同的函数写一个 Rust 程序来检查，也可以问 GPT 相关的交换流程</p>
+<p>把它载入 IDA，通过汇编设置断点，但后面的汇编我实在看不懂，所以只能在 read 和 write 处设置断点<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-009-708967f580.png" alt="图片"></p>
+<p><a href="https://blog.csdn.net/counsellor/article/details/125882904">https://blog.csdn.net/counsellor/article/details/125882904</a><br>至于签名有多少字节、signature.len() 取多少字节等问题，可以用相同的函数写一个 Rust 程序来检查，也可以问 GPT 相关的交换流程</p>
 <p>用 pause 来找到对应函数的断点；最后那段 <code>    let mut recv_iov = [iovec {         iov_base: vec![0u8; recv_size].as_mut_ptr() as *mut _,  //生命周期问题导致存在悬挂指针         iov_len: recv_size,     }];</code> 所执行的分配应该位于<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-010-99f1791e7a.png" alt="图片"></p>
 <h2 id="exp-1">exp</h2>
-<p>这里需要新建一个线程来运行 listen，因为发送之后最终还要等待 connec 函数成功连接，才能拿到 listen 返回的客户端 fd，而 connec 返回的是服务器端 fd
-为了防止 connec 在 accept 启动之前就运行，这里使用 pause()</p>
+<p>这里需要新建一个线程来运行 listen，因为发送之后最终还要等待 connec 函数成功连接，才能拿到 listen 返回的客户端 fd，而 connec 返回的是服务器端 fd<br>为了防止 connec 在 accept 启动之前就运行，这里使用 pause()</p>
 <h3 id="泄露-libc">泄露 libc</h3>
-<p>我们不能发送零字节，因为这样 recvmsg 会阻塞；所以我们尝试发送单个 0 字节，结果出现如下情况
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-011-066d8d4d59.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-012-5d70b67b8a.png" alt="图片">
-这发生在 <code>  vec![recv_data.len().to_le_bytes().to_vec(), recv_data.to_vec()].concat()</code> 处，因为 fd 的值被改变了，所以 fd 不再是 unsorted_chunk 的值
-要绕过这一点：首先，分配之后这个 chunk 必须再次被释放，并且赋值之后 fd 或 bk 部分必须仍残留 libc 数据，同时 fd 必须指向 unsorted_chunk 的地址。</p>
+<p>我们不能发送零字节，因为这样 recvmsg 会阻塞；所以我们尝试发送单个 0 字节，结果出现如下情况<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-011-066d8d4d59.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-012-5d70b67b8a.png" alt="图片"><br>这发生在 <code>  vec![recv_data.len().to_le_bytes().to_vec(), recv_data.to_vec()].concat()</code> 处，因为 fd 的值被改变了，所以 fd 不再是 unsorted_chunk 的值<br>要绕过这一点：首先，分配之后这个 chunk 必须再次被释放，并且赋值之后 fd 或 bk 部分必须仍残留 libc 数据，同时 fd 必须指向 unsorted_chunk 的地址。</p>
 <p>当我在 malloc 上设置断点时，发现第一次分配使用的是 <code>_rust_alloc_zeroed</code>，没有触发断点——可能用了别的函数。在 IDA 中检查后发现它用的是 <code>calloc</code>。它和 malloc 的区别在于：一开始它不会从 tcache 中取 chunk，而是直接开始检查该大小是否属于 fastbin（类似于低版本的 malloc，但当 fastbin 有多余的 chunk 时，会把它们链入 tcache）</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-013-cdd38d69b7.png" alt="图片">
-然后是一次正常的 free
-第二次分配使用的是 <code>__rust_alloc</code>，对应 malloc
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-014-72cf723b0b.png" alt="图片">
-如果第一次分配绕过 tcache 去取 chunk，那么释放时因为 tcache 已满，它会进入 unsorted bin，下一次分配又会再次从 tcache 中找到它；而且后续所有的 chunk 都可以从 tcache 中找到，free 也可以直接进 tcache 或进 unsorted bin——那么问题就解决了。简而言之，经过这次 free 并赋值之后，后续所有的 malloc 都只能来自 tcache；这里我逐一尝试了能把 tcache 填满的那些 bin 对应的 chunk 大小</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-013-cdd38d69b7.png" alt="图片"><br>然后是一次正常的 free<br>第二次分配使用的是 <code>__rust_alloc</code>，对应 malloc<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-014-72cf723b0b.png" alt="图片"><br>如果第一次分配绕过 tcache 去取 chunk，那么释放时因为 tcache 已满，它会进入 unsorted bin，下一次分配又会再次从 tcache 中找到它；而且后续所有的 chunk 都可以从 tcache 中找到，free 也可以直接进 tcache 或进 unsorted bin——那么问题就解决了。简而言之，经过这次 free 并赋值之后，后续所有的 malloc 都只能来自 tcache；这里我逐一尝试了能把 tcache 填满的那些 bin 对应的 chunk 大小</p>
 <h3 id="覆盖-free_hook">覆盖 free_hook</h3>
 <p>这里我们仍然要确保 malloc 和 calloc 不会去搜索 unsorted bin（不过看起来通过一些堆风水，下一次也能成功）。同时，因为这里需要写入某个 tcache chunk 的 fd，并把原始内容拷贝到 fd 所指向的那个 chunk 上——从而用 system 覆盖 free_hook——所以它必须是 tcache 上的一个 chunk。第一次分配是 calloc，此时要求该 chunk 处于 fastbin 或 smallbin 中；释放后它进入 tcache；赋值写入 fd；下一次分配从 tcache 中取出；再下一次分配则返回 free_hook-8 这个 chunk；然后拷贝操作用 system 覆盖了 free_hook</p>
 <pre><code class="language-c">  if (tc_idx &lt; mp_.tcache_bins
@@ -1789,8 +1765,7 @@ int system(const char * cmdstring)
 </code></pre>
 <p>system 调用失败会导致派生出的子进程退出。<del>用 gdb 调试时一直卡在子进程里退不出来</del> 后来发现卡住是因为原来的断点无法插入，所以才卡住——很离谱。但后来，由于 free 操作很多，任何断点都会导致卡住。所以我把它设置为在 hand_client 中不跟随子进程，但进入 hand_client 又需要先进入子进程，相当麻烦</p>
 <h3 id="执行命令">执行命令</h3>
-<p>覆盖完成之后，下一次我们发送相关命令时，它会被接收并赋值；当它的生命周期结束时会调用 free，从而触发 system(command)。这里需要 cat flag 并把它重定向到服务器的套接字（大概是因为发送之后
-会有一次对存放命令的那块堆的 free 操作），并使用 recv_msg 把 flag 内容和刚才发送的内容一起接收回来</p>
+<p>覆盖完成之后，下一次我们发送相关命令时，它会被接收并赋值；当它的生命周期结束时会调用 free，从而触发 system(command)。这里需要 cat flag 并把它重定向到服务器的套接字（大概是因为发送之后<br>会有一次对存放命令的那块堆的 free 操作），并使用 recv_msg 把 flag 内容和刚才发送的内容一起接收回来</p>
 <h3 id="exp-2">exp</h3>
 <pre><code class="language-python">from pwn import *
 import rsa
@@ -2336,9 +2311,7 @@ send(u32(server_fd),15,b&quot;cat ./flag &gt;&amp;9\x00&quot;)
 recv_data=recv(u32(client_fd),0x50) 
 print(&quot;recv_data&quot;,recv_data)
 </code></pre>
-<p>这些 <code>sh:</code> 行是因为我把 proxy 放在后台运行，所以它的输出直接打到了终端上
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-015-0d9c9e5e15.png" alt="图片">
-由于这里生成公钥相当麻烦，我没有尝试太多其他可能的大小</p>
+<p>这些 <code>sh:</code> 行是因为我把 proxy 放在后台运行，所以它的输出直接打到了终端上<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20N1CTF/assets/csdn-139752095/image-015-0d9c9e5e15.png" alt="图片"><br>由于这里生成公钥相当麻烦，我没有尝试太多其他可能的大小</p>
 
     </article>
     

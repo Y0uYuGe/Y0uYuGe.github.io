@@ -22,14 +22,9 @@
 <p><a href="https://bbs.kanxue.com/thread-274259.htm#msg_header_h2_6">https://bbs.kanxue.com/thread-274259.htm#msg_header_h2_6</a></p>
 <p><a href="http://www.blackbird.wang/2022/08/30/LLVM-PASS%E7%B1%BBpwn%E9%A2%98%E6%80%BB%E7%BB%93/">http://www.blackbird.wang/2022/08/30/LLVM-PASS%E7%B1%BBpwn%E9%A2%98%E6%80%BB%E7%BB%93/</a></p>
 <h1 id="检查">检查</h1>
-<p>因为它是通过 opt 运行的，opt 会从动态库 VMPASS.so 中加载 PASS 类，再用这个 PASS 类对 IR 进行优化，所以被打的对象是 opt
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-001-b21af757c3.png" alt="图片"></p>
+<p>因为它是通过 opt 运行的，opt 会从动态库 VMPASS.so 中加载 PASS 类，再用这个 PASS 类对 IR 进行优化，所以被打的对象是 opt<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-001-b21af757c3.png" alt="图片"></p>
 <h1 id="逆向分析">逆向分析</h1>
-<p>搜索 vtable 来定位虚表；最底部的函数是被重写的虚函数 runOnFunction
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-002-b02e777c97.png" alt="图片">
-它检查你正在优化的程序中的函数名；如果存在一个名为 o0o0o0o0 的函数，就调用 sub_6AC0
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-003-b81b8b7b22.png" alt="图片">
-逐块遍历该函数</p>
+<p>搜索 vtable 来定位虚表；最底部的函数是被重写的虚函数 runOnFunction<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-002-b02e777c97.png" alt="图片"><br>它检查你正在优化的程序中的函数名；如果存在一个名为 o0o0o0o0 的函数，就调用 sub_6AC0<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-003-b81b8b7b22.png" alt="图片"><br>逐块遍历该函数</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-004-40456923b2.png" alt="图片"></p>
 <p>然后它调用 sub_6B80 来处理该块</p>
 <pre><code class="language-cpp">__int64 __fastcall sub_6B80(__int64 a1, llvm::BasicBlock *basic_block)
@@ -204,52 +199,26 @@
 }
 </code></pre>
 <h1 id="漏洞">漏洞</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-005-d28bf2f00d.png" alt="图片">
-根据指定的寄存器，把该寄存器值所指向的内容赋给另一个寄存器
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-006-00480a76eb.png" alt="图片">
-根据指定的寄存器，把另一个寄存器赋给该寄存器值所指向的内容</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-005-d28bf2f00d.png" alt="图片"><br>根据指定的寄存器，把该寄存器值所指向的内容赋给另一个寄存器<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-006-00480a76eb.png" alt="图片"><br>根据指定的寄存器，把另一个寄存器赋给该寄存器值所指向的内容</p>
 <p>存在任意地址读写</p>
 <h1 id="思路">思路</h1>
-<p> <del>PIE 没有开启，因此可以利用任意读写，用一个 gadget 覆盖 free 的 GOT 表项，因为 opt 优化调用的函数最终会调用 free</del> 
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-007-3bb9cd46cd.png" alt="图片">
-这样不太行；被调用的并不是 PIE 中的 free，最后用的是另一个函数中的 free
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-008-d2e0f7d14e.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-009-e41284d0cf.png" alt="图片">
-但是，如果最终执行到 call free 这条指令时，此时 rbp 为 0，会导致段错误
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-010-a47bac9df5.png" alt="图片"></p>
-<p>这里参考了 winmt 大佬的思路
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-011-67421cab71.png" alt="图片">
-选这个
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-012-bfcd05c4d5.png" alt="图片">
-GOT 表：找到了两个 GOT 表，两个都试一下</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-013-c17bfd8138.png" alt="图片">
-第二个失败了；上面那个成功了</p>
+<p> <del>PIE 没有开启，因此可以利用任意读写，用一个 gadget 覆盖 free 的 GOT 表项，因为 opt 优化调用的函数最终会调用 free</del><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-007-3bb9cd46cd.png" alt="图片"><br>这样不太行；被调用的并不是 PIE 中的 free，最后用的是另一个函数中的 free<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-008-d2e0f7d14e.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-009-e41284d0cf.png" alt="图片"><br>但是，如果最终执行到 call free 这条指令时，此时 rbp 为 0，会导致段错误<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-010-a47bac9df5.png" alt="图片"></p>
+<p>这里参考了 winmt 大佬的思路<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-011-67421cab71.png" alt="图片"><br>选这个<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-012-bfcd05c4d5.png" alt="图片"><br>GOT 表：找到了两个 GOT 表，两个都试一下</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-013-c17bfd8138.png" alt="图片"><br>第二个失败了；上面那个成功了</p>
 <h1 id="调试">调试</h1>
 <pre><code class="language-bash">clang-8 -emit-llvm -S exp.c -o exp.bc或者
 clang-8 -emit-llvm -S exp.c -o exp.ll
 </code></pre>
 <pre><code class="language-bash">opt-8 -load ./VMPass.so -VMPass ./exp.bc
 </code></pre>
-<p>调试 opt，然后跟进到 .so 文件中
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-014-0f88314d97.png" alt="图片">
-opt 一开始并不会加载 .so 模块；它会先执行一些初始化函数，然后才加载 .so 模块。
-调试时可以在 llvm::Pass::preparePassManager 处下断点。执行到这里时，LLVMHello.so 文件已经被加载（或者跳到 main+11507），这样我们就可以根据偏移量在 LLVMHello.so 内部下断点
-检查 vmmap，发现它已经被加载了，然后就可以根据偏移量在 runOnFunction 处下断点
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-015-ae368450dd.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-016-981497093b.png" alt="图片"></p>
-<p>成功
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-017-60e2ca59fb.png" alt="图片">
-注意寄存器一开始都是 0，所以 add 实际上等同于直接赋值</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-018-876c46222c.png" alt="图片">
-找到 GOT 表</p>
+<p>调试 opt，然后跟进到 .so 文件中<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-014-0f88314d97.png" alt="图片"><br>opt 一开始并不会加载 .so 模块；它会先执行一些初始化函数，然后才加载 .so 模块。<br>调试时可以在 llvm::Pass::preparePassManager 处下断点。执行到这里时，LLVMHello.so 文件已经被加载（或者跳到 main+11507），这样我们就可以根据偏移量在 LLVMHello.so 内部下断点<br>检查 vmmap，发现它已经被加载了，然后就可以根据偏移量在 runOnFunction 处下断点<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-015-ae368450dd.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-016-981497093b.png" alt="图片"></p>
+<p>成功<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-017-60e2ca59fb.png" alt="图片"><br>注意寄存器一开始都是 0，所以 add 实际上等同于直接赋值</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-018-876c46222c.png" alt="图片"><br>找到 GOT 表</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-019-9831f5c709.png" alt="图片"></p>
 <h1 id="定位-pass-名称">定位 PASS 名称</h1>
-<p>通过对 <code>_cxa_atexit</code> 的引用来定位（在 start 函数中）
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-020-da538ecaf7.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-021-35f19056d6.png" alt="图片"></p>
+<p>通过对 <code>_cxa_atexit</code> 的引用来定位（在 start 函数中）<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-020-da538ecaf7.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-021-35f19056d6.png" alt="图片"></p>
 <h1 id="exp">exp</h1>
-<p>add 的第二个参数使用 64 位
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-022-f09d71c8ab.png" alt="图片"></p>
+<p>add 的第二个参数使用 64 位<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2019-2021/CTF-PWN-LLVM%20-%20%5BRedHat%20Cup%202021%20simpleVM%5D/assets/csdn-140048804/image-022-f09d71c8ab.png" alt="图片"></p>
 <pre><code class="language-c">
 void add(int arg1,int arg2);
 void load(int arg1);

@@ -29,10 +29,7 @@
 <pre><code class="language-bash">mount -t overlay overlay -o lowerdir=lower1:lower2:lower3,upperdir=upper,workdir=work merged_dir
 </code></pre>
 <p>这条命令把 lower1、lower2、lower3、upper、work 这几个目录的内容放到 merged_dir 目录中</p>
-<p>lowerdir：只读层，对应当前层以下所有层的文件
-upperdir：读写层，当前层的文件
-workdir：不用管它
-merged_dir：合并结果存放的位置</p>
+<p>lowerdir：只读层，对应当前层以下所有层的文件<br>upperdir：读写层，当前层的文件<br>workdir：不用管它<br>merged_dir：合并结果存放的位置</p>
 <p>此时，如果修改某个文件的内容，如果该文件来自 lowerdir，那么修改之后，upperdir 中会出现一个带有修改内容的文件，但 lowerdir 中的内容不会改变</p>
 <p>此时，如果从 merged_dir 中删除某个文件，如果该文件来自 lowerdir，那么在 merged_dir 中删除之后，upperdir 中会出现一个 whiteout 文件（标记该文件已经消失），但 lowerdir 中的文件不会改变</p>
 <h1 id="sudo-docker-info">sudo docker info</h1>
@@ -45,9 +42,7 @@ merged_dir：合并结果存放的位置</p>
 <p>docker 拉取镜像时，镜像位于</p>
 <pre><code class="language-bash">/var/snap/docker/common/var-lib-docker/overlay2
 </code></pre>
-<p>查看这个目录
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-003-827b160d6b.png" alt="图片">
-除了 l 目录之外，其他都是镜像层</p>
+<p>查看这个目录<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-003-827b160d6b.png" alt="图片"><br>除了 l 目录之外，其他都是镜像层</p>
 <ul>
 <li>diff：该镜像层的文件</li>
 <li>link：当前镜像层 diff 在 l 目录下对应符号链接的名字</li>
@@ -68,9 +63,7 @@ merged_dir：合并结果存放的位置</p>
 <li>upperdir：container 层的 diff 文件</li>
 <li>merged：container 层的 merged</li>
 </ul>
-<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-005-8eed029bfe.png" alt="图片">
-container 层把 init 层和 image 层中同名的内容合并到 container 层的 merged 层中
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-006-635e492b50.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-005-8eed029bfe.png" alt="图片"><br>container 层把 init 层和 image 层中同名的内容合并到 container 层的 merged 层中<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%207%20-%20%EF%BC%BB%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%BD%EF%BC%88%E8%81%94%E5%90%88%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E3%80%81overlay%20%E6%8C%82%E8%BD%BD%E3%80%81Docker/assets/csdn-137211344/image-006-635e492b50.png" alt="图片"></p>
 <h1 id="动手实践">动手实践</h1>
 <p><a href="https://github.com/FULLK/llkdocker/tree/main/unionfilesystem">https://github.com/FULLK/llkdocker/tree/main/unionfilesystem</a></p>
 <p>创建五个文件夹</p>
@@ -172,8 +165,7 @@ llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ sudo tree -L 2
 llk@llk-virtual-machine:~/Desktop/docker/unionfilesystem$ 
 </code></pre>
 <h1 id="疑问">疑问</h1>
-<p>也就是说，docker 运行容器后，会把 image 层、init 层以及当前 container 层的 diff 挂载到 container 层的 merged 上，但我发现 merged 里面没有内容
-而且 mount | grep overlay2 也没有找到 docker 启动容器时应该挂载的那个 merged</p>
+<p>也就是说，docker 运行容器后，会把 image 层、init 层以及当前 container 层的 diff 挂载到 container 层的 merged 上，但我发现 merged 里面没有内容<br>而且 mount | grep overlay2 也没有找到 docker 启动容器时应该挂载的那个 merged</p>
 <p>有大佬说我需要参考源码才能知道最新的流程。这里先放一放，等后面遇到如何实现的时候再回来看</p>
 <p><a href="https://github.com/microsoft/docker/blob/master/volume/volume.go#L18">https://github.com/microsoft/docker/blob/master/volume/volume.go#L18</a></p>
 <p><a href="https://github.com/microsoft/docker/blob/master/daemon/graphdriver/overlay/overlay.go#L234">https://github.com/microsoft/docker/blob/master/daemon/graphdriver/overlay/overlay.go#L234</a></p>

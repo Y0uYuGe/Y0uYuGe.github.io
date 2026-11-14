@@ -20,18 +20,13 @@
     <article class="post-body">
 <p>带叉的表示：文字别看，文字难懂</p>
 <h1 id="什么是排序">什么是排序</h1>
-<p>关键字可以相同
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-001-e8b76145d3.png" alt="图片"></p>
+<p>关键字可以相同<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-001-e8b76145d3.png" alt="图片"></p>
 <h1 id="排序算法的应用">排序算法的应用</h1>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-002-a584218a70.png" alt="图片"></p>
 <h1 id="排序算法的评价指标">排序算法的评价指标</h1>
-<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-003-8420b4f80a.png" alt="图片">
-即：如果相同的元素保持与之前相同的相对顺序，则排序是稳定的；否则是不稳定的
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-004-5c9f518b77.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-003-8420b4f80a.png" alt="图片"><br>即：如果相同的元素保持与之前相同的相对顺序，则排序是稳定的；否则是不稳定的<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-004-5c9f518b77.png" alt="图片"></p>
 <h1 id="排序算法的分类">排序算法的分类</h1>
-<p>内部排序：待排序数据放在内存中，排序完成后写回磁盘
-外部排序：数据无法一次全部放入内存进行排序，需要分多次处理。每次从磁盘读取、排序，再写回磁盘，并且需要额外的处理，因为每次只对部分数据排序，把不同部分合并到一起可能无法直接完成
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-005-bc8dc447cf.png" alt="图片"></p>
+<p>内部排序：待排序数据放在内存中，排序完成后写回磁盘<br>外部排序：数据无法一次全部放入内存进行排序，需要分多次处理。每次从磁盘读取、排序，再写回磁盘，并且需要额外的处理，因为每次只对部分数据排序，把不同部分合并到一起可能无法直接完成<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-005-bc8dc447cf.png" alt="图片"></p>
 <h1 id="总结">总结</h1>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/05-%E6%8E%92%E5%BA%8F/%E6%8E%92%E5%BA%8F%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E5%88%86%E7%B1%BB%E3%80%81%E5%BA%94%E7%94%A8%E3%80%81%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%EF%BC%89/assets/csdn-135412270/image-006-dad6c09df2.png" alt="图片"></p>
 

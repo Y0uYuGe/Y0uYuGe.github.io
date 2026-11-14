@@ -19,25 +19,18 @@
     <div class="meta"><time>2023-11-16</time><span class="tag">#学习</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#ROP</span></div>
     <article class="post-body">
 <h1 id="ret2shellcode">ret2shellcode</h1>
-<p>控制程序执行我们填入的代码。
-条件：</p>
+<p>控制程序执行我们填入的代码。<br>条件：</p>
 <ul>
 <li>我们填入的代码所在位置具有可执行权限</li>
 </ul>
 <h1 id="htbcybersanta-2021-sleigh">HTBCyberSanta 2021 sleigh</h1>
 <p><strong>查看保护</strong></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-001-136ce315f8.png" alt="图片">
-&#39;Has RWX segments&#39; 表示存在可读可写可执行的段</p>
-<p><strong>main 函数</strong>
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-002-ce73f30b01.png" alt="图片">
-banner 函数：
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-003-0e43c06e4b.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-001-136ce315f8.png" alt="图片"><br>&#39;Has RWX segments&#39; 表示存在可读可写可执行的段</p>
+<p><strong>main 函数</strong><br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-002-ce73f30b01.png" alt="图片"><br>banner 函数：<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-003-0e43c06e4b.png" alt="图片"></p>
 <p>repair 函数：</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-004-57383ff4d5.png" alt="图片">
-这里 read 存在栈溢出，第一个 fprintf 打印了 buf 的地址</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-004-57383ff4d5.png" alt="图片"><br>这里 read 存在栈溢出，第一个 fprintf 打印了 buf 的地址</p>
 <p>goodbye 函数</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-005-fffa292758.png" alt="图片">
-sleigh 函数</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-005-fffa292758.png" alt="图片"><br>sleigh 函数</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-006-c2a968391d.png" alt="图片"></p>
 <p>C 库函数 int atoi(const char *str) 把参数 str 所指向的字符串转换为一个整数（类型为 int 型）。</p>
 <p><strong>fprintf 用法</strong></p>
@@ -58,11 +51,8 @@ int main()
 </code></pre>
 <h1 id="思路">思路</h1>
 <p>栈溢出，且栈可执行：将泄露的 buf 地址作为返回地址，同时在 buf 中写入 shellcode</p>
-<p>一个 shellcode 不行就换下一个
-<a href="https://blog.csdn.net/A951860555/article/details/114106118">shellcdoe</a>
-<a href="https://shell-storm.org/shellcode/files/shellcode-806.html">shellcode</a></p>
-<p>对接收到的字节 &#39;0x ...&#39; 的处理：先转换为整数，再 p64
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-007-c8d871a6c5.png" alt="图片"></p>
+<p>一个 shellcode 不行就换下一个<br><a href="https://blog.csdn.net/A951860555/article/details/114106118">shellcdoe</a><br><a href="https://shell-storm.org/shellcode/files/shellcode-806.html">shellcode</a></p>
+<p>对接收到的字节 &#39;0x ...&#39; 的处理：先转换为整数，再 p64<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%ACROP-%E3%80%90ret2shellcode%E3%80%91/assets/csdn-134445867/image-007-c8d871a6c5.png" alt="图片"></p>
 <pre><code class="language-python">s.recvuntil(b&quot; [&quot;)
 leakVariable = p64(int(s.recvuntil(b&quot;]&quot;)[:-1].decode(),16))//转换到八个字节的地址形式
 </code></pre>

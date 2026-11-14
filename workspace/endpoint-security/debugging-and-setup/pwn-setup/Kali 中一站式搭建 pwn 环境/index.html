@@ -20,11 +20,8 @@
     <article class="post-body">
 <p>为了防止出现某些问题需要重新配置 pwn 环境的情况，每次都一个一个去搜实在太麻烦了，这里做个汇总，方便自己下次重新配置；需要的工具会在这篇博客中实时更新……</p>
 <h1 id="kali-无法启动">Kali 无法启动</h1>
-<p><img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/Kali%20%E4%B8%AD%E4%B8%80%E7%AB%99%E5%BC%8F%E6%90%AD%E5%BB%BA%20pwn%20%E7%8E%AF%E5%A2%83/assets/csdn-138201377/image-001-54c8e9ae02.png" alt="图片">
-解决办法：扩容磁盘，或者删除一些不需要的东西
-可以看到 100%</p>
-<p><img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/Kali%20%E4%B8%AD%E4%B8%80%E7%AB%99%E5%BC%8F%E6%90%AD%E5%BB%BA%20pwn%20%E7%8E%AF%E5%A2%83/assets/csdn-138201377/image-002-bab12605cf.png" alt="图片">
-解决办法：<a href="https://blog.csdn.net/weixin_39510813/article/details/78387334">https://blog.csdn.net/weixin_39510813/article/details/78387334</a></p>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/Kali%20%E4%B8%AD%E4%B8%80%E7%AB%99%E5%BC%8F%E6%90%AD%E5%BB%BA%20pwn%20%E7%8E%AF%E5%A2%83/assets/csdn-138201377/image-001-54c8e9ae02.png" alt="图片"><br>解决办法：扩容磁盘，或者删除一些不需要的东西<br>可以看到 100%</p>
+<p><img src="/workspace/endpoint-security/debugging-and-setup/pwn-setup/Kali%20%E4%B8%AD%E4%B8%80%E7%AB%99%E5%BC%8F%E6%90%AD%E5%BB%BA%20pwn%20%E7%8E%AF%E5%A2%83/assets/csdn-138201377/image-002-bab12605cf.png" alt="图片"><br>解决办法：<a href="https://blog.csdn.net/weixin_39510813/article/details/78387334">https://blog.csdn.net/weixin_39510813/article/details/78387334</a></p>
 <h1 id="解决-kali-没有网络的问题配置-eth0-即可解决">解决 Kali 没有网络的问题（配置 eth0 即可解决）</h1>
 <ol>
 <li><p><strong>sudo systemctl restart networking.service</strong></p>
@@ -43,8 +40,7 @@
 </li>
 </ul>
 </li>
-<li><p><strong>三者之间的关系</strong>
-当你执行 <code>sudo systemctl restart networking.service</code> 时，系统会根据 <code>/etc/network/interfaces</code> 中的配置信息重新配置并启动所有网络接口；这里专门指定了 <code>eth0</code> 接口使用 DHCP 获取 IP 地址及其他相关网络参数。也就是说，在你修改了 <code>/etc/network/interfaces</code> 中的配置之后，通过重启 <code>networking.service</code> 服务，新的配置就会应用到网络接口 <code>eth0</code> 上，实现网络配置的更新和生效。</p>
+<li><p><strong>三者之间的关系</strong><br>当你执行 <code>sudo systemctl restart networking.service</code> 时，系统会根据 <code>/etc/network/interfaces</code> 中的配置信息重新配置并启动所有网络接口；这里专门指定了 <code>eth0</code> 接口使用 DHCP 获取 IP 地址及其他相关网络参数。也就是说，在你修改了 <code>/etc/network/interfaces</code> 中的配置之后，通过重启 <code>networking.service</code> 服务，新的配置就会应用到网络接口 <code>eth0</code> 上，实现网络配置的更新和生效。</p>
 </li>
 </ol>
 <h1 id="换源">换源</h1>

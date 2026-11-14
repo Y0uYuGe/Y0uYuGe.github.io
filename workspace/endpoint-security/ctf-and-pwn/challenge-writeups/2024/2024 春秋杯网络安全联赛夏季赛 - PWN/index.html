@@ -19,11 +19,7 @@
     <div class="meta"><time>2024-07-10</time><span class="tag">#Web 安全</span><span class="tag">#安全</span><span class="tag">#Pwn</span><span class="tag">#ROP</span></div>
     <article class="post-body">
 <h1 id="stdout">stdout</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-001-358837f6ac.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-002-644f6eb374.png" alt="图片">
-溢出并返回到 vuln
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-003-80eee9ed5d.png" alt="图片">
-然后 ROP</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-001-358837f6ac.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-002-644f6eb374.png" alt="图片"><br>溢出并返回到 vuln<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-003-80eee9ed5d.png" alt="图片"><br>然后 ROP</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-004-39a7a56027.png" alt="图片"></p>
 <h2 id="测试">测试</h2>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
@@ -41,9 +37,7 @@ int main() {
     return 0;
 }
 </code></pre>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-005-0b5d959366.png" alt="图片">
-取消注释后
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-006-c2649127d9.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-005-0b5d959366.png" alt="图片"><br>取消注释后<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-006-c2649127d9.png" alt="图片"></p>
 <h2 id="绕过-setvbufstdout-0ll-2-0ll">绕过 setvbuf(stdout, 0LL, 2, 0LL)</h2>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -61,8 +55,7 @@ int main() {
     return 0;
 }
 </code></pre>
-<p>执行 <code> setvbuf(stdout, 0LL, 2, 0LL);</code> 之后，可以看到之前缓冲区里的内容被输出了
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-007-6552337a87.png" alt="图片"></p>
+<p>执行 <code> setvbuf(stdout, 0LL, 2, 0LL);</code> 之后，可以看到之前缓冲区里的内容被输出了<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-007-6552337a87.png" alt="图片"></p>
 <h2 id="或者一直输出直到缓冲区填满">或者一直输出直到缓冲区填满</h2>
 <h2 id="使用-systembinsh-或-onegadget即使-setvbufstdout-0ll-0-0ll-也能立即回显">使用 system(&quot;/bin/sh&quot;) 或 onegadget，即使 setvbuf(stdout, 0LL, 0, 0LL); 也能立即回显</h2>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
@@ -104,15 +97,11 @@ int main() {
     return 0;
 }
 </code></pre>
-<p>发现可以
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-009-94509eaa5d.png" alt="图片"></p>
+<p>发现可以<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-009-94509eaa5d.png" alt="图片"></p>
 <h2 id="参考-httpsstarrysky1004githubio202407052024-shu-qi-xue-xi-ji-l">参考 <a href="https://starrysky1004.github.io/2024/07/05/2024-shu-qi-xue-xi-ji-lu/#toc-heading-4">https://starrysky1004.github.io/2024/07/05/2024-shu-qi-xue-xi-ji-lu/#toc-heading-4</a></h2>
-<p>显式调用 fflush 函数
-流被关闭（调用 fclose）
-程序正常终止（调用 exit）</p>
+<p>显式调用 fflush 函数<br>流被关闭（调用 fclose）<br>程序正常终止（调用 exit）</p>
 <h2 id="思路">思路</h2>
-<p>gadget 不够，所以用 csu 中的。通过一个特殊的 ROP gadget 修改 GOT 表，再用 gadget 满足 onegadget 的约束条件，最后调用被覆盖的 GOT 表项
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-010-dcef5e9f40.png" alt="图片"></p>
+<p>gadget 不够，所以用 csu 中的。通过一个特殊的 ROP gadget 修改 GOT 表，再用 gadget 满足 onegadget 的约束条件，最后调用被覆盖的 GOT 表项<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-010-dcef5e9f40.png" alt="图片"></p>
 <h2 id="exp">exp</h2>
 <pre><code class="language-python">from pwn import *
 context(os=&#39;linux&#39;, arch=&#39;amd64&#39;, log_level=&#39;debug&#39;)
@@ -160,13 +149,10 @@ p.interactive()
 </code></pre>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-011-313c658a5e.png" alt="图片"></p>
 <h1 id="shuffle">shuffle</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-012-75bb2c3a8e.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-013-c0b5ef8831.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-012-75bb2c3a8e.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-013-c0b5ef8831.png" alt="图片"></p>
 <p>用 openat、mmap、writev 读取 flag，或者 openat preadv2 writev 等</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-014-ecd5312561.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-015-99f1b7de18.png" alt="图片"></p>
-<p>用零字节绕过 shuffle（零字节前最多只能有一个非零字节）
-然后写 shellcode 即可（没有栈，用 mmap 分配的内存充当栈，存放字符串和 iovec 结构体）</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-014-ecd5312561.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-015-99f1b7de18.png" alt="图片"></p>
+<p>用零字节绕过 shuffle（零字节前最多只能有一个非零字节）<br>然后写 shellcode 即可（没有栈，用 mmap 分配的内存充当栈，存放字符串和 iovec 结构体）</p>
 <h2 id="exp-1">exp</h2>
 <pre><code class="language-python">from pwn import *
 context(os=&#39;linux&#39;, arch=&#39;amd64&#39;, log_level=&#39;debug&#39;)
@@ -289,20 +275,11 @@ int main()
 </code></pre>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-016-083c26c9b3.png" alt="图片"></p>
 <h1 id="savetheprincess">savetheprincess</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-017-538b2b473b.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-018-e5a2e6b6a7.png" alt="图片">
-用 openat+pread+write 绕过</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-019-2e369a91a2.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-020-3007b82afd.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-017-538b2b473b.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-018-e5a2e6b6a7.png" alt="图片"><br>用 openat+pread+write 绕过</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-019-2e369a91a2.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-020-3007b82afd.png" alt="图片"></p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-021-79f4e44d12.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-022-ff4bba8d66.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-023-f398612a50.png" alt="图片">
-没有时间限制也没有次数限制，所以可以爆破，26*7 次。然后触发格式化字符串泄露 canary 和 libc 地址，再溢出并 ROP 绕过沙箱
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-024-f8965e7232.png" alt="图片">
-把 buf 填满，打印 buf 时会把 i 也一起打印出来，这样就能判断 i 是否自增，从而判断当前字节是否爆破正确</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-025-0eaa18c5bd.png" alt="图片">
-找不到控制第六个参数的 gadget，所以把 mmap 换成 pread，或者<strong>用 mprotect 让栈可执行（注意要页对齐），再用 openat、mmap、write 写 shellcode 读取 flag</strong>
-pread 无法从终端读取，所以要事先泄露一个栈地址，把 flag 文件名放在栈上</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-022-ff4bba8d66.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-023-f398612a50.png" alt="图片"><br>没有时间限制也没有次数限制，所以可以爆破，26*7 次。然后触发格式化字符串泄露 canary 和 libc 地址，再溢出并 ROP 绕过沙箱<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-024-f8965e7232.png" alt="图片"><br>把 buf 填满，打印 buf 时会把 i 也一起打印出来，这样就能判断 i 是否自增，从而判断当前字节是否爆破正确</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20%E6%98%A5%E7%A7%8B%E6%9D%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E8%81%94%E8%B5%9B%E5%A4%8F%E5%AD%A3%E8%B5%9B%20-%20PWN/assets/csdn-140205290/image-025-0eaa18c5bd.png" alt="图片"><br>找不到控制第六个参数的 gadget，所以把 mmap 换成 pread，或者<strong>用 mprotect 让栈可执行（注意要页对齐），再用 openat、mmap、write 写 shellcode 读取 flag</strong><br>pread 无法从终端读取，所以要事先泄露一个栈地址，把 flag 文件名放在栈上</p>
 <h2 id="pread">pread</h2>
 <p><code>pread()</code> 函数在 Linux 和类 Unix 系统中用于从文件描述符指定的文件中读取数据，但与普通的 <code>read()</code> 函数不同，<code>pread()</code> 允许指定从文件中的哪个偏移处开始读取</p>
 <p><code>pread()</code> 的原型如下：</p>

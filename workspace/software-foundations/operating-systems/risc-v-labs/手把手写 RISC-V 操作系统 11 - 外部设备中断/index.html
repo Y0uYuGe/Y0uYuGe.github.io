@@ -19,38 +19,25 @@
     <div class="meta"><time>2024-04-17</time><span class="tag">#risc-v</span><span class="tag">#单片机</span><span class="tag">#嵌入式硬件</span></div>
     <article class="post-body">
 <h1 id="中断分类">中断分类</h1>
-<p>本地中断：软件中断（0-3）和定时器中断（4-7）
-全局中断：外部中断（8-10）</p>
-<p>这三类中断对应 CPU 上的三个引脚
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-001-40731b9e39.png" alt="图片"></p>
+<p>本地中断：软件中断（0-3）和定时器中断（4-7）<br>全局中断：外部中断（8-10）</p>
+<p>这三类中断对应 CPU 上的三个引脚<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-001-40731b9e39.png" alt="图片"></p>
 <h1 id="mie-mip">mie mip</h1>
 <p>mstatus 中的中断寄存器是全局的，而 mie 中断寄存器处于第二级，相当于一种细化</p>
-<p>mie：在某个模式下使能某一类中断
-mip：表示在某个模式下某一类中断当前是否正在发生
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-002-b880fcebc5.png" alt="图片"></p>
+<p>mie：在某个模式下使能某一类中断<br>mip：表示在某个模式下某一类中断当前是否正在发生<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-002-b880fcebc5.png" alt="图片"></p>
 <h1 id="中断处理流程">中断处理流程</h1>
 <p>与异常处理流程类似，区别在于 mepc 被设置为保存当前 pc 的下一条指令的地址。因为中断被认为是在当前指令执行完之后才响应的，所以中断处理完毕后，应当返回到前一条指令的下一条指令继续执行。</p>
 <h1 id="外部中断">外部中断</h1>
-<p>外设向 CPU 产生中断，CPU 响应并处理该中断
-每个 CPU 只有一个引脚对应外部中断，但外设有很多
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-003-fba636b273.png" alt="图片">
-通过 PLIC 中断控制器来管理：外设产生中断源之后，由 PLIC 处理，再交给某个 CPU 来处理
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-004-42b982d52e.png" alt="图片"></p>
+<p>外设向 CPU 产生中断，CPU 响应并处理该中断<br>每个 CPU 只有一个引脚对应外部中断，但外设有很多<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-003-fba636b273.png" alt="图片"><br>通过 PLIC 中断控制器来管理：外设产生中断源之后，由 PLIC 处理，再交给某个 CPU 来处理<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-004-42b982d52e.png" alt="图片"></p>
 <h1 id="中断源">中断源</h1>
-<p>0 没有固定对应的中断源，是保留的
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-005-f2b92b9053.png" alt="图片"></p>
+<p>0 没有固定对应的中断源，是保留的<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-005-f2b92b9053.png" alt="图片"></p>
 <h1 id="plic">PLIC</h1>
-<p>PLIC 本身也是一个外设。CPU 通过将其映射到内存来访问 PLIC，这样访问内存就相当于访问 PLIC 的寄存器
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-006-60004cc117.png" alt="图片"></p>
+<p>PLIC 本身也是一个外设。CPU 通过将其映射到内存来访问 PLIC，这样访问内存就相当于访问 PLIC 的寄存器<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-006-60004cc117.png" alt="图片"></p>
 <h1 id="priority优先级">Priority（优先级）</h1>
-<p>每个中断源根据其中断源 ID 对应各自的 Priority 寄存器。每个寄存器的取值范围为 0 到 7，其中 0 表示该中断源的最低优先级
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-007-ae772d7e9a.png" alt="图片"></p>
+<p>每个中断源根据其中断源 ID 对应各自的 Priority 寄存器。每个寄存器的取值范围为 0 到 7，其中 0 表示该中断源的最低优先级<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-007-ae772d7e9a.png" alt="图片"></p>
 <h1 id="pending挂起">Pending（挂起）</h1>
-<p>PLIC 可读可写，用于表示某个中断源是否已经发生。每个 PLIC 有两个这样的寄存器，因为需要 64 位才能表示所有的中断源
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-008-e64bb00893.png" alt="图片"></p>
+<p>PLIC 可读可写，用于表示某个中断源是否已经发生。每个 PLIC 有两个这样的寄存器，因为需要 64 位才能表示所有的中断源<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-008-e64bb00893.png" alt="图片"></p>
 <h1 id="enable使能">Enable（使能）</h1>
-<p>与 hart 对应；同样也有两个，同样是因为需要 64 位才能表示所有的中断源
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-009-c402a10f01.png" alt="图片"></p>
+<p>与 hart 对应；同样也有两个，同样是因为需要 64 位才能表示所有的中断源<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-009-c402a10f01.png" alt="图片"></p>
 <h1 id="threshold">Threshold</h1>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-010-55c7fe53ad.png" alt="图片"></p>
 <h1 id="claimcomplete">Claim/Complete</h1>
@@ -63,8 +50,7 @@ mip：表示在某个模式下某一类中断当前是否正在发生
 <li>然后，由于 hart0 的 threshold 为零，允许进入</li>
 <li>该中断源对应的 pending 位被置为 1，此时将其传递给 CPU，CPU 就知道发生了某个中断</li>
 <li>然后通过 Claim 可以得知当前中断源的 ID 号，并清除 pending 位，接着进入中断处理函数</li>
-<li>然后执行 complete，通知 PLIC 当前中断已处理完毕，接着处理中断源 1，过程与上述相同
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-012-0026132600.png" alt="图片"></li>
+<li>然后执行 complete，通知 PLIC 当前中断已处理完毕，接着处理中断源 1，过程与上述相同<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-012-0026132600.png" alt="图片"></li>
 </ol>
 <h1 id="设置-uart-寄存器-ier">设置 uart 寄存器 IER</h1>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-013-1814404a51.png" alt="图片"></p>
@@ -144,13 +130,11 @@ void another_function() {
 </code></pre>
 <p>在这个例子中，虽然 <code>handle_trap()</code> 函数的定义被同时包含进了 <code>file1.c</code> 和 <code>file2.c</code>，但由于它是 <code>static inline</code> 的，每个源文件都有一个独立的内联版本（理想情况下编译器会将其内联；如果不能，每个编译单元也会有一份独立的非内联副本），最终在链接时不会出现重复定义的问题。</p>
 <h1 id="代码">代码</h1>
-<p>外设通过 uart 接口连接到 PLIC，PLIC 再连接到 CPU。当外设输入一个字符时，会产生中断，并通过 PLIC 通知 CPU 去处理该中断。
-输出则是 CPU 与 uart 直接相连：CPU 把字符传给 uart，uart 再传给外设，因此显示器自然就能显示出来</p>
+<p>外设通过 uart 接口连接到 PLIC，PLIC 再连接到 CPU。当外设输入一个字符时，会产生中断，并通过 PLIC 通知 CPU 去处理该中断。<br>输出则是 CPU 与 uart 直接相连：CPU 把字符传给 uart，uart 再传给外设，因此显示器自然就能显示出来</p>
 <h2 id="初始化-plic">初始化 plic</h2>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-015-2d2c789bc6.png" alt="图片"></p>
 <h2 id="中断处理">中断处理</h2>
-<p>根据发出的中断进入相应的 uart 中断处理函数
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-016-3329696512.png" alt="图片"></p>
+<p>根据发出的中断进入相应的 uart 中断处理函数<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E6%89%8B%E6%8A%8A%E6%89%8B%E5%86%99%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2011%20-%20%E5%A4%96%E9%83%A8%E8%AE%BE%E5%A4%87%E4%B8%AD%E6%96%AD/assets/csdn-137630897/image-016-3329696512.png" alt="图片"></p>
 <h1 id="代码-1">代码</h1>
 <p><a href="https://github.com/FULLK/risllkos/tree/main/Fullkenerl6">https://github.com/FULLK/risllkos/tree/main/Fullkenerl6</a></p>
 <h1 id="待解决">待解决</h1>

@@ -21,12 +21,9 @@
 <h1 id="用户态和内核态">用户态和内核态</h1>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-001-e2a46aaa56.png" alt="图片"></p>
 <h1 id="mstatus-的设置">mstatus 的设置</h1>
-<p>此时 UIE 置 1，MPIE 为 1，MPP 置 0
-这意味着当前特权级允许 UIE 中断发生，并且第一次 mret 之后特权级恢复为用户态，同时 MIE 也保持开启
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-002-037b7ef923.png" alt="图片"></p>
+<p>此时 UIE 置 1，MPIE 为 1，MPP 置 0<br>这意味着当前特权级允许 UIE 中断发生，并且第一次 mret 之后特权级恢复为用户态，同时 MIE 也保持开启<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-002-037b7ef923.png" alt="图片"></p>
 <h1 id="模式切换">模式切换</h1>
-<p>ecall 相当于触发一个异常，然后在对应的异常中处理相应的系统调用
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-003-f0269a5a09.png" alt="图片"></p>
+<p>ecall 相当于触发一个异常，然后在对应的异常中处理相应的系统调用<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-003-f0269a5a09.png" alt="图片"></p>
 <h1 id="核心流程">核心流程</h1>
 <ul>
 <li>首先在进程中使用 gethartid 函数</li>
@@ -34,14 +31,10 @@
 <li>ecall 触发中断进入 trap_vector，此时 mepc 是 ecall 的地址，mecause 为 8</li>
 <li>trap_vector 保存当前上下文，然后把指向所保存上下文的指针作为 trap_hander 的第三个参数；trap_hander 执行完后把返回值写入 mepc，然后 mret 到 mepc 对应的位置，此时就是 ecall+4 的地址</li>
 <li>trap_hander 执行 syscall 函数，参数是之前传入的已保存上下文，然后 syscall 函数把 hart 的 id 赋给该上下文的 a0 寄存器</li>
-<li>这时返回到最终恢复已保存上下文的地方，也就是 trap_vector 中，恢复上下文后，此时的返回值恰好就是 hart 的 id，而 mepc 也已被设为 ecall+4，于是返回到上一级 gethartid 的 ret 处，此时返回值同样是 hart 的 id，也就拿到了 hartid
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-004-03e0389f3d.png" alt="图片">
-原则上 a6 其实也可以用作参数
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-005-379ac1e757.png" alt="图片"></li>
+<li>这时返回到最终恢复已保存上下文的地方，也就是 trap_vector 中，恢复上下文后，此时的返回值恰好就是 hart 的 id，而 mepc 也已被设为 ecall+4，于是返回到上一级 gethartid 的 ret 处，此时返回值同样是 hart 的 id，也就拿到了 hartid<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-004-03e0389f3d.png" alt="图片"><br>原则上 a6 其实也可以用作参数<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-005-379ac1e757.png" alt="图片"></li>
 </ul>
 <h1 id="封装">封装</h1>
-<p>建议把用户态函数使用的头文件和内核态函数使用的头文件分别封装成单独的文件；用户态的作为 C 库，内核态的由内核维护。如果头文件中的相关定义不一致，就可能出问题
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-006-71b4c1efc5.png" alt="图片"></p>
+<p>建议把用户态函数使用的头文件和内核态函数使用的头文件分别封装成单独的文件；用户态的作为 C 库，内核态的由内核维护。如果头文件中的相关定义不一致，就可能出问题<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%2016%20-%20%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/assets/csdn-138269700/image-006-71b4c1efc5.png" alt="图片"></p>
 <h1 id="代码">代码</h1>
 <p><a href="https://github.com/FULLK/risllkos/tree/main/Fullkenerl11">https://github.com/FULLK/risllkos/tree/main/Fullkenerl11</a></p>
 <pre><code class="language-assembly">#ifdef CONFIG_SYSCALL

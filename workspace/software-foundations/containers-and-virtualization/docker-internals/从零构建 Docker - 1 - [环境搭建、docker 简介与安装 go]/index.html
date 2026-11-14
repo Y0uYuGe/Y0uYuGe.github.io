@@ -40,8 +40,7 @@
 <ol start="3">
 <li><p>|：这是管道符，作用是把前一个命令的输出作为后一个命令的输入。</p>
 </li>
-<li><p>sh：这是 Shell 解释器，这里用它来执行从 <a href="https://get.docker.com">https://get.docker.com</a> 下载的脚本。
-然后就可以直接使用 docker 了。</p>
+<li><p>sh：这是 Shell 解释器，这里用它来执行从 <a href="https://get.docker.com">https://get.docker.com</a> 下载的脚本。<br>然后就可以直接使用 docker 了。</p>
 </li>
 </ol>
 <h1 id="go-语言">Go 语言</h1>
@@ -105,21 +104,13 @@
 </li>
 <li><p>$HOME：这是一个环境变量，表示用户的主目录。在大多数系统上，它等同于 /home/你的用户名。</p>
 </li>
-<li><p>/.bashrc：.bashrc 是用户主目录下的一个文件，包含定义 Bash shell 行为的脚本。每次启动新的 Bash shell 会话时（例如打开一个新的终端窗口），.bashrc 文件中的脚本都会自动执行。
-安装成功。</p>
+<li><p>/.bashrc：.bashrc 是用户主目录下的一个文件，包含定义 Bash shell 行为的脚本。每次启动新的 Bash shell 会话时（例如打开一个新的终端窗口），.bashrc 文件中的脚本都会自动执行。<br>安装成功。</p>
 </li>
 </ul>
 <h1 id="go-配置">Go 配置</h1>
-<p>GOPATH 是实际存放代码的路径。Go 根据 GOPATH 来查找依赖包。GOPATH 目录按约定包含以下子目录。
-src：存放你的 Go 源文件。每个包在 src 下都有自己的目录。
-pkg：该目录包含包对象，即编译后的 Go 源代码文件，用于生成可执行文件。
-bin：该目录包含可执行命令。当你运行 go install package，且 go install 通过 src 目录下的工作区找到该包时，Go 会把文件安装到这里。
-这里我们用 /go 作为 GOPATH 路径。编辑 $HOME/.bashrc 文件，把命令 export GOPATH=/go 添加到文件中，
-然后执行 source $HOME/.bashrc，再运行 go env 查看效果。结果如下。</p>
+<p>GOPATH 是实际存放代码的路径。Go 根据 GOPATH 来查找依赖包。GOPATH 目录按约定包含以下子目录。<br>src：存放你的 Go 源文件。每个包在 src 下都有自己的目录。<br>pkg：该目录包含包对象，即编译后的 Go 源代码文件，用于生成可执行文件。<br>bin：该目录包含可执行命令。当你运行 go install package，且 go install 通过 src 目录下的工作区找到该包时，Go 会把文件安装到这里。<br>这里我们用 /go 作为 GOPATH 路径。编辑 $HOME/.bashrc 文件，把命令 export GOPATH=/go 添加到文件中，<br>然后执行 source $HOME/.bashrc，再运行 go env 查看效果。结果如下。</p>
 <p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%201%20-%20%5B%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%E3%80%81docker%20%E7%AE%80%E4%BB%8B%E4%B8%8E%E5%AE%89%E8%A3%85%20go%5D/assets/csdn-136409947/image-001-204b08413f.png" alt="图片"></p>
-<p>可以看到 $GOPATH 已经被指定。
-下面的代码都将基于上述配置，代码路径为 $GOPATH/src/github.com/xianlubird/
-mydocker。项目名为 mydocker，后续的开发都将基于这个路径。</p>
+<p>可以看到 $GOPATH 已经被指定。<br>下面的代码都将基于上述配置，代码路径为 $GOPATH/src/github.com/xianlubird/<br>mydocker。项目名为 mydocker，后续的开发都将基于这个路径。</p>
 
     </article>
     

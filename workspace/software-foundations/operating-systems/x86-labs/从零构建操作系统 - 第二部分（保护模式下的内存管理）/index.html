@@ -20,42 +20,25 @@
     <article class="post-body">
 <h1 id="分段">分段</h1>
 <h2 id="分布">分布</h2>
-<p>在 32 位模式下，内存被划分为一个一个的段
-离散分布，即它们不一定紧挨在一起</p>
+<p>在 32 位模式下，内存被划分为一个一个的段<br>离散分布，即它们不一定紧挨在一起</p>
 <h2 id="寻址">寻址</h2>
-<p>32 位：段选择子 + 段内偏移
-16 位：段起始地址*16 + 段内偏移</p>
+<p>32 位：段选择子 + 段内偏移<br>16 位：段起始地址*16 + 段内偏移</p>
 <blockquote>
 <p>为什么要 ×16？因为 8086 CPU 的地址总线是 20 位，而寄存器是 16 位，最多只能寻址 64KB，无法寻址 1M 内存。于是 Intel 设计了这种寻址方式：先缩小 4 位变成 16 位放入段寄存器，使用时再扩展回 20 位。这也导致了段的起始地址必须是 16 的倍数这一限制</p>
 </blockquote>
-<p>区别：32 位模式下寻址不需要左移四位来得到段的起始地址
-           32 位模式可以自行定义段的位置和长度</p>
+<p>区别：32 位模式下寻址不需要左移四位来得到段的起始地址<br>           32 位模式可以自行定义段的位置和长度</p>
 <h2 id="全局描述符表gdt">全局描述符表（GDT）</h2>
-<p>全局描述符表是一块内存空间，最大 64KB（1KB=1024B），可以理解为一个数组，每个元素都是一个段描述符
-全局描述符表的地址指针存放在一个叫 GDTR 的特殊寄存器中
-GDTR 是一个 48 位寄存器。全局描述符的地址指针也是 48 位</p>
+<p>全局描述符表是一块内存空间，最大 64KB（1KB=1024B），可以理解为一个数组，每个元素都是一个段描述符<br>全局描述符表的地址指针存放在一个叫 GDTR 的特殊寄存器中<br>GDTR 是一个 48 位寄存器。全局描述符的地址指针也是 48 位</p>
 <p><img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%89/assets/csdn-134146520/image-001-c0d4af7af3.png" alt="图片"></p>
 <h2 id="段描述符">段描述符</h2>
-<p> 段描述符记录了该段的特征
- 每个段描述符占八个字节，分为高 32 位和低 32 位</p>
-<p> <img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%89/assets/csdn-134146520/image-002-2bb774a11d.png" alt="图片">
- 基址和长度是拆开存放的</p>
-<p> 1GB=1024MB
- 1MB（兆字节）= 1024KB（千字节）
- 1KB=1024B（字节） 
- 1Byte（字节）=8bit（位）</p>
-<p> 段描述符的组成
-<img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%89/assets/csdn-134146520/image-003-68509dbc72.png" alt="图片">
-逻辑地址的组成
-<img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%89/assets/csdn-134146520/image-004-d565115cf9.png" alt="图片">
-CS、ES、SS、DS 这四个寄存器在 32 位模式下仍然是 16 位寄存器</p>
+<p> 段描述符记录了该段的特征<br> 每个段描述符占八个字节，分为高 32 位和低 32 位</p>
+<p> <img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%89/assets/csdn-134146520/image-002-2bb774a11d.png" alt="图片"><br> 基址和长度是拆开存放的</p>
+<p> 1GB=1024MB<br> 1MB（兆字节）= 1024KB（千字节）<br> 1KB=1024B（字节）<br> 1Byte（字节）=8bit（位）</p>
+<p> 段描述符的组成<br><img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%89/assets/csdn-134146520/image-003-68509dbc72.png" alt="图片"><br>逻辑地址的组成<br><img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%88%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%89/assets/csdn-134146520/image-004-d565115cf9.png" alt="图片"><br>CS、ES、SS、DS 这四个寄存器在 32 位模式下仍然是 16 位寄存器</p>
 <blockquote>
 <p>段选择子：在 32 位汇编中，16 位段寄存器（CS、DS、ES、SS、FS、GS）不再存放段基址，而是存放段选择子</p>
 </blockquote>
-<p>实模式下存放的是段地址
-保护模式下存放的是段选择子
-保护模式还额外附送了两个段寄存器：FS 和 GS
- CS 和 SS 指向正确类型的段</p>
+<p>实模式下存放的是段地址<br>保护模式下存放的是段选择子<br>保护模式还额外附送了两个段寄存器：FS 和 GS<br> CS 和 SS 指向正确类型的段</p>
 
     </article>
     

@@ -22,33 +22,20 @@
 <h2 id="虚拟化与虚拟机">虚拟化与虚拟机</h2>
 <p>虚拟化：将计算机的各种物理资源抽象出来，呈现出不同的虚拟资源</p>
 <p>虚拟机：利用虚拟化技术将一台计算机变为多台逻辑计算机——虚拟化技术中的系统虚拟化</p>
-<p>按不同的抽象层次，虚拟化分为：
-硬件虚拟化：为虚拟操作系统呈现与物理硬件相似的抽象层（VMware）
-操作系统虚拟化：为多个用户空间提供类似操作系统的抽象层（docker）
-库函数虚拟化：对库函数进行虚拟化，使应用程序可以使用不同的库运行
-编程语言虚拟化：进程级虚拟化，模拟编译器/解释器来生成机器码</p>
-<p>硬件虚拟化：
-计算虚拟化：对 CPU 和内存资源进行虚拟化。
-网络虚拟化：对网络链路资源进行虚拟化。
-IO 虚拟化：对 IO 资源进行虚拟化。
-存储虚拟化：对磁盘存储资源进行虚拟化</p>
+<p>按不同的抽象层次，虚拟化分为：<br>硬件虚拟化：为虚拟操作系统呈现与物理硬件相似的抽象层（VMware）<br>操作系统虚拟化：为多个用户空间提供类似操作系统的抽象层（docker）<br>库函数虚拟化：对库函数进行虚拟化，使应用程序可以使用不同的库运行<br>编程语言虚拟化：进程级虚拟化，模拟编译器/解释器来生成机器码</p>
+<p>硬件虚拟化：<br>计算虚拟化：对 CPU 和内存资源进行虚拟化。<br>网络虚拟化：对网络链路资源进行虚拟化。<br>IO 虚拟化：对 IO 资源进行虚拟化。<br>存储虚拟化：对磁盘存储资源进行虚拟化</p>
 <h2 id="基本模型">基本模型</h2>
-<p>计算机一般可以分为
-物理硬件层、操作系统层、应用层</p>
+<p>计算机一般可以分为<br>物理硬件层、操作系统层、应用层</p>
 <p>虚拟机可以分为：虚拟硬件层、操作系统层、应用层</p>
 <h3 id="虚拟硬件层vmm">虚拟硬件层——VMM</h3>
 <p>可以看作是位于虚拟机与硬件之间的一个软件层。该软件层不仅对硬件层进行抽象，还负责虚拟机的创建与销毁，并为虚拟机提供运行环境</p>
 <h3 id="vmm-满足虚拟化系统架构的条件">VMM 满足虚拟化系统架构的条件</h3>
-<p>等价性：在 VMM 管理下运行与在物理机上运行没有区别
-资源控制：VMM 对虚拟化的资源有完全的控制权
-高效性：经常使用的那部分机器指令应当直接在硬件上执行，无需 VMM 干预（这样可以提高效率）</p>
+<p>等价性：在 VMM 管理下运行与在物理机上运行没有区别<br>资源控制：VMM 对虚拟化的资源有完全的控制权<br>高效性：经常使用的那部分机器指令应当直接在硬件上执行，无需 VMM 干预（这样可以提高效率）</p>
 <h2 id="两种-vmm-方案">两种 VMM 方案</h2>
-<p>VMM 与操作系统处于同一层，运行在硬件之上
-VMM 与应用程序处于同一层，运行在操作系统之上</p>
+<p>VMM 与操作系统处于同一层，运行在硬件之上<br>VMM 与应用程序处于同一层，运行在操作系统之上</p>
 <h2 id="敏感指令与特权指令">敏感指令与特权指令</h2>
 <p>特权指令：系统中有一些操作和管理关键系统资源的指令，这些指令只有在最高特权级上才能正确运行。如果在非最高特权级上运行，特权指令会引发一个异常，处理器会陷入到最高特权级，交由系统软件处理。</p>
-<p>敏感指令：操作特权资源的指令，包括修改虚拟机的运行模式或下层物理机的状态；读写时钟和中断寄存器；访问存储保护系统、地址重定位系统以及所有的 I/O 指令
-敏感指令必须在 VMM 的监控下或通过 VMM 来完成。</p>
+<p>敏感指令：操作特权资源的指令，包括修改虚拟机的运行模式或下层物理机的状态；读写时钟和中断寄存器；访问存储保护系统、地址重定位系统以及所有的 I/O 指令<br>敏感指令必须在 VMM 的监控下或通过 VMM 来完成。</p>
 <h2 id="特权级压缩ring-compression">特权级压缩（Ring Compression）</h2>
 <p>VMM 运行在最高特权级，而 Guest VM 运行在较低特权级。当 Guest VM 执行敏感指令或特权指令时，会陷入到最高特权级的 VMM，再由 VMM 执行该敏感指令或特权指令。</p>
 <h1 id="ctf---虚拟机-前置知识-第二部分">CTF - 虚拟机 — ［前置知识 第二部分］</h1>
@@ -57,22 +44,16 @@ VMM 与应用程序处于同一层，运行在操作系统之上</p>
 <h2 id="特权级压缩">特权级压缩</h2>
 <p>VMM 处于最高特权级，Guest VM 处于较低特权级。Guest VM 执行非敏感指令时直接在硬件上运行；执行敏感指令时则陷入最高特权级的 VMM，由 VMM 执行该敏感指令的行为</p>
 <h2 id="特权级别">特权级别</h2>
-<p>内核处于 ring 0；用户进程处于 ring 3
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-001-07339508bb.png" alt="图片"></p>
+<p>内核处于 ring 0；用户进程处于 ring 3<br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-001-07339508bb.png" alt="图片"></p>
 <h2 id="系统虚拟化">系统虚拟化</h2>
-<p>在系统虚拟化的“陷入与模拟”（Trap &amp; Emulate）架构中，Guest OS 完全运行在 ring 3。当虚拟机涉及特权指令时，会触发一个通用保护异常，由 VMM 介入处理
-但并非所有敏感指令都是特权指令，所以有些非特权的敏感指令不会触发通用保护异常让 VMM 介入——这是危险的</p>
+<p>在系统虚拟化的“陷入与模拟”（Trap &amp; Emulate）架构中，Guest OS 完全运行在 ring 3。当虚拟机涉及特权指令时，会触发一个通用保护异常，由 VMM 介入处理<br>但并非所有敏感指令都是特权指令，所以有些非特权的敏感指令不会触发通用保护异常让 VMM 介入——这是危险的</p>
 <h2 id="解决方案">解决方案</h2>
 <h3 id="仿真与解释vmware">仿真与解释（VMware）</h3>
-<p>仿真的本质：在不同的平台上实现与被仿真对象相同的行为
-仿真技术：仿真器不断地从内存中读取指令，模拟每条指令的效果，然后决定是否改变状态（即解释）</p>
+<p>仿真的本质：在不同的平台上实现与被仿真对象相同的行为<br>仿真技术：仿真器不断地从内存中读取指令，模拟每条指令的效果，然后决定是否改变状态（即解释）</p>
 <p>QEMU（Quick Emulator）：完整仿真一整套计算机系统，包括各种硬件</p>
 <p>仿真的缺点：性能极差；每条指令都必须被模拟，模拟步骤繁琐</p>
 <h3 id="扫描与打补丁scan-patch">扫描与打补丁（Scan &amp; patch）</h3>
-<p>虚拟机和物理机的指令集基本相同，所以没必要进行纯粹的仿真
-只有特权指令和敏感指令才会以某种方式转到 VMM
-扫描与打补丁：把所有敏感指令替换成跳转指令或其他能陷入 VMM 的命令
-基本流程：</p>
+<p>虚拟机和物理机的指令集基本相同，所以没必要进行纯粹的仿真<br>只有特权指令和敏感指令才会以某种方式转到 VMM<br>扫描与打补丁：把所有敏感指令替换成跳转指令或其他能陷入 VMM 的命令<br>基本流程：</p>
 <ol>
 <li>在虚拟机执行每段代码之前，VMM 先扫描这段代码，解析每条指令，寻找敏感指令和特权指令</li>
 <li>VMM 为对应的指令动态生成补丁代码，把敏感指令和特权指令替换为跳出去进入 VMM 的跳转；VMM 执行这段补丁代码</li>
@@ -95,8 +76,7 @@ VMM 与应用程序处于同一层，运行在操作系统之上</p>
 <p>这是 Intel 为虚拟化提供的硬件支持；负责 CPU 虚拟化的部分叫做 VT-x</p>
 <h4 id="vmx-操作模式virtual-machine-extensions">VMX 操作模式（Virtual Machine eXtensions）</h4>
 <ul>
-<li>VMX Root Operation：VMM 的工作模式；可以访问
-所有资源，并调度虚拟机</li>
+<li>VMX Root Operation：VMM 的工作模式；可以访问<br>所有资源，并调度虚拟机</li>
 <li>VMX Non-Root Operation：虚拟机的工作模式；在这种模式下只能访问非敏感资源。访问敏感资源会导致 CPU 退出 Non-Root 模式，进入 VMX Root Operation 模式；处理完后再重新进入 VMX Non-Root Operation 模式</li>
 </ul>
 <h4 id="模式切换行为的定义"><strong>模式切换行为的定义</strong></h4>
@@ -105,12 +85,10 @@ VMM 与应用程序处于同一层，运行在操作系统之上</p>
 <li>VM-Exit：虚拟机停止运行并保存自身的状态信息，切换到 VMX Root Operation 模式，加载 VMM 的状态信息，并执行相应的处理程序</li>
 </ul>
 <h4 id="特权级保护">特权级保护</h4>
-<p>VMX Root Operation 和 VMX Non-Root Operation 都有各自的特权级保护。Host OS 和 Guest OS 可以在各自对应的模式下直接在硬件上运行；只有当 Guest OS 访问敏感资源或 Host OS 调度虚拟机时才会发生切换
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-003-7dfd48bb4d.png" alt="图片"></p>
+<p>VMX Root Operation 和 VMX Non-Root Operation 都有各自的特权级保护。Host OS 和 Guest OS 可以在各自对应的模式下直接在硬件上运行；只有当 Guest OS 访问敏感资源或 Host OS 调度虚拟机时才会发生切换<br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-003-7dfd48bb4d.png" alt="图片"></p>
 <h4 id="vmcsvirtual-machine-control-structure">VMCS（Virtual-Machine Control Structure）</h4>
 <p>VMCS 是一块内存，存储着虚拟机的虚拟 CPU 的状态。每个虚拟 CPU 都有一个 VMCS；在任意时刻，一个物理 CPU 只能绑定一个 VMCS，即一个物理 CPU 对应一个虚拟 CPU，但在不同时刻，一个 VMCS 可以绑定不同的物理 CPU——虚拟 CPU 可以选择它对应的物理 CPU，这被称为 VMCS 迁移</p>
-<p><strong>VMCS 与物理 CPU 的绑定与解绑</strong>
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-004-62915860f3.png" alt="图片"></p>
+<p><strong>VMCS 与物理 CPU 的绑定与解绑</strong><br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-004-62915860f3.png" alt="图片"></p>
 <p><strong>在 VT-x 中，VMCS 结构被定义为一块最多 4KB 的内存，按 4KB 对齐（即对应十六进制地址的低三位为 0）</strong></p>
 <pre><code class="language-c">struct VMCS {
     /* 版本号，4字节 */
@@ -135,32 +113,25 @@ VMM 与应用程序处于同一层，运行在操作系统之上</p>
 <li>VM-exit control fields：控制 VM-Exit 过程中的某些行为</li>
 <li>VM-exit information field：存储 VM-Exit 的基本原因及其他详细信息；在某些处理器上该字段是只读的</li>
 </ul>
-<p><strong>VMCS 的读写</strong>
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-005-0c1572c75c.png" alt="图片"></p>
+<p><strong>VMCS 的读写</strong><br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-005-0c1572c75c.png" alt="图片"></p>
 <p>这里的 index 并不是偏移量；Intel 为数据域中的每个字段都定义了一个唯一的索引值</p>
 <h4 id="msr">MSR</h4>
-<p>Model Specific Register，即 MSR，是 x86 下的一组寄存器；有的控制 CPU 的运行，有的记录特性开关，有的负责调试，有的监控 CPU 性能等等，但总体上可以分为两大类。如图所示：
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-006-adfdcbf9d0.png" alt="图片"></p>
+<p>Model Specific Register，即 MSR，是 x86 下的一组寄存器；有的控制 CPU 的运行，有的记录特性开关，有的负责调试，有的监控 CPU 性能等等，但总体上可以分为两大类。如图所示：<br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-006-adfdcbf9d0.png" alt="图片"></p>
 <h4 id="vmx-操作模式的整体流程">VMX 操作模式的整体流程</h4>
 <p>VMX 模式默认是关闭的；只有当 VMM 需要使用硬件辅助虚拟化时才会启用，并且只有启用之后，VM-root-operation 和 VM-non-root-operation 模式才会存在</p>
 <blockquote>
-<p>VMXON：启用 VMX 操作模式
-VMXOFF：关闭 VMX 操作模式</p>
+<p>VMXON：启用 VMX 操作模式<br>VMXOFF：关闭 VMX 操作模式</p>
 </blockquote>
 <blockquote>
-<p>resume 和 launch
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-007-c9ac62b8f0.png" alt="图片"></p>
+<p>resume 和 launch<br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-007-c9ac62b8f0.png" alt="图片"></p>
 </blockquote>
 <p><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134403151/image-008-438b38c92a.png" alt="图片"></p>
 <h2 id="kvmqemu-kvm基于内核的虚拟机">KVM&amp;QEMU-KVM（基于内核的虚拟机）</h2>
-<p>本质上，QEMU 作为 host，而 VMM 位于内核中
-KVM 负责 CPU 和内存的虚拟化，而 QEMU 负责模拟 IO 设备等硬件
-在 Linux 中，可以使用 ioctl() 函数在用户程序和内核模块之间进行通信</p>
+<p>本质上，QEMU 作为 host，而 VMM 位于内核中<br>KVM 负责 CPU 和内存的虚拟化，而 QEMU 负责模拟 IO 设备等硬件<br>在 Linux 中，可以使用 ioctl() 函数在用户程序和内核模块之间进行通信</p>
 <ul>
 <li>QEMU 通过 ioctl 系统调用发起请求，进入内核态并把控制权交给 KVM，由 KVM 来运行虚拟机</li>
 <li>虚拟机代码运行过程中发生 VM-Exit；KVM 接管后判断原因，处理完毕后决定是继续运行还是交给 QEMU</li>
-<li>如果需要进行 IO 操作，就退出 KVM，由 QEMU 处理
-<a href="https://www.cnblogs.com/wujuntian/p/16294898.html">QEMU-KVM 详细讲解</a></li>
+<li>如果需要进行 IO 操作，就退出 KVM，由 QEMU 处理<br><a href="https://www.cnblogs.com/wujuntian/p/16294898.html">QEMU-KVM 详细讲解</a></li>
 </ul>
 <h1 id="ctf---虚拟机-前置知识-第三部分">CTF - 虚拟机 —— [前置知识 第三部分]</h1>
 <h2 id="内存虚拟化">内存虚拟化</h2>
@@ -179,25 +150,18 @@ KVM 负责 CPU 和内存的虚拟化，而 QEMU 负责模拟 IO 设备等硬件
 <p>ptr：此处用来描述指向某个页表的寄存器</p>
 <h2 id="虚拟机中内存访问的原理">虚拟机中内存访问的原理</h2>
 <p>Guest 访问自己的内存时，步骤如下：</p>
-<p> <strong>1. 通过 Guest 页表把 GVA 转换为 GPA
- 2. GPA 对应 Host 中一大块 mmap 出来的内存，因此需要把 GPA 转换为 HVA
- 3. 最后通过 Host 页表把 HVA 转换为 HPA</strong></p>
+<p> <strong>1. 通过 Guest 页表把 GVA 转换为 GPA<br> 2. GPA 对应 Host 中一大块 mmap 出来的内存，因此需要把 GPA 转换为 HVA<br> 3. 最后通过 Host 页表把 HVA 转换为 HPA</strong></p>
 <p>缺点：过程繁琐，导致虚拟机内的内存访问性能极差</p>
 <h2 id="影子页表">影子页表</h2>
-<p>影子页表：一种 GVA→HPA 映射的页表
-<strong>实现机制：
-访问内存时，需要用到读写 CR3（保存页目录表物理基址的寄存器）的指令。由于这一操作是敏感指令，VMM 会将其截获，并把页表替换为影子页表，这样页表就变成了 GVA→HPA 的映射。</strong></p>
+<p>影子页表：一种 GVA→HPA 映射的页表<br><strong>实现机制：<br>访问内存时，需要用到读写 CR3（保存页目录表物理基址的寄存器）的指令。由于这一操作是敏感指令，VMM 会将其截获，并把页表替换为影子页表，这样页表就变成了 GVA→HPA 的映射。</strong></p>
 <p>缺点：每一套页表都需要独立维护一个影子页表，并且 VMM 与 VM 之间需要多次切换，开销相当大</p>
 <h2 id="扩展页表">扩展页表</h2>
-<p>EPT：一种 GPA→HPA 映射的页表
-在硬件层面引入了 EPTP 寄存器，用来指向 EPT 页表的基地址。Guest 运行时，Guest 页表被加载到 PDBR 中，而 EPT 页表被加载到专用的 EPT 页表指针寄存器 EPTP 中。</p>
-<p><strong>实现机制：
-<strong>GVA-&gt;GPA 的转换仍然通过查原来的页表完成，而 GPA-&gt;HPA 的转换则通过查 EPT 完成。每个客户虚拟机都有一个由 VMM 维护的 EPT。与此同时，hypervisor 只需要截获 EPT Violation 异常（EPT 表项为空）</strong></strong></p>
+<p>EPT：一种 GPA→HPA 映射的页表<br>在硬件层面引入了 EPTP 寄存器，用来指向 EPT 页表的基地址。Guest 运行时，Guest 页表被加载到 PDBR 中，而 EPT 页表被加载到专用的 EPT 页表指针寄存器 EPTP 中。</p>
+<p><strong>实现机制：<br><strong>GVA-&gt;GPA 的转换仍然通过查原来的页表完成，而 GPA-&gt;HPA 的转换则通过查 EPT 完成。每个客户虚拟机都有一个由 VMM 维护的 EPT。与此同时，hypervisor 只需要截获 EPT Violation 异常（EPT 表项为空）</strong></strong></p>
 <h2 id="vpidvirtual-processor-identifier虚拟处理器标识符tlbtranslation-looka">VPID（Virtual Processor Identifier，虚拟处理器标识符）：TLB（Translation Lookaside Buffer，转换后备缓冲器）资源优化</h2>
 <p>TLB 是页表项的缓存，缓存最近的虚拟地址转换记录。进行地址转换时，CPU 首先查询 TLB；TLB 检查是否有该虚拟地址对应的缓存项，只有缓存未命中时才会去查页表。</p>
 <p>由于 TLB 与对应的页表配合工作，页表切换时其原有内容就会失效，所以应当使用 INVLPG 使 TLB 失效。例如在 VM-Entry 和 VM-Exit 时会切换页表，CPU 会强制使 TLB 失效——但这样做仍会带来一定的性能损失。</p>
-<p>VPID 是对 TLB 资源管理的一种优化：它给每个 TLB 表项打上 VPID 标识（VMM 为每个 vCPU 分配一个唯一的 VPID，存放在 VMCS 中；逻辑 CPU 的 VPID 为 0）。CPU 查找 TLB 缓存时，会先比较 VPID，因此我们不再需要在每次 VM 进入/退出时刷新所有缓存项，可以持续复用之前保留的缓存。
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134413539/image-001-1aade396f7.png" alt="图片"></p>
+<p>VPID 是对 TLB 资源管理的一种优化：它给每个 TLB 表项打上 VPID 标识（VMM 为每个 vCPU 分配一个唯一的 VPID，存放在 VMCS 中；逻辑 CPU 的 VPID 为 0）。CPU 查找 TLB 缓存时，会先比较 VPID，因此我们不再需要在每次 VM 进入/退出时刷新所有缓存项，可以持续复用之前保留的缓存。<br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134413539/image-001-1aade396f7.png" alt="图片"></p>
 <h1 id="ctf虚拟机前置知识之四">CTF——虚拟机——［前置知识之四］</h1>
 <h2 id="io-虚拟化">IO 虚拟化</h2>
 <p>由于外设数量有限，我们仍然希望为虚拟机提供外设功能。（另外，由于处理器与外设之间的交互主要是 IO 交互，所以外设虚拟化被称为 IO 虚拟化。）因此需要 VMM 通过 IO 虚拟化为虚拟机提供 IO 设备功能。</p>
@@ -209,8 +173,7 @@ KVM 负责 CPU 和内存的虚拟化，而 QEMU 负责模拟 IO 设备等硬件
 </ul>
 <h2 id="基本模型-1">基本模型</h2>
 <h3 id="平台设备模拟">平台设备模拟</h3>
-<p>即由 VMM 负责模拟设备功能
-VMM 模拟设备供各个 Guest OS 共享</p>
+<p>即由 VMM 负责模拟设备功能<br>VMM 模拟设备供各个 Guest OS 共享</p>
 <h3 id="用户空间设备模拟">用户空间设备模拟</h3>
 <p>即由宿主机的用户空间模拟设备功能，模拟出的虚拟设备可以通过 VMM 提供的接口被其他虚拟机调用。而且设备模拟独立于 VMM。</p>
 <h3 id="设备直通">设备直通</h3>
@@ -267,21 +230,15 @@ struct vring_used
 };
 </code></pre>
 <h4 id="大致流程">大致流程</h4>
-<p><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134420031/image-001-b96a1f5e96.png" alt="图片">
-<a href="https://nxw.name/2023/virtqueue">大佬的分析</a></p>
+<p><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134420031/image-001-b96a1f5e96.png" alt="图片"><br><a href="https://nxw.name/2023/virtqueue">大佬的分析</a></p>
 <h2 id="iommu">IOMMU</h2>
-<p>IOMMU，即输入/输出内存管理单元，其功能与 CPU 的 MMU 类似，是在设备端提供地址转换的单元。
-<strong>IOMMU 与 MMU 的区别</strong>
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134420031/image-002-6dbcab5c9b.png" alt="图片">
-<strong>IOMMU 的功能</strong>
-LAPIC（Local Advanced Programmable Interrupt Controller，本地高级可编程中断控制器） </p>
+<p>IOMMU，即输入/输出内存管理单元，其功能与 CPU 的 MMU 类似，是在设备端提供地址转换的单元。<br><strong>IOMMU 与 MMU 的区别</strong><br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134420031/image-002-6dbcab5c9b.png" alt="图片"><br><strong>IOMMU 的功能</strong><br>LAPIC（Local Advanced Programmable Interrupt Controller，本地高级可编程中断控制器） </p>
 <ul>
 <li>DMA 重映射：具备 DMA 能力的设备可以使用虚拟地址，由 IOMMU 转换为物理地址进行直接内存访问。</li>
 <li>中断重映射：IOMMU 截获设备产生的中断，并根据中断重映射表生成新的中断请求，发送给 LAPIC。</li>
 </ul>
 <h3 id="dma-重映射">DMA 重映射</h3>
-<p>DMA 重映射是设备端的地址访问再转换。如下图所示，左侧是 CPU 对内存的虚拟化：MMU 利用进程页表把进程要访问的虚拟地址转换为物理地址，由于不同进程的页表不同，两个进程访问同一个虚拟地址实际访问的是不同的物理地址——DMA 重映射的原理与此类似。如图右侧所示，当外设要进行 DMA 时，IOMMU 根据“设备页表”进行地址转换；不同设备的页表不同，所以两个设备各自认为访问的是同一个地址，实际访问的却是不同的物理地址。
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134420031/image-003-9e4318fdb1.png" alt="图片"></p>
+<p>DMA 重映射是设备端的地址访问再转换。如下图所示，左侧是 CPU 对内存的虚拟化：MMU 利用进程页表把进程要访问的虚拟地址转换为物理地址，由于不同进程的页表不同，两个进程访问同一个虚拟地址实际访问的是不同的物理地址——DMA 重映射的原理与此类似。如图右侧所示，当外设要进行 DMA 时，IOMMU 根据“设备页表”进行地址转换；不同设备的页表不同，所以两个设备各自认为访问的是同一个地址，实际访问的却是不同的物理地址。<br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%E8%87%B3%E5%9B%9B%EF%BC%89/assets/csdn-134420031/image-003-9e4318fdb1.png" alt="图片"></p>
 <p>半虚拟化设备并不知道 GPA 到 HPA 的转换，因此可能会访问出错；所以 IOMMU 需要根据 Host 提供的 GPA 到 HPA 地址转换表进行 DMA 映射，使外设能够正确访问 Guest 的物理内存</p>
 
     </article>

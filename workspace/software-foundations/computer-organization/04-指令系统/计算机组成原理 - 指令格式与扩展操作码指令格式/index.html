@@ -25,22 +25,15 @@
 <h1 id="概述">概述</h1>
 <p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-003-ce7d68ea25.png" alt="图片"></p>
 <h1 id="指令的定义">指令的定义</h1>
-<p>不同的硬件架构支持不同的指令集
-手机：ARM 架构 
-电脑：x86 架构
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-004-80ffc5b1b2.png" alt="图片"></p>
+<p>不同的硬件架构支持不同的指令集<br>手机：ARM 架构<br>电脑：x86 架构<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-004-80ffc5b1b2.png" alt="图片"></p>
 <h1 id="指令格式">指令格式</h1>
 <p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-005-6a343077e4.png" alt="图片"></p>
 <h2 id="零地址指令">零地址指令</h2>
-<p>可以结合后缀表达式来理解：两个操作数隐含存放在栈顶和次栈顶
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-006-a013cf1c23.png" alt="图片"></p>
+<p>可以结合后缀表达式来理解：两个操作数隐含存放在栈顶和次栈顶<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-006-a013cf1c23.png" alt="图片"></p>
 <h2 id="一地址指令">一地址指令</h2>
-<p>取指令需要访存一次；从主存中读取某个地址的内容也需要访存一次
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-007-ab89f73ab1.png" alt="图片"></p>
+<p>取指令需要访存一次；从主存中读取某个地址的内容也需要访存一次<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-007-ab89f73ab1.png" alt="图片"></p>
 <h2 id="二地址三地址指令">二地址、三地址指令</h2>
-<p>即三地址指令会指明结果存放在哪里
-二地址指令不指明结果存放位置，使用默认位置
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-008-7e0c53f9e9.png" alt="图片"></p>
+<p>即三地址指令会指明结果存放在哪里<br>二地址指令不指明结果存放位置，使用默认位置<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-008-7e0c53f9e9.png" alt="图片"></p>
 <ul>
 <li>二地址指令可以分为（按访问的对象）：</li>
 </ul>
@@ -50,9 +43,7 @@
 <li>寄存器-存储器（RS）型指令（既访问内存又访问寄存器；一般指令中既有表示寄存器的位，也有形式地址的位）</li>
 </ol>
 <h2 id="四地址指令">四地址指令</h2>
-<p>修改 PC 不是简单地顺序加 1
-指令总长度对应的地址范围是有限的。如果指令总长度不变，地址码越多，可寻址范围相对于总地址范围就越小
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-009-6fc54336d6.png" alt="图片"></p>
+<p>修改 PC 不是简单地顺序加 1<br>指令总长度对应的地址范围是有限的。如果指令总长度不变，地址码越多，可寻址范围相对于总地址范围就越小<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-009-6fc54336d6.png" alt="图片"></p>
 <h2 id="小结">小结</h2>
 <p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-010-d5f3e36521.png" alt="图片"></p>
 <h2 id="指令---按指令长度分类">指令 - 按指令长度分类</h2>
@@ -61,18 +52,14 @@
 <p>定长指令字结构 + 可变长操作码 = 扩展操作码指令格式</p>
 <p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-012-a8ead3f794.png" alt="图片"></p>
 <h2 id="指令---按操作类型分类">指令 - 按操作类型分类</h2>
-<p>转移操作：即改变指令执行流程，PC 的值会改变
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-013-85e25cf4da.png" alt="图片"></p>
+<p>转移操作：即改变指令执行流程，PC 的值会改变<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-013-85e25cf4da.png" alt="图片"></p>
 <h2 id="小结-1">小结</h2>
 <p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-014-50af54b6ab.png" alt="图片"></p>
 <h1 id="扩展操作码">扩展操作码</h1>
 <h2 id="概述-1">概述</h2>
-<p>指令字：一条指令
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-015-844c292f72.png" alt="图片"></p>
+<p>指令字：一条指令<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-015-844c292f72.png" alt="图片"></p>
 <h2 id="扩展操作码示例-1">扩展操作码示例 1</h2>
-<p>注意零地址指令可以全为 1，不需要再扩展操作码
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-016-558e1628c0.png" alt="图片">
-短码不能是长码的前缀，否则无法准确识别。</p>
+<p>注意零地址指令可以全为 1，不需要再扩展操作码<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-016-558e1628c0.png" alt="图片"><br>短码不能是长码的前缀，否则无法准确识别。</p>
 <p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-017-1709881dba.png" alt="图片"></p>
 <h2 id="扩展操作码示例-2">扩展操作码示例 2</h2>
 <p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F%E4%B8%8E%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F/assets/csdn-134745864/image-018-b974bbab88.png" alt="图片"></p>

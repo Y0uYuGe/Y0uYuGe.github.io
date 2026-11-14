@@ -20,10 +20,7 @@
     <article class="post-body">
 <h1 id="rop">ROP</h1>
 <p>开启 NX 保护后，无法再直接向栈或堆中注入代码，因此目前使用 ROP（Return Oriented Programming，返回导向编程）来绕过保护</p>
-<p>要求：
-程序存在溢出，因此可以控制返回地址
-可以找到合适的 gadget 及其对应的 gadget 地址
-如果 gadget 的地址每次并不固定，就需要想办法动态获取对应的地址</p>
+<p>要求：<br>程序存在溢出，因此可以控制返回地址<br>可以找到合适的 gadget 及其对应的 gadget 地址<br>如果 gadget 的地址每次并不固定，就需要想办法动态获取对应的地址</p>
 <h1 id="ret2text">ret2text</h1>
 <p>也就是说，在返回时，程序执行的是程序自身的代码（.text 段）</p>
 <h1 id="la-ctf-2023-bot">LA CTF 2023 【bot】</h1>
@@ -65,8 +62,7 @@ int main(void) {
 <p>局部变量从上到下依次压栈：先定义的先入栈</p>
 <p>gets 溢出无法覆盖到 give_flag</p>
 <blockquote>
-<p>set var $pc=0x555555555160 修改寄存器的值
-set {int}0x83040 = 4 修改某处内存的内容</p>
+<p>set var $pc=0x555555555160 修改寄存器的值<br>set {int}0x83040 = 4 修改某处内存的内容</p>
 </blockquote>
 <p>exp</p>
 <pre><code class="language-python">from pwn import*

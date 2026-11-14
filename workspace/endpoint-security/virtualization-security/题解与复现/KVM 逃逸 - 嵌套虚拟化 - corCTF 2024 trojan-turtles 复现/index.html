@@ -19,8 +19,7 @@
     <div class="meta"><time>2024-08-29</time><span class="tag">#PWN</span></div>
     <article class="post-body">
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://zolutal.github.io/corctf-trojan-turtles/">https://zolutal.github.io/corctf-trojan-turtles/</a>
-<a href="https://eqqie.cn/index.php/archives/1972">https://eqqie.cn/index.php/archives/1972</a></p>
+<p><a href="https://zolutal.github.io/corctf-trojan-turtles/">https://zolutal.github.io/corctf-trojan-turtles/</a><br><a href="https://eqqie.cn/index.php/archives/1972">https://eqqie.cn/index.php/archives/1972</a></p>
 <p>本文首发于奇安信攻防社区 <a href="https://forum.butian.net/question/1370">https://forum.butian.net/question/1370</a></p>
 <h1 id="kvmkernel-based-virtual-machine">KVM（Kernel-based Virtual Machine）</h1>
 <p>本节介绍 KVM（基于内核的虚拟机）的概念、实现方式，以及它如何与 QEMU（Quick Emulator）配合使用。下面给出详细说明和示例：</p>
@@ -107,8 +106,7 @@
 <li>启用 VMXE 位之后：处理器可以正确识别并执行这些指令。</li>
 </ul>
 </li>
-<li><p>实际示例：
-假设要在电脑上运行虚拟机：</p>
+<li><p>实际示例：<br>假设要在电脑上运行虚拟机：</p>
 <ul>
 <li>启用 VMXE 前：虚拟机软件只能通过纯软件模拟运行虚拟机，效率较低。</li>
 <li>启用 VMXE 后：虚拟机软件可以利用这些硬件指令，大幅提升虚拟机的运行效率。</li>
@@ -220,9 +218,7 @@ cd /mnt/qcow2
 <p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-001-cf834355ef.png" alt="图片"></p>
 <pre><code class="language-bash">tree -L 2
 </code></pre>
-<p>找到这个东西，应该是虚拟机对应的镜像及其文件系统和启动脚本。直接解包虚拟机的文件系统进行查看，将 exp 模块添加进去，再重新打包、启动虚拟机即可。
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-002-b51c301f81.png" alt="图片">
-分别安装对应的内核头文件。这里的目标是为对应虚拟机构建内核模块，再加载模块逃逸到宿主机。</p>
+<p>找到这个东西，应该是虚拟机对应的镜像及其文件系统和启动脚本。直接解包虚拟机的文件系统进行查看，将 exp 模块添加进去，再重新打包、启动虚拟机即可。<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-002-b51c301f81.png" alt="图片"><br>分别安装对应的内核头文件。这里的目标是为对应虚拟机构建内核模块，再加载模块逃逸到宿主机。</p>
 <pre><code class="language-bash">sudo dpkg -i linux-hwe-5.15-headers-5.15.0-107_5.15.0-107.117~20.04.1_all.deb
 sudo dpkg -i linux-headers-5.15.0-107-generic_5.15.0-107.117~20.04.1_amd64.deb
 ls /usr/lib/modules/5.15.0-107-generic/build
@@ -243,8 +239,7 @@ clean:
 <h1 id="漏洞">漏洞</h1>
 <p>虚拟机执行相关 vmx 指令，也就是进行嵌套虚拟化时，这些 vmx 指令会被识别为特殊指令并触发 VMexit，随后由宿主机 VMM 处理。</p>
 <h2 id="diff">diff</h2>
-<p>差异点位于 handle_vmread 和 handle_vmwrite 函数。
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-003-7fdadad193.png" alt="图片"></p>
+<p>差异点位于 handle_vmread 和 handle_vmwrite 函数。<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-003-7fdadad193.png" alt="图片"></p>
 <p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-004-bff319e2c6.png" alt="图片"></p>
 <pre><code class="language-c">__int64 __fastcall handle_vmwrite(__int64 a1, int a2, int a3, int a4, int a5, int a6){
 {
@@ -285,11 +280,9 @@ static __always_inline struct vcpu_vmx *to_vmx(struct kvm_vcpu *vcpu)
 		      &quot;pointer type mismatch in container_of()&quot;);	\
 	((type *)(__mptr - offsetof(type, member))); })
 </code></pre>
-<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-005-8777afb0cc.png" alt="图片">
-上面的代码用于检查当前是否处于嵌套虚拟化状态。</p>
+<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-005-8777afb0cc.png" alt="图片"><br>上面的代码用于检查当前是否处于嵌套虚拟化状态。</p>
 <ol>
-<li><p>客户机模式（Guest Mode）：
-在嵌套虚拟化中，“guest mode”指虚拟机监控器（VMM）运行在虚拟机（VM）内部的情况。也就是说，虚拟机中还有虚拟机。</p>
+<li><p>客户机模式（Guest Mode）：<br>在嵌套虚拟化中，“guest mode”指虚拟机监控器（VMM）运行在虚拟机（VM）内部的情况。也就是说，虚拟机中还有虚拟机。</p>
 </li>
 <li><p>嵌套虚拟化的层级：</p>
 <ul>
@@ -298,14 +291,11 @@ static __always_inline struct vcpu_vmx *to_vmx(struct kvm_vcpu *vcpu)
 <li>L2：运行在 L1 虚拟机内部的虚拟机</li>
 </ul>
 </li>
-<li><p>is_guest_mode(vcpu)：
-该函数检查指定虚拟 CPU（vcpu）是否处于 guest mode。如果是，表示当前正在运行 L2 虚拟机。</p>
+<li><p>is_guest_mode(vcpu)：<br>该函数检查指定虚拟 CPU（vcpu）是否处于 guest mode。如果是，表示当前正在运行 L2 虚拟机。</p>
 </li>
-<li><p>VMCS（Virtual Machine Control Structure）：
-VMCS 是 Intel 虚拟化技术中用于控制虚拟机行为的数据结构。</p>
+<li><p>VMCS（Virtual Machine Control Structure）：<br>VMCS 是 Intel 虚拟化技术中用于控制虚拟机行为的数据结构。</p>
 </li>
-<li><p>vmcs12：
-在嵌套虚拟化中，vmcs12 表示 L1 VMM 用于管理 L2 虚拟机的 VMCS。</p>
+<li><p>vmcs12：<br>在嵌套虚拟化中，vmcs12 表示 L1 VMM 用于管理 L2 虚拟机的 VMCS。</p>
 </li>
 <li><p>代码说明：</p>
 <ul>
@@ -1353,8 +1343,7 @@ unsigned long kvm_get_dr(struct kvm_vcpu *vcpu, int dr)
 <h2 id="寻找虚拟机-vmcs-的偏移">寻找虚拟机 VMCS 的偏移</h2>
 <p>目前可以相对于嵌套虚拟机 VMCS 在宿主机上的虚拟地址进行任意读写。VMCS 结构均由 kmalloc 分配，内核堆位于直接映射区，因此可以根据 VMCS 的相关特征，向上、向下扫描相对地址，找到外层虚拟机 VMCS 在宿主机上的虚拟地址。</p>
 <p>根据 vmcs 结构的特征，选择 guest_idtr_base 字段。该值不会变化，而 VMCS 必须按页对齐，所以只需在按页粒度递增的偏移加上 0x208 的位置查找 IDT 基址 0xfffffe0000000000（guest_idtr_base），即可找到虚拟机 VMCS 的虚拟地址。</p>
-<p>可以查看 vmcs 偏移 0 处的内容，也就是 vmcs_revision 字段的内容。
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-006-b7f8c3b5f2.png" alt="图片"></p>
+<p>可以查看 vmcs 偏移 0 处的内容，也就是 vmcs_revision 字段的内容。<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-006-b7f8c3b5f2.png" alt="图片"></p>
 <pre><code class="language-c"> for (i = 0; i &lt; 0x4000; i++) {
         pos_offset = ((i * 0x1000) + 0x208) / 8;
         neg_offset = ((i * -1 * 0x1000) + 0x208) / 8;
@@ -1451,8 +1440,7 @@ third_value = read_relative(ept_offset);
 </code></pre>
 <h2 id="修改虚拟机的-ept">修改虚拟机的 EPT</h2>
 <p><a href="https://www.owalle.com/2018/12/10/kvm-memory/">https://www.owalle.com/2018/12/10/kvm-memory/</a></p>
-<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-007-2678038931.png" alt="图片">
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-008-3dc12a229d.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-007-2678038931.png" alt="图片"><br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-008-3dc12a229d.png" alt="图片"></p>
 <blockquote>
 <p>EPT 表及相关页表项中的地址，都是宿主机物理地址。</p>
 </blockquote>
@@ -1468,9 +1456,7 @@ third_value = read_relative(ept_offset);
 <p>此时，0x87 表示该页表项是大页，1GB Page Physical Addr 为 0。</p>
 <p>为了避免干扰已有页表项，这里新增一项。它是第 6 项，因此对应 6GB-7GB。最终，虚拟机中 6GB-7GB 的物理地址映射到宿主机 0GB-1GB 的物理地址。</p>
 <h2 id="修改虚拟机-cr3">修改虚拟机 cr3</h2>
-<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-009-55514657a0.png" alt="图片">
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-010-37df36d697.png" alt="图片">
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-011-8aa5ca4bb1.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-009-55514657a0.png" alt="图片"><br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-010-37df36d697.png" alt="图片"><br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-011-8aa5ca4bb1.png" alt="图片"></p>
 <pre><code>
 +-------------------+
 |     CR3 Register  |
@@ -1533,10 +1519,7 @@ After:
 <h2 id="寻找要覆盖的函数">寻找要覆盖的函数</h2>
 <p>最终，虚拟机中 0xffff880000000000+0GB 到 0xffff880000000000+1GB 的地址映射到宿主机物理内存 0-1G。显然，1G 远大于宿主机的实际内存，qemu 模拟的内存只有几百 MB。因此，此时从虚拟机中的 0xffff880000000000 开始遍历，相当于从物理地址 0 开始遍历，自然能找到要覆盖的函数，再用 shellcode 覆盖它。</p>
 <p>这里选择与该函数位于同一页的一段特殊字节模式即可。</p>
-<p>原函数：
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-012-1adbb630d8.png" alt="图片">
-用十六进制编辑器搜索。这里选择 0x00001C70BF440F4C，因为除了从 60 开始的位置外，就只有这里出现，而我们检查的偏移是 0x503。
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-013-a12e886bba.png" alt="图片"></p>
+<p>原函数：<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-012-1adbb630d8.png" alt="图片"><br>用十六进制编辑器搜索。这里选择 0x00001C70BF440F4C，因为除了从 60 开始的位置外，就只有这里出现，而我们检查的偏移是 0x503。<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-013-a12e886bba.png" alt="图片"></p>
 <pre><code class="language-c"> for (i = 0; i &lt; (1&lt;&lt;18); i += 0x1000) {
         unsigned long long val = *((unsigned long long *)(0xffff880000000503 + i));
 
@@ -1550,9 +1533,7 @@ After:
 </code></pre>
 <h2 id="shellcode">shellcode</h2>
 <ul>
-<li><p>CPU Entry Area Mapping：
- 这是内核内存中的一个特殊区域，用于存放重要的 CPU 相关数据结构和入口点。该区域地址通常固定，不受 KASLR（内核地址空间布局随机化）影响。
-该区域开头有几个地址，与内核 text 段（代码段）保持固定偏移关系。这意味着，知道这些地址的值后，就可以计算内核代码的实际加载地址。</p>
+<li><p>CPU Entry Area Mapping：<br> 这是内核内存中的一个特殊区域，用于存放重要的 CPU 相关数据结构和入口点。该区域地址通常固定，不受 KASLR（内核地址空间布局随机化）影响。<br>该区域开头有几个地址，与内核 text 段（代码段）保持固定偏移关系。这意味着，知道这些地址的值后，就可以计算内核代码的实际加载地址。</p>
 </li>
 <li><p>由于 CPU Entry Area Mapping 的地址固定，攻击者可以直接读取 0xfffffe0000000004 处的内容，再通过简单计算（可能是加减固定偏移）得到基址。</p>
 </li>
@@ -1659,8 +1640,7 @@ After:
         }
     }
 </code></pre>
-<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-015-a961c319f8.png" alt="图片">
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-016-b1fdd36927.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-015-a961c319f8.png" alt="图片"><br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/KVM%20%E9%80%83%E9%80%B8%20-%20%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%20-%20corCTF%202024%20trojan-turtles%20%E5%A4%8D%E7%8E%B0/assets/csdn-140787240/image-016-b1fdd36927.png" alt="图片"></p>
 <h1 id="exp">exp</h1>
 <p>由于我自己复现的 exp 写得比较丑，为了方便读者参考，这里附上我参考过的 Shellphish 题解中的版本。</p>
 <pre><code class="language-c">#include &lt;linux/init.h&gt;

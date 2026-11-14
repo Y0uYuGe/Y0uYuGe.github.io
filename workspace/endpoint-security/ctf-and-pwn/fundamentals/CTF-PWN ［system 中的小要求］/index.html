@@ -21,8 +21,7 @@
 <h2 id="system-中的小要求">system 中的小要求</h2>
 <p><a href="https://www.yuque.com/cyberangel/rg9gdm/bvfc20">参考语雀上某位大佬的文章</a></p>
 <blockquote>
-<p>在 IDA 中显示 libc 文件
-但不同的 libc 文件可能不存在这个问题</p>
+<p>在 IDA 中显示 libc 文件<br>但不同的 libc 文件可能不存在这个问题</p>
 </blockquote>
 <pre><code class="language-c">__int64 __fastcall system(__int64 a1)
 {
@@ -84,10 +83,7 @@
 .text:0000000000044E88                 sub     rsp, 80h
 ………………………………………………下面还有很多在这里就不显示了
 </code></pre>
-<p>大佬说这个函数末尾有一条 movaps 指令：
-movaps[rsp+198h+var_158],xmmo
-（可以直接在 IDA 的 system 区域搜索该指令是否存在）
-该指令要求 rsp+198h+var_158 的值的十六进制形式必须是 0x10 的倍数，否则无法 getshell</p>
+<p>大佬说这个函数末尾有一条 movaps 指令：<br>movaps[rsp+198h+var_158],xmmo<br>（可以直接在 IDA 的 system 区域搜索该指令是否存在）<br>该指令要求 rsp+198h+var_158 的值的十六进制形式必须是 0x10 的倍数，否则无法 getshell</p>
 <p>方法：</p>
 <ol>
 <li>改变 payload 长度（局部变量入栈，栈长度发生变化），使 rsp 的值发生变化</li>

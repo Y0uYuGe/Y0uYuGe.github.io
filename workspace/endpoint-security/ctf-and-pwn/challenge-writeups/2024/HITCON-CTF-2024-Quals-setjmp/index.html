@@ -82,21 +82,14 @@ int main() {
 <p>于是在 <code>longjmp(main_begin_jmp_buf, 1);</code> 执行之后，程序会从 <code>if ( _setjmp(main_begin_jmp_buf) )</code> 这一行继续执行，但这一次 <code>_setjmp()</code> 不再返回 0——它返回的是 <code>longjmp()</code> 传入的值（这里是 1）。因此 <code>if</code> 语句的条件为真，程序会执行 <code>v3 = time(0LL);</code> 和 <code>printf(&quot;restart at %ld\n&quot;, v3);</code> 这两行。</p>
 <p>简而言之，<code>longjmp(main_begin_jmp_buf, 1);</code> 会让程序跳转到 <code>_setjmp(main_begin_jmp_buf);</code> 之后的代码并从那里继续执行，此时 <code>_setjmp()</code> 返回 1，从而触发 <code>if</code> 语句中的代码块。</p>
 <h1 id="逆向分析">逆向分析</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-002-9d3a5d0113.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-003-2a4f2e1189.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-004-f99b687094.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-005-7362c7997e.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-006-75a0acabaa.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-002-9d3a5d0113.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-003-2a4f2e1189.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-004-f99b687094.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-005-7362c7997e.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-006-75a0acabaa.png" alt="图片"></p>
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://firmianay.gitbook.io/ctf-all-in-one/6_writeup/pwn/6.1.17_pwn_secconctf2016_jmper">https://firmianay.gitbook.io/ctf-all-in-one/6_writeup/pwn/6.1.17_pwn_secconctf2016_jmper</a>
-<a href="https://darkwing.moe/2019/09/24/Pwn%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B024-%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%8A%80%E6%9C%AF/">https://darkwing.moe/2019/09/24/Pwn%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B024-%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%8A%80%E6%9C%AF/</a></p>
+<p><a href="https://firmianay.gitbook.io/ctf-all-in-one/6_writeup/pwn/6.1.17_pwn_secconctf2016_jmper">https://firmianay.gitbook.io/ctf-all-in-one/6_writeup/pwn/6.1.17_pwn_secconctf2016_jmper</a><br><a href="https://darkwing.moe/2019/09/24/Pwn%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B024-%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%8A%80%E6%9C%AF/">https://darkwing.moe/2019/09/24/Pwn%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B024-%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%8A%80%E6%9C%AF/</a></p>
 <h1 id="思路">思路</h1>
 <blockquote>
 <p>非常感谢 Eurus 提供的帮助</p>
 </blockquote>
-<p>反编译结果存在问题；这里在 new_user 之后，root_chunk 会发生变化
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-007-002dbd90ad.png" alt="图片">
-这实现了一个循环双向链表。大致来说，创建一个用户会插入到链表尾部，然后更新 root_chunk；find 按照 name 遍历这个循环链表，最终当下一个节点与起始节点相同时停止</p>
+<p>反编译结果存在问题；这里在 new_user 之后，root_chunk 会发生变化<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/HITCON-CTF-2024-Quals-setjmp/assets/csdn-140413292/image-007-002dbd90ad.png" alt="图片"><br>这实现了一个循环双向链表。大致来说，创建一个用户会插入到链表尾部，然后更新 root_chunk；find 按照 name 遍历这个循环链表，最终当下一个节点与起始节点相同时停止</p>
 <blockquote>
 <p>漏洞在于：释放当前的 root_chunk 之后，root_chunk 的值并没有被改变；find 仍然按照原来的 root_chunk 进行搜索，这进而影响了 new、dele 和 change</p>
 </blockquote>

@@ -21,11 +21,7 @@
 <h1 id="前言">前言</h1>
 <p>这道题在我看来非常离谱（我比较菜）</p>
 <h2 id="ida">IDA</h2>
-<p>首先，IDA 在这里感觉有点拉胯
-反汇编里完全没有 strcpy……它凭空反编译出了一个 strcpy 函数，但汇编本身是没问题的
-&quot;You are cheating&quot; 和 &quot;Bye&quot; 这两个字符串被放在栈上，是直接写入的；这两个字符串不在全局变量里（难怪字符串搜索没找到）
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-001-d2d48ad342.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-002-0b221b1c2e.png" alt="图片"></p>
+<p>首先，IDA 在这里感觉有点拉胯<br>反汇编里完全没有 strcpy……它凭空反编译出了一个 strcpy 函数，但汇编本身是没问题的<br>&quot;You are cheating&quot; 和 &quot;Bye&quot; 这两个字符串被放在栈上，是直接写入的；这两个字符串不在全局变量里（难怪字符串搜索没找到）<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-001-d2d48ad342.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-002-0b221b1c2e.png" alt="图片"></p>
 <h2 id="movabsq">movabsq</h2>
 <p>movabsq 是一个新加入的指令，用于把一个 64 位的值直接存入一个 64 位寄存器</p>
 <h2 id="ja">ja</h2>
@@ -35,17 +31,11 @@
 <h2 id="scanfss">scanf(&quot;%s&quot;,s)</h2>
 <p>明显的溢出……</p>
 <h1 id="开始-pwn">开始 pwn</h1>
-<p>所有保护都开了（国外赛题的常规操作）
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-003-8794324c00.png" alt="图片">
-正常逻辑绕不过 exit，只能用 printf 的格式化字符串，但 exit 之前只能 printf 一次，所以必须绕过 exit。pretty_alert 和 exit(0) 紧挨着——为什么不用 printf 的任意写去改 pretty_alert 的返回地址呢？</p>
+<p>所有保护都开了（国外赛题的常规操作）<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-003-8794324c00.png" alt="图片"><br>正常逻辑绕不过 exit，只能用 printf 的格式化字符串，但 exit 之前只能 printf 一次，所以必须绕过 exit。pretty_alert 和 exit(0) 紧挨着——为什么不用 printf 的任意写去改 pretty_alert 的返回地址呢？</p>
 <h1 id="随机化">随机化</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-004-9205d748c8.png" alt="图片">
-八个字节会变化，但最低四位始终保持不变</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/HKCERT%20CTF%202023%20-%20%EF%BC%BBAbsolute%20Winner%EF%BC%BD/assets/csdn-134375800/image-004-9205d748c8.png" alt="图片"><br>八个字节会变化，但最低四位始终保持不变</p>
 <h1 id="思路">思路</h1>
-<p>溢出可以修改后面变量的值
-找到了一条可利用的 rbp 链；嵌套两轮就够了
-第一轮嵌套把栈上某个位置的值改为返回地址所在的地址
-第二轮嵌套把该返回地址所在位置的实际内容改为输出 flag 的那个函数</p>
+<p>溢出可以修改后面变量的值<br>找到了一条可利用的 rbp 链；嵌套两轮就够了<br>第一轮嵌套把栈上某个位置的值改为返回地址所在的地址<br>第二轮嵌套把该返回地址所在位置的实际内容改为输出 flag 的那个函数</p>
 <p>但要注意，在一次 printf 中，第一次修改的内容可能还没来得及更新就要用于第二次修改，所以</p>
 <h1 id="exp">exp</h1>
 <pre><code class="language-python">from pwn import *

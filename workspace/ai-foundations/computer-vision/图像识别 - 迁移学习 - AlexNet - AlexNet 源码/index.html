@@ -25,26 +25,20 @@
 <p><a href="https://tensorflow.google.cn/api_docs/python/tf/keras/applications">https://tensorflow.google.cn/api_docs/python/tf/keras/applications</a></p>
 <p><a href="https://pytorch.org/vision/stable/models.html#classification">https://pytorch.org/vision/stable/models.html#classification</a></p>
 <h1 id="alexnet">AlexNet</h1>
-<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-003-ce7775939c.png" alt="图片">
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-004-aba86c9ed4.png" alt="图片">
-Data augmentation：即数据增强——通过在训练样本中引入变化，使模型能够适应变化后的图像，提高泛化能力。这也使模型不仅能识别原始图像，还能识别变化后的图像（防止过拟合）。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-005-8b659acc1c.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-003-ce7775939c.png" alt="图片"><br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-004-aba86c9ed4.png" alt="图片"><br>Data augmentation：即数据增强——通过在训练样本中引入变化，使模型能够适应变化后的图像，提高泛化能力。这也使模型不仅能识别原始图像，还能识别变化后的图像（防止过拟合）。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-005-8b659acc1c.png" alt="图片"></p>
 <p>卷积核按输出通道被分为两部分，但每部分的卷积核仍然遍历整张图像。</p>
 <p>两部分得到的卷积结果分别进行池化，得到各自的池化结果。</p>
 <p>然后再分别进行卷积，但仍然是作用于各自的结果。</p>
-<p>最后，全连接层也是分别作用于各自的结果。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-006-0675835dc6.png" alt="图片"></p>
+<p>最后，全连接层也是分别作用于各自的结果。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E8%BF%81%E7%A7%BB%E5%AD%A6%E4%B9%A0%20-%20AlexNet%20-%20AlexNet%20%E6%BA%90%E7%A0%81/assets/csdn-145051091/image-006-0675835dc6.png" alt="图片"></p>
 <h2 id="transformstotensor">transforms.ToTensor()</h2>
 <h3 id="transformstotensor-的作用"><strong><code>transforms.ToTensor()</code> 的作用</strong></h3>
 <p><code>transforms.ToTensor()</code> 是 PyTorch 提供的 <code>torchvision.transforms</code> 模块中的常用方法，用于把 <strong>PIL 图像</strong>或 <strong>NumPy 数组</strong>转换为 <strong>PyTorch 张量（Tensor）</strong>。</p>
 <hr>
 <h3 id="1-为什么需要-totensor"><strong>1. 为什么需要 <code>ToTensor()</code>？</strong></h3>
 <ul>
-<li><p><strong>神经网络只能处理张量</strong>：
-深度学习模型通常只接受 PyTorch 张量（Tensor）作为输入，而图像数据通常以 <strong>PIL 图像</strong>或 <strong>NumPy 数组</strong>的形式存储，因此需要转换为 PyTorch 张量格式。</p>
+<li><p><strong>神经网络只能处理张量</strong>：<br>深度学习模型通常只接受 PyTorch 张量（Tensor）作为输入，而图像数据通常以 <strong>PIL 图像</strong>或 <strong>NumPy 数组</strong>的形式存储，因此需要转换为 PyTorch 张量格式。</p>
 </li>
-<li><p><strong>自动归一化</strong>：
-<code>ToTensor()</code> 会把图像数据从像素值范围 <code>[0, 255]</code> 转换为 <code>[0.0, 1.0]</code> 范围内的浮点数。</p>
+<li><p><strong>自动归一化</strong>：<br><code>ToTensor()</code> 会把图像数据从像素值范围 <code>[0, 255]</code> 转换为 <code>[0.0, 1.0]</code> 范围内的浮点数。</p>
 <ul>
 <li>这种归一化有助于提高模型训练的稳定性。</li>
 </ul>

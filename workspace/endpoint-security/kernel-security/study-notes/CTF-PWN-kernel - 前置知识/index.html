@@ -31,11 +31,7 @@ cd ..
 <h1 id="查看保护">查看保护</h1>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-001-388ed19dc7.png" alt="图片"></p>
 <h1 id="调试">调试</h1>
-<p>记得设置为 root，否则看不到
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-002-887ad87f38.png" alt="图片">
-然后关闭 kaslr，方便下断点
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-003-974d6d1758.png" alt="图片">
-查看模块相关的段以及内核中存在的符号函数</p>
+<p>记得设置为 root，否则看不到<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-002-887ad87f38.png" alt="图片"><br>然后关闭 kaslr，方便下断点<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-003-974d6d1758.png" alt="图片"><br>查看模块相关的段以及内核中存在的符号函数</p>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel%20-%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-136745828/image-004-53bf92289a.png" alt="图片"></p>
 <pre><code class="language-bash">gdb ./vmlinux -q
 set architecture i386:x86-64

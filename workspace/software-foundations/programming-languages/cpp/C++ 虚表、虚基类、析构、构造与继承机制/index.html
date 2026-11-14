@@ -135,13 +135,8 @@ ObjA destructed
 </code></pre>
 <p>通过这种方式，C++ 保证了全局对象的构造和析构是有序进行的，即使对象之间存在依赖关系。</p>
 <h1 id="继承">继承</h1>
-<p>在构造函数中：
-构造顺序：先构造父类，再按声明顺序构造初始化列表中指定的成员对象和成员，最后执行自身的构造函数代码
-析构顺序：先调用自身的析构函数，再调用成员对象的析构函数，最后调用父类的析构函数</p>
-<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-005-e12b9923f2.png" alt="图片">
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-006-78b94f99a6.png" alt="图片">
-按照继承关系的顺序，先调用父类 Sofa 的构造函数。在调用另一个父类 Bed 时，并不是直接把对象的起始地址作为 this 指针传入，而是把地址向后调整父类 Sofa 的长度，用调整后的地址值作为 this 指针传入；只有这样才调用父类 Bed 的构造函数。因为有两个父类，子类在继承时也继承了它们各自的虚表指针，所以子类拥有两个虚表指针。可以看出，在多继承中，子类中虚表指针的数量取决于所继承父类的数量，父类有几个，虚表指针就有几个。
-在进行多态操作时，会把指针向前或向后移动，使其指向那个位置。</p>
+<p>在构造函数中：<br>构造顺序：先构造父类，再按声明顺序构造初始化列表中指定的成员对象和成员，最后执行自身的构造函数代码<br>析构顺序：先调用自身的析构函数，再调用成员对象的析构函数，最后调用父类的析构函数</p>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-005-e12b9923f2.png" alt="图片"><br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-006-78b94f99a6.png" alt="图片"><br>按照继承关系的顺序，先调用父类 Sofa 的构造函数。在调用另一个父类 Bed 时，并不是直接把对象的起始地址作为 this 指针传入，而是把地址向后调整父类 Sofa 的长度，用调整后的地址值作为 this 指针传入；只有这样才调用父类 Bed 的构造函数。因为有两个父类，子类在继承时也继承了它们各自的虚表指针，所以子类拥有两个虚表指针。可以看出，在多继承中，子类中虚表指针的数量取决于所继承父类的数量，父类有几个，虚表指针就有几个。<br>在进行多态操作时，会把指针向前或向后移动，使其指向那个位置。</p>
 <h1 id="继承抽象类">继承抽象类</h1>
 <pre><code class="language-cpp">// C++ 源码
 #include &lt;stdio.h&gt;
@@ -164,14 +159,7 @@ obj.show();
 return 0;
 }
 </code></pre>
-<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-007-073a953df1.png" alt="图片">
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-008-fb82dbf9b3.png" alt="图片">
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-009-e3962954db.png" alt="图片">
-可以发现，虚表中函数指针所指向的位置并没有具体实现。
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-010-c0d6088718.png" alt="图片">
-而子类虚表函数指针所指向的位置则有具体实现。
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-011-9e28430980.png" alt="图片">
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-012-436f4289a1.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-007-073a953df1.png" alt="图片"><br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-008-fb82dbf9b3.png" alt="图片"><br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-009-e3962954db.png" alt="图片"><br>可以发现，虚表中函数指针所指向的位置并没有具体实现。<br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-010-c0d6088718.png" alt="图片"><br>而子类虚表函数指针所指向的位置则有具体实现。<br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-011-9e28430980.png" alt="图片"><br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E8%99%9A%E8%A1%A8%E3%80%81%E8%99%9A%E5%9F%BA%E7%B1%BB%E3%80%81%E6%9E%90%E6%9E%84%E3%80%81%E6%9E%84%E9%80%A0%E4%B8%8E%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-139033790/image-012-436f4289a1.png" alt="图片"></p>
 <h1 id="虚继承">虚继承</h1>
 <h3 id="基本设定">基本设定</h3>
 <p>假设我们有以下四个类：</p>

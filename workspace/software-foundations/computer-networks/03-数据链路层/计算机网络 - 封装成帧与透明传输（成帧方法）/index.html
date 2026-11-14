@@ -19,31 +19,20 @@
     <div class="meta"><time>2024-02-04</time><span class="tag">#计算机网络</span><span class="tag">#网络</span></div>
     <article class="post-body">
 <h1 id="数据链路层的功能概述">数据链路层的功能概述</h1>
-<p>就像老板让秘书把一份文件送到另一家公司；秘书告诉快递员如何把文件送到对方公司的秘书手里，然后对方公司的秘书再把文件交给她的老板。
-&#39;<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-001-4723b192c8.png" alt="图片"></p>
+<p>就像老板让秘书把一份文件送到另一家公司；秘书告诉快递员如何把文件送到对方公司的秘书手里，然后对方公司的秘书再把文件交给她的老板。<br>&#39;<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-001-4723b192c8.png" alt="图片"></p>
 <h1 id="封装成帧">封装成帧</h1>
-<p>MTU：与当前所用协议有关。
-接收方通过帧头和帧尾的帧定界符来区分一帧的开始和结束。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-002-78d6ea4154.png" alt="图片"></p>
+<p>MTU：与当前所用协议有关。<br>接收方通过帧头和帧尾的帧定界符来区分一帧的开始和结束。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-002-78d6ea4154.png" alt="图片"></p>
 <h1 id="透明传输">透明传输</h1>
-<p>就像秘书在递送文件时并不关心文件的内容是什么。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-003-cbb2c9ea67.png" alt="图片"></p>
+<p>就像秘书在递送文件时并不关心文件的内容是什么。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-003-cbb2c9ea67.png" alt="图片"></p>
 <h1 id="成帧方法">成帧方法</h1>
 <h2 id="字符计数法">字符计数法</h2>
-<p>某一帧的计数字段出错，会导致其后的帧也全部出错。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-004-0d1aee45b0.png" alt="图片"></p>
+<p>某一帧的计数字段出错，会导致其后的帧也全部出错。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-004-0d1aee45b0.png" alt="图片"></p>
 <h2 id="字符填充法">字符填充法</h2>
-<p>用开头和结尾各一个字节作为起始和结束标志。
-ASCII 码与帧的起始字节和结束字节没有重叠。</p>
-<p>但如果不是 ASCII 码，就可能出现识别错误。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-005-07740fd4b5.png" alt="图片">
-字节填充法是一种防止数据中出现与帧定界符相同比特组合的技术。
-字节填充（填入一个转义字符，告诉接收方无论后面是什么，都当作数据处理）。</p>
-<p>接收时，删除所有收到的转义字符。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-006-66e3c98b57.png" alt="图片"></p>
+<p>用开头和结尾各一个字节作为起始和结束标志。<br>ASCII 码与帧的起始字节和结束字节没有重叠。</p>
+<p>但如果不是 ASCII 码，就可能出现识别错误。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-005-07740fd4b5.png" alt="图片"><br>字节填充法是一种防止数据中出现与帧定界符相同比特组合的技术。<br>字节填充（填入一个转义字符，告诉接收方无论后面是什么，都当作数据处理）。</p>
+<p>接收时，删除所有收到的转义字符。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-006-66e3c98b57.png" alt="图片"></p>
 <h2 id="零比特填充法">零比特填充法</h2>
-<p>在发送端，硬件扫描整个帧，一旦检测到连续五个 1 的比特序列，就自动在该序列之后插入一个 0。这样做的目的是防止数据中出现与帧定界符相同的比特组合（例如 HDLC 协议通常使用 01111110 作为帧定界符），从而避免接收端误识别帧边界。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-007-24a7c607e8.png" alt="图片"></p>
+<p>在发送端，硬件扫描整个帧，一旦检测到连续五个 1 的比特序列，就自动在该序列之后插入一个 0。这样做的目的是防止数据中出现与帧定界符相同的比特组合（例如 HDLC 协议通常使用 01111110 作为帧定界符），从而避免接收端误识别帧边界。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-007-24a7c607e8.png" alt="图片"></p>
 <h2 id="违规编码法">违规编码法</h2>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%B0%81%E8%A3%85%E6%88%90%E5%B8%A7%E4%B8%8E%E9%80%8F%E6%98%8E%E4%BC%A0%E8%BE%93%EF%BC%88%E6%88%90%E5%B8%A7%E6%96%B9%E6%B3%95%EF%BC%89/assets/csdn-136018426/image-008-0c61461735.png" alt="图片"></p>
 <h1 id="为什么字符填充法复杂且不兼容">为什么字符填充法复杂且不兼容</h1>

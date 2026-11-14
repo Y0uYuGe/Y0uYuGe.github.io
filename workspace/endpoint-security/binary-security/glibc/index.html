@@ -19,8 +19,7 @@
     <div class="meta"><time>2024-06-09</time><span class="tag">#io</span><span class="tag">#Pwn</span><span class="tag">#CTF</span></div>
     <article class="post-body">
 <h1 id="参考">参考</h1>
-<p><a href="https://wiki.wgpsec.org/knowledge/ctf/iofile.html">https://wiki.wgpsec.org/knowledge/ctf/iofile.html</a>
-<a href="https://blog.wingszeng.top/pwn-glibc-file-struct-and-related-functions/#%E8%AF%BB%E5%8F%96%E7%BC%93%E5%86%B2%E5%8C%BA">https://blog.wingszeng.top/pwn-glibc-file-struct-and-related-functions/#%E8%AF%BB%E5%8F%96%E7%BC%93%E5%86%B2%E5%8C%BA</a></p>
+<p><a href="https://wiki.wgpsec.org/knowledge/ctf/iofile.html">https://wiki.wgpsec.org/knowledge/ctf/iofile.html</a><br><a href="https://blog.wingszeng.top/pwn-glibc-file-struct-and-related-functions/#%E8%AF%BB%E5%8F%96%E7%BC%93%E5%86%B2%E5%8C%BA">https://blog.wingszeng.top/pwn-glibc-file-struct-and-related-functions/#%E8%AF%BB%E5%8F%96%E7%BC%93%E5%86%B2%E5%8C%BA</a></p>
 <h1 id="缓冲机制">缓冲机制</h1>
 <ul>
 <li>读：先从文件读取一大块数据到缓冲区，然后从缓冲区中读取所需的那部分数据</li>
@@ -350,8 +349,7 @@ pwndbg&gt;
 <h1 id="fread">fread</h1>
 <p>fread 实际上调用 _IO_fread</p>
 <h2 id="_io_fread">_IO_fread</h2>
-<p>buf 是读取后数据保存的位置，fp 是要读取的文件
-它调用 _IO_sgetn 函数</p>
+<p>buf 是读取后数据保存的位置，fp 是要读取的文件<br>它调用 _IO_sgetn 函数</p>
 <pre><code class="language-c">
 30      size_t  _IO_fread (void *buf, size_t size, size_t count, FILE *fp)
 31      {

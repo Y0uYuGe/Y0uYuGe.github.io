@@ -19,22 +19,16 @@
     <div class="meta"><time>2024-11-26</time><span class="tag">#golang</span><span class="tag">#编程语言</span><span class="tag">#后端</span></div>
     <article class="post-body">
 <h1 id="go-编译参数-ldflags--w--s-的作用与问题">go 编译参数 ldflags -w -s 的作用与问题</h1>
-<p><a href="https://blog.csdn.net/Kevin_Gates/article/details/130107710">https://blog.csdn.net/Kevin_Gates/article/details/130107710</a>
--ldflags 参数可以用来向编译器传递额外的参数。其中，-w 和 -s 是两个常用的参数。</p>
+<p><a href="https://blog.csdn.net/Kevin_Gates/article/details/130107710">https://blog.csdn.net/Kevin_Gates/article/details/130107710</a><br>-ldflags 参数可以用来向编译器传递额外的参数。其中，-w 和 -s 是两个常用的参数。</p>
 <ul>
 <li>w：剥离 DWARF 调试信息。这会减小可执行文件的体积。</li>
 <li>s：剥离符号表信息。这会进一步减小可执行文件的体积。</li>
 </ul>
 <p>使用 <code>-ldflags &quot;-w -s&quot;</code> 参数编译出可执行文件之后，可以通过以下方式检查生成的可执行文件是否已经剥离了调试信息和符号表。</p>
 <h3 id="使用-file-命令检查文件类型">使用 <code>file</code> 命令检查文件类型</h3>
-<p><code>file</code> 命令可以显示可执行文件的基本信息；如果调试信息已被剥离，<code>file</code> 的输出中就不应提到调试符号。
-<img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-001-1e9c6f7607.png" alt="图片"></p>
+<p><code>file</code> 命令可以显示可执行文件的基本信息；如果调试信息已被剥离，<code>file</code> 的输出中就不应提到调试符号。<br><img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-001-1e9c6f7607.png" alt="图片"></p>
 <h1 id="go-语言逆向相关参考资料">Go 语言逆向相关参考资料</h1>
-<p><a href="https://www.cnblogs.com/lordtianqiyi/articles/16315905.html">https://www.cnblogs.com/lordtianqiyi/articles/16315905.html</a>
-<a href="https://forum.butian.net/share/1874">https://forum.butian.net/share/1874</a>
-<a href="https://jiayu0x.com/2020/09/28/go-binary-reverse-engineering-tips-and-example/">https://jiayu0x.com/2020/09/28/go-binary-reverse-engineering-tips-and-example/</a>
-<a href="https://xz.aliyun.com/t/9015?time__1311=n4%2bxnD0DuAitG=DODy7DlhjmE3biDBn7QZDWqAID">推荐阅读：从正向开发角度理解 Go 逆向</a>
-<a href="https://zu1k.com/posts/security/reverse/golang-reverse/">Golang 逆向资料合集</a></p>
+<p><a href="https://www.cnblogs.com/lordtianqiyi/articles/16315905.html">https://www.cnblogs.com/lordtianqiyi/articles/16315905.html</a><br><a href="https://forum.butian.net/share/1874">https://forum.butian.net/share/1874</a><br><a href="https://jiayu0x.com/2020/09/28/go-binary-reverse-engineering-tips-and-example/">https://jiayu0x.com/2020/09/28/go-binary-reverse-engineering-tips-and-example/</a><br><a href="https://xz.aliyun.com/t/9015?time__1311=n4%2bxnD0DuAitG=DODy7DlhjmE3biDBn7QZDWqAID">推荐阅读：从正向开发角度理解 Go 逆向</a><br><a href="https://zu1k.com/posts/security/reverse/golang-reverse/">Golang 逆向资料合集</a></p>
 <p><a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-garbage-collector/">Go 语言设计与实现</a></p>
 <h1 id="go-id">go ID</h1>
 <p>Build ID 是 Go 二进制文件中的元数据之一</p>
@@ -118,8 +112,7 @@ go build fileName  -o 可执行程序名
 使用 go build 命令进行编译时，不同参数的执行结果也是不同的。
 </code></pre>
 <p>编译一个 Go 程序同样也是一个编译和链接的过程</p>
-<p><img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-002-b5f76de68d.png" alt="图片">
-<a href="https://juejin.cn/post/6914195712737542157">golang 包管理工具----go mod</a></p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-002-b5f76de68d.png" alt="图片"><br><a href="https://juejin.cn/post/6914195712737542157">golang 包管理工具----go mod</a></p>
 <p>一个 Module 可以包含多个不同的 Package，而每个 Package 又可以包含多个目录和许多源文件。</p>
 <pre><code class="language-cpp">Module :moduledata 里面有pclntab 全名是 Program Counter Line Table
 </code></pre>
@@ -175,11 +168,7 @@ type pcHeader struct {
 </ul>
 </li>
 </ol>
-<p>函数表
-函数地址偏移是相对于函数表中第一个函数的地址
-<img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-004-fe5faf8a9e.png" alt="图片">
-源文件表
-<img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-005-400df44bca.png" alt="图片"></p>
+<p>函数表<br>函数地址偏移是相对于函数表中第一个函数的地址<br><img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-004-fe5faf8a9e.png" alt="图片"><br>源文件表<br><img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-005-400df44bca.png" alt="图片"></p>
 <h1 id="moduledata">Moduledata</h1>
 <p>Module 是比 Package 更高层的概念：一个 Module 可以包含多个不同的 Package，而每个 Package 又可以包含多个目录和许多源文件。</p>
 <p>相应地，Moduledata 也是 Go 二进制文件中一个更高层的数据结构，包含了许多其他结构的索引信息</p>
@@ -240,10 +229,7 @@ type pcHeader struct {
 <h1 id="程序启动">程序启动</h1>
 <p><a href="https://juejin.cn/post/7035633561805783070">Golang 程序启动流程</a></p>
 <blockquote>
-<p>rt0_amd64_linux-&gt;rt0_amd64-&gt;runtime_rt0_go
-rt0_go 代码相当长，可以分为两部分。第一部分处理系统参数获取和运行时检查。第二部分是 Go 程序启动的核心；整体启动流程如下
-<img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-007-a847cfba44.png" alt="图片">
-执行 runtime.main 主要完成以下工作：</p>
+<p>rt0_amd64_linux-&gt;rt0_amd64-&gt;runtime_rt0_go<br>rt0_go 代码相当长，可以分为两部分。第一部分处理系统参数获取和运行时检查。第二部分是 Go 程序启动的核心；整体启动流程如下<br><img src="/workspace/endpoint-security/reverse-engineering/Go%20%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%20-%20%E5%9F%BA%E7%A1%80/assets/csdn-138756266/image-007-a847cfba44.png" alt="图片"><br>执行 runtime.main 主要完成以下工作：</p>
 </blockquote>
 <ol>
 <li><p>启动系统后台监控 sysmon 线程</p>

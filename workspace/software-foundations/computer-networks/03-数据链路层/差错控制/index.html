@@ -23,29 +23,21 @@
 <p>奇偶校验码：只能检错，不能找出错误位置，也不能纠错。</p>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-001-763f862f4a.png" alt="图片"></p>
 <h2 id="海明距离">海明距离</h2>
-<p>如果找到码距为 1，那它就一定是 1，因为码距取的是最小值。
-码集的码距从 1 开始依次递增查找。</p>
-<p>要检测 d 位错误，需要码距为 d+1。
-要纠正 d 位错误，需要码距为 2d+1。</p>
+<p>如果找到码距为 1，那它就一定是 1，因为码距取的是最小值。<br>码集的码距从 1 开始依次递增查找。</p>
+<p>要检测 d 位错误，需要码距为 d+1。<br>要纠正 d 位错误，需要码距为 2d+1。</p>
 <p>要具备检测 d 位错误的能力，码距至少为 d+1。这是因为如果码距为 d+1，那么任何 d 位错误都会使码字从一个合法码字变成非法码字，而不会与其他任何合法码字重合。这样，接收方只需检查码字是否为合法码字就能发现错误。如果码距小于 d+1，则可能存在两个合法码字，它们的海明距离小于或等于 d，这意味着 d 位错误有可能把一个码字变成另一个合法码字，导致错误无法被检测出来。</p>
-<p>要具备纠正 d 位错误的能力，码距至少为 2d+1。这是因为要纠错，接收方不仅需要能检测到错误，还需要能确定错误发生的具体位置。如果码距为 2d+1，那么即使发生了 d 位错误，出错的码字与所有合法码字之间的最小海明距离也至少为 d+1，这意味着接收方可以通过比较收到的码字与所有合法码字之间的海明距离，来判定最有可能的原始码字。如果码距小于 2d+1，则可能存在多个合法码字与出错码字的海明距离相同，导致无法准确判定原始码字。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-002-e39e5ae49a.png" alt="图片"></p>
+<p>要具备纠正 d 位错误的能力，码距至少为 2d+1。这是因为要纠错，接收方不仅需要能检测到错误，还需要能确定错误发生的具体位置。如果码距为 2d+1，那么即使发生了 d 位错误，出错的码字与所有合法码字之间的最小海明距离也至少为 d+1，这意味着接收方可以通过比较收到的码字与所有合法码字之间的海明距离，来判定最有可能的原始码字。如果码距小于 2d+1，则可能存在多个合法码字与出错码字的海明距离相同，导致无法准确判定原始码字。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-002-e39e5ae49a.png" alt="图片"></p>
 <h3 id="1-确定校验位数-r">1. 确定校验位数 r</h3>
-<p>根据公式确定 r。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-003-b5076724d9.png" alt="图片"></p>
+<p>根据公式确定 r。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-003-b5076724d9.png" alt="图片"></p>
 <h3 id="2-确定校验码和数据的位置">2. 确定校验码和数据的位置</h3>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-004-0a51c6c3a0.png" alt="图片"></p>
 <h3 id="3-求出校验码的值">3. 求出校验码的值</h3>
-<p>通常采用偶校验，也可以采用奇校验。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-005-357adc8cec.png" alt="图片"></p>
+<p>通常采用偶校验，也可以采用奇校验。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-005-357adc8cec.png" alt="图片"></p>
 <h3 id="4-检错并纠错">4. 检错并纠错</h3>
 <h4 id="纠错方法一">纠错方法一</h4>
-<p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-006-e198fc476d.png" alt="图片">
-三个大圆分别对应 1、2、4 号校验码，重叠部分是它们各自的交集。正确的部分——2 号校验码覆盖第 2、3、6、7 位，没有问题；出错的 1 号和 4 号校验码的公共部分，即第 5、7 位，必有问题，而 7 没问题（2 号校验码覆盖第 2、3、6、7 位，都正常），所以问题出在第 5 位。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-007-abd20e686e.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-006-e198fc476d.png" alt="图片"><br>三个大圆分别对应 1、2、4 号校验码，重叠部分是它们各自的交集。正确的部分——2 号校验码覆盖第 2、3、6、7 位，没有问题；出错的 1 号和 4 号校验码的公共部分，即第 5、7 位，必有问题，而 7 没问题（2 号校验码覆盖第 2、3、6、7 位，都正常），所以问题出在第 5 位。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-007-abd20e686e.png" alt="图片"></p>
 <h4 id="纠错方法二">纠错方法二</h4>
-<p>把各校验组两两异或，得到错误位置的二进制编码，再把这个二进制编码转换成十进制数，就是错误所在的位置。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-008-d299b0336f.png" alt="图片"></p>
+<p>把各校验组两两异或，得到错误位置的二进制编码，再把这个二进制编码转换成十进制数，就是错误所在的位置。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-008-d299b0336f.png" alt="图片"></p>
 <h2 id="总结">总结</h2>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136033237/image-009-147b228fc6.png" alt="图片"></p>
 <h1 id="计算机网络---差错控制奇偶校验码crc-循环冗余码">计算机网络 - 差错控制（奇偶校验码、CRC 循环冗余码）</h1>
@@ -53,8 +45,7 @@
 <ul>
 <li>噪声通常指任何意外的、随机的信号干扰，可能来自多种物理源，比如电子设备中的热噪声、无线信号受到的环境干扰等</li>
 </ul>
-<p>不同的链路采用不同的链路层服务
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-001-abb2aea223.png" alt="图片"></p>
+<p>不同的链路采用不同的链路层服务<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-001-abb2aea223.png" alt="图片"></p>
 <h3 id="一个在传感器层面提升信噪比以降低线路自身随机噪声的例子">一个在传感器层面提升信噪比以降低线路自身随机噪声的例子</h3>
 <p>在通信系统中，信号在通过信道传输时会衰减，信道上的干扰和噪声也会影响信号，造成信号失真。为了确保信号到达接收端时能够正确解码而不出现太多错误，需要采取措施提升信噪比。具体如下：</p>
 <p>改进传输手段：例如用光缆或同轴电缆代替传统的铜缆，因为这些介质提供更高的传输质量，能有效降低传输过程中的信号损耗和外部电磁干扰</p>
@@ -74,21 +65,16 @@
 <h2 id="数据链路层的差错控制">数据链路层的差错控制</h2>
 <p> <img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-002-12fdea1e20.png" alt="图片"></p>
 <h3 id="检错码奇偶校验码">检错码——奇偶校验码</h3>
-<p>添加校验位；它是 0 还是 1，取决于使用的是奇校验还是偶校验
-奇校验：1 的个数为奇数时正确
-偶校验：1 的个数为偶数时正确</p>
-<p>如果检测到的 1 的个数是奇数，仍然可能丢失了偶数个 1。所以准确率只有一半
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-003-605d1efae6.png" alt="图片"></p>
+<p>添加校验位；它是 0 还是 1，取决于使用的是奇校验还是偶校验<br>奇校验：1 的个数为奇数时正确<br>偶校验：1 的个数为偶数时正确</p>
+<p>如果检测到的 1 的个数是奇数，仍然可能丢失了偶数个 1。所以准确率只有一半<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-003-605d1efae6.png" alt="图片"></p>
 <h3 id="检错码crc-循环冗余码">检错码——CRC 循环冗余码</h3>
-<p>会给出生成多项式；注意先计算出 r 位的校验序列，再把它附加到原始数据后面
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-004-ed58ca38d6.png" alt="图片"></p>
+<p>会给出生成多项式；注意先计算出 r 位的校验序列，再把它附加到原始数据后面<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-004-ed58ca38d6.png" alt="图片"></p>
 <h3 id="例题">例题</h3>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-005-56c2775e3d.png" alt="图片"></p>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-006-6857504878.png" alt="图片"></p>
 <h3 id="说明">说明</h3>
 <p>数据链路层在接收端收到的所有帧都是无差错的，这个说法大体上是对的：这里的“接收”具有“最终被接受”的含义，因为有差错的帧不会被最终接受。但要注意，余数对应的比特也可能恰好相同，所以即便看起来无差错，仍然有可能存在错误；但由于概率很小，所以认为是无差错的</p>
-<p>CRC 校验实现的是比特无差错（不是百分之百），但不能保证不丢帧或不重复。所以并不是发了什么就一定能收到什么，它不是可靠传输
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-007-80a0ff99d1.png" alt="图片"></p>
+<p>CRC 校验实现的是比特无差错（不是百分之百），但不能保证不丢帧或不重复。所以并不是发了什么就一定能收到什么，它不是可靠传输<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6/assets/csdn-136022792/image-007-80a0ff99d1.png" alt="图片"></p>
 
     </article>
     

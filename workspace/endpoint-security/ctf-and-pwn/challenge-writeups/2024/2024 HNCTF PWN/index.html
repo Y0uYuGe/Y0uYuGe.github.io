@@ -88,8 +88,7 @@ p.sendafter(b&quot;\n&quot;,b&quot;\x11&quot;*24+p32(rbp+8)+getflag+binsh+b&quot
 p.interactive()
 </code></pre>
 <h2 id="idea">idea</h2>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-001-43dee46151.png" alt="图片">
-没有随机化，GOT 表可写</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-001-43dee46151.png" alt="图片"><br>没有随机化，GOT 表可写</p>
 <h3 id="代码-1">代码</h3>
 <pre><code class="language-c">int vuln()
 {
@@ -151,14 +150,8 @@ p.interactive()
 </code></pre>
 <h2 id="what">what</h2>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-002-7d0896d375.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-003-20bfb93b65.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-004-8d64d8cab7.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-005-7976a80028.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-006-92769362ec.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-007-d340527daa.png" alt="图片"></p>
-<p>size 不受限制，free 后没有清空指针（UAF），atoi 可以输入负数，造成越界读写
-UAF 后 show 泄露 libc 地址，然后申请两个 tcachebin chunk，分配到 free_hook-8 处，写入 /bin/sh 和 system 地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-008-a8b2cc4228.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-003-20bfb93b65.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-004-8d64d8cab7.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-005-7976a80028.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-006-92769362ec.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-007-d340527daa.png" alt="图片"></p>
+<p>size 不受限制，free 后没有清空指针（UAF），atoi 可以输入负数，造成越界读写<br>UAF 后 show 泄露 libc 地址，然后申请两个 tcachebin chunk，分配到 free_hook-8 处，写入 /bin/sh 和 system 地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-008-a8b2cc4228.png" alt="图片"></p>
 <h3 id="exp-2">exp</h3>
 <pre><code class="language-c">from pwn import *
 context(os=&#39;linux&#39;, arch=&#39;i386&#39;, log_level=&#39;debug&#39;)
@@ -205,18 +198,13 @@ p.interactive()
 <h3 id="解决-ida-中文乱码">解决 IDA 中文乱码</h3>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-010-40c7d10c24.png" alt="图片"></p>
 <h3 id="代码-2">代码</h3>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-011-9110613bdb.png" alt="图片">
-存在越界写：直接向上方的 GOT 表写入低字节造成偏移，这样下次调用该函数时就可以触发其他漏洞
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-012-ad6ec84dc1.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-011-9110613bdb.png" alt="图片"><br>存在越界写：直接向上方的 GOT 表写入低字节造成偏移，这样下次调用该函数时就可以触发其他漏洞<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-012-ad6ec84dc1.png" alt="图片"></p>
 <p>如果把 atoi 的 GOT 表项改成 printf，就可以造成栈上的格式化字符串</p>
 <h3 id="思路">思路</h3>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-013-f047cf2e43.png" alt="图片">
-要进入格式化字符串需要 s1=yes。利用 int 赋值给 char 会截断的特点，绕过检查，使其等于 0x73 时返回 0。然后利用格式化字符串泄露地址，并循环再次触发格式化字符串漏洞</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-014-14da8906bf.png" alt="图片">
-将 printf 的 GOT 表项最后一个字节修改为 0x70</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-013-f047cf2e43.png" alt="图片"><br>要进入格式化字符串需要 s1=yes。利用 int 赋值给 char 会截断的特点，绕过检查，使其等于 0x73 时返回 0。然后利用格式化字符串泄露地址，并循环再次触发格式化字符串漏洞</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-014-14da8906bf.png" alt="图片"><br>将 printf 的 GOT 表项最后一个字节修改为 0x70</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-138804721/image-015-c170e250ab.png" alt="图片"></p>
-<p>同时将格式化字符串转换为字节流：<code>f&quot;%{v}c%8$hhn&quot;.encode().ljust(0x10,b&quot;a&quot;)</code>
-写零字节怎么办？直接用 <code>%8$hhn</code> 即可</p>
+<p>同时将格式化字符串转换为字节流：<code>f&quot;%{v}c%8$hhn&quot;.encode().ljust(0x10,b&quot;a&quot;)</code><br>写零字节怎么办？直接用 <code>%8$hhn</code> 即可</p>
 <blockquote>
 <p><code>%0c</code> 是 printf 系列函数中的格式说明符，用于输出单个字符。在 <code>%0c</code> 中，<code>0</code> 作为填充字符在这里实际上没有效果，因为 %c 本身只处理一个字符，无论前面的数字是多少，它都只输出一个字符，或者在字符不存在时不输出（即什么也不打印）。因此，<code>%0c</code> 与 <code>%c</code> 的效果相同：都根据提供的参数输出单个字符。</p>
 </blockquote>
@@ -274,21 +262,13 @@ p.interactive()
 <h2 id="参考资料">参考资料</h2>
 <p><a href="https://docs.qq.com/doc/p/641e8742c39d16cd6d046b18bcb251fd3ab0cd6d">https://docs.qq.com/doc/p/641e8742c39d16cd6d046b18bcb251fd3ab0cd6d</a></p>
 <h2 id="hide_flag">hide_flag</h2>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-001-fc1f9ac1b1.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-002-baa8e5d891.png" alt="图片">
-open+pread+write 即可</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-001-fc1f9ac1b1.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-002-baa8e5d891.png" alt="图片"><br>open+pread+write 即可</p>
 <blockquote>
-<p>pread 是 Linux 和其他类 UNIX 系统中用于文件输入/输出的高级函数，允许应用程序在读取时指定相对于文件开头的绝对偏移。
-ssize_t pread(int fd, void *buf, size_t count, off_t offset);</p>
+<p>pread 是 Linux 和其他类 UNIX 系统中用于文件输入/输出的高级函数，允许应用程序在读取时指定相对于文件开头的绝对偏移。<br>ssize_t pread(int fd, void *buf, size_t count, off_t offset);</p>
 </blockquote>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-003-9e518cb6fb.png" alt="图片">
- 字节码必须与所在位置索引具有相同的奇偶性，即遵循偶-奇-偶-奇的顺序。
- 因此，像 syscall 这样连续两个字节都是奇数的指令不可用；只能使用 call 调用函数（jmp 不方便返回）。
- <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-004-91d83b8e72.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-003-9e518cb6fb.png" alt="图片"><br> 字节码必须与所在位置索引具有相同的奇偶性，即遵循偶-奇-偶-奇的顺序。<br> 因此，像 syscall 这样连续两个字节都是奇数的指令不可用；只能使用 call 调用函数（jmp 不方便返回）。<br> <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-004-91d83b8e72.png" alt="图片"></p>
 <h3 id="思路-1">思路</h3>
-<p>刚进入 shellcode 时残留的寄存器和栈内容：
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-005-6ad49a6ff0.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-006-e723376e64.png" alt="图片"></p>
+<p>刚进入 shellcode 时残留的寄存器和栈内容：<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-005-6ad49a6ff0.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-006-e723376e64.png" alt="图片"></p>
 <ul>
 <li>pop push  add sub  mov  xchg cmp shl xor call nop</li>
 <li>如果必须连续出现两个偶数字节或两个奇数字节，就填入一条不影响结果的其他指令，以满足偶奇交替的要求。</li>
@@ -356,10 +336,8 @@ p.interactive()
 </code></pre>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-007-84a3804a1d.png" alt="图片"></p>
 <h2 id="rand_file_dockerfile-libc-231">Rand_file_dockerfile libc 2.31</h2>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-008-a67b49cc57.png" alt="图片">
-open 被禁用，且 read 的文件描述符被限制为不大于 2。直接用 close 关闭 stderr，就可以读取新打开的文件：close+openat+read+write</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-009-49976c3e73.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-010-ff61caa542.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-008-a67b49cc57.png" alt="图片"><br>open 被禁用，且 read 的文件描述符被限制为不大于 2。直接用 close 关闭 stderr，就可以读取新打开的文件：close+openat+read+write</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-009-49976c3e73.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-010-ff61caa542.png" alt="图片"></p>
 <pre><code class="language-c">ptr ^= __readfsqword(0x28u);
 </code></pre>
 <p>这一行从线程特定的位置读取一个 64 位值，并与 <code>ptr</code> 异或。<code>__readfsqword</code> 是一种特殊的内联汇编内建函数，用于读取 <code>FS</code> 段寄存器所指向的地址加上偏移 <code>0x28</code> 处的 64 位值。<code>FS</code> 段寄存器通常用于访问当前线程的非分页内存区域，例如 TLS（线程局部存储）。</p>
@@ -387,17 +365,13 @@ return 0LL;
 <p><code>write</code> 函数向文件描述符 1（通常代表标准输出 <code>stdout</code>）写入换行符，随后函数返回 <code>0LL</code>，表示程序正常结束。</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-011-a681c6c07b.png" alt="图片"></p>
 <ol>
-<li><p><code>*a1 ^= *a2;</code>
-这一行使用异或运算符 <code>^</code>，将 <code>a1</code> 指向的值与 <code>a2</code> 指向的值异或，并将结果存回 <code>a1</code> 指向的位置。异或具有以下性质：任何数与自身异或都为零，与零异或则保持原值。</p>
+<li><p><code>*a1 ^= *a2;</code><br>这一行使用异或运算符 <code>^</code>，将 <code>a1</code> 指向的值与 <code>a2</code> 指向的值异或，并将结果存回 <code>a1</code> 指向的位置。异或具有以下性质：任何数与自身异或都为零，与零异或则保持原值。</p>
 </li>
-<li><p><code>*a2 ^= *a1;</code>
-这里再次使用异或，将 <code>a2</code> 指向的值与 <code>a1</code> 现在指向的新值异或。由于 <code>a1</code> 当前指向的值实际上是 <code>*a1 ^ *a2</code>，因此 <code>(*a2) ^ (*a1 ^ *a2)</code> 的结果就是 <code>*a1</code> 的原始值。结果存入 <code>a2</code> 指向的位置。</p>
+<li><p><code>*a2 ^= *a1;</code><br>这里再次使用异或，将 <code>a2</code> 指向的值与 <code>a1</code> 现在指向的新值异或。由于 <code>a1</code> 当前指向的值实际上是 <code>*a1 ^ *a2</code>，因此 <code>(*a2) ^ (*a1 ^ *a2)</code> 的结果就是 <code>*a1</code> 的原始值。结果存入 <code>a2</code> 指向的位置。</p>
 </li>
-<li><p><code>result = a1;</code>
-这一行实际上没有参与数值交换，只是将 <code>a1</code> 的值赋给 <code>result</code> 变量。这可能是为了返回某个值，但交换过程中 <code>result</code> 的值实际上没有变化，因此这行代码可能只是为了满足函数声明中的返回类型，或用于其他目的（例如告诉调用者哪个指针指向的值先被修改）。</p>
+<li><p><code>result = a1;</code><br>这一行实际上没有参与数值交换，只是将 <code>a1</code> 的值赋给 <code>result</code> 变量。这可能是为了返回某个值，但交换过程中 <code>result</code> 的值实际上没有变化，因此这行代码可能只是为了满足函数声明中的返回类型，或用于其他目的（例如告诉调用者哪个指针指向的值先被修改）。</p>
 </li>
-<li><p><code>*a1 ^= *a2;</code>
-最后一步再次异或，将 <code>a1</code> 指向的值与 <code>a2</code> 现在指向的新值异或。由于 <code>a2</code> 当前指向的值实际上是 <code>a1</code> 原来指向的值，因此 <code>(*a1 ^ *a2) ^ *a1</code> 的结果就是 <code>a2</code> 原来指向的值。结果存入 <code>a1</code> 指向的位置。</p>
+<li><p><code>*a1 ^= *a2;</code><br>最后一步再次异或，将 <code>a1</code> 指向的值与 <code>a2</code> 现在指向的新值异或。由于 <code>a2</code> 当前指向的值实际上是 <code>a1</code> 原来指向的值，因此 <code>(*a1 ^ *a2) ^ *a1</code> 的结果就是 <code>a2</code> 原来指向的值。结果存入 <code>a1</code> 指向的位置。</p>
 </li>
 </ol>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-012-c877f3e62b.png" alt="图片"></p>
@@ -438,37 +412,18 @@ int main() {
 <p>注意，<code>setenv</code> 设置的环境变量仅在当前进程及其子进程中生效，不影响父进程或其他无关进程的环境变量。此外，程序结束后，这些环境变量不会保存到系统中，除非通过其他机制（例如在脚本中重新设置）将其持久化。</p>
 <h3 id="思路-2">思路</h3>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-013-8946be1ef2.png" alt="图片"></p>
-<p>调试有点麻烦，因为 run 中嵌入了构建镜像里的绝对地址，只能先把它 patch 掉，再在本地调试。
-使用 swap 交换栈上地址处的八字节内容。</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-014-cabaeb48e2.png" alt="图片">
-实现 main 函数的无限重复循环。
-然后将某个值与自身交换，结果保持不变，仍然为零，此时会跳出；再通过下面与 canary 的异或，就能将其泄露。上述操作作为一系列泄露的最后一部分。</p>
-<p>泄露 libc 地址：最后将其交换到 ptr 的位置，控制好返回地址后，再在原位置交换一次，然后输出与 canary 异或的结果；再与之前泄露的 canary 异或一次（不交换 ptr 的值——0 与 canary 异或仍是 canary），即可得到原始值。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-015-4b8feb8b75.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-016-31bad8cfa2.png" alt="图片">
-然后用同样的方法泄露栈地址。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-017-d1e76d719c.png" alt="图片"></p>
-<p>接下来是最巧妙的部分：从当前 call swap 函数栈上的某个地址，获取一个栈地址的内容，加上固定偏移，就能得到下一轮循环中 swap 对应的 ptr 地址；再根据 libc 地址获得 stdout 地址，计算它到下一次 ptr 的偏移，就可以修改 stdout 结构体。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-018-a01035a3a1.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-019-ac2e927f5c.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-020-4e0af1ef7d.png" alt="图片">
-通过与 stdout 的内容交换实现任意地址读，泄露栈上存放的大量指向环境变量的栈地址（其中部分栈地址处的内容是 libc 地址），从而获得大量栈地址，并保存末尾字节合适的栈地址（例如要修改第三个字节，就找一个以 3 或 b 结尾的栈地址；与其交换时，此时的最后一个字节恰好是栈地址 + 8 的第三个字节，正好对应 ptr 与 canary 异或后再反转的最后一个字节，也就是 ptr 的第一个字节）。</p>
+<p>调试有点麻烦，因为 run 中嵌入了构建镜像里的绝对地址，只能先把它 patch 掉，再在本地调试。<br>使用 swap 交换栈上地址处的八字节内容。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-014-cabaeb48e2.png" alt="图片"><br>实现 main 函数的无限重复循环。<br>然后将某个值与自身交换，结果保持不变，仍然为零，此时会跳出；再通过下面与 canary 的异或，就能将其泄露。上述操作作为一系列泄露的最后一部分。</p>
+<p>泄露 libc 地址：最后将其交换到 ptr 的位置，控制好返回地址后，再在原位置交换一次，然后输出与 canary 异或的结果；再与之前泄露的 canary 异或一次（不交换 ptr 的值——0 与 canary 异或仍是 canary），即可得到原始值。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-015-4b8feb8b75.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-016-31bad8cfa2.png" alt="图片"><br>然后用同样的方法泄露栈地址。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-017-d1e76d719c.png" alt="图片"></p>
+<p>接下来是最巧妙的部分：从当前 call swap 函数栈上的某个地址，获取一个栈地址的内容，加上固定偏移，就能得到下一轮循环中 swap 对应的 ptr 地址；再根据 libc 地址获得 stdout 地址，计算它到下一次 ptr 的偏移，就可以修改 stdout 结构体。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-018-a01035a3a1.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-019-ac2e927f5c.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-020-4e0af1ef7d.png" alt="图片"><br>通过与 stdout 的内容交换实现任意地址读，泄露栈上存放的大量指向环境变量的栈地址（其中部分栈地址处的内容是 libc 地址），从而获得大量栈地址，并保存末尾字节合适的栈地址（例如要修改第三个字节，就找一个以 3 或 b 结尾的栈地址；与其交换时，此时的最后一个字节恰好是栈地址 + 8 的第三个字节，正好对应 ptr 与 canary 异或后再反转的最后一个字节，也就是 ptr 的第一个字节）。</p>
 <p>由于只能交换，不能写入，唯一的输入机会就是 call swap 之前的输入。swap 函数与输入函数处于同一层级，栈帧存在重叠部分，因此可以利用输入函数残留的变量，再通过 swap 写入其他位置（利用输入调用的栈帧中残留的已写入变量，让 swap 将其写到栈上另一处）。</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-021-879a65e3a5.png" alt="图片">
-构造 pop rdi ret 和 gets 函数地址，将它们写到返回地址处，再输入 ROP 链。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-021-879a65e3a5.png" alt="图片"><br>构造 pop rdi ret 和 gets 函数地址，将它们写到返回地址处，再输入 ROP 链。</p>
 <p>使用 swap，将栈上现有的 libc 地址与末尾为 3 或 b 的栈地址加 5 处交换。再用 swap 交换 _IO_write_ptr 和 _IO_write_end，设置要写入的栈地址，控制 ptr 的值，使异或后写入的最高第八字节（对应输入的第一个字节与 canary 异或的结果）恰好修改残留 libc 地址的倒数第三个字节；再用相同方法修改第二个字节和第一个字节。</p>
 <blockquote>
-<p>通过 stdout 任意写时，需要构造：
-让 fp -&gt; _IO_write_ptr 和 fp -&gt; _IO_write_end 指向待写入的位置。写入的内容是准备写入文件的变量内容。偏移分别为 0x28 和 0x30。
-调用 fwrite、fputs 等文件写入函数。</p>
+<p>通过 stdout 任意写时，需要构造：<br>让 fp -&gt; _IO_write_ptr 和 fp -&gt; _IO_write_end 指向待写入的位置。写入的内容是准备写入文件的变量内容。偏移分别为 0x28 和 0x30。<br>调用 fwrite、fputs 等文件写入函数。</p>
 </blockquote>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-022-50c1caa00b.png" alt="图片">
-修改后，需要将这个栈地址处的内容向下交换到固定位置保存。要修改倒数第二个字节时，需要找到末尾为 2 或 a 的栈地址，再将之前保存位置的内容与栈地址 + 6 处交换；随后从该栈地址写入 8 字节时，就能修改栈地址 + 6 处的第二个字节，也就是在之前已修改第三个字节的基础上继续修改第二个字节，第一个字节同理。最终修改好的 libc 地址也保存在某个位置。</p>
-<p>使用 swap，将栈上与 PIE 地址相关的内容与末尾为 2 或 a 的地址加 5 处交换，再按上述方法操作，最终改为 pop rdi ; ret 对应的地址。最终地址也保存在某个位置。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-023-8f80b38fc0.png" alt="图片">
-然后将保存好的地址移动到返回地址区域，将 rdi 参数构造为此前泄露的栈地址。gets 函数之后仍需交换回 start 函数地址（因为输入 ROP 链后，最后还要重新进入 main 函数，通过 swap 将其交换到返回地址处，组成 ROP 链）。随后向栈地址对应的区域输入 ROP 链。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-024-286caa7719.png" alt="图片">
-最后，先把栈地址开头的文件名交换到固定位置，再将 ROP 部分交换到栈上的返回地址区域（输入的 ROP payload 为 filename + close + orw）。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-022-50c1caa00b.png" alt="图片"><br>修改后，需要将这个栈地址处的内容向下交换到固定位置保存。要修改倒数第二个字节时，需要找到末尾为 2 或 a 的栈地址，再将之前保存位置的内容与栈地址 + 6 处交换；随后从该栈地址写入 8 字节时，就能修改栈地址 + 6 处的第二个字节，也就是在之前已修改第三个字节的基础上继续修改第二个字节，第一个字节同理。最终修改好的 libc 地址也保存在某个位置。</p>
+<p>使用 swap，将栈上与 PIE 地址相关的内容与末尾为 2 或 a 的地址加 5 处交换，再按上述方法操作，最终改为 pop rdi ; ret 对应的地址。最终地址也保存在某个位置。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-023-8f80b38fc0.png" alt="图片"><br>然后将保存好的地址移动到返回地址区域，将 rdi 参数构造为此前泄露的栈地址。gets 函数之后仍需交换回 start 函数地址（因为输入 ROP 链后，最后还要重新进入 main 函数，通过 swap 将其交换到返回地址处，组成 ROP 链）。随后向栈地址对应的区域输入 ROP 链。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-024-286caa7719.png" alt="图片"><br>最后，先把栈地址开头的文件名交换到固定位置，再将 ROP 部分交换到栈上的返回地址区域（输入的 ROP payload 为 filename + close + orw）。</p>
 <h3 id="利用脚本-1">利用脚本</h3>
 <pre><code class="language-python">from pwn import *
 import struct
@@ -780,17 +735,9 @@ ia()
 </code></pre>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-025-6e984b0aa1.png" alt="图片"></p>
 <h2 id="appetizers-glibc-235">Appetizers glibc 2.35</h2>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-026-7cef68371c.png" alt="图片">
-open+read（count=0x9j 即可）+write
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-027-76cfff694c.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-028-7c8fac66e7.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-029-1fd8bb74d7.png" alt="图片">
-原本由于无缓冲模式，stdout-&gt;write_ptr 与 stdout-&gt;write_base 相等；随后通过单字节修改高位字节，增大 stdout-&gt;write_ptr。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-030-7363d7683a.png" alt="图片">
-从而泄露栈地址和堆地址。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-026-7cef68371c.png" alt="图片"><br>open+read（count=0x9j 即可）+write<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-027-76cfff694c.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-028-7c8fac66e7.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-029-1fd8bb74d7.png" alt="图片"><br>原本由于无缓冲模式，stdout-&gt;write_ptr 与 stdout-&gt;write_base 相等；随后通过单字节修改高位字节，增大 stdout-&gt;write_ptr。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-030-7363d7683a.png" alt="图片"><br>从而泄露栈地址和堆地址。</p>
 <h3 id="绕过标准输出关闭的示例">绕过标准输出关闭的示例</h3>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-031-43f9e9a1d4.png" alt="图片">
-由于标准输出和标准输入已关闭，此时 open+read 已将 flag 读入内存，接下来需要把 flag 从内存中输出。标准输出关闭后无法重新打开，也无法重定向，因此需要使用 socket 连接本地 socket：新建 socket，连接本地端，再将 flag 写入该连接，从而写到本地服务端 socket。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-031-43f9e9a1d4.png" alt="图片"><br>由于标准输出和标准输入已关闭，此时 open+read 已将 flag 读入内存，接下来需要把 flag 从内存中输出。标准输出关闭后无法重新打开，也无法重定向，因此需要使用 socket 连接本地 socket：新建 socket，连接本地端，再将 flag 写入该连接，从而写到本地服务端 socket。</p>
 <h3 id="客户端关闭标准输出">客户端：关闭标准输出</h3>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -928,12 +875,9 @@ int main() {
 
 </code></pre>
 <h3 id="结果">结果</h3>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-032-f60708407f.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-033-e71799228e.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-032-f60708407f.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-033-e71799228e.png" alt="图片"></p>
 <h3 id="利用脚本-2">利用脚本</h3>
-<p>最后在 mmap 的位置写入 ROP 链，再写栈并进行栈迁移（栈地址也大于 0x70FFFFFFFFFFLL），最终运行 ROP 链。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-034-6f0412e13d.png" alt="图片">
-open+read+socker+connect+write</p>
+<p>最后在 mmap 的位置写入 ROP 链，再写栈并进行栈迁移（栈地址也大于 0x70FFFFFFFFFFLL），最终运行 ROP 链。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-034-6f0412e13d.png" alt="图片"><br>open+read+socker+connect+write</p>
 <pre><code class="language-python">from pwn import *
 
 s       = lambda data               :io.send(data)
@@ -1067,12 +1011,9 @@ io.sendline(b&quot;&quot;)
 
 io.interactive()
 </code></pre>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-035-2545b8eb7e.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-036-aac8b00a6a.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-035-2545b8eb7e.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-036-aac8b00a6a.png" alt="图片"></p>
 <h2 id="ttocrv_-glibc-235">TTOCrv_🎲 glibc 2.35</h2>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-037-765b4fcfe8.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-038-a7a11d60c7.png" alt="图片">
-openat+read+write</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-037-765b4fcfe8.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-038-a7a11d60c7.png" alt="图片"><br>openat+read+write</p>
 <h3 id="逆向分析">逆向分析</h3>
 <pre><code class="language-c">void __fastcall __noreturn main(__int64 a1, char **a2, char **a3)
 {
@@ -1135,23 +1076,14 @@ openat+read+write</p>
   exit(0LL);
 }
 </code></pre>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-039-2c91c7e860.png" alt="图片">
-chunk_array 没有清零，导致 double free。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-040-4f7d7c36f3.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-041-701ab19a17.png" alt="图片"></p>
-<p>可以在 free 后 show：将每个字节的低四位和高四位分别加上一个基准字符，再输出所得字符。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-042-c28ce4699f.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-043-3407cb46a4.png" alt="图片">
-由于无法清零，这里只能 new 4 次。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-044-1be0269b8f.png" alt="图片">
-释放后可 edit</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-039-2c91c7e860.png" alt="图片"><br>chunk_array 没有清零，导致 double free。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-040-4f7d7c36f3.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-041-701ab19a17.png" alt="图片"></p>
+<p>可以在 free 后 show：将每个字节的低四位和高四位分别加上一个基准字符，再输出所得字符。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-042-c28ce4699f.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-043-3407cb46a4.png" alt="图片"><br>由于无法清零，这里只能 new 4 次。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-044-1be0269b8f.png" alt="图片"><br>释放后可 edit</p>
 <ul>
 <li>上述 idx 均没有检查，因此存在越界读写。不过，要向负方向越界写，由于只能输入 7 字节，而负数要求最高的第八字节为 ff，需要先调用 nouse 函数并填入 \XFF；再次调用输入函数时，会带上残留的 ff，与原来的 7 字节组成负数。</li>
 </ul>
 <h3 id="利用-dt_debug-获取各库基址">利用 DT_DEBUG 获取各库基址</h3>
-<p><a href="https://rk700.github.io/2015/04/09/dt_debug-read/">通过 DT_DEBUG 获取各库基址</a>
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-045-9766c62fc4.png" alt="图片">
-在文件中，DT_DEBUG 的值为 0。实际运行时，DT_DEBUG 的值是指向 struct r_debug 的指针。</p>
+<p><a href="https://rk700.github.io/2015/04/09/dt_debug-read/">通过 DT_DEBUG 获取各库基址</a><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-045-9766c62fc4.png" alt="图片"><br>在文件中，DT_DEBUG 的值为 0。实际运行时，DT_DEBUG 的值是指向 struct r_debug 的指针。</p>
 <pre><code class="language-c">struct r_debug
   { 
     int r_version;              /* Version number for this protocol. */
@@ -1182,8 +1114,7 @@ struct link_map
     struct link_map *l_next, *l_prev; /* Chain of loaded objects. */
   };
 </code></pre>
-<p>遍历 link_map 并比较 l_name，找到目标后，即可通过 l_addr 获取该库的基址。当然，前提是二进制文件包含 DT_DEBUG。
-先通过 show 泄露 r_debug 地址（ld 地址）。遍历 linkmap 后发现，libc 的 link_map 与泄露的 ld 地址之间存在固定偏移，计算偏移后，下次 show 即可泄露（感觉直接输出 GOT 表来泄露 libc 地址也可以）。</p>
+<p>遍历 link_map 并比较 l_name，找到目标后，即可通过 l_addr 获取该库的基址。当然，前提是二进制文件包含 DT_DEBUG。<br>先通过 show 泄露 r_debug 地址（ld 地址）。遍历 linkmap 后发现，libc 的 link_map 与泄露的 ld 地址之间存在固定偏移，计算偏移后，下次 show 即可泄露（感觉直接输出 GOT 表来泄露 libc 地址也可以）。</p>
 <h3 id="随机数">随机数</h3>
 <ul>
 <li>struct random_data *buf：保存随机数生成器状态的结构体。</li>
@@ -1284,27 +1215,17 @@ static struct random_data unsafe_state =
 <li>rand_type 默认为 TYPE_3，因此并非直接使用线性同余生成器产生随机数。</li>
 <li>前指针 fptr 所指的值加上后指针 rptr 所指的值，将该值保存为结果，然后前后指针一起向后移动一个位置，返回该结果作为生成的随机数。（fptr 从总计 32 个元素中的第 4 个开始，因此要调用很多次 rand 才可能进入 fptr &gt;= end_ptr 分支；所以当前 edit 可以视为始终进入 else 分支。）</li>
 </ol>
-<p>调用一次 rand 后，fptr 和 rptr 都向后移动四字节。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-046-6e8fec537e.png" alt="图片">
-这里泄露 fptr、rptr 和 fptr +0x10 的内容（总计恰好八个）。</p>
+<p>调用一次 rand 后，fptr 和 rptr 都向后移动四字节。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-046-6e8fec537e.png" alt="图片"><br>这里泄露 fptr、rptr 和 fptr +0x10 的内容（总计恰好八个）。</p>
 <h3 id="思路-3">思路</h3>
 <ol>
 <li>size 为 0x90，释放一个 chunk 后，show 即可泄露堆地址。</li>
-<li>将 nouse 填满 \xff，再用负数越界索引 show，泄露 PIE 地址，由此获得 heap_list 的起始地址。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-047-179909da94.png" alt="图片"></li>
+<li>将 nouse 填满 \xff，再用负数越界索引 show，泄露 PIE 地址，由此获得 heap_list 的起始地址。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-047-179909da94.png" alt="图片"></li>
 <li>然后用正数越界索引 show，泄露 r_debug 地址（也可以直接从 GOT 泄露 libc 地址）。再根据相对于 r_debug 地址的偏移，获取保存 libc 的 link_map 地址的位置，计算它相对于 PIE 上 heap_list 的偏移，通过 show 泄露 libc 地址。</li>
 <li>再根据 libc 地址，得到存放 &amp;randtbl[1+3] 和 &amp;randtbl[1] 的地址（位于 unsafe_state 中，即 &amp;unsafe_state 和 &amp;unsafe_state +8）。然后通过 show 泄露 randtbl 的内容（fptr、rptr 和 fptr +0x10 的内容，每次泄露四个；泄露 environ 中的栈地址也是同理）。也可以用 edit_name 写入 libc 地址，再通过负数越界索引 show 来泄露。</li>
-<li>然后根据 rand 函数与泄露的 randtbl，绕过 rand<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-048-9e207efe37.png" alt="图片">
-此后每次 rand，都会将 fptr 与 rptr 当前所指的值相加，存入 fptr 所指的位置。由于 fptr 和 rptr 都不断向数组右侧移动，而最后会向堆的 next 区域输入八字节，此时处理函数循环两次，总共调用八次 rand，fptr 和 rptr 也移动八次。这里 fptr 后面的元素足够，因此最后更新的和会添加到 rptr 后方。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-049-94b726b9f9.png" alt="图片"></li>
-<li>最后，对栈地址进行相应的 rand 处理后再分配，使分配落到栈上。注意，选用的栈地址必须对齐，可以不断尝试更小的值。这里分配到的是 read 函数返回地址所在的栈位置。
-. <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-050-f7603c2558.png" alt="图片">
-. <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-051-5ab6b2b2e1.png" alt="图片">
-这里直接利用 read 函数残留的寄存器，再次进行 read 系统调用，地址就是刚才使用的地址。</li>
+<li>然后根据 rand 函数与泄露的 randtbl，绕过 rand<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-048-9e207efe37.png" alt="图片"><br>此后每次 rand，都会将 fptr 与 rptr 当前所指的值相加，存入 fptr 所指的位置。由于 fptr 和 rptr 都不断向数组右侧移动，而最后会向堆的 next 区域输入八字节，此时处理函数循环两次，总共调用八次 rand，fptr 和 rptr 也移动八次。这里 fptr 后面的元素足够，因此最后更新的和会添加到 rptr 后方。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-049-94b726b9f9.png" alt="图片"></li>
+<li>最后，对栈地址进行相应的 rand 处理后再分配，使分配落到栈上。注意，选用的栈地址必须对齐，可以不断尝试更小的值。这里分配到的是 read 函数返回地址所在的栈位置。<br>. <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-050-f7603c2558.png" alt="图片"><br>. <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-051-5ab6b2b2e1.png" alt="图片"><br>这里直接利用 read 函数残留的寄存器，再次进行 read 系统调用，地址就是刚才使用的地址。</li>
 </ol>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-052-56d4dfcc25.png" alt="图片">
-随后再次调用 read，先填充并覆盖前面的内容，再从当前 ret 对应的返回地址处开始放置 ROP 链。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-053-51cf35a8f1.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-052-56d4dfcc25.png" alt="图片"><br>随后再次调用 read，先填充并覆盖前面的内容，再从当前 ret 对应的返回地址处开始放置 ROP 链。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20HNCTF%20PWN/assets/csdn-140492180/image-053-51cf35a8f1.png" alt="图片"></p>
 <h3 id="利用脚本-3">利用脚本</h3>
 <pre><code class="language-python">from pwn import *
 

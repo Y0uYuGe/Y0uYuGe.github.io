@@ -21,66 +21,37 @@
 <h1 id="概述">概述</h1>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-001-0b2235038e.png" alt="图片"></p>
 <h1 id="逻辑结构集合">逻辑结构——集合</h1>
-<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-002-f5b2f48a94.png" alt="图片">
-喜欢不同水果的人被划分为不同的子集
-两个元素要么属于同一个集合，要么不属于同一个集合
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-003-adc0c0cb43.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-002-f5b2f48a94.png" alt="图片"><br>喜欢不同水果的人被划分为不同的子集<br>两个元素要么属于同一个集合，要么不属于同一个集合<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-003-adc0c0cb43.png" alt="图片"></p>
 <h2 id="树的回顾">树的回顾</h2>
-<p>森林中的每棵树都可以用来表示一个集合
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-004-7dec47116e.png" alt="图片"></p>
+<p>森林中的每棵树都可以用来表示一个集合<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-004-7dec47116e.png" alt="图片"></p>
 <h1 id="查find">查（Find）</h1>
-<p>通过根节点来判断两个元素是否属于同一个集合，或者属于哪个集合
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-005-b6274f999f.png" alt="图片"></p>
+<p>通过根节点来判断两个元素是否属于同一个集合，或者属于哪个集合<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-005-b6274f999f.png" alt="图片"></p>
 <h1 id="并union">并（Union）</h1>
-<p>合并时，把一棵树的根节点连到另一棵树的根节点上
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-006-96b2853704.png" alt="图片">
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-007-1619004875.png" alt="图片"></p>
+<p>合并时，把一棵树的根节点连到另一棵树的根节点上<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-006-96b2853704.png" alt="图片"><br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-007-1619004875.png" alt="图片"></p>
 <h1 id="并查集">并查集</h1>
 <p>实现了 Union 和 Find 功能的集合</p>
 <h1 id="树的存储回顾双亲表示法">树的存储回顾：双亲表示法</h1>
-<p>双亲表示法：每个节点保存其父节点的位置
-这样查找根节点的位置非常方便
-因此可以很方便地实现 Union 和 Find
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-008-af85c90aa9.png" alt="图片"></p>
+<p>双亲表示法：每个节点保存其父节点的位置<br>这样查找根节点的位置非常方便<br>因此可以很方便地实现 Union 和 Find<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-008-af85c90aa9.png" alt="图片"></p>
 <h1 id="并查集的存储结构">并查集的存储结构</h1>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-009-265c230b45.png" alt="图片"></p>
 <h1 id="并查集的基本操作">并查集的基本操作</h1>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-010-dc501c0a87.png" alt="图片"></p>
 <h1 id="并查集的代码实现初始化">并查集的代码实现——初始化</h1>
-<p>先初始化，使每个节点各自成为一个独立的子集
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-011-abc674d60a.png" alt="图片"></p>
+<p>先初始化，使每个节点各自成为一个独立的子集<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-011-abc674d60a.png" alt="图片"></p>
 <h1 id="并查集的代码实现并与查">并查集的代码实现——并与查</h1>
-<p>并：先找到两个集合的根，然后把一个根的父节点下标值赋给另一个根的父节点内容
-查：沿着节点的父节点一路向上遍历即可</p>
+<p>并：先找到两个集合的根，然后把一个根的父节点下标值赋给另一个根的父节点内容<br>查：沿着节点的父节点一路向上遍历即可</p>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-012-0d25373ab0.png" alt="图片"></p>
 <h1 id="时间复杂度分析">时间复杂度分析</h1>
-<p>时间复杂度主要来自合并操作，与表示集合的树的高度有关
-树越矮，时间复杂度越低
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-013-33973030b1.png" alt="图片"></p>
+<p>时间复杂度主要来自合并操作，与表示集合的树的高度有关<br>树越矮，时间复杂度越低<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-013-33973030b1.png" alt="图片"></p>
 <h1 id="优化-union-操作">优化 Union 操作</h1>
-<p>把矮树合并到高树的根下作为孩子（小树并入大树）
-这样整体树高相比原来较高的那棵树不会增加
-根节点的内容为当前树节点个数的相反数
-通过节点内容的正负来判断它是否为根节点
-于是，内容更小的根节点对应的是更高的树
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-014-7dbd812af7.png" alt="图片">
-简单来说，这种方法使合并后的树每一层都是满的
-所以 n 个节点的树的高度可以用与满二叉树相同的方法计算
-由于高度降低了，最终可以降低 Find 操作的时间复杂度
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-015-31e06cee5b.png" alt="图片"></p>
+<p>把矮树合并到高树的根下作为孩子（小树并入大树）<br>这样整体树高相比原来较高的那棵树不会增加<br>根节点的内容为当前树节点个数的相反数<br>通过节点内容的正负来判断它是否为根节点<br>于是，内容更小的根节点对应的是更高的树<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-014-7dbd812af7.png" alt="图片"><br>简单来说，这种方法使合并后的树每一层都是满的<br>所以 n 个节点的树的高度可以用与满二叉树相同的方法计算<br>由于高度降低了，最终可以降低 Find 操作的时间复杂度<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-015-31e06cee5b.png" alt="图片"></p>
 <h1 id="小结">小结</h1>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-016-cf32d16795.png" alt="图片"></p>
 <h1 id="并查集的终极优化路径压缩">并查集的终极优化（路径压缩）</h1>
-<p>Find 操作有两个循环
-第一个循环：找到根节点
-第二个循环：再次遍历查找根节点，把途经的每个节点的内容都更新为第一个循环找到的根节点
-这样第二次 Find 就能直接定位到对应的根节点</p>
-<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-017-3f04ac9f11.png" alt="图片">
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-018-d029e4cb5d.png" alt="图片"></p>
+<p>Find 操作有两个循环<br>第一个循环：找到根节点<br>第二个循环：再次遍历查找根节点，把途经的每个节点的内容都更新为第一个循环找到的根节点<br>这样第二次 Find 就能直接定位到对应的根节点</p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-017-3f04ac9f11.png" alt="图片"><br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-018-d029e4cb5d.png" alt="图片"></p>
 <h2 id="对比">对比</h2>
-<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-019-27f8927261.png" alt="图片">
-合并 n 个独立元素时，Union 先要找到每个独立元素对应的根节点（其时间复杂度与树高有关），然后进行 n-1 次合并。所以总时间复杂度为合并次数乘以一次查找的时间复杂度
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-020-4558af32b0.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-019-27f8927261.png" alt="图片"><br>合并 n 个独立元素时，Union 先要找到每个独立元素对应的根节点（其时间复杂度与树高有关），然后进行 n-1 次合并。所以总时间复杂度为合并次数乘以一次查找的时间复杂度<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/02-%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%20-%20%E5%B9%B6%E6%9F%A5%E9%9B%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%B8%8E%E4%BC%98%E5%8C%96/assets/csdn-134783012/image-020-4558af32b0.png" alt="图片"></p>
 
     </article>
     

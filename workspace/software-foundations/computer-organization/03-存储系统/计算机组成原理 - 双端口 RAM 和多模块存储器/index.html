@@ -23,37 +23,25 @@
 <h1 id="概述">概述</h1>
 <p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-002-af3cc8dfdc.png" alt="图片"></p>
 <h1 id="双端口-ram">双端口 RAM</h1>
-<p>RAM：用于主存或 Cache，断电后数据丢失
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-003-8c8125f5c7.png" alt="图片"></p>
+<p>RAM：用于主存或 Cache，断电后数据丢失<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-003-8c8125f5c7.png" alt="图片"></p>
 <h1 id="多体并行存储器">多体并行存储器</h1>
 <p>读一个存储芯片时，一个存取周期内只能访问一个单元的数据；但如果是不同的存储芯片，就可以在访问当前存储芯片某个单元的同时，开始访问下一个存储芯片的某个单元</p>
-<p>根据地址译码方式的不同，同一个存储芯片上的地址可能是不相邻的
-对于低位交叉编址，连续取 n 个存储字耗时：nr+T-r
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-004-88359c56b4.png" alt="图片"></p>
+<p>根据地址译码方式的不同，同一个存储芯片上的地址可能是不相邻的<br>对于低位交叉编址，连续取 n 个存储字耗时：nr+T-r<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-004-88359c56b4.png" alt="图片"></p>
 <h1 id="低位交叉编址的存储体数多少合适体号">低位交叉编址的存储体数多少合适（体号）</h1>
 <p> 低位交叉编址的访问可以理解为流水线：宏观上看是同时进行的，即并行，但微观上实际是按顺序进行的，即串行</p>
 <p>宏观上，一个 m 体交叉存储器在一个存取周期内可以取出 m 个存储字</p>
-<p>为了兼顾效率和成本，取 m=T/r 作为存储体的个数
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-005-68ef235f08.png" alt="图片">
-给定地址 x，判断它属于哪个存储体</p>
+<p>为了兼顾效率和成本，取 m=T/r 作为存储体的个数<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-005-68ef235f08.png" alt="图片"><br>给定地址 x，判断它属于哪个存储体</p>
 <ul>
 <li>可以通过体号判断</li>
 <li>可以通过对 m 取模判断</li>
 </ul>
 <h1 id="多模块存储器多体存储器">多模块存储器（多体存储器）</h1>
-<p>单体多字存储器：一次可以读 m 个字，每次访问可读的存储单元数是固定的
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-006-5395341cea.png" alt="图片"> </p>
+<p>单体多字存储器：一次可以读 m 个字，每次访问可读的存储单元数是固定的<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-006-5395341cea.png" alt="图片"> </p>
 <h1 id="小结">小结</h1>
-<p>高位交叉编址：相当于扩充容量（更多的存储单元）
- <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-007-5245aa86ec.png" alt="图片"></p>
+<p>高位交叉编址：相当于扩充容量（更多的存储单元）<br> <img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-007-5245aa86ec.png" alt="图片"></p>
 <h1 id="实际场景">实际场景</h1>
-<p>橙色和绿色在同一个卡槽中表示高位交叉编址
-橙色在不同卡槽中表示低位交叉编址</p>
-<p>时钟频率相同意味着存取周期相同；容量相同才能都构成多体存储
-如果频率不同，CPU 会降频到较低的频率；如果容量不同，部分区域会变成单体存储
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-008-2a5de9692f.png" alt="图片">
-16GB 拆分成两根内存条，构成低位交叉编址
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-009-3d1ef1de9e.png" alt="图片"></p>
+<p>橙色和绿色在同一个卡槽中表示高位交叉编址<br>橙色在不同卡槽中表示低位交叉编址</p>
+<p>时钟频率相同意味着存取周期相同；容量相同才能都构成多体存储<br>如果频率不同，CPU 会降频到较低的频率；如果容量不同，部分区域会变成单体存储<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-008-2a5de9692f.png" alt="图片"><br>16GB 拆分成两根内存条，构成低位交叉编址<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%8C%E7%AB%AF%E5%8F%A3%20RAM%20%E5%92%8C%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8/assets/csdn-134488927/image-009-3d1ef1de9e.png" alt="图片"></p>
 
     </article>
     

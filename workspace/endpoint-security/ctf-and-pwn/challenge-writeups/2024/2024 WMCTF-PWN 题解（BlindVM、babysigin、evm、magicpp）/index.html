@@ -192,20 +192,14 @@ newheap后的处理流程（av还是之前那个，但把av的top改成了当前
 第一个下面总是不连续，并且小于0x20000，可以每次喷的时候多个小于0x20000的部分，来把不足0x20000的部分填满
 </code></pre>
 <ul>
-<li>此时 topchunk 位于 heap_info 下方，此前伪造的 heap_info 恰好位于 heap_info 下方的起始处。也就是说，第一次分配完成后，topchunk 移动到伪造的 heap_info。这样便将 _heap_info 视作 topchunk，再次分配时恰好通过 ar_ptr 检查，同时也能写入 size 后面的数据，从而控制 heap_info
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20WMCTF-PWN%20%E9%A2%98%E8%A7%A3%EF%BC%88BlindVM%E3%80%81babysigin%E3%80%81evm%E3%80%81magicpp%EF%BC%89/assets/csdn-141989628/image-001-a9d2c0bf0f.png" alt="图片"></li>
+<li>此时 topchunk 位于 heap_info 下方，此前伪造的 heap_info 恰好位于 heap_info 下方的起始处。也就是说，第一次分配完成后，topchunk 移动到伪造的 heap_info。这样便将 _heap_info 视作 topchunk，再次分配时恰好通过 ar_ptr 检查，同时也能写入 size 后面的数据，从而控制 heap_info<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20WMCTF-PWN%20%E9%A2%98%E8%A7%A3%EF%BC%88BlindVM%E3%80%81babysigin%E3%80%81evm%E3%80%81magicpp%EF%BC%89/assets/csdn-141989628/image-001-a9d2c0bf0f.png" alt="图片"></li>
 </ul>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20WMCTF-PWN%20%E9%A2%98%E8%A7%A3%EF%BC%88BlindVM%E3%80%81babysigin%E3%80%81evm%E3%80%81magicpp%EF%BC%89/assets/csdn-141989628/image-002-4f8fe175c1.png" alt="图片"></p>
 <ul>
 <li>后续通过 grow_heap 扩展 topchunk，再切分以覆盖 libc，就顺理成章了</li>
 </ul>
 <blockquote>
-<p>加载 libc 地址的过程大致如下
-dl_fixup 通过字符串找到该函数对应的结构
-这个结构保存了一个偏移
-该函数最终的真实地址为 l_addr（库加载地址）+ 偏移
-这个结构存放在 libc 开头的 ro 段
-我们拥有的原语（mprotect）可以将其改为 rw，随后直接将 free 对应的偏移改写为 system</p>
+<p>加载 libc 地址的过程大致如下<br>dl_fixup 通过字符串找到该函数对应的结构<br>这个结构保存了一个偏移<br>该函数最终的真实地址为 l_addr（库加载地址）+ 偏移<br>这个结构存放在 libc 开头的 ro 段<br>我们拥有的原语（mprotect）可以将其改为 rw，随后直接将 free 对应的偏移改写为 system</p>
 </blockquote>
 <pre><code class="language-bash">IDA中的Elf64_Sym
 LOAD:000000000000D4D0                 dd offset aLibcFree+7 - offset unk_16650; st_name ; &quot;free&quot;
@@ -249,8 +243,7 @@ pwndbg&gt; tele 0x72b088c0d4d0
 <h2 id="利用脚本">利用脚本</h2>
 <p>不知道为什么发不出来</p>
 <h1 id="babysigin">babysigin</h1>
-<p>LLVM pass 题目
-粗看给了 mmap、open、read、write，直接读 flag 不就行了？不过有一些限制，还有一些特殊之处需要逆向</p>
+<p>LLVM pass 题目<br>粗看给了 mmap、open、read、write，直接读 flag 不就行了？不过有一些限制，还有一些特殊之处需要逆向</p>
 <pre><code class="language-c">apt-get -y install llvm &amp;&amp; apt-get -y install clang 
 
 clang-14 -emit-llvm llk.c -S -o  llk.bc
@@ -440,8 +433,7 @@ llvm::StringRef::StringRef((llvm::StringRef *)&amp;v68, &quot;.addr&quot;);
                   llvm::Value::use_iterator_impl&lt;llvm::Use&gt;::operator++(&amp;v29);
                 }
 </code></pre>
-<p>先遍历 loadinst 第一个参数的所有使用处，再转换为 storeinst，并取出 storeinst 的第一个参数，该参数需要是全局常量。后来想了想，常量应该都是全局的……
-如下所示</p>
+<p>先遍历 loadinst 第一个参数的所有使用处，再转换为 storeinst，并取出 storeinst 的第一个参数，该参数需要是全局常量。后来想了想，常量应该都是全局的……<br>如下所示</p>
 <pre><code class="language-c"> const char *store=&quot;./flag&quot;;
  func4(store);
  此时对应的IR，此时会自动生成一个全局变量表示&quot;./flag&quot;
@@ -486,10 +478,7 @@ const char *recrusive = &quot;nouse&quot;;
                 {
                   if ( (unsigned int)llvm::ConstantInt::getSExtValue(v43) != 0x8888 )
 </code></pre>
-<p>这段代码获取全局变量的初始值，并将其转换为 <code>llvm::ConstantInt</code> 类型。
-<code>v44</code> 是 <code>llvm::GlobalVariable</code> 类型的指针，表示一个全局变量。<code>llvm::GlobalVariable::getOperand</code> 方法用于获取该全局变量的第一个操作数，也就是全局变量的初始值。<code>v34</code> 即为该操作数。
-随后，<code>llvm::dyn_cast</code> 方法将 <code>v34</code> 转换为 <code>llvm::ConstantInt</code> 类型，以便访问其值。<code>v43</code> 是指向这个常量整数的指针。
-例如，假设有以下 C 代码：</p>
+<p>这段代码获取全局变量的初始值，并将其转换为 <code>llvm::ConstantInt</code> 类型。<br><code>v44</code> 是 <code>llvm::GlobalVariable</code> 类型的指针，表示一个全局变量。<code>llvm::GlobalVariable::getOperand</code> 方法用于获取该全局变量的第一个操作数，也就是全局变量的初始值。<code>v34</code> 即为该操作数。<br>随后，<code>llvm::dyn_cast</code> 方法将 <code>v34</code> 转换为 <code>llvm::ConstantInt</code> 类型，以便访问其值。<code>v43</code> 是指向这个常量整数的指针。<br>例如，假设有以下 C 代码：</p>
 <pre><code class="language-c">int global_var = 0x12345678;
 </code></pre>
 <p>对应的 LLVM IR 代码可能如下：</p>
@@ -882,8 +871,7 @@ while(1):
 </code></pre>
 <h1 id="magicpp">magicpp</h1>
 <p><a href="https://blog.iret.xyz/posts/those-magic-compiler-optimization/">乘法变成除法</a></p>
-<p><del>逆不出来……和强网杯那道一样，全靠猜</del> 
-<del>我傻了，可以逆，是之前有心理阴影了……</del> </p>
+<p><del>逆不出来……和强网杯那道一样，全靠猜</del><br><del>我傻了，可以逆，是之前有心理阴影了……</del> </p>
 <p>可以加载文件，因此直接加载 /proc/self/maps 泄露地址；book 从 1 开始</p>
 <p>可以通过 fuzz 找到。使用 Python fuzz 会出现 <code>malloc(): unsorted double linked list corrupted\</code>。先增加分支，如果发生崩溃，再缩减分支，直到无法继续缩减，排除对触发崩溃没有影响的操作，再改变 fuzz 的操作，直到追踪到具体原因</p>
 <pre><code class="language-c">if (__glibc_unlikely (bck-&gt;fd != victim)

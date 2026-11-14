@@ -19,17 +19,14 @@
     <div class="meta"><time>2024-12-17</time><span class="tag">#机器学习</span><span class="tag">#人工智能</span></div>
     <article class="post-body">
 <h1 id="拟合">拟合</h1>
-<p>过拟合：参数（特征）过多——可以理解为考虑的因素过多——或者过于关注原始训练数据，导致模型过于复杂。
-欠拟合：参数过少，对原始训练数据关注过少，导致模型过于简单。</p>
+<p>过拟合：参数（特征）过多——可以理解为考虑的因素过多——或者过于关注原始训练数据，导致模型过于复杂。<br>欠拟合：参数过少，对原始训练数据关注过少，导致模型过于简单。</p>
 <p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/assets/csdn-144535264/image-001-670a501c21.png" alt="图片"></p>
 <p>随着模型复杂度的增加（可以理解为对训练数据的拟合程度），训练误差不断减小，而泛化误差（即在测试数据上的误差）先减小后增大。</p>
 <p>低、中、高复杂度分别对应欠拟合、良好拟合和过拟合。</p>
 <h1 id="正则化">正则化</h1>
-<p>正则化通常通过在损失函数中加入正则化项来实现；该项根据模型参数的大小来惩罚模型复杂度。
-<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/assets/csdn-144535264/image-002-43cbe5eab2.png" alt="图片"></p>
+<p>正则化通常通过在损失函数中加入正则化项来实现；该项根据模型参数的大小来惩罚模型复杂度。<br><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/assets/csdn-144535264/image-002-43cbe5eab2.png" alt="图片"></p>
 <h1 id="正则化项">正则化项</h1>
-<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/assets/csdn-144535264/image-003-8b8d93cf2d.png" alt="图片">
-L1 和 L2 正则化对权重产生不同的影响，主要是因为它们惩罚权重的方式不同（即让权重变化的方式不同）。</p>
+<p><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%20-%20%E6%AD%A3%E5%88%99%E5%8C%96%E6%8A%80%E6%9C%AF/assets/csdn-144535264/image-003-8b8d93cf2d.png" alt="图片"><br>L1 和 L2 正则化对权重产生不同的影响，主要是因为它们惩罚权重的方式不同（即让权重变化的方式不同）。</p>
 <h3 id="l1-正则化lasso">L1 正则化（Lasso）</h3>
 <p>L1 正则化将权重绝对值之和作为惩罚项加入损失函数。这意味着它会惩罚较大的权重值，同时对较小的权重值也有显著影响。由于惩罚基于绝对值，当优化过程试图最小化整体损失函数时，它倾向于把某些权重直接压缩到零。原因如下：</p>
 <ul>

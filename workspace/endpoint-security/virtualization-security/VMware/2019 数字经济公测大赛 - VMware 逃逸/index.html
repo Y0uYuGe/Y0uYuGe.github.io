@@ -21,22 +21,11 @@
 <h1 id="环境搭建">环境搭建</h1>
 <ul>
 <li>ubuntu :18.04.01</li>
-<li>vmware: VMware-Workstation-Full-15.5.0-14665864.x86_64.bundle
-<del>这里一直没把环境搭成功……打完补丁后报错，不知道怎么修</del> 后来发现补丁在被 IDA 加载后可能就不能用了，可能影响到了原补丁。重新下载补丁后发现可以运行，但没有网络……不过似乎自带 vmtools。</li>
+<li>vmware: VMware-Workstation-Full-15.5.0-14665864.x86_64.bundle<br><del>这里一直没把环境搭成功……打完补丁后报错，不知道怎么修</del> 后来发现补丁在被 IDA 加载后可能就不能用了，可能影响到了原补丁。重新下载补丁后发现可以运行，但没有网络……不过似乎自带 vmtools。</li>
 </ul>
 <h1 id="漏洞点">漏洞点</h1>
-<p>用 bindiff 对比原版 vmx 和打过补丁的版本，发现了下面的修改。
-<img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-001-95a2fd2899.png" alt="图片">
-将这里替换为 nop，并留下了一个后门。
-<img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-002-da13c4a88d.png" alt="图片"></p>
-<p>在 sub_16E220 函数开头，调用 sub_5463D0(1LL) 得到 v2，用来决定执行 switch 语句的哪个分支。各分支对应不同的 RPC 通信操作：
-打开 GuestRPC 通道
-发送命令长度
-发送命令数据
-接收回复长度
-接收回复数据
-发送接收完成信号
-关闭通道</p>
+<p>用 bindiff 对比原版 vmx 和打过补丁的版本，发现了下面的修改。<br><img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-001-95a2fd2899.png" alt="图片"><br>将这里替换为 nop，并留下了一个后门。<br><img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-002-da13c4a88d.png" alt="图片"></p>
+<p>在 sub_16E220 函数开头，调用 sub_5463D0(1LL) 得到 v2，用来决定执行 switch 语句的哪个分支。各分支对应不同的 RPC 通信操作：<br>打开 GuestRPC 通道<br>发送命令长度<br>发送命令数据<br>接收回复长度<br>接收回复数据<br>发送接收完成信号<br>关闭通道</p>
 <p>下面是 bindiff 中差异位置对应的反编译代码，属于 case 4。</p>
 <p>其中出现了与通道有关的字符串 GuestMsg: Channel %u, Not enough memory to receive a message，再结合函数开头检查 number 是否位于 0-6 范围内的 switch-case，很容易联想到 GuestRPC Handler，即处理 RPC 通信的命令处理函数。下方代码仅保留漏洞所在部分，可以看到这条路径处理的是 subcommand=0x4，也就是接收回复数据。</p>
 <pre><code class="language-c">   case 4u:
@@ -104,8 +93,7 @@ LABEL_31:
 <p>这里的 need 表示尚未发送的数据长度。当 need &gt;= 4 时，每次发送 4 字节，最后对 need &lt; 4 的情况作特殊处理。后门函数就位于 need == 3 的判断中。</p>
 <p>另外，调试发现 state == 3 对应宿主机向客户机回复数据的阶段。因此，需要宿主机回复给客户机的数据长度对 4 取模等于 3，同时 buf 恰好是要执行的命令。</p>
 <p>调试发现，回复数据的长度等于 info-set guestinfo.x 后面的字符串长度加 2，执行的命令也正好是这个字符串，只是在前面多了两个字节，包含字符 1。recv rpc data 中提到，rpctype 的前两个字节表示成功或失败；Receive RPC reply length 中也提到，回复数据的前两个字节始终表示 RPC 命令的状态。因此，need 的最终总长度就是 info-set guestinfo.x 后面的字符串长度加 2，即 <code>1 string</code>，buf 则指向这段内容的起始地址。所以 system 执行命令时，执行的是 <code>1 string</code>。为了执行 string 中的命令，要让字符串以 ; 开头，将前面的内容截断。最后，只需保证字符串长度加 2 后对 4 取模等于 3，也就是字符串长度对 4 取模等于 1。</p>
-<p>这里的 <code>;</code> 已经占了一个字符，因此只要保证其余部分的长度是 4 的倍数即可。这样就可以执行任意命令：可以通过添加空格补齐长度，并在最后加上 ; 或 &amp;，否则虚拟机会出问题。
-<img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-003-a1e09c74c4.png" alt="图片"></p>
+<p>这里的 <code>;</code> 已经占了一个字符，因此只要保证其余部分的长度是 4 的倍数即可。这样就可以执行任意命令：可以通过添加空格补齐长度，并在最后加上 ; 或 &amp;，否则虚拟机会出问题。<br><img src="/workspace/endpoint-security/virtualization-security/VMware/2019%20%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E5%85%AC%E6%B5%8B%E5%A4%A7%E8%B5%9B%20-%20VMware%20%E9%80%83%E9%80%B8/assets/csdn-140593470/image-003-a1e09c74c4.png" alt="图片"></p>
 <p>另外，执行命令的参数前面固定带有 1。我在它后面追加 ; 来执行下一条命令，所以最终要执行的命令是 /usr/bin/xcalc ;。</p>
 <h1 id="exp">exp</h1>
 <pre><code class="language-c">#include &lt;ctype.h&gt;

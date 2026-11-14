@@ -23,11 +23,7 @@
 <pre><code class="language-bash">sudo docker pull area39/pikachu
 sudo docker run -itd -p 80:80 -p 3306:3306 --name pikachu area39/pikachu
 </code></pre>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-001-4bd0fc63ff.png" alt="图片">
-点击安装/初始化
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-002-5459819672.png" alt="图片">
-然后点击 <code>Click here</code>
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-003-016fbf449c.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-001-4bd0fc63ff.png" alt="图片"><br>点击安装/初始化<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-002-5459819672.png" alt="图片"><br>然后点击 <code>Click here</code><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-003-016fbf449c.png" alt="图片"></p>
 <h1 id="浏览器访问过程">浏览器访问过程</h1>
 <p>是的，在浏览器中访问一个网页时，大致流程如下：</p>
 <ol>
@@ -101,17 +97,14 @@ sudo docker run -itd -p 80:80 -p 3306:3306 --name pikachu area39/pikachu
 <li>服务器生成验证码并发送给前端</li>
 <li>用户在登录页看到的验证码是后端发来的</li>
 <li>前端把输入的验证码和登录信息一起发给后端进行比对</li>
-<li>如果失败，而验证码机制只在验证码比对失败时才刷新并重新发送验证码给前端，那么在账号密码错误时，同一个验证码就可以反复使用直到成功
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-005-816e6e6054.png" alt="图片"></li>
+<li>如果失败，而验证码机制只在验证码比对失败时才刷新并重新发送验证码给前端，那么在账号密码错误时，同一个验证码就可以反复使用直到成功<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-005-816e6e6054.png" alt="图片"></li>
 </ul>
 <h2 id="验证码绕过on-client">验证码绕过（on client）</h2>
 <ul>
 <li>页面刷新后，由前端生成验证码</li>
-<li>点击登录时先校验验证码，再决定是否把数据包发给后端
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-006-a47ea04a39.png" alt="图片"></li>
+<li>点击登录时先校验验证码，再决定是否把数据包发给后端<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-006-a47ea04a39.png" alt="图片"></li>
 <li>输入正确的验证码后抓包，就可以无限次发送</li>
-<li>而且无论发送的数据包是否包含验证码相关信息，结果都不受影响
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-007-3505c12618.png" alt="图片"></li>
+<li>而且无论发送的数据包是否包含验证码相关信息，结果都不受影响<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-007-3505c12618.png" alt="图片"></li>
 <li>否则如果验证码错误，就抓不到包</li>
 <li><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-008-d075db48e8.png" alt="图片"></li>
 </ul>
@@ -137,28 +130,18 @@ sudo docker run -itd -p 80:80 -p 3306:3306 --name pikachu area39/pikachu
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-009-d487261db8.png" alt="图片"></p>
 <p>从第二个请求开始才对应字典中的值，因为 0 号请求是当前发送的数据包，而第一个数据包虽然用的是字典的第一项，但其 token 没有自动更新，需要一个初始值，而这个初始值无法预测（因为前一个数据包即 0 号请求还没有发送，得到的响应中的 token 自然也是未知的）。</p>
 <h1 id="xss跨站脚本">XSS（跨站脚本）</h1>
-<p><a href="https://www.cnblogs.com/dogecheng/p/11556221.html">https://www.cnblogs.com/dogecheng/p/11556221.html</a>
-<a href="https://blog.csdn.net/m0_46467017/article/details/124747885">https://blog.csdn.net/m0_46467017/article/details/124747885</a>
-XSS 漏洞形成的主要原因是程序对输入和输出的控制不够严格，导致“精心构造”的脚本输入提交到服务器后，在前端被接收时被浏览器当作有效代码解析执行，从而产生危害。</p>
+<p><a href="https://www.cnblogs.com/dogecheng/p/11556221.html">https://www.cnblogs.com/dogecheng/p/11556221.html</a><br><a href="https://blog.csdn.net/m0_46467017/article/details/124747885">https://blog.csdn.net/m0_46467017/article/details/124747885</a><br>XSS 漏洞形成的主要原因是程序对输入和输出的控制不够严格，导致“精心构造”的脚本输入提交到服务器后，在前端被接收时被浏览器当作有效代码解析执行，从而产生危害。</p>
 <h2 id="反射型-xssget">反射型 XSS（GET）</h2>
 <p>GET 型 XSS 漏洞，即相应内容通过 GET 方式提交到服务器，再由前端解析</p>
 <ul>
 <li>修改前端的输入长度限制</li>
 <li>然后提交能执行并产生反馈的代码</li>
 </ul>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-010-b893c7c3b7.png" alt="图片">
-输入的内容通过 GET 方式（在 URL 中）提交到服务器
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-011-1d7f379323.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-010-b893c7c3b7.png" alt="图片"><br>输入的内容通过 GET 方式（在 URL 中）提交到服务器<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-011-1d7f379323.png" alt="图片"></p>
 <h2 id="反射型-xsspost">反射型 XSS（POST）</h2>
-<p>GET 通过 URL 提交数据；
-POST 通过表单在请求体中提交数据；
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-012-2aedd69c0b.png" alt="图片">
-URL 中不包含 POST 的内容
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-013-138270040a.png" alt="图片"></p>
+<p>GET 通过 URL 提交数据；<br>POST 通过表单在请求体中提交数据；<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-012-2aedd69c0b.png" alt="图片"><br>URL 中不包含 POST 的内容<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-013-138270040a.png" alt="图片"></p>
 <h2 id="存储型-xss">存储型 XSS</h2>
-<p>即请求被记录在服务器上，之后每次访问都会返回服务器上存储的被修改过的内容
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-014-52be7992bc.png" alt="图片">
-每次请求都会返回存储的结果 <code>&lt;script&gt;alert(&quot;llk&quot;)&lt;/script&gt;</code></p>
+<p>即请求被记录在服务器上，之后每次访问都会返回服务器上存储的被修改过的内容<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-014-52be7992bc.png" alt="图片"><br>每次请求都会返回存储的结果 <code>&lt;script&gt;alert(&quot;llk&quot;)&lt;/script&gt;</code></p>
 <h2 id="dom-型-xss">DOM 型 XSS</h2>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-015-3d2845a6a3.png" alt="图片"></p>
 <h3 id="domxss-函数"><code>domxss</code> 函数</h3>
@@ -177,17 +160,14 @@ URL 中不包含 POST 的内容
 <h3 id="攻击尝试示例">攻击尝试示例</h3>
 <p>接下来两行注释展示了攻击者可能尝试的、用于利用 DOM 型 XSS 漏洞的输入：</p>
 <ul>
-<li><p><code>&#39;&gt;&lt;img src=&quot;#&quot; onmouseover=&quot;alert(&#39;xss&#39;)&quot;&gt;</code>
-这个输入试图闭合原来的 <code>&lt;a&gt;</code> 标签，并添加一个带 <code>onmouseover</code> 事件的 <code>&lt;img&gt;</code> 标签。鼠标悬停在这个链接上时，会触发 JavaScript 的 <code>alert(&#39;xss&#39;)</code>，弹出一个显示 &quot;xss&quot; 的警告框，证明 XSS 攻击成功。</p>
+<li><p><code>&#39;&gt;&lt;img src=&quot;#&quot; onmouseover=&quot;alert(&#39;xss&#39;)&quot;&gt;</code><br>这个输入试图闭合原来的 <code>&lt;a&gt;</code> 标签，并添加一个带 <code>onmouseover</code> 事件的 <code>&lt;img&gt;</code> 标签。鼠标悬停在这个链接上时，会触发 JavaScript 的 <code>alert(&#39;xss&#39;)</code>，弹出一个显示 &quot;xss&quot; 的警告框，证明 XSS 攻击成功。</p>
 </li>
-<li><p><code>onclick=&quot;alert(&#39;xss&#39;)&quot;&gt;</code>
-这是一个更简洁的尝试：通过在输入中添加 <code>onclick</code> 事件，点击链接时同样会执行 <code>alert(&#39;xss&#39;)</code>，展示 XSS 攻击的效果。</p>
+<li><p><code>onclick=&quot;alert(&#39;xss&#39;)&quot;&gt;</code><br>这是一个更简洁的尝试：通过在输入中添加 <code>onclick</code> 事件，点击链接时同样会执行 <code>alert(&#39;xss&#39;)</code>，展示 XSS 攻击的效果。</p>
 </li>
 </ul>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-016-e1fc4d14ad.png" alt="图片"></p>
 <h2 id="dom-型-xss---x">DOM 型 XSS - x</h2>
-<p>与前面类似，区别是需要先提交以得到一个包含 onclick 属性的链接，之后的操作与前面相同
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-017-36167c8209.png" alt="图片"></p>
+<p>与前面类似，区别是需要先提交以得到一个包含 onclick 属性的链接，之后的操作与前面相同<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-017-36167c8209.png" alt="图片"></p>
 <h3 id="domxss-函数的工作流程"><code>domxss</code> 函数的工作流程：</h3>
 <ol>
 <li><p><strong>获取查询字符串</strong>：<code>var str = window.location.search;</code> 这行获取当前页面 URL 的查询字符串部分。例如，如果 URL 是 <code>http://example.com/?text=hello</code>，那么 <code>str</code> 就是 <code>&quot;?text=hello&quot;</code>。</p>
@@ -209,10 +189,7 @@ URL 中不包含 POST 的内容
 <h2 id="xss-盲打">XSS 盲打</h2>
 <ul>
 <li>即输入的内容被发送到后端并被后端当作代码执行，但内容不会返回到前端</li>
-<li>后端的人员能看到输入的内容或 XSS 攻击的结果
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-018-03f390374c.png" alt="图片">
-登录后台查看，发现代码被执行了
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-019-5e6af905b5.png" alt="图片"></li>
+<li>后端的人员能看到输入的内容或 XSS 攻击的结果<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-018-03f390374c.png" alt="图片"><br>登录后台查看，发现代码被执行了<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-019-5e6af905b5.png" alt="图片"></li>
 </ul>
 <h2 id="xss-过滤">XSS 过滤</h2>
 <ul>
@@ -253,22 +230,14 @@ echo $safe_text;
 <p>在这个例子中，本可能触发 XSS 攻击的脚本被转换为可安全显示的 HTML 实体，浏览器直接显示文本内容而不执行脚本，从而保护了网站及其用户。</p>
 <ul>
 <li>先尝试输入，看哪些字符被转换成了实体</li>
-<li>再选择绕过方法（这里尖括号被过滤了，所以用单引号闭合属性）
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-021-8d588145d2.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-022-852ac353fb.png" alt="图片">
-注入 <code>#&#39; onclick=&#39;alert(1)&#39;</code>
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-023-2598233678.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-024-342e421afd.png" alt="图片"></li>
+<li>再选择绕过方法（这里尖括号被过滤了，所以用单引号闭合属性）<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-021-8d588145d2.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-022-852ac353fb.png" alt="图片"><br>注入 <code>#&#39; onclick=&#39;alert(1)&#39;</code><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-023-2598233678.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-024-342e421afd.png" alt="图片"></li>
 </ul>
 <h2 id="xss-之-href-输出">XSS 之 href 输出</h2>
 <ul>
 <li>此时尖括号和引号都被过滤了</li>
 <li>着眼于当前标签，尝试使用其他协议</li>
 </ul>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-025-21fb6cea47.png" alt="图片">
-输入 <code>javascript:alert(document.cookie)</code>
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-026-f672a78d1a.png" alt="图片">
-在 HTML 中，<code>&lt;a&gt;</code> 标签的 <code>href</code> 属性不仅可以指向普通网址（如 <a href="http://example.com%EF%BC%89%EF%BC%8C%E8%BF%98%E5%8F%AF%E4%BB%A5%E6%8C%87%E5%90%91%E4%BB%A5">http://example.com），还可以指向以</a> <code>javascript:</code> 等特殊协议开头的 URL，这样用户点击链接时就可以直接执行一段 JavaScript 代码。</p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-025-21fb6cea47.png" alt="图片"><br>输入 <code>javascript:alert(document.cookie)</code><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-026-f672a78d1a.png" alt="图片"><br>在 HTML 中，<code>&lt;a&gt;</code> 标签的 <code>href</code> 属性不仅可以指向普通网址（如 <a href="http://example.com%EF%BC%89%EF%BC%8C%E8%BF%98%E5%8F%AF%E4%BB%A5%E6%8C%87%E5%90%91%E4%BB%A5">http://example.com），还可以指向以</a> <code>javascript:</code> 等特殊协议开头的 URL，这样用户点击链接时就可以直接执行一段 JavaScript 代码。</p>
 <h3 id="示例说明">示例说明：</h3>
 <p>假设一个网页中包含如下 HTML 片段：</p>
 <pre><code class="language-html">&lt;a href=&quot;javascript:alert(document.cookie)&quot;&gt;点击获取Cookie&lt;/a&gt;
@@ -279,10 +248,8 @@ echo $safe_text;
 <ul>
 <li>输入的内容会被嵌入 JavaScript 代码中</li>
 </ul>
-<p>输入 <code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code>，发现 script 被提前闭合了，尖括号、标签和引号都没有被过滤
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-027-f0c6c0baef.png" alt="图片"></p>
-<p>输入 <code>&#39;;alert(1);//</code>
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-028-63f703e464.png" alt="图片"></p>
+<p>输入 <code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code>，发现 script 被提前闭合了，尖括号、标签和引号都没有被过滤<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-027-f0c6c0baef.png" alt="图片"></p>
+<p>输入 <code>&#39;;alert(1);//</code><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-028-63f703e464.png" alt="图片"></p>
 <h1 id="csrf跨站请求伪造">CSRF（跨站请求伪造）</h1>
 <ul>
 <li>攻击者伪造一个请求（这个请求通常是一个链接）</li>
@@ -295,14 +262,12 @@ echo $safe_text;
 <h2 id="csrfget">CSRF（GET）</h2>
 <ul>
 <li>获取修改用户信息的 URL（由于是通过 GET 请求的，其他用户点击该 URL 也会对当前用户生效）</li>
-<li>把这个 URL 做成链接让被攻击用户点击，攻击就发起了
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-029-72eb9f7896.png" alt="图片"></li>
+<li>把这个 URL 做成链接让被攻击用户点击，攻击就发起了<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-029-72eb9f7896.png" alt="图片"></li>
 </ul>
 <h2 id="csrfpost">CSRF（POST）</h2>
 <ul>
 <li>与 GET 类似，区别是不能仅通过 URL 完成，而是需要伪造一个包含表单的网页，通过提交表单发送 POST 请求</li>
-<li>让用户跳转到构造好的恶意网页并点击提交，POST 请求就发送出去了
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-030-4754fb5f97.png" alt="图片"></li>
+<li>让用户跳转到构造好的恶意网页并点击提交，POST 请求就发送出去了<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-030-4754fb5f97.png" alt="图片"></li>
 </ul>
 <h2 id="csrf-token">CSRF Token</h2>
 <p><a href="https://blog.csdn.net/m0_46467017/article/details/124795334">https://blog.csdn.net/m0_46467017/article/details/124795334</a></p>
@@ -335,13 +300,11 @@ echo $safe_text;
 </li>
 </ul>
 <h2 id="数字型注入post">数字型注入（POST）</h2>
-<p>不需要特殊闭合，直接进行 union 注入即可
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-031-05e0508e9d.png" alt="图片"></p>
+<p>不需要特殊闭合，直接进行 union 注入即可<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-031-05e0508e9d.png" alt="图片"></p>
 <h2 id="字符型注入get">字符型注入（GET）</h2>
 <ul>
 <li>先用 HackBar 测试合适的语句</li>
-<li>再用 Burp Suite 观察（HackBar 发送前会进行 URL 编码，Burp Suite 收到的是编码后的版本）
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-032-7107164f50.png" alt="图片"></li>
+<li>再用 Burp Suite 观察（HackBar 发送前会进行 URL 编码，Burp Suite 收到的是编码后的版本）<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-032-7107164f50.png" alt="图片"></li>
 </ul>
 <h2 id="搜索型like注入">搜索型（LIKE）注入</h2>
 <p>注意引号和标点</p>
@@ -359,15 +322,13 @@ echo $safe_text;
 </ul>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-033-3ffc6861a6.png" alt="图片"></p>
 <h2 id="xx-型注入">xx 型注入</h2>
-<p>只是闭合方式不同，闭合符号变成了 &#39;)
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-034-b97485a0bb.png" alt="图片"></p>
+<p>只是闭合方式不同，闭合符号变成了 &#39;)<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-034-b97485a0bb.png" alt="图片"></p>
 <h2 id="insertupdate-注入">insert/update 注入</h2>
 <pre><code class="language-bash">insert into 表名 (列名，列名……) values （值,值……）
 update 表 set 列名=值,set 列名=值…… where 限制
 </code></pre>
 <p>insert 是注册，update 是修改信息，两者的注入逻辑类似</p>
-<p>没有回显时，使用报错注入
-发现是单引号闭合</p>
+<p>没有回显时，使用报错注入<br>发现是单引号闭合</p>
 <ul>
 <li><p><strong><code>username=xixi&#39; or</code></strong>：这部分试图闭合原 SQL 查询中 <code>username</code> 字段的单引号，并添加一个恒真条件（<code>OR TRUE</code> 的等价形式），确保即使前面的用户名校验失败，整个 WHERE 子句也成立。</p>
 </li>
@@ -381,45 +342,30 @@ update 表 set 列名=值,set 列名=值…… where 限制
 </li>
 <li><p><strong><code>or &#39;</code></strong>：同样利用 <code>OR TRUE</code> 逻辑，确保整个 SQL 逻辑表达式为真。</p>
 </li>
-<li><p>剩下的 <code>&amp;password=666666&amp;sex=&amp;phonenum=&amp;email=&amp;add=&amp;submit=submit</code> 是其他表单字段的值，不是这次注入尝试的关键部分。
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-035-d7038dd725.png" alt="图片">
-爆出当前用户
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-036-ab3c5b69de.png" alt="图片">
-爆出当前版本</p>
+<li><p>剩下的 <code>&amp;password=666666&amp;sex=&amp;phonenum=&amp;email=&amp;add=&amp;submit=submit</code> 是其他表单字段的值，不是这次注入尝试的关键部分。<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-035-d7038dd725.png" alt="图片"><br>爆出当前用户<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-036-ab3c5b69de.png" alt="图片"><br>爆出当前版本</p>
 </li>
 </ul>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-037-13931219bb.png" alt="图片">
-爆出数据文件存放目录
-  <code>substr(string, start_position, length)</code></p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-037-13931219bb.png" alt="图片"><br>爆出数据文件存放目录<br>  <code>substr(string, start_position, length)</code></p>
 <ul>
 <li>string 是原始字符串。</li>
 <li>start_position 指定从字符串的哪个位置开始截取（大多数数据库中位置从 1 开始计数）。</li>
 <li>length 指定要截取的字符数。</li>
 </ul>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-038-2091776058.png" alt="图片"></p>
-<p>update 注入类似
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-039-4761ee7130.png" alt="图片"></p>
+<p>update 注入类似<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-039-4761ee7130.png" alt="图片"></p>
 <h2 id="delete-注入">delete 注入</h2>
 <pre><code class="language-bash">delete from 表名称 where 列名 = 值 
 </code></pre>
-<p>由于是数字型，不需要闭合，末尾也不需要加注释，因为还有一个双引号来闭合整个 SQL 语句
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-040-090d2926dc.png" alt="图片"></p>
+<p>由于是数字型，不需要闭合，末尾也不需要加注释，因为还有一个双引号来闭合整个 SQL 语句<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-040-090d2926dc.png" alt="图片"></p>
 <h2 id="http-头注入">HTTP 头注入</h2>
-<p>与 insert 注入差不多
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-041-8e9e4433cb.png" alt="图片">
-这里返回的结果是一个重定向页面，需要在代理中配置
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-042-66d827a5c2.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-043-0c6af6c917.png" alt="图片">
-再次发送，发现可以了
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-044-41d0506d22.png" alt="图片"></p>
+<p>与 insert 注入差不多<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-041-8e9e4433cb.png" alt="图片"><br>这里返回的结果是一个重定向页面，需要在代理中配置<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-042-66d827a5c2.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-043-0c6af6c917.png" alt="图片"><br>再次发送，发现可以了<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-044-41d0506d22.png" alt="图片"></p>
 <h2 id="布尔盲注">布尔盲注</h2>
 <ul>
 <li>当显示的数据有限、报错也不回显时，使用布尔盲注，通过布尔值的不同回显结果进行判断</li>
 </ul>
 <p>服务器不打印报错，且只允许查询返回一行数据，否则什么都不显示</p>
 <ul>
-<li>所以无法进行报错注入和联合查询
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-045-a2a9880d43.png" alt="图片"></li>
+<li>所以无法进行报错注入和联合查询<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-045-a2a9880d43.png" alt="图片"></li>
 <li>单引号闭合；由于只能显示一行，使用 AND 布尔判断：正确则显示该行，否则显示其他内容</li>
 <li>仍然是从数据库一直到列内容</li>
 </ul>
@@ -437,23 +383,19 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <ul>
 <li><p><code>sudo apt install sqlmap</code> 下载 sqlmap</p>
 </li>
-<li><p>爆数据库 <code>sqlmap -u &quot;http://127.0.0.1/vul/sqli/sqli_blind_b.php?name=kobe&amp;submit=%E6%9F%A5%E8%AF%A2&quot; --current-db</code>
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-046-93f7533396.png" alt="图片"></p>
+<li><p>爆数据库 <code>sqlmap -u &quot;http://127.0.0.1/vul/sqli/sqli_blind_b.php?name=kobe&amp;submit=%E6%9F%A5%E8%AF%A2&quot; --current-db</code><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-046-93f7533396.png" alt="图片"></p>
 </li>
 <li><p>爆表 <code>sqlmap -u &quot;http://127.0.0.1/vul/sqli/sqli_blind_b.php?name=kobe&amp;submit=%E6%9F%A5%E8%AF%A2&quot; -D pikachu --tables</code></p>
 </li>
 </ul>
 <p> <img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-047-05873d9322.png" alt="图片"></p>
 <ul>
-<li>爆列 <code>sqlmap -u &quot;http://127.0.0.1/vul/sqli/sqli_blind_b.php?name=kobe&amp;submit=%E6%9F%A5%E8%AF%A2&quot; -D pikachu -T users --columns</code>
- <img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-048-4104db3f9d.png" alt="图片"></li>
-<li>爆列内容 <code>sqlmap -u &quot;http://127.0.0.1/vul/sqli/sqli_blind_b.php?name=kobe&amp;submit=%E6%9F%A5%E8%AF%A2&quot; -D pikachu -T users -C &quot;username,password&quot; --dump </code>
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-049-754e3dd350.png" alt="图片"></li>
+<li>爆列 <code>sqlmap -u &quot;http://127.0.0.1/vul/sqli/sqli_blind_b.php?name=kobe&amp;submit=%E6%9F%A5%E8%AF%A2&quot; -D pikachu -T users --columns</code><br> <img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-048-4104db3f9d.png" alt="图片"></li>
+<li>爆列内容 <code>sqlmap -u &quot;http://127.0.0.1/vul/sqli/sqli_blind_b.php?name=kobe&amp;submit=%E6%9F%A5%E8%AF%A2&quot; -D pikachu -T users -C &quot;username,password&quot; --dump </code><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-049-754e3dd350.png" alt="图片"></li>
 </ul>
 <h2 id="时间盲注">时间盲注</h2>
 <ul>
-<li>没有差异化的回显信息（没有回显信息），且只能显示一行所以无法联合查询；利用布尔值得到不同时长的反应来爆破信息
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-050-0ff80b5785.png" alt="图片"></li>
+<li>没有差异化的回显信息（没有回显信息），且只能显示一行所以无法联合查询；利用布尔值得到不同时长的反应来爆破信息<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-050-0ff80b5785.png" alt="图片"></li>
 <li><code>kobe&#39; and sleep(10)#</code> 判断是否为单引号闭合：如果是单引号闭合，响应会耗时 10 秒</li>
 </ul>
 <ol>
@@ -472,10 +414,7 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <h2 id="宽字节注入">宽字节注入</h2>
 <ul>
 <li>加了转义字符</li>
-<li>字节解析方式的不同，使得加了转义字符后的字节被解析成其他内容
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-051-3d554a8560.png" alt="图片">
-服务器端处理时先调用了 escape
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-052-88032faeac.png" alt="图片"></li>
+<li>字节解析方式的不同，使得加了转义字符后的字节被解析成其他内容<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-051-3d554a8560.png" alt="图片"><br>服务器端处理时先调用了 escape<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-052-88032faeac.png" alt="图片"></li>
 </ul>
 <p> 宽字节处理</p>
 <p><code>%df</code> 在百分号编码（也叫 URL 编码）中表示一个特定的字节。在这个语境下，<code>%df</code> 解码后是十六进制值为 <code>df</code> 的字节，即十进制的 223。在不同的字符编码标准中，这个字节代表不同的字符：</p>
@@ -485,10 +424,7 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <li>在 GB2312 或 GBK 等中文编码中，<code>%df</code> 通常与下一个字节组合表示一个汉字。例如 <code>%df%bb</code> 在 GBK 编码中表示汉字“易”。（这里利用的就是 %df 与转义时加入的字节一起在 GBK 中被解码成一个汉字）</li>
 </ul>
 <p>提到 <code>%df</code> 时，在 Web 开发和网络传输中，百分号编码用于把非字母数字字符转换为可安全传输的格式，接收端再把它们解码还原。</p>
-<p>执行成功，说明开启了转义，且闭合方式是单引号
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-053-0b794dc7d4.png" alt="图片">
-然后就是常规的爆库操作……
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-054-679c287b2d.png" alt="图片"></p>
+<p>执行成功，说明开启了转义，且闭合方式是单引号<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-053-0b794dc7d4.png" alt="图片"><br>然后就是常规的爆库操作……<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-054-679c287b2d.png" alt="图片"></p>
 <h1 id="rce远程命令代码执行">RCE（远程命令/代码执行）</h1>
 <ul>
 <li>客户端向服务器传输某个值</li>
@@ -499,10 +435,7 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-055-a5f2b367fd.png" alt="图片"></p>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-056-9bd06f084c.png" alt="图片"></p>
 <h2 id="exec-eval">exec &quot;eval&quot;</h2>
-<p>eval() 的作用是把字符串当作代码执行。也就是说，它接收一个字符串参数，其内容可以是一段代码，eval() 会像这段代码直接写在程序中一样解析并执行它。
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-057-3a325d31ce.png" alt="图片">
-输入 phpinfo();
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-058-2aa9294fdb.png" alt="图片"></p>
+<p>eval() 的作用是把字符串当作代码执行。也就是说，它接收一个字符串参数，其内容可以是一段代码，eval() 会像这段代码直接写在程序中一样解析并执行它。<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-057-3a325d31ce.png" alt="图片"><br>输入 phpinfo();<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-058-2aa9294fdb.png" alt="图片"></p>
 <h1 id="unsafe-filedownload文件下载漏洞">unsafe filedownload（文件下载漏洞）</h1>
 <ul>
 <li>用户请求中包含与要下载文件相关的参数</li>
@@ -516,10 +449,7 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <pre><code>http://www.example.com/sports/nba/execdownload.php?filename=ai.png
 </code></pre>
 <p>简而言之，完整 URL 就是当前页面的 URL 结合链接中指定的相对路径再加上查询字符串。</p>
-<p>页面上存在的各个链接
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-059-b48c6a6c2f.png" alt="图片">
-响应的处理逻辑
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-060-0aa5b7ee35.png" alt="图片"></p>
+<p>页面上存在的各个链接<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-059-b48c6a6c2f.png" alt="图片"><br>响应的处理逻辑<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-060-0aa5b7ee35.png" alt="图片"></p>
 <p>客户端收到的响应</p>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-061-40f62567ed.png" alt="图片"></p>
 <ol>
@@ -557,8 +487,7 @@ update 表 set 列名=值,set 列名=值…… where 限制
 </li>
 </ol>
 <p>综上，浏览器根据响应头中的指示和收到的数据，识别出这是要下载的文件内容，据此引导用户完成下载操作，最终把收到的二进制数据保存为一个 PNG 图片文件。</p>
-<p>当为 <code>../execdownload.php</code> 时，就能下载到源码
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-062-b40f5a6820.png" alt="图片"></p>
+<p>当为 <code>../execdownload.php</code> 时，就能下载到源码<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-062-b40f5a6820.png" alt="图片"></p>
 <h1 id="unsafe-upfileupload文件上传漏洞">unsafe upfileupload（文件上传漏洞）</h1>
 <ul>
 <li>客户端向服务器上传文件</li>
@@ -569,12 +498,7 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <ul>
 <li>把木马 php 文件的扩展名改为 jpg</li>
 <li>通过前端限制后抓包</li>
-<li>在 Burp Suite 中把扩展名改回 php
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-063-c8024751ac.png" alt="图片">
-服务器端处理
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-064-b9a1bb7c14.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-065-f9ddc970a7.png" alt="图片">
-在 PHP 中，<code>$_FILES</code> 是一个预定义的全局数组，用于存放通过 HTTP POST 请求上传的文件信息。用户通过表单上传文件时，PHP 会自动填充这个数组，方便开发者访问上传文件的详细信息。</li>
+<li>在 Burp Suite 中把扩展名改回 php<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-063-c8024751ac.png" alt="图片"><br>服务器端处理<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-064-b9a1bb7c14.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-065-f9ddc970a7.png" alt="图片"><br>在 PHP 中，<code>$_FILES</code> 是一个预定义的全局数组，用于存放通过 HTTP POST 请求上传的文件信息。用户通过表单上传文件时，PHP 会自动填充这个数组，方便开发者访问上传文件的详细信息。</li>
 </ul>
 <p>关于数组元素结构 <code>$_FILES[$key]</code>，这里的 <code>$key</code> 对应表单中文件输入字段的 <code>name</code> 属性值。例如，如果 HTML 表单的文件上传部分如下：</p>
 <pre><code class="language-html">&lt;input type=&quot;file&quot; name=&quot;uploadfile&quot;&gt;
@@ -588,17 +512,11 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <ul>
 <li>这是为目标文件构造一个完整的保存路径。<code>$save_path</code> 是想要保存文件的目录路径，<code>$_FILES[$key][&#39;name&#39;]</code> 是上传文件的原始名称。通过字符串连接运算符 <code>.</code>，这两部分被合并成一个完整路径。例如，如果 <code>$save_path</code> 是 <code>/var/www/uploads/</code>，上传的文件名为 <code>example.txt</code>，那么最终路径就是 <code>/var/www/uploads/example.txt</code>。<code>move_uploaded_file</code> 函数用这个路径把上传的临时文件移动到这个指定的永久位置。</li>
 </ul>
-<p>文件内容及相关信息以 POST 形式提交到服务器
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-066-05c04637ae.png" alt="图片"></p>
+<p>文件内容及相关信息以 POST 形式提交到服务器<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-066-05c04637ae.png" alt="图片"></p>
 <h2 id="服务端-mime-检查">服务端 MIME 检查</h2>
-<p>没有前端检查，但后端会检查类型
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-067-425e5d0f47.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-068-d85ce8822a.png" alt="图片">
-修改 <code>content-type</code> 即可
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-069-a2cdc3c9b6.png" alt="图片"></p>
+<p>没有前端检查，但后端会检查类型<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-067-425e5d0f47.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-068-d85ce8822a.png" alt="图片"><br>修改 <code>content-type</code> 即可<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-069-a2cdc3c9b6.png" alt="图片"></p>
 <h2 id="getimagesize">getimagesize()</h2>
-<p>没有前端检查，只有服务器端处理
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-070-fdb81c82b9.png" alt="图片"></p>
+<p>没有前端检查，只有服务器端处理<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-070-fdb81c82b9.png" alt="图片"></p>
 <p><code>$_FILES[$key][&#39;tmp_name&#39;]</code> 是 PHP 中用于访问通过 HTTP POST 方法上传的文件的临时存储位置的变量。用户上传文件时，PHP 会把文件临时存放在服务器的临时目录中，并通过 <code>$_FILES</code> 超全局数组提供详细的文件上传信息。这个数组是多维结构，每个上传的文件对应数组中的一个元素，以表单中文件输入字段的 <code>name</code> 属性值为索引。</p>
 <p>具体来说，<code>$_FILES</code> 数组的结构大致如下：</p>
 <pre><code class="language-php">$_FILES = [
@@ -643,8 +561,7 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <li><strong>功能</strong>：结合了 <code>require()</code> 和 <code>include_once()</code> 的特点，确保文件只被包含一次，并且如果文件不存在或不可读，会导致致命错误，终止脚本执行。</li>
 </ul>
 <h2 id="本地文件包含">本地文件包含</h2>
-<p>从服务器的角度看，包含的是服务器本地的文件
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-073-5f0c854429.png" alt="图片"></p>
+<p>从服务器的角度看，包含的是服务器本地的文件<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-073-5f0c854429.png" alt="图片"></p>
 <ul>
 <li>上传一个木马文件，木马文件存在于服务器本地</li>
 <li>服务器包含这个本地木马文件</li>
@@ -652,13 +569,11 @@ update 表 set 列名=值,set 列名=值…… where 限制
 </ul>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-074-dedf96aa2a.png" alt="图片"></p>
 <ul>
-<li>用相对路径指向之前上传的木马文件，再用蚁剑 getshell
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-075-377db4e6cd.png" alt="图片"></li>
+<li>用相对路径指向之前上传的木马文件，再用蚁剑 getshell<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-075-377db4e6cd.png" alt="图片"></li>
 </ul>
 <h2 id="远程文件包含">远程文件包含</h2>
 <ul>
-<li>包含一个 URL：PHP 会尝试通过网络获取 URL 指向的文件内容，并当作 PHP 代码处理
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-076-2cfd481114.png" alt="图片"></li>
+<li>包含一个 URL：PHP 会尝试通过网络获取 URL 指向的文件内容，并当作 PHP 代码处理<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-076-2cfd481114.png" alt="图片"></li>
 </ul>
 <p>修改 php.ini，打开 <code>·allow_url_include</code></p>
 <p>由于这个靶场是以容器方式运行的，需要先进入命令行再修改</p>
@@ -668,16 +583,13 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <li>确认版本后，<code>vim /etc/php/7.3/apache2/php.ini</code></li>
 <li>按 / 再输入要搜索的字符，回车跳转过去，然后改为 On</li>
 </ul>
-<p>用 <code>http://127.0.0.1/vul/fileinclude/fi_remote.php?filename=http://127.0.0.1/vul/unsafeupload/uploads/shell.php&amp;submit=Submit+Query</code> 配合蚁剑 getshell 时会报错。这是因为蚁剑是用 POST 请求 URL 的，而我们填的是 GET 型的 URL；即使尝试向这个地址发送 POST 请求，Web 服务器通常也会忽略 URL 中的查询字符串（?filename=... 之后的部分），所以包含失败
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-077-30e328ca91.png" alt="图片">
-但如果直接访问这个 URL，它仍然能正常包含文件</p>
+<p>用 <code>http://127.0.0.1/vul/fileinclude/fi_remote.php?filename=http://127.0.0.1/vul/unsafeupload/uploads/shell.php&amp;submit=Submit+Query</code> 配合蚁剑 getshell 时会报错。这是因为蚁剑是用 POST 请求 URL 的，而我们填的是 GET 型的 URL；即使尝试向这个地址发送 POST 请求，Web 服务器通常也会忽略 URL 中的查询字符串（?filename=... 之后的部分），所以包含失败<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-077-30e328ca91.png" alt="图片"><br>但如果直接访问这个 URL，它仍然能正常包含文件</p>
 <ul>
 <li>所以这里通过访问 URL 来执行文件，从而创建一个新的木马文件</li>
 </ul>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-078-bef24716d3.png" alt="图片"></p>
 <ul>
-<li>然后用蚁剑 getshell
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-079-12d3a0883e.png" alt="图片"></li>
+<li>然后用蚁剑 getshell<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-079-12d3a0883e.png" alt="图片"></li>
 </ul>
 <h1 id="over-permission越权">over permission（越权）</h1>
 <ul>
@@ -689,29 +601,19 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <ul>
 <li>水平越权：A 用户和 B 用户是同级别的用户，但彼此不能操作对方的个人信息。如果 A 用户能越权操作 B 用户的个人信息，就称为“水平越权”</li>
 </ul>
-<p>这里的连接都是一样的，不会因用户不同而不同。
-但 SQL 语句直接用从 URL 获取的用户名来执行，所以修改 URL 中的用户名就能得到对应用户的个人信息
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-080-b675a40687.png" alt="图片"></p>
+<p>这里的连接都是一样的，不会因用户不同而不同。<br>但 SQL 语句直接用从 URL 获取的用户名来执行，所以修改 URL 中的用户名就能得到对应用户的个人信息<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-080-b675a40687.png" alt="图片"></p>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-081-5425c3b13c.png" alt="图片"></p>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-082-eb301e02d3.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-083-f73931f1d2.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-082-eb301e02d3.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-083-f73931f1d2.png" alt="图片"></p>
 <h2 id="垂直越权">垂直越权</h2>
 <ul>
 <li>垂直越权：A 用户的权限高于 B 用户，B 用户能执行 A 用户的操作的情况称为“垂直越权”</li>
 </ul>
-<p>登录后，服务器代码会往 <code>$_SESSION</code> 中添加相关设置
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-084-0edd3d4fd1.png" alt="图片">
-退出登录后，<code>$_SESSION</code> 会被删除
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-085-16291ab8a8.png" alt="图片"></p>
-<p>添加用户的代码会检查用户是否已登录
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-086-c82cc17fa7.png" alt="图片">
-但登录检查只检查该用户是否存在，并不检查该用户的 <code>$_SESSION</code> 是否与当前权限级别相符
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-087-0a432e89cb.png" alt="图片"></p>
+<p>登录后，服务器代码会往 <code>$_SESSION</code> 中添加相关设置<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-084-0edd3d4fd1.png" alt="图片"><br>退出登录后，<code>$_SESSION</code> 会被删除<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-085-16291ab8a8.png" alt="图片"></p>
+<p>添加用户的代码会检查用户是否已登录<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-086-c82cc17fa7.png" alt="图片"><br>但登录检查只检查该用户是否存在，并不检查该用户的 <code>$_SESSION</code> 是否与当前权限级别相符<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-087-0a432e89cb.png" alt="图片"></p>
 <ul>
 <li>可以抓取添加用户的数据包，而此时不会校验用户 <code>$_SESSION</code> 的级别，即任何其他已登录用户的 <code>$_SESSION</code> 也都可以</li>
 <li>这里 admin 退出登录后，用 pikachu 登录，再把添加用户数据包的 PHPSESSION 替换为 pikachu 的 PHPSESSION</li>
-<li>这里页面显示登录页的原因是添加后会跳转到 op2_admin.php，然后又跳转到 op2_login.php
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-088-784bd4bf30.png" alt="图片"></li>
+<li>这里页面显示登录页的原因是添加后会跳转到 op2_admin.php，然后又跳转到 op2_login.php<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-088-784bd4bf30.png" alt="图片"></li>
 </ul>
 <h1 id="目录遍历漏洞">目录遍历漏洞</h1>
 <ul>
@@ -719,19 +621,15 @@ update 表 set 列名=值,set 列名=值…… where 限制
 <li>服务器没有妥善处理，导致可以访问其他本不应访问的文件</li>
 </ul>
 <p>服务器端处理</p>
-<p><code>require</code> 用于把一个源代码文件的内容插入另一个源代码文件中<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-089-025e44cfd7.png" alt="图片">
-用 <code>title=../dir.php</code> 可以看到 dir.php 的内容被执行并显示在前端
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-090-d0429c177a.png" alt="图片"></p>
+<p><code>require</code> 用于把一个源代码文件的内容插入另一个源代码文件中<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-089-025e44cfd7.png" alt="图片"><br>用 <code>title=../dir.php</code> 可以看到 dir.php 的内容被执行并显示在前端<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-090-d0429c177a.png" alt="图片"></p>
 <h1 id="敏感信息泄露">敏感信息泄露</h1>
 <ul>
 <li>用户访问服务器，服务器没有妥善处理，导致可以访问其他资源</li>
 <li>源代码中存在相关信息泄露</li>
 </ul>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-091-40623779c7.png" alt="图片">
-登录账号和密码泄露了，直接登录即可</p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-091-40623779c7.png" alt="图片"><br>登录账号和密码泄露了，直接登录即可</p>
 <h1 id="php-反序列化">PHP 反序列化</h1>
-<p> <strong>序列化 serialize()</strong>
-序列化通俗来说就是把一个对象变成可以传输的字符串。例如，下面是一个对象：</p>
+<p> <strong>序列化 serialize()</strong><br>序列化通俗来说就是把一个对象变成可以传输的字符串。例如，下面是一个对象：</p>
 <pre><code>class S{
     public $test=&quot;pikachu&quot;;
 }
@@ -780,12 +678,9 @@ echo $u-&gt;test; //得到的结果为pikachu
 
     payload:O:1:&quot;S&quot;:1:{s:4:&quot;test&quot;;s:29:&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;;}
 </code></pre>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-092-f086b7e9d2.png" alt="图片">
-自己创建一个 PHP 文件来生成用于利用的字符串：<code>O:1:&quot;S&quot;:1:{s:4:&quot;test&quot;;s:33:&quot;&lt;script&gt;alert(&#39;Hacking&#39;)&lt;/script&gt;&quot;;}</code>
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-093-89ec9faf97.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-092-f086b7e9d2.png" alt="图片"><br>自己创建一个 PHP 文件来生成用于利用的字符串：<code>O:1:&quot;S&quot;:1:{s:4:&quot;test&quot;;s:33:&quot;&lt;script&gt;alert(&#39;Hacking&#39;)&lt;/script&gt;&quot;;}</code><br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-093-89ec9faf97.png" alt="图片"></p>
 <h1 id="xxexml-外部实体注入">XXE（XML 外部实体注入）</h1>
-<p><a href="https://www.cnblogs.com/joker-vip/p/12355165.html">https://www.cnblogs.com/joker-vip/p/12355165.html</a>
-XML 在数据交换中的应用：</p>
+<p><a href="https://www.cnblogs.com/joker-vip/p/12355165.html">https://www.cnblogs.com/joker-vip/p/12355165.html</a><br>XML 在数据交换中的应用：</p>
 <p>假设有一家网上书店，需要定期把图书库存信息同步给合作伙伴——一家数据分析公司，用于市场趋势分析和预测。在这个场景下，XML 可以作为双方系统之间传输数据的中间数据格式。</p>
 <p><strong>步骤如下：</strong></p>
 <ol>
@@ -819,8 +714,7 @@ XML 在数据交换中的应用：</p>
 </li>
 </ol>
 <p>通过这个例子可以看出 XML 作为数据交换格式的灵活性和便利性：它让不同系统之间的数据共享变得标准、高效。此外，由于 XML 是自描述的，接收方即使没有额外的文档，也能通过 XML 标签大致理解数据的结构和含义。</p>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-094-2c656924ec.png" alt="图片">
-<code>simplexml_load_string</code> 函数配合 <code>LIBXML_NOENT</code> 标志，用于解析包含实体的 XML 字符串，并操作得到的 SimpleXMLElement 对象。</p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-094-2c656924ec.png" alt="图片"><br><code>simplexml_load_string</code> 函数配合 <code>LIBXML_NOENT</code> 标志，用于解析包含实体的 XML 字符串，并操作得到的 SimpleXMLElement 对象。</p>
 <h3 id="示例-xml-字符串">示例 XML 字符串</h3>
 <p>假设我们有一个包含实体引用的简单 XML 字符串：</p>
 <pre><code class="language-xml">$xmlString = &lt;&lt;&lt;XML
@@ -873,8 +767,7 @@ XML;
 ]&gt;
    &lt;content&gt;&amp;secret;&lt;/content&gt;
 </code></pre>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-095-a45f8dc6a9.png" alt="图片">
-所以如果能解析外部实体，且外部实体用 SYSTEM 访问外部资源，那么任何外部资源都可以被泄露</p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-095-a45f8dc6a9.png" alt="图片"><br>所以如果能解析外部实体，且外部实体用 SYSTEM 访问外部资源，那么任何外部资源都可以被泄露</p>
 <pre><code class="language-xml">&lt;!DOCTYPE ANY [ 
 &lt;!ENTITY f SYSTEM &quot;php://filter/read=convert.base64-encode/resource=xxe.php&quot;&gt; 
 ]&gt; 
@@ -887,8 +780,7 @@ XML;
 <li>服务器处理收到的数据，然后执行与重定向相关的操作</li>
 </ul>
 <p>URL 重定向漏洞导致的钓鱼攻击，简单来说，就是攻击者利用用户对知名或可信网站的信任，通过不安全的 URL 重定向功能把用户引导到恶意钓鱼网站。下面用一个具体例子帮助理解这个过程：</p>
-<p><strong>场景假设</strong>：
-假设有一家知名的网上银行，域名为 <code>trustedbank.com</code>。用户经常访问这个网站进行各种金融操作，对这个域名高度信任。</p>
+<p><strong>场景假设</strong>：<br>假设有一家知名的网上银行，域名为 <code>trustedbank.com</code>。用户经常访问这个网站进行各种金融操作，对这个域名高度信任。</p>
 <p><strong>攻击过程</strong>：</p>
 <ol>
 <li><p><strong>构造恶意链接</strong>：攻击者创建一个看起来像是 <code>trustedbank.com</code> 页面的恶意链接，可能是这样的：<code>https://trustedbank.com/login?redirect=https://evilphishingsite.com/login</code>。其中，<code>redirect</code> 参数后面跟的是攻击者控制的钓鱼网站地址。</p>
@@ -902,9 +794,7 @@ XML;
 <li><p><strong>窃取信息</strong>：用户在这个伪造的登录页上输入银行账户的用户名和密码，可能还有安全问题答案、验证码等其他敏感信息。一旦提交，这些信息就会直接发送给攻击者。</p>
 </li>
 </ol>
-<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-097-08a70ea92a.png" alt="图片">
-点击链接后，URL 被处理并重定向
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-098-b3f5e3e49d.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-097-08a70ea92a.png" alt="图片"><br>点击链接后，URL 被处理并重定向<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-098-b3f5e3e49d.png" alt="图片"></p>
 <h3 id="对于-headerlocation-httpswwwbaiducom">对于 &quot;header(&#39;Location: <a href="https://www.baidu.com/')%22%EF%BC%9A">https://www.baidu.com/&#39;)&quot;：</a></h3>
 <p>这个例子提供了完整的 URL，包括协议（https://），浏览器会把它理解为绝对 URL。它明确指定了要重定向到的完整地址，无论当前页面的协议和域名是什么，浏览器都会直接跳转到 &quot;<a href="https://www.baidu.com/%22%E3%80%82">https://www.baidu.com/&quot;。</a></p>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-099-0817490e65.png" alt="图片"></p>
@@ -918,14 +808,11 @@ XML;
 </ul>
 <p>PHP 中以下函数使用不当会导致 SSRF：</p>
 <ol>
-<li><p><strong>file_get_contents()</strong>：
-这个函数通常用于读取文件内容，但如果提供的是 URL 而不是本地文件路径，PHP 会尝试向该 URL 发起 HTTP 或 FTP 请求来获取内容。攻击者可以精心构造 URL，让服务器访问内部系统、执行未授权的 API 调用或访问外部恶意服务器，从而导致信息泄露或引发其他安全问题。</p>
+<li><p><strong>file_get_contents()</strong>：<br>这个函数通常用于读取文件内容，但如果提供的是 URL 而不是本地文件路径，PHP 会尝试向该 URL 发起 HTTP 或 FTP 请求来获取内容。攻击者可以精心构造 URL，让服务器访问内部系统、执行未授权的 API 调用或访问外部恶意服务器，从而导致信息泄露或引发其他安全问题。</p>
 </li>
-<li><p><strong>fsockopen()</strong>：
-这个函数用于打开一个网络连接，常用于 TCP/IP 通信。它允许直接与任意 IP 地址和端口建立连接、收发数据。如果攻击者能控制传给这个函数的参数，就可以迫使服务器与内部系统或恶意服务器建立连接，执行攻击者想要的请求，例如扫描内网或攻击其他服务。</p>
+<li><p><strong>fsockopen()</strong>：<br>这个函数用于打开一个网络连接，常用于 TCP/IP 通信。它允许直接与任意 IP 地址和端口建立连接、收发数据。如果攻击者能控制传给这个函数的参数，就可以迫使服务器与内部系统或恶意服务器建立连接，执行攻击者想要的请求，例如扫描内网或攻击其他服务。</p>
 </li>
-<li><p><strong>curl_exec()</strong>：
-cURL 是一个强大的库，用于从各种协议（HTTP、FTP、SMTP 等）的服务器下载数据。<code>curl_exec()</code> 函数执行一个 cURL 会话；同样，如果攻击者能操纵请求的 URL 或其他参数，就能诱使服务器向任意地址发送请求，造成 SSRF 漏洞。</p>
+<li><p><strong>curl_exec()</strong>：<br>cURL 是一个强大的库，用于从各种协议（HTTP、FTP、SMTP 等）的服务器下载数据。<code>curl_exec()</code> 函数执行一个 cURL 会话；同样，如果攻击者能操纵请求的 URL 或其他参数，就能诱使服务器向任意地址发送请求，造成 SSRF 漏洞。</p>
 </li>
 </ol>
 <h2 id="ssrfcurl">SSRF（curl）</h2>
@@ -969,10 +856,8 @@ if(isset($_GET[&#39;file&#39;]) &amp;&amp; $_GET[&#39;file&#39;] !=null){
 </code></pre>
 <p><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-103-d6510506bb.png" alt="图片"></p>
 <ul>
-<li>泄露本地文件内容
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-104-c5a4659ed3.png" alt="图片"></li>
-<li>泄露 PHP 源码
-<img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-105-999487465e.png" alt="图片"></li>
+<li>泄露本地文件内容<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-104-c5a4659ed3.png" alt="图片"></li>
+<li>泄露 PHP 源码<br><img src="/workspace/security-foundations/web-and-database-security/Pikachu%20%E6%BC%8F%E6%B4%9E%E9%9D%B6%E5%9C%BA%20-%20%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-138327240/image-105-999487465e.png" alt="图片"></li>
 <li>还可以访问内网其他端口上的文件内容</li>
 </ul>
 

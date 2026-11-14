@@ -19,8 +19,7 @@
     <div class="meta"><time>2024-04-20</time><span class="tag">#docker</span><span class="tag">#eureka</span><span class="tag">#java</span></div>
     <article class="post-body">
 <h1 id="busybox">busybox</h1>
-<p>一个简单的 UNIX 文件系统，里面有很多文件；可以把 busybox 看作一个文件夹
-我们把它作为第一个容器内运行的文件系统</p>
+<p>一个简单的 UNIX 文件系统，里面有很多文件；可以把 busybox 看作一个文件夹<br>我们把它作为第一个容器内运行的文件系统</p>
 <h1 id="docker-run--d-busybox-top"><code>docker run -d busybox top</code></h1>
 <p>命令 <code>docker run -d busybox top</code> 用于在 Docker 中启动一个新容器并执行特定操作。下面是对该命令每个部分的详细解释：</p>
 <ul>
@@ -86,23 +85,19 @@
 <li><p><strong>-C</strong>：这个选项用于指定提取出的文件存放的目录；它后面跟着目标目录路径 <code>busybox/</code>。这意味着从 <code>busybox.tar</code> 中提取出的所有文件和目录都会放到名为 <code>busybox</code> 的目录下</p>
 </li>
 </ul>
-<p>总的来说，这条命令的整体效果是把 <code>busybox.tar</code> 中的所有文件提取出来，解压到当前目录下的 <code>busybox/</code> 子目录中。如果 <code>busybox/</code> 目录尚不存在，<code>tar</code> 会在提取之前先创建这个目录
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-001-2c08e72d6b.png" alt="图片"></p>
+<p>总的来说，这条命令的整体效果是把 <code>busybox.tar</code> 中的所有文件提取出来，解压到当前目录下的 <code>busybox/</code> 子目录中。如果 <code>busybox/</code> 目录尚不存在，<code>tar</code> 会在提取之前先创建这个目录<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-001-2c08e72d6b.png" alt="图片"></p>
 <h1 id="mount-namespace-的共享性">mount namespace 的共享性</h1>
 <p>在 Linux 的 <code>mount namespace</code> 中挂载文件系统是否会影响宿主机的文件系统，取决于具体情况</p>
 <ul>
-<li><p><strong>默认情况下（在引入 systemd 之前，或设置了 MS_SHARED 传播类型时）</strong>：
-如果你在一个新的 <code>mount namespace</code> 中挂载文件系统，并且该挂载点是共享挂载（即挂载传播类型为 <code>MS_SHARED</code>），那么在新的 <code>mount namespace</code> 中进行的挂载操作会传播回宿主机以及共享该挂载点的其他 <code>mount namespace</code>。这意味着宿主机的文件系统视图也会相应发生变化</p>
+<li><p><strong>默认情况下（在引入 systemd 之前，或设置了 MS_SHARED 传播类型时）</strong>：<br>如果你在一个新的 <code>mount namespace</code> 中挂载文件系统，并且该挂载点是共享挂载（即挂载传播类型为 <code>MS_SHARED</code>），那么在新的 <code>mount namespace</code> 中进行的挂载操作会传播回宿主机以及共享该挂载点的其他 <code>mount namespace</code>。这意味着宿主机的文件系统视图也会相应发生变化</p>
 </li>
-<li><p><strong>设置为私有挂载（MS_PRIVATE）</strong>：
-如果在创建 <code>mount namespace</code> 时，把挂载点设置为私有（通过 <code>syscall.Mount(&quot;&quot;, &quot;/&quot;, &quot;&quot;, syscall.MS_PRIVATE|syscall.MS_REC, &quot;&quot;)</code> 命令），那么在这个新的 <code>mount namespace</code> 中挂载的任何文件系统，都不会影响宿主机，也不会影响没有设置为私有的其他 <code>mount namespace</code>。也就是说，新 <code>mount namespace</code> 中对文件系统的挂载和卸载操作只会影响该 namespace 本身，宿主机的文件系统视图不会发生变化</p>
+<li><p><strong>设置为私有挂载（MS_PRIVATE）</strong>：<br>如果在创建 <code>mount namespace</code> 时，把挂载点设置为私有（通过 <code>syscall.Mount(&quot;&quot;, &quot;/&quot;, &quot;&quot;, syscall.MS_PRIVATE|syscall.MS_REC, &quot;&quot;)</code> 命令），那么在这个新的 <code>mount namespace</code> 中挂载的任何文件系统，都不会影响宿主机，也不会影响没有设置为私有的其他 <code>mount namespace</code>。也就是说，新 <code>mount namespace</code> 中对文件系统的挂载和卸载操作只会影响该 namespace 本身，宿主机的文件系统视图不会发生变化</p>
 </li>
 </ul>
 <p>在 Docker 等容器技术中，通常会创建一个新的 <code>mount namespace</code>，并将其内部的挂载点设置为私有，以确保容器内部的文件系统操作不会影响宿主机或其他容器，从而实现容器级别的文件系统隔离</p>
 <h1 id="自挂载self-mount">自挂载（Self Mount）</h1>
 <p>想象你有一棵大树：树干代表宿主机的根文件系统，树枝代表挂载在其上的各个目录。当你想创建一个独立的分支（比如 <code>/newroot</code>）作为容器的新根目录时，如果不采取措施，这个分支仍然会受到整棵树（宿主机）其他变化的影响</p>
-<p><strong>举例说明</strong>：
-假设宿主机上有如下目录结构：</p>
+<p><strong>举例说明</strong>：<br>假设宿主机上有如下目录结构：</p>
 <pre><code>/
 ├── bin
 ├── etc
@@ -144,11 +139,9 @@
 <p>这样做的目的是为了满足 <code>syscall.PivotRoot</code> 函数的要求，即新的根文件系统和旧的根文件系统不能处于同一个文件系统下。通过“bind mount”操作，我们可以满足这个要求</p>
 <h1 id="私有挂载点-vs-私有-mount-namespace">私有挂载点 vs. 私有 mount namespace</h1>
 <p>Mount Namespace 的属性主要指的是 Namespace 中挂载点的传播属性（Mount Propagation）。下面的例子可以说明这一点：</p>
-<p><strong>示例场景</strong>：
-假设宿主机上有两个目录 <code>/mnt/shared</code> 和 <code>/mnt/private</code>，宿主机根目录 <code>/</code> 的挂载传播属性为默认值</p>
+<p><strong>示例场景</strong>：<br>假设宿主机上有两个目录 <code>/mnt/shared</code> 和 <code>/mnt/private</code>，宿主机根目录 <code>/</code> 的挂载传播属性为默认值</p>
 <ol>
-<li><p><strong>创建一个新的 Mount Namespace 并设置挂载点的传播属性</strong>：
-我们可以用 <code>unshare</code> 命令创建一个新的 Mount Namespace，把 <code>/mnt/shared</code> 设置为共享挂载属性，<code>/mnt/private</code> 设置为私有挂载属性</p>
+<li><p><strong>创建一个新的 Mount Namespace 并设置挂载点的传播属性</strong>：<br>我们可以用 <code>unshare</code> 命令创建一个新的 Mount Namespace，把 <code>/mnt/shared</code> 设置为共享挂载属性，<code>/mnt/private</code> 设置为私有挂载属性</p>
 <pre><code class="language-bash">sudo unshare -m bash            # 创建一个新的Mount Namespace
 sudo mount --make-shared /mnt/shared    # 设置/mnt/shared为共享挂载
 sudo mount --make-private /mnt/private  # 设置/mnt/private为私有挂载
@@ -168,24 +161,12 @@ sudo mount --make-private /mnt/private  # 设置/mnt/private为私有挂载
 </ol>
 <p>通过这个例子，我们可以看到 Mount Namespace 的属性如何影响不同 Namespace 之间挂载点的可见性以及操作带来的效果。在容器技术中，Mount Namespace 的这些属性为容器提供了独立的文件系统视图，有助于实现资源隔离和安全性</p>
 <h1 id="pivotroot">pivotroot</h1>
-<p>它会切换根系统目录，但不会自动把当前工作目录切换到根系统目录。如果不手动切换，你仍会停留在程序执行时所处的工作目录
-如下图所示
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-002-9e8fcb9b46.png" alt="图片">
-加上 <code>syscall.Chdir(&quot;/&quot;);</code>
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-003-e8c44cd007.png" alt="图片">
-不加 <code>syscall.Chdir(&quot;/&quot;);</code>，但加上 <code>command.Dir = &quot;/home/llk/Desktop/docker/src/pivotroot_docker/busybox&quot;</code>
-那么当前工作目录会在 command.start 时自动切换
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-004-dcd7e8a250.png" alt="图片"></p>
+<p>它会切换根系统目录，但不会自动把当前工作目录切换到根系统目录。如果不手动切换，你仍会停留在程序执行时所处的工作目录<br>如下图所示<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-002-9e8fcb9b46.png" alt="图片"><br>加上 <code>syscall.Chdir(&quot;/&quot;);</code><br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-003-e8c44cd007.png" alt="图片"><br>不加 <code>syscall.Chdir(&quot;/&quot;);</code>，但加上 <code>command.Dir = &quot;/home/llk/Desktop/docker/src/pivotroot_docker/busybox&quot;</code><br>那么当前工作目录会在 command.start 时自动切换<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-004-dcd7e8a250.png" alt="图片"></p>
 <h1 id="我自己的理解">我自己的理解</h1>
 <ol>
 <li>不同的 mount namespace 各自拥有符合当前 namespace 的挂载点列表，也就是说挂载后显示的文件系统是不同的，但文件视图仍与从宿主机继承而来的一样。挂载操作是否会影响宿主机以及其他 mount namespace 的文件，取决于这个挂载点的属性。如果是私有的，就会修改宿主机和其他 mount namespace 的文件，否则就不会影响它们</li>
 </ol>
-<p>下图展示了把当前进程根目录挂载点设置为私有，并在直接在 mount namespace 中启动后，把 proc 挂载到当前容器内部的 /proc；可以发现这不会覆盖原宿主机上的 /proc
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-005-0fcadc88db.png" alt="图片">
-而如果不把当前进程根目录挂载点设置为私有，挂载的内容就会影响宿主机的 /proc
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-006-84b7011016.png" alt="图片">
-2. 把当前进程根目录挂载点下的一切都设置为私有，意味着该进程在这个挂载点上进行操作时，不会影响宿主机以及其他 mount namespace 的根目录挂载点
-3.  对新根目录挂载点进行绑定挂载，是因为 pivotroot 要求新根目录和原根目录处于不同的挂载点。由于新的根目录必须在原根目录的挂载点之内，为了让两者不处于同一个挂载点，我们把它绑定挂载到自身，这样当前进程就会把新根目录所在的挂载点视为新的根目录，这就使得两者不处于同一个挂载点</p>
+<p>下图展示了把当前进程根目录挂载点设置为私有，并在直接在 mount namespace 中启动后，把 proc 挂载到当前容器内部的 /proc；可以发现这不会覆盖原宿主机上的 /proc<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-005-0fcadc88db.png" alt="图片"><br>而如果不把当前进程根目录挂载点设置为私有，挂载的内容就会影响宿主机的 /proc<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2011%20%E7%AF%87%20-%20%EF%BC%BB%E7%94%A8%20pivotRoot%20%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E9%9A%94%E7%A6%BB%EF%BC%BD/assets/csdn-137966603/image-006-84b7011016.png" alt="图片"><br>2. 把当前进程根目录挂载点下的一切都设置为私有，意味着该进程在这个挂载点上进行操作时，不会影响宿主机以及其他 mount namespace 的根目录挂载点<br>3.  对新根目录挂载点进行绑定挂载，是因为 pivotroot 要求新根目录和原根目录处于不同的挂载点。由于新的根目录必须在原根目录的挂载点之内，为了让两者不处于同一个挂载点，我们把它绑定挂载到自身，这样当前进程就会把新根目录所在的挂载点视为新的根目录，这就使得两者不处于同一个挂载点</p>
 <h1 id="代码">代码</h1>
 <p><a href="https://github.com/FULLK/llkdocker/tree/main/pivotroot_docker">https://github.com/FULLK/llkdocker/tree/main/pivotroot_docker</a></p>
 <h1 id="结果">结果</h1>

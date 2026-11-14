@@ -22,22 +22,13 @@
 <p>程序运行在开发板上，换句话说，就是运行在硬件上</p>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-001-bf1e7a4524.png" alt="图片"></p>
 <h1 id="交叉编译">交叉编译</h1>
-<p>简单来说，交叉编译就是生成的程序不在本机上运行，而是在与本机体系结构不同的计算机上运行
-build：构建编译器的计算机
-host：运行由 build 计算机生成的编译器的计算机
-target：编译结果运行的地方
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-002-ad59a30f85.png" alt="图片"></p>
+<p>简单来说，交叉编译就是生成的程序不在本机上运行，而是在与本机体系结构不同的计算机上运行<br>build：构建编译器的计算机<br>host：运行由 build 计算机生成的编译器的计算机<br>target：编译结果运行的地方<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-002-ad59a30f85.png" alt="图片"></p>
 <h2 id="看看-gcc-的一些文件夹">看看 GCC 的一些文件夹</h2>
-<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-003-3ca2b214fb.png" alt="图片">
--&gt; 表示符号链接
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-004-ecc9946ce7.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-003-3ca2b214fb.png" alt="图片"><br>-&gt; 表示符号链接<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-004-ecc9946ce7.png" alt="图片"></p>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-005-d420e3a61e.png" alt="图片"></p>
 <h1 id="gdb-调试器">GDB 调试器</h1>
-<p>GDB 调试涉及 2 个程序：gdb 程序和被调试的程序。根据这 2 个程序是否运行在同一台计算机上，GDB 的调试模式可以分为 2 种：
-本地调试：调试器和被调试程序运行在同一台计算机上
-gdb 启动后，首先 fork 一个子进程，被调试程序就在这个单独的子进程中运行，gdb 程序本身也在自己独立的进程中运行。然后这两个进程通过特殊的 ptrace 系统调用建立联系。</p>
-<p>远程调试：调试器运行在一台计算机上，而被调试程序运行在另一台计算机上
-目标机上有一个 gdbserver 服务，gdb 与 gdbserver 交互，由 gdbserver 代理我们的调试过程。被调试程序运行在目标机上，而调试操作在本机上进行。两台机器通过网络连接</p>
+<p>GDB 调试涉及 2 个程序：gdb 程序和被调试的程序。根据这 2 个程序是否运行在同一台计算机上，GDB 的调试模式可以分为 2 种：<br>本地调试：调试器和被调试程序运行在同一台计算机上<br>gdb 启动后，首先 fork 一个子进程，被调试程序就在这个单独的子进程中运行，gdb 程序本身也在自己独立的进程中运行。然后这两个进程通过特殊的 ptrace 系统调用建立联系。</p>
+<p>远程调试：调试器运行在一台计算机上，而被调试程序运行在另一台计算机上<br>目标机上有一个 gdbserver 服务，gdb 与 gdbserver 交互，由 gdbserver 代理我们的调试过程。被调试程序运行在目标机上，而调试操作在本机上进行。两台机器通过网络连接</p>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-006-aa5bb4d36f.png" alt="图片"></p>
 <h2 id="相关语法和命令">相关语法和命令</h2>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-007-85ad1084a6.png" alt="图片"></p>
@@ -65,28 +56,21 @@ l
 List的简写，列出当前位置之后的10行代码；list line_number: 列出line_number之后的十行代码。
 </code></pre>
 <h1 id="qemu-模拟器">QEMU 模拟器</h1>
-<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-008-5e6500fba0.png" alt="图片">
-此时它模拟的是用户级环境（类似于操作系统）；llk 运行在用户级</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-008-5e6500fba0.png" alt="图片"><br>此时它模拟的是用户级环境（类似于操作系统）；llk 运行在用户级</p>
 <pre><code class="language-bash">qemu-riscv32 ./llk  #在qemu提供的环境上运行llk
 </code></pre>
 <p>开发操作系统时，需要模拟系统级层面（类似于硬件层面）</p>
 <h1 id="安装和使用-qemu">安装和使用 QEMU</h1>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-009-d0e5b89964.png" alt="图片"></p>
 <h1 id="项目构建工具-make">项目构建工具 Make</h1>
-<p>以自动化的方式编译程序
--f 指定 makefile
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-010-a614d2ed18.png" alt="图片"></p>
+<p>以自动化的方式编译程序<br>-f 指定 makefile<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-010-a614d2ed18.png" alt="图片"></p>
 <h2 id="makefile-的结构">Makefile 的结构</h2>
-<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-011-bdd8a21a28.png" alt="图片">
-特殊变量 .DEFAULT_GOAL 可以用来告诉 Make：如果命令行上没有指定目标（即直接运行 make 时），要构建哪个（或哪些）目标。否则，Make 就构建它遇到的第一个目标。
-.PHONY：伪目标。伪目标并不代表一个真正的文件名，在执行 make 时可以指定这个目标来执行其规则中定义的命令。伪目标有时也称为标签。伪目标用 PHONY 声明。在 PHONY 中声明的目标，其命令总是会被执行
-在下图中，意思是无论 clean 是否存在，clean 中的命令都会执行</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-011-bdd8a21a28.png" alt="图片"><br>特殊变量 .DEFAULT_GOAL 可以用来告诉 Make：如果命令行上没有指定目标（即直接运行 make 时），要构建哪个（或哪些）目标。否则，Make 就构建它遇到的第一个目标。<br>.PHONY：伪目标。伪目标并不代表一个真正的文件名，在执行 make 时可以指定这个目标来执行其规则中定义的命令。伪目标有时也称为标签。伪目标用 PHONY 声明。在 PHONY 中声明的目标，其命令总是会被执行<br>在下图中，意思是无论 clean 是否存在，clean 中的命令都会执行</p>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-012-4f63c38583.png" alt="图片"></p>
 <pre><code class="language-bash">$(SRCS_ASM:.S=.o) 就是将SRCS_ASH变量里面的.S都替换为.o
 </code></pre>
 <h2 id="运行-make">运行 make</h2>
-<p>基本上就是一层套一层
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-013-63e56f02c4.png" alt="图片"></p>
+<p>基本上就是一层套一层<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%E2%80%94%E2%80%94%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E4%BB%8B%E7%BB%8D/assets/csdn-134789519/image-013-63e56f02c4.png" alt="图片"></p>
 <h1 id="练习-4-1">练习 4-1</h1>
 <p>熟悉交叉编译的概念。使用 riscv gcc 编译代码，并使用 binutils 工具分析生成的目标文件和可执行文件（ELF 格式）。具体要求如下：</p>
 <ul>

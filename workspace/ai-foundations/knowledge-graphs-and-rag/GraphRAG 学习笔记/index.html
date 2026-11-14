@@ -19,22 +19,11 @@
     <div class="meta"><time>2025-01-15</time><span class="tag">#学习</span><span class="tag">#GraphRAG</span></div>
     <article class="post-body">
 <h1 id="实践参考">实践参考</h1>
-<p><a href="https://github.com/gusye1234/nano-graphrag">https://github.com/gusye1234/nano-graphrag</a>
-<a href="https://github.com/severian42/GraphRAG-Local-UI">https://github.com/severian42/GraphRAG-Local-UI</a>
-<a href="https://github.com/TheAiSingularity/graphrag-local-ollama">https://github.com/TheAiSingularity/graphrag-local-ollama</a>
-<a href="https://github.com/microsoft/graphrag">https://github.com/microsoft/graphrag</a>
-<a href="https://github.com/Azure-Samples/graphrag-accelerator">https://github.com/Azure-Samples/graphrag-accelerator</a>
-<a href="https://www.bilibili.com/video/BV1u6iFeAEx9?spm_id_from=333.788.videopod.episodes&vd_source=a1be939c65919194c77b8a6a36c14a6e">GraphRAG 原理、源码与应用介绍</a></p>
+<p><a href="https://github.com/gusye1234/nano-graphrag">https://github.com/gusye1234/nano-graphrag</a><br><a href="https://github.com/severian42/GraphRAG-Local-UI">https://github.com/severian42/GraphRAG-Local-UI</a><br><a href="https://github.com/TheAiSingularity/graphrag-local-ollama">https://github.com/TheAiSingularity/graphrag-local-ollama</a><br><a href="https://github.com/microsoft/graphrag">https://github.com/microsoft/graphrag</a><br><a href="https://github.com/Azure-Samples/graphrag-accelerator">https://github.com/Azure-Samples/graphrag-accelerator</a><br><a href="https://www.bilibili.com/video/BV1u6iFeAEx9?spm_id_from=333.788.videopod.episodes&vd_source=a1be939c65919194c77b8a6a36c14a6e">GraphRAG 原理、源码与应用介绍</a></p>
 <h1 id="参考论文">参考论文</h1>
-<p><a href="https://blog.csdn.net/m0_46686599/article/details/140608213">GraphRAG 论文解读：快速从 0 到 1 上手 GraphRAG</a>
-<a href="https://www.bilibili.com/video/BV1ym421g7Rm/?vd_source=a1be939c65919194c77b8a6a36c14a6e">GraphRAG：论文原理解读</a>
-<a href="https://blog.csdn.net/qq_41185868/article/details/138982960">大模型中的 GraphRAG：《From Local to Global: A Graph RAG Approach to Query-Focused Summarization》翻译与解读</a>
-<a href="https://www.15zhi.net/blog/202407-%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-from-local-to-global%EF%BC%9Aa-graph-rag-approach-to-query-focused-summarization/">202407 论文研读 – From Local to Global: A Graph RAG Approach to Query-Focused Summarization</a>
-<a href="https://www.1goto.ai/article/ed28a1f6-156d-47a2-9ed0-55549667b3e6">下一代 RAG 技术：GraphRAG</a>
-<a href="https://arxiv.org/pdf/2404.16130">From Local to Global: A Graph RAG Approach toQuery-Focused Summarization</a></p>
+<p><a href="https://blog.csdn.net/m0_46686599/article/details/140608213">GraphRAG 论文解读：快速从 0 到 1 上手 GraphRAG</a><br><a href="https://www.bilibili.com/video/BV1ym421g7Rm/?vd_source=a1be939c65919194c77b8a6a36c14a6e">GraphRAG：论文原理解读</a><br><a href="https://blog.csdn.net/qq_41185868/article/details/138982960">大模型中的 GraphRAG：《From Local to Global: A Graph RAG Approach to Query-Focused Summarization》翻译与解读</a><br><a href="https://www.15zhi.net/blog/202407-%E8%AE%BA%E6%96%87%E7%A0%94%E8%AF%BB-from-local-to-global%EF%BC%9Aa-graph-rag-approach-to-query-focused-summarization/">202407 论文研读 – From Local to Global: A Graph RAG Approach to Query-Focused Summarization</a><br><a href="https://www.1goto.ai/article/ed28a1f6-156d-47a2-9ed0-55549667b3e6">下一代 RAG 技术：GraphRAG</a><br><a href="https://arxiv.org/pdf/2404.16130">From Local to Global: A Graph RAG Approach toQuery-Focused Summarization</a></p>
 <h1 id="特点">特点</h1>
-<p>  rag：从外部知识中检索信息 -&gt; 让 LLM 回答涉及私有或未见过的文档集合的问题。
-  传统 rag：检索细节信息，无法解决 QFS（Query-Focused Summarization，面向查询的摘要）问题。</p>
+<p>  rag：从外部知识中检索信息 -&gt; 让 LLM 回答涉及私有或未见过的文档集合的问题。<br>  传统 rag：检索细节信息，无法解决 QFS（Query-Focused Summarization，面向查询的摘要）问题。</p>
 <h1 id="基本概念">基本概念</h1>
 <h3 id="document文档">Document（文档）</h3>
 <ul>
@@ -160,20 +149,15 @@
 </ul>
 <h1 id="索引构建原理">索引构建原理</h1>
 <h2 id="document---textunit">Document -&gt; TextUnit</h2>
-<p>对文本块大小有一定要求：太大则上下文信息保留不好；太小则文本块数量过多，处理耗时很长。
-<img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-001-668a92c855.png" alt="图片"></p>
+<p>对文本块大小有一定要求：太大则上下文信息保留不好；太小则文本块数量过多，处理耗时很长。<br><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-001-668a92c855.png" alt="图片"></p>
 <h2 id="text-units---graph-extraction">Text Units -&gt; Graph Extraction</h2>
-<p>从文本单元中提取实体和关系并生成摘要；claim 是更详细的摘要。
-<img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-002-ebd1ca9a4d.png" alt="图片"></p>
+<p>从文本单元中提取实体和关系并生成摘要；claim 是更详细的摘要。<br><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-002-ebd1ca9a4d.png" alt="图片"></p>
 <h2 id="构建社区">构建社区</h2>
-<p>社区是具有相似性的子图。图嵌入的原理是生成节点的向量表示，这些向量可以反映节点在图中的位置以及与其他节点的关系。
-<img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-003-e861e305c9.png" alt="图片"></p>
+<p>社区是具有相似性的子图。图嵌入的原理是生成节点的向量表示，这些向量可以反映节点在图中的位置以及与其他节点的关系。<br><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-003-e861e305c9.png" alt="图片"></p>
 <h2 id="社区摘要">社区摘要</h2>
-<p>为每个社区生成报告，每份社区报告由 LLM 总结以便快速查阅。最后生成社区的向量表示。
-<img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-004-7318c4068a.png" alt="图片"></p>
+<p>为每个社区生成报告，每份社区报告由 LLM 总结以便快速查阅。最后生成社区的向量表示。<br><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-004-7318c4068a.png" alt="图片"></p>
 <h2 id="文档处理">文档处理</h2>
-<p>文档与文本单元相关联。文档嵌入的做法是把文档拆分成多个部分，分别对每个部分做嵌入，再计算这些嵌入的平均值，得到整篇文档的向量表示。这种方法可以捕捉文档之间的隐含关系。
-<img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-005-95fe9fbabd.png" alt="图片"></p>
+<p>文档与文本单元相关联。文档嵌入的做法是把文档拆分成多个部分，分别对每个部分做嵌入，再计算这些嵌入的平均值，得到整篇文档的向量表示。这种方法可以捕捉文档之间的隐含关系。<br><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-005-95fe9fbabd.png" alt="图片"></p>
 <h1 id="查询流程原理">查询流程原理</h1>
 <h2 id="local-search局部搜索">Local Search（局部搜索）</h2>
 <p> <img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-006-0c0810aa65.png" alt="图片"></p>
@@ -262,8 +246,7 @@
 <h3 id="总结">总结</h3>
 <p>该流程经过多次映射与优先级排序，从用户查询中提取实体，并基于这些实体生成候选文本单元、社区报告、实体、关系和协变量。最后，经过优先级排序后，这些候选内容会与聊天历史合并，生成最终响应。对话历史贯穿整个流程，用于提供更准确、更个性化的搜索结果。</p>
 <h2 id="global-search全局搜索">Global Search（全局搜索）</h2>
-<p>遍历每个社区查找相关信息，对找到的内容打分并过滤，然后拼接内容填充提示词，最后调用 LLM。
-<img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-007-2c55f0547d.png" alt="图片"></p>
+<p>遍历每个社区查找相关信息，对找到的内容打分并过滤，然后拼接内容填充提示词，最后调用 LLM。<br><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/GraphRAG%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/assets/csdn-144546207/image-007-2c55f0547d.png" alt="图片"></p>
 <h1 id="v020-graph-源码阅读">v0.2.0 Graph 源码阅读</h1>
 <h2 id="init">init</h2>
 

@@ -21,12 +21,9 @@
 <h1 id="彻底解决-vscode-终端乱码问题">彻底解决 VSCode 终端乱码问题</h1>
 <h2 id="方法一修改注册表编辑器">方法一：修改注册表编辑器</h2>
 <p><strong>安装 Code Runner 并选择在终端中运行后，我发现终端里出现了乱码。我先试了网上找到的修改注册表的方法，发现 cmd 修复成功了，但终端的编码仍然是 GBK。你可以自己试一试——也许只是我电脑的问题</strong></p>
-<p><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-001-d0c67f4c1c.png" alt="图片">
-<img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-002-9f0b2f449f.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-001-d0c67f4c1c.png" alt="图片"><br><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-002-9f0b2f449f.png" alt="图片"></p>
 <h2 id="方法二修改-terminalintegratedprofileswindows">方法二：修改 terminal.integrated.profiles.windows</h2>
-<p><em><strong>打开 VSCode 设置，搜索 terminal.integrated.profiles.windows</strong></em>
-<img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-003-0cd3676fee.png" alt="图片">
-<em><strong>点击“在 settings.json 中编辑”，然后找到 terminal.integrated.profiles.windows 并开始编辑。一般需要修改的是 args 部分</strong></em></p>
+<p><em><strong>打开 VSCode 设置，搜索 terminal.integrated.profiles.windows</strong></em><br><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-003-0cd3676fee.png" alt="图片"><br><em><strong>点击“在 settings.json 中编辑”，然后找到 terminal.integrated.profiles.windows 并开始编辑。一般需要修改的是 args 部分</strong></em></p>
 <pre><code class="language-typescript">    &quot;terminal.integrated.profiles.windows&quot;: {
         
 
@@ -46,15 +43,10 @@
         }
     }
 </code></pre>
-<p><em><strong>这样 VSCode 终端就不会再出现乱码了</strong></em>
-<em><strong>如果希望 PowerShell 或 cmd 在打开时自动使用 UTF-8 编码，可以这样做</strong></em></p>
-<p><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-004-0397fed9c8.png" alt="图片">
-<em><strong>点击命令行进行修改</strong></em>
-<img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-005-f09a88f983.png" alt="图片"></p>
+<p><em><strong>这样 VSCode 终端就不会再出现乱码了</strong></em><br><em><strong>如果希望 PowerShell 或 cmd 在打开时自动使用 UTF-8 编码，可以这样做</strong></em></p>
+<p><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-004-0397fed9c8.png" alt="图片"><br><em><strong>点击命令行进行修改</strong></em><br><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-005-f09a88f983.png" alt="图片"></p>
 <p><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-006-19b52ff63b.png" alt="图片"></p>
-<p><em><strong>关闭后重新打开，如果出现下面的内容，就说明修改成功。你可以在最上方看到“Active code page: 65001”</strong></em>
-<img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-007-b3f893245c.png" alt="图片">
-<img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-008-ca6948210e.png" alt="图片"></p>
+<p><em><strong>关闭后重新打开，如果出现下面的内容，就说明修改成功。你可以在最上方看到“Active code page: 65001”</strong></em><br><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-007-b3f893245c.png" alt="图片"><br><img src="/workspace/software-foundations/tools-and-setup/%E5%BD%BB%E5%BA%95%E8%A7%A3%E5%86%B3%20VSCode%20%E7%BB%88%E7%AB%AF%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98/assets/csdn-133853334/image-008-ca6948210e.png" alt="图片"></p>
 
     </article>
     

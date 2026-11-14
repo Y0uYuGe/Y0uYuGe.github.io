@@ -19,70 +19,20 @@
     <div class="meta"><time>2025-02-10</time><span class="tag">#ros</span><span class="tag">#IMU</span></div>
     <article class="post-body">
 <h1 id="imu惯性测量单元消息包">IMU（惯性测量单元）消息包</h1>
-<p><a href="https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/">https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/</a>
-<a href="https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Imu.html">https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Imu.html</a></p>
+<p><a href="https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/">https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/</a><br><a href="https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Imu.html">https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Imu.html</a></p>
 <p>sensor_msgs/Imu 消息用于表示 IMU 数据，包括姿态（方向）、角速度和线加速度。通过订阅该消息，可以获取 IMU 传感器的数据，用于机器人导航、位姿估计等应用。</p>
 <ol>
-<li>Header
-Header：包含时间戳和坐标系信息。
-stamp：时间戳，表示数据采集的时间。
-frame_id：坐标系名称，表示数据的参考坐标系。</li>
-<li>orientation
-geometry_msgs/Quaternion：表示物体的姿态，用四元数表示。<a href="https://www.bilibili.com/video/BV14t421h7M4/?spm_id_from=333.337.search-card.all.click&vd_source=a1be939c65919194c77b8a6a36c14a6e">四元数如何控制物体旋转？</a>
-x：四元数的 x 分量。
-y：四元数的 y 分量。
-z：四元数的 z 分量。
-w：四元数的 w 分量。</li>
-<li>orientation_covariance
-float64[9]：表示姿态测量的协方差矩阵，9 个元素按行优先顺序表示一个 3x3 协方差矩阵。
-orientation_covariance[0]：xx 方向的协方差。
-orientation_covariance[1]：xy 方向的协方差。
-orientation_covariance[2]：xz 方向的协方差。
-orientation_covariance[3]：yx 方向的协方差。
-orientation_covariance[4]：yy 方向的协方差。
-orientation_covariance[5]：yz 方向的协方差。
-orientation_covariance[6]：zx 方向的协方差。
-orientation_covariance[7]：zy 方向的协方差。
-orientation_covariance[8]：zz 方向的协方差。</li>
-<li>angular_velocity
-geometry_msgs/Vector3：表示物体的角速度，单位为 rad/s。
-x：绕 x 轴的角速度。
-y：绕 y 轴的角速度。
-z：绕 z 轴的角速度。</li>
-<li>angular_velocity_covariance
-float64[9]：表示角速度测量的协方差矩阵，9 个元素按行优先顺序表示一个 3x3 协方差矩阵。
-angular_velocity_covariance[0]：xx 方向的协方差。
-angular_velocity_covariance[1]：xy 方向的协方差。
-angular_velocity_covariance[2]：xz 方向的协方差。
-angular_velocity_covariance[3]：yx 方向的协方差。
-angular_velocity_covariance[4]：yy 方向的协方差。
-angular_velocity_covariance[5]：yz 方向的协方差。
-angular_velocity_covariance[6]：zx 方向的协方差。
-angular_velocity_covariance[7]：zy 方向的协方差。
-angular_velocity_covariance[8]：zz 方向的协方差。</li>
-<li>linear_acceleration
-geometry_msgs/Vector3：表示物体的线加速度，单位为 m/s²。
-x：沿 x 轴的加速度。
-y：沿 y 轴的加速度。
-z：沿 z 轴的加速度。</li>
-<li>linear_acceleration_covariance
-float64[9]：表示线加速度测量的协方差矩阵，9 个元素按行优先顺序表示一个 3x3 协方差矩阵。
-linear_acceleration_covariance[0]：xx 方向的协方差。
-linear_acceleration_covariance[1]：xy 方向的协方差。
-linear_acceleration_covariance[2]：xz 方向的协方差。
-linear_acceleration_covariance[3]：yx 方向的协方差。
-linear_acceleration_covariance[4]：yy 方向的协方差。
-linear_acceleration_covariance[5]：yz 方向的协方差。
-linear_acceleration_covariance[6]：zx 方向的协方差。
-linear_acceleration_covariance[7]：zy 方向的协方差。
-linear_acceleration_covariance[8]：zz 方向的协方差。</li>
-<li>注意事项
-协方差矩阵：如果协方差矩阵的所有元素都为零，表示协方差未知，需要从其他来源获取协方差信息。
-无估计值：如果某个数据元素没有估计值（例如 IMU 不提供姿态估计），则应将该协方差矩阵的第一个元素设为 -1。</li>
+<li>Header<br>Header：包含时间戳和坐标系信息。<br>stamp：时间戳，表示数据采集的时间。<br>frame_id：坐标系名称，表示数据的参考坐标系。</li>
+<li>orientation<br>geometry_msgs/Quaternion：表示物体的姿态，用四元数表示。<a href="https://www.bilibili.com/video/BV14t421h7M4/?spm_id_from=333.337.search-card.all.click&vd_source=a1be939c65919194c77b8a6a36c14a6e">四元数如何控制物体旋转？</a><br>x：四元数的 x 分量。<br>y：四元数的 y 分量。<br>z：四元数的 z 分量。<br>w：四元数的 w 分量。</li>
+<li>orientation_covariance<br>float64[9]：表示姿态测量的协方差矩阵，9 个元素按行优先顺序表示一个 3x3 协方差矩阵。<br>orientation_covariance[0]：xx 方向的协方差。<br>orientation_covariance[1]：xy 方向的协方差。<br>orientation_covariance[2]：xz 方向的协方差。<br>orientation_covariance[3]：yx 方向的协方差。<br>orientation_covariance[4]：yy 方向的协方差。<br>orientation_covariance[5]：yz 方向的协方差。<br>orientation_covariance[6]：zx 方向的协方差。<br>orientation_covariance[7]：zy 方向的协方差。<br>orientation_covariance[8]：zz 方向的协方差。</li>
+<li>angular_velocity<br>geometry_msgs/Vector3：表示物体的角速度，单位为 rad/s。<br>x：绕 x 轴的角速度。<br>y：绕 y 轴的角速度。<br>z：绕 z 轴的角速度。</li>
+<li>angular_velocity_covariance<br>float64[9]：表示角速度测量的协方差矩阵，9 个元素按行优先顺序表示一个 3x3 协方差矩阵。<br>angular_velocity_covariance[0]：xx 方向的协方差。<br>angular_velocity_covariance[1]：xy 方向的协方差。<br>angular_velocity_covariance[2]：xz 方向的协方差。<br>angular_velocity_covariance[3]：yx 方向的协方差。<br>angular_velocity_covariance[4]：yy 方向的协方差。<br>angular_velocity_covariance[5]：yz 方向的协方差。<br>angular_velocity_covariance[6]：zx 方向的协方差。<br>angular_velocity_covariance[7]：zy 方向的协方差。<br>angular_velocity_covariance[8]：zz 方向的协方差。</li>
+<li>linear_acceleration<br>geometry_msgs/Vector3：表示物体的线加速度，单位为 m/s²。<br>x：沿 x 轴的加速度。<br>y：沿 y 轴的加速度。<br>z：沿 z 轴的加速度。</li>
+<li>linear_acceleration_covariance<br>float64[9]：表示线加速度测量的协方差矩阵，9 个元素按行优先顺序表示一个 3x3 协方差矩阵。<br>linear_acceleration_covariance[0]：xx 方向的协方差。<br>linear_acceleration_covariance[1]：xy 方向的协方差。<br>linear_acceleration_covariance[2]：xz 方向的协方差。<br>linear_acceleration_covariance[3]：yx 方向的协方差。<br>linear_acceleration_covariance[4]：yy 方向的协方差。<br>linear_acceleration_covariance[5]：yz 方向的协方差。<br>linear_acceleration_covariance[6]：zx 方向的协方差。<br>linear_acceleration_covariance[7]：zy 方向的协方差。<br>linear_acceleration_covariance[8]：zz 方向的协方差。</li>
+<li>注意事项<br>协方差矩阵：如果协方差矩阵的所有元素都为零，表示协方差未知，需要从其他来源获取协方差信息。<br>无估计值：如果某个数据元素没有估计值（例如 IMU 不提供姿态估计），则应将该协方差矩阵的第一个元素设为 -1。</li>
 </ol>
 <h1 id="获取-imu-设备数据">获取 IMU 设备数据</h1>
-<p>IMU 设备一般有以下三个话题
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-001-b69b449eed.png" alt="图片"></p>
+<p>IMU 设备一般有以下三个话题<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-001-b69b449eed.png" alt="图片"></p>
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-002-681ac4eeb7.png" alt="图片"></p>
 <pre><code class="language-cpp">#include &lt;ros/ros.h&gt;
 #include &lt;sensor_msgs/Imu.h&gt;
@@ -154,8 +104,7 @@ int main(int argc, char *argv[])
 }
 </code></pre>
 <h1 id="imu-航向锁定">IMU 航向锁定</h1>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-003-2108305db2.png" alt="图片">
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-004-3284a6429d.png" alt="图片"></p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-003-2108305db2.png" alt="图片"><br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-004-3284a6429d.png" alt="图片"></p>
 <pre><code class="language-cpp">#include &lt;ros/ros.h&gt;
 #include &lt;sensor_msgs/Imu.h&gt;
 #include &lt;tf/tf.h&gt; // 四元数转换为欧拉角
@@ -264,34 +213,16 @@ if __name__ == &#39;__main__&#39;:
     rospy.spin()
 </code></pre>
 <h1 id="标准消息包与常用消息包">标准消息包与常用消息包</h1>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-005-3042dfb42f.png" alt="图片">
-<a href="https://docs.ros.org/en/noetic/api/std_msgs/html/msg/">https://docs.ros.org/en/noetic/api/std_msgs/html/msg/</a>
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-006-1a78d97a17.png" alt="图片">
-常用消息包包括
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-007-f2a5a5f07e.png" alt="图片">
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-008-8be8c3a783.png" alt="图片">
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-009-da1171a2f4.png" alt="图片"></p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-005-3042dfb42f.png" alt="图片"><br><a href="https://docs.ros.org/en/noetic/api/std_msgs/html/msg/">https://docs.ros.org/en/noetic/api/std_msgs/html/msg/</a><br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-006-1a78d97a17.png" alt="图片"><br>常用消息包包括<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-007-f2a5a5f07e.png" alt="图片"><br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-008-8be8c3a783.png" alt="图片"><br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-009-da1171a2f4.png" alt="图片"></p>
 <h1 id="自定义消息包">自定义消息包</h1>
 <p>消息包也是一个软件包</p>
 <ol>
-<li>消息定义文件
-文件位置：msg 文件通常存放在 ROS 包的 msg 目录下。
-文件格式：msg 文件是纯文本文件，每行定义一个字段，字段由类型和名称组成。</li>
-<li>消息内容语法
-字段定义：每行定义一个字段，格式为 <code>type name</code>。
-支持的类型：
-基本类型：
-int8、int16、int32、int64（以及对应的无符号类型 uint8、uint16、uint32、uint64）
-float32、float64
-string
-time、duration
-其他消息类型：可以引用其他已定义的消息类型。
-数组：支持变长数组 [] 和定长数组 [C]。</li>
+<li>消息定义文件<br>文件位置：msg 文件通常存放在 ROS 包的 msg 目录下。<br>文件格式：msg 文件是纯文本文件，每行定义一个字段，字段由类型和名称组成。</li>
+<li>消息内容语法<br>字段定义：每行定义一个字段，格式为 <code>type name</code>。<br>支持的类型：<br>基本类型：<br>int8、int16、int32、int64（以及对应的无符号类型 uint8、uint16、uint32、uint64）<br>float32、float64<br>string<br>time、duration<br>其他消息类型：可以引用其他已定义的消息类型。<br>数组：支持变长数组 [] 和定长数组 [C]。</li>
 </ol>
 <pre><code class="language-bash">catkin_create_pkg qq_msgs roscpp rospy std_msgs message_generation message_runtime
 </code></pre>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-010-6ba0d18f53.png" alt="图片">
-编译时可能遇到 em 版本问题，记得删除 catkin_ws 下的 build 和 devel 目录后重新编译</p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-010-6ba0d18f53.png" alt="图片"><br>编译时可能遇到 em 版本问题，记得删除 catkin_ws 下的 build 和 devel 目录后重新编译</p>
 <pre><code class="language-bash">pip uninstall empy
 pip install empy==3.3.4
 </code></pre>
@@ -300,38 +231,13 @@ string grade
 int64 star
 string data
 </code></pre>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-011-6924f8c7b3.png" alt="图片">
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-012-069db0fe5b.png" alt="图片"></p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-011-6924f8c7b3.png" alt="图片"><br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-012-069db0fe5b.png" alt="图片"></p>
 <h1 id="栅格地图格式">栅格地图格式</h1>
-<p><a href="https://docs.ros.org/en/api/nav_msgs/html/msg/OccupancyGrid.html">https://docs.ros.org/en/api/nav_msgs/html/msg/OccupancyGrid.html</a>
-地图原点在左下角
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-013-805e2e0891.png" alt="图片">
-nav_msgs/OccupancyGrid 是 ROS（机器人操作系统）中用于表示二维栅格地图的消息类型。每个栅格表示该位置的占用状态</p>
+<p><a href="https://docs.ros.org/en/api/nav_msgs/html/msg/OccupancyGrid.html">https://docs.ros.org/en/api/nav_msgs/html/msg/OccupancyGrid.html</a><br>地图原点在左下角<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-013-805e2e0891.png" alt="图片"><br>nav_msgs/OccupancyGrid 是 ROS（机器人操作系统）中用于表示二维栅格地图的消息类型。每个栅格表示该位置的占用状态</p>
 <ol>
-<li>Header header
-类型：std_msgs/Header
-作用：包含时间戳和坐标系信息，用于描述地图数据的时间和空间参考。
-字段：
-uint32 seq：序列号，用于标识消息的顺序。
-time stamp：时间戳，表示消息的时间。
-string frame_id：坐标系名称，表示地图数据所在的参考坐标系。</li>
-<li>MapMetaData info
-类型：nav_msgs/MapMetaData
-作用：包含地图的元数据，描述地图的属性和配置。
-字段：
-float32 map_load_time：地图加载时的时间戳。
-float32 resolution：地图的分辨率（单位：米/像素），也就是一个栅格的边长
-int32 width：地图的宽度（单位：像素）。
-int32 height：地图的高度（单位：像素）。
-geometry_msgs/Pose origin：地图原点的位置和朝向，即相对于坐标系的偏移。</li>
-<li>int8[] data
-类型：int8[]（整数数组）
-作用：按行优先顺序存放实际的地图数据。
-取值含义：
--1：未知，表示该位置的占用状态未知。
-0：空闲，表示该位置未被占用。
-100：占用，表示该位置被占用。
-范围：占用值在 [0, 100] 之间，-1 表示未知。</li>
+<li>Header header<br>类型：std_msgs/Header<br>作用：包含时间戳和坐标系信息，用于描述地图数据的时间和空间参考。<br>字段：<br>uint32 seq：序列号，用于标识消息的顺序。<br>time stamp：时间戳，表示消息的时间。<br>string frame_id：坐标系名称，表示地图数据所在的参考坐标系。</li>
+<li>MapMetaData info<br>类型：nav_msgs/MapMetaData<br>作用：包含地图的元数据，描述地图的属性和配置。<br>字段：<br>float32 map_load_time：地图加载时的时间戳。<br>float32 resolution：地图的分辨率（单位：米/像素），也就是一个栅格的边长<br>int32 width：地图的宽度（单位：像素）。<br>int32 height：地图的高度（单位：像素）。<br>geometry_msgs/Pose origin：地图原点的位置和朝向，即相对于坐标系的偏移。</li>
+<li>int8[] data<br>类型：int8[]（整数数组）<br>作用：按行优先顺序存放实际的地图数据。<br>取值含义：<br>-1：未知，表示该位置的占用状态未知。<br>0：空闲，表示该位置未被占用。<br>100：占用，表示该位置被占用。<br>范围：占用值在 [0, 100] 之间，-1 表示未知。</li>
 </ol>
 <h1 id="发布地图">发布地图</h1>
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/assets/csdn-145444782/image-014-0cbc116265.png" alt="图片"></p>

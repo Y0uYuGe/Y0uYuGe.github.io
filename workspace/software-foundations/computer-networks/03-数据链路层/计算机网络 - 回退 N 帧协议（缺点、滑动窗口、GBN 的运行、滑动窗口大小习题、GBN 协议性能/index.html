@@ -21,15 +21,11 @@
 <h1 id="停止-等待协议的缺点">停止-等待协议的缺点</h1>
 <p>信道利用率低：在停止-等待协议中，发送方发送一帧之后，必须等待接收方的确认（ACK）才能发送下一帧。如果确认丢失或延迟，发送方会因超时而重传数据帧，信道在等待确认期间处于空闲状态，浪费了信道资源。（比较发完两帧所需的时间就能看出这一点。）</p>
 <p>流水线传输：每个数据帧紧跟在前一个数据帧之后发送。</p>
-<p>此时需要增大序号的范围（流水线传输会发送很多帧），并且可能还需要缓存多个数据帧（流水线传输是连续发送的）。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-001-02c7d91aaa.png" alt="图片"></p>
+<p>此时需要增大序号的范围（流水线传输会发送很多帧），并且可能还需要缓存多个数据帧（流水线传输是连续发送的）。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-001-02c7d91aaa.png" alt="图片"></p>
 <h1 id="回退-n-帧协议中的滑动窗口">回退 N 帧协议中的滑动窗口</h1>
 <p>发送窗口是一组待发送（即逐个发送出去）的连续帧序号。</p>
-<p>帧发送出去之后，发送方会保留一份副本。
-接收方收到 0 号帧之后，窗口右移一个位置。
-发送方收到 0 号帧的确认帧 ACK 0 之后，窗口右移一个位置。</p>
-<p>接收方可以先收到多个帧，再发送最后一个帧的确认帧。这样仍然能保证之前的所有帧都已收到，因为接收方的接收窗口只有在收到帧时才会移动；所以只要能发出最后一个帧的确认，说明之前的所有帧都已经收到了。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-002-aacf8497de.png" alt="图片"></p>
+<p>帧发送出去之后，发送方会保留一份副本。<br>接收方收到 0 号帧之后，窗口右移一个位置。<br>发送方收到 0 号帧的确认帧 ACK 0 之后，窗口右移一个位置。</p>
+<p>接收方可以先收到多个帧，再发送最后一个帧的确认帧。这样仍然能保证之前的所有帧都已收到，因为接收方的接收窗口只有在收到帧时才会移动；所以只要能发出最后一个帧的确认，说明之前的所有帧都已经收到了。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-002-aacf8497de.png" alt="图片"></p>
 <h1 id="gbn-发送方必须响应的三件事">GBN 发送方必须响应的三件事</h1>
 <p>累积确认：GBN（回退 N 帧）协议中的累积确认是一种机制，用于告知发送方哪些数据已被接收方成功接收。</p>
 <p>在 GBN 协议中，接收方使用累积确认来告知发送方数据的接收状态。这意味着接收方不会为每个成功接收的数据包都发送一条确认消息，而是发送一个确认号（ACK），它表示接收方期望收到的下一个数据包的序号。这样，发送方就能得知接收方已成功接收了序号在该确认号之前的所有数据包。</p>
@@ -39,14 +35,12 @@
 <p>GBN 对超时事件的处理与停止-等待协议不同</p>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-003-9d3a774865.png" alt="图片"></p>
 <h1 id="gbn-接收方要做的事">GBN 接收方要做的事</h1>
-<p>并重发最近一个按序到达的帧的 ACK：发送未收到的那个序号的前一个序号的确认帧；发送方收到之后，就知道接收方已经收到的帧的序号，从而可以发送接收方尚未收到的帧。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-004-c8071d14e3.png" alt="图片"></p>
+<p>并重发最近一个按序到达的帧的 ACK：发送未收到的那个序号的前一个序号的确认帧；发送方收到之后，就知道接收方已经收到的帧的序号，从而可以发送接收方尚未收到的帧。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-004-c8071d14e3.png" alt="图片"></p>
 <h1 id="gbn-的运行">GBN 的运行</h1>
 <p>发送 1 号帧且接收方收到 1 号帧之后，如果发出的 2 号帧丢失，那么即使 3 号帧发出并被接收方收到，也会被丢弃，并发送 1 号确认帧。</p>
 <p>发送方收到确认帧时，窗口按相应的数量右移。</p>
 <p>当发送方等待 2 号确认帧超时后，会重传 2 号帧及其之后的所有帧。</p>
-<p>可以把接收方想象成在吃汉堡：必须按规定一层一层地吃。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-005-50b2f3d667.png" alt="图片"></p>
+<p>可以把接收方想象成在吃汉堡：必须按规定一层一层地吃。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-005-50b2f3d667.png" alt="图片"></p>
 <h1 id="滑动窗口大小">滑动窗口大小</h1>
 <p>回退 N 帧协议（Go-Back-N ARQ）中滑动窗口大小的上限，是为了保证接收方能够正确区分新帧和旧帧。</p>
 <p>在回退 N 帧协议中，发送方和接收方分别维护一个发送窗口和一个接收窗口。这些窗口本质上是序号的集合，表示哪些帧可以被发送或接收。具体来说：</p>
@@ -60,14 +54,11 @@
 <h1 id="gbn-协议要点总结">GBN 协议要点总结</h1>
 <p>偶尔捎带确认：接收方偶尔会向发送方发送数据，并把确认帧捎带在其中。</p>
 <p>对按序到达的最大序号的帧进行确认：也就是说，当收到序号为 1、2、4 的帧时，回送 2 作为确认帧。</p>
-<p>发送窗口一旦确定，在运行过程中就不能轻易改变。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-007-fc8c5c9cf3.png" alt="图片"></p>
+<p>发送窗口一旦确定，在运行过程中就不能轻易改变。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-007-fc8c5c9cf3.png" alt="图片"></p>
 <h1 id="习题-1">习题 1</h1>
-<p>收到 3 号帧的确认时，表示 3 号帧及其之前的所有帧都已收到，因此发送窗口右移 4 个位置。
- <img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-008-c2337d03a3.png" alt="图片"></p>
+<p>收到 3 号帧的确认时，表示 3 号帧及其之前的所有帧都已收到，因此发送窗口右移 4 个位置。<br> <img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-008-c2337d03a3.png" alt="图片"></p>
 <h1 id="习题-2">习题 2</h1>
-<p>发送方收到第一个确认帧时已发送的字节数 / 发送方收到第一个确认帧的时刻
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-009-f86b2a3558.png" alt="图片"></p>
+<p>发送方收到第一个确认帧时已发送的字节数 / 发送方收到第一个确认帧的时刻<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-009-f86b2a3558.png" alt="图片"></p>
 <h1 id="gbn-协议性能分析">GBN 协议性能分析</h1>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%9B%9E%E9%80%80%20N%20%E5%B8%A7%E5%8D%8F%E8%AE%AE%EF%BC%88%E7%BC%BA%E7%82%B9%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E3%80%81GBN%20%E7%9A%84%E8%BF%90%E8%A1%8C%E3%80%81%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E4%B9%A0%E9%A2%98%E3%80%81GBN%20%E5%8D%8F%E8%AE%AE%E6%80%A7%E8%83%BD/assets/csdn-136086808/image-010-0befa99673.png" alt="图片"></p>
 <h1 id="总结">总结</h1>

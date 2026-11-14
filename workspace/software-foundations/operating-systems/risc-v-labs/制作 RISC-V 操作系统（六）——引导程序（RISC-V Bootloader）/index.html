@@ -19,49 +19,31 @@
     <div class="meta"><time>2024-03-21</time><span class="tag">#risc-v</span><span class="tag">#linux</span><span class="tag">#运维</span></div>
     <article class="post-body">
 <h1 id="硬件基本概念">硬件基本概念</h1>
-<p>hart：可以理解为一个处理器
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-001-3adc8737d1.png" alt="图片">
-platform：可以理解为芯片（包含处理器和一些外设）
-DRAM：动态内存
-ROM：只读存储器，断电后内容依然保留</p>
-<p>随着技术的进步，芯片的集成度越来越高，最终实现了片上系统（system on chip）
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-002-b84286e256.png" alt="图片">
-qemu 模拟的就是 platform
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-003-4f9171796b.png" alt="图片"></p>
+<p>hart：可以理解为一个处理器<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-001-3adc8737d1.png" alt="图片"><br>platform：可以理解为芯片（包含处理器和一些外设）<br>DRAM：动态内存<br>ROM：只读存储器，断电后内容依然保留</p>
+<p>随着技术的进步，芯片的集成度越来越高，最终实现了片上系统（system on chip）<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-002-b84286e256.png" alt="图片"><br>qemu 模拟的就是 platform<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-003-4f9171796b.png" alt="图片"></p>
 <h1 id="qemu-virt-地址映射">qemu-virt 地址映射</h1>
-<p>qemu 将平台的外设和内存统一映射，从零到最高地址分配所有物理地址。下图展示了不同硬件对应的物理地址范围（qemu 模拟的物理地址）
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-004-7de62fcb8e.png" alt="图片"></p>
+<p>qemu 将平台的外设和内存统一映射，从零到最高地址分配所有物理地址。下图展示了不同硬件对应的物理地址范围（qemu 模拟的物理地址）<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-004-7de62fcb8e.png" alt="图片"></p>
 <h1 id="系统启动">系统启动</h1>
 <p>Bootloader 加载：上电时，处理器从预先定义的存储设备（如硬盘、固态硬盘、闪存等）中加载 bootloader。bootloader 位于启动设备的特定位置，负责启动操作系统。</p>
 <p>Bootloader 初始化：bootloader 初始化包括设置基本的硬件环境，例如处理器模式、内存管理单元（MMU）等。</p>
 <p>内核加载：bootloader 将操作系统内核加载到内存中的特定位置。这个内核通常是一个独立的预编译二进制文件，包含操作系统的核心功能。</p>
 <p>内核初始化与启动：内核一旦被加载到内存，处理器就转去执行内核。内核会执行一系列初始化操作，包括初始化硬件设备、启动设备驱动、构建必要的数据结构等。</p>
-<p>编译时用 -Ttext 选择一个位置（例如 0x80000000）作为内核的起始位置
-qemu -kernel 指定要加载的内核
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-005-4278ce0a5a.png" alt="图片">
-八个核同时运行，每个核独立工作；一上电，每个核都会同时运行这个流程。</p>
+<p>编译时用 -Ttext 选择一个位置（例如 0x80000000）作为内核的起始位置<br>qemu -kernel 指定要加载的内核<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-005-4278ce0a5a.png" alt="图片"><br>八个核同时运行，每个核独立工作；一上电，每个核都会同时运行这个流程。</p>
 <h1 id="csr">CSR<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-006-2ac505303b.png" alt="图片"></h1>
 <h1 id="机器模式下的-csr">机器模式下的 CSR</h1>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-007-2834c1bd13.png" alt="图片"></p>
 <h1 id="对应的-csr-指令">对应的 CSR 指令</h1>
-<p>不同模式对应不同的寄存器，操作这些寄存器的指令也不同 
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-008-2f941ea272.png" alt="图片">
-Atomic：原子操作，不可被打断，一气呵成</p>
+<p>不同模式对应不同的寄存器，操作这些寄存器的指令也不同<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-008-2f941ea272.png" alt="图片"><br>Atomic：原子操作，不可被打断，一气呵成</p>
 <h2 id="csrrw">csrrw</h2>
-<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-009-5977d404ff.png" alt="图片">
-当 rd 为 x0 时，csr 中的数据不会写入 x0，只执行第二步，相当于把一个寄存器写入 csr。对应的伪指令是 csrw</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-009-5977d404ff.png" alt="图片"><br>当 rd 为 x0 时，csr 中的数据不会写入 x0，只执行第二步，相当于把一个寄存器写入 csr。对应的伪指令是 csrw</p>
 <h2 id="csrrs">csrrs</h2>
-<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-010-b0c9a12fec.png" alt="图片">
-这种情况下，如果 x6 为 0，就相当于把 csr 的值复制到 rd，而 csr 保持不变，可以等价于一次读操作</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-010-b0c9a12fec.png" alt="图片"><br>这种情况下，如果 x6 为 0，就相当于把 csr 的值复制到 rd，而 csr 保持不变，可以等价于一次读操作</p>
 <h1 id="mhartid">mhartid</h1>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-011-2e5230b6e9.png" alt="图片"></p>
 <h1 id="bootloader-做了什么">Bootloader 做了什么</h1>
-<p>上电时八个核会同时开始运行，但为了简化流程，我们设置了特殊参数，让每个核判断自己是否应该运行，从而实现上电时八个核中只有一个核运行
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-012-ec563ed0d8.png" alt="图片">
-目前先记住 bootloader 要做哪些事，后面再解释</p>
+<p>上电时八个核会同时开始运行，但为了简化流程，我们设置了特殊参数，让每个核判断自己是否应该运行，从而实现上电时八个核中只有一个核运行<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-012-ec563ed0d8.png" alt="图片"><br>目前先记住 bootloader 要做哪些事，后面再解释</p>
 <h2 id="判断当前-hart-是否为第一个-hart">判断当前 hart 是否为第一个 hart</h2>
-<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-013-49243025fb.png" alt="图片">
-忙等自旋实际上仍让 cpu 在运行，依然消耗电能。而使用 WFI 时 cpu 处于休眠状态，此时 cpu 停止运行</p>
+<p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E5%88%B6%E4%BD%9C%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%85%AD%EF%BC%89%E2%80%94%E2%80%94%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F%EF%BC%88RISC-V%20Bootloader%EF%BC%89/assets/csdn-136725470/image-013-49243025fb.png" alt="图片"><br>忙等自旋实际上仍让 cpu 在运行，依然消耗电能。而使用 WFI 时 cpu 处于休眠状态，此时 cpu 停止运行</p>
 <h2 id="初始化栈">初始化栈</h2>
 <p>选择一块区域并设置相关的栈指针即可</p>
 <h2 id="跳转到-c-执行环境">跳转到 C 执行环境</h2>

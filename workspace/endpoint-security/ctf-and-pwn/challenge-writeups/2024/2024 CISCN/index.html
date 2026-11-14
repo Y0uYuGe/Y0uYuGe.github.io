@@ -472,13 +472,10 @@ p.interactive()
 </code></pre>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-001-5e4601b286.png" alt="图片"></p>
 <h2 id="vlun">vlun</h2>
-<p><a href="https://survive2.github.io/posts/d743632a/">https://survive2.github.io/posts/d743632a/</a>
-写入 0x10 字节的 shellcode，保护全关</p>
+<p><a href="https://survive2.github.io/posts/d743632a/">https://survive2.github.io/posts/d743632a/</a><br>写入 0x10 字节的 shellcode，保护全关</p>
 <ul>
 <li>写一个 read 系统调用来扩充 shellcode</li>
-<li>read 结束后会执行 read 写入的 shellcode
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-002-278b87cb2e.png" alt="图片">
-movabs 执行前 rdi 已经是 0 了，所以直接赋值 /bin/sh 即可</li>
+<li>read 结束后会执行 read 写入的 shellcode<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-002-278b87cb2e.png" alt="图片"><br>movabs 执行前 rdi 已经是 0 了，所以直接赋值 /bin/sh 即可</li>
 </ul>
 <h3 id="exp-1">exp</h3>
 <pre><code class="language-python">from pwn import *
@@ -555,21 +552,15 @@ p.interactive()
 
 </code></pre>
 <h2 id="qeme">qeme</h2>
-<p>显然是 QEMU 逃逸，启动时添加了一个设备
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-003-c0f5ebfb2f.png" alt="图片"></p>
+<p>显然是 QEMU 逃逸，启动时添加了一个设备<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-003-c0f5ebfb2f.png" alt="图片"></p>
 <h3 id="启动失败">启动失败</h3>
 <p><a href="https://blog.csdn.net/wp133716/article/details/107197125">解决方法
 </a></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-004-6a37e93de0.png" alt="图片">
-由于我用的是 zsh，所以把加载共享库路径的环境变量导入到了 ~/.zshrc 中</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-004-6a37e93de0.png" alt="图片"><br>由于我用的是 zsh，所以把加载共享库路径的环境变量导入到了 ~/.zshrc 中</p>
 <h3 id="保护">保护</h3>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-005-42eb310ebf.png" alt="图片">
-没有符号表，可恶..</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-005-42eb310ebf.png" alt="图片"><br>没有符号表，可恶..</p>
 <h3 id="逆向-1">逆向</h3>
-<p>直接搜索 edu-mimo，没有 edu-pmio
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-006-148b4463fb.png" alt="图片">
-找到 mmio_read 和 mmio_write 函数
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-007-067dee8ea6.png" alt="图片"></p>
+<p>直接搜索 edu-mimo，没有 edu-pmio<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-006-148b4463fb.png" alt="图片"><br>找到 mmio_read 和 mmio_write 函数<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-007-067dee8ea6.png" alt="图片"></p>
 <pre><code class="language-c">__int64 __fastcall edu_mmio_read(__int64 pcistat, int addr)
 {
   __int64 v2; // r12
@@ -818,15 +809,10 @@ int main(){
 </blockquote>
 <p>疑惑解开了，再看一遍就很明显了…… <del>怪自己太菜，总想着通过给的 root 脚本找出路</del> </p>
 <p>泄露地址后直接写函数指针就可以了</p>
-<p>在 mmio_read 函数中，它会读取 qword_FD9C60 的值
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-008-991bf0a1f3.png" alt="图片">
-在 mmio_write 函数中，会调用一个函数，然后把 sub_399AE0 赋值给 qword_FD9C60，这里就可以泄露 PIE 基址</p>
+<p>在 mmio_read 函数中，它会读取 qword_FD9C60 的值<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-008-991bf0a1f3.png" alt="图片"><br>在 mmio_write 函数中，会调用一个函数，然后把 sub_399AE0 赋值给 qword_FD9C60，这里就可以泄露 PIE 基址</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-009-1c191df5d6.png" alt="图片"></p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-010-e43b8d133f.png" alt="图片"></p>
-<p>正好有 system 函数，搞定！！！
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-011-2a12772750.png" alt="图片">
-只写低三位偏移即可
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-012-2f2597d65a.png" alt="图片"></p>
+<p>正好有 system 函数，搞定！！！<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-011-2a12772750.png" alt="图片"><br>只写低三位偏移即可<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139733306/image-012-2f2597d65a.png" alt="图片"></p>
 <h2 id="exp-2">exp</h2>
 <pre><code class="language-c">#define _GNU_SOURCE
 #include &lt;stdio.h&gt;
@@ -931,8 +917,7 @@ tcache_put (mchunkptr chunk, size_t tc_idx)
 <li>然后再次溢出修改第二个 chunk 的头部，把第二个 chunk 申请回来，再次溢出把第二个 chunk 修改成两个 chunk 的布局，给靠近第一个 chunk 那部分选一个与 tcache 中已有的某个 chunk 大小相匹配的 size，然后释放第二个 chunk</li>
 <li>然后溢出填充第二个 chunk 的 fd 部分为 libc 中 environ 的地址，再 malloc 两次，用第二次拿到的 chunk 去 show，泄漏出栈地址，再计算出当前函数返回地址在栈上的地址</li>
 <li>然后溢出修改第二个 chunk 的布局，使得靠近第一个 chunk 那部分的大小能容纳 orw 的 ROP 链，然后把一个与靠近第一个 chunk 那部分大小相同的 chunk 释放进 tcache（可以用最开始的第三个 chunk，也可以 malloc 一个再 free 掉），然后释放第二个 chunk</li>
-<li>然后溢出把第二个 chunk 的 fd 修改为栈上返回地址的地址，再 malloc 两次，第二次修改栈上与返回地址相关的那部分
-<strong>具体细节见下面的 exp</strong></li>
+<li>然后溢出把第二个 chunk 的 fd 修改为栈上返回地址的地址，再 malloc 两次，第二次修改栈上与返回地址相关的那部分<br><strong>具体细节见下面的 exp</strong></li>
 </ol>
 <h2 id="exp-3">exp</h2>
 <pre><code class="language-c">from pwn import *
@@ -1113,8 +1098,7 @@ p.interactive()
 </code></pre>
 <h1 id="2024-cicsn-magicvm">2024 cicsn magicvm</h1>
 <h2 id="参考资料">参考资料</h2>
-<p><a href="https://forum.butian.net/share/3048">https://forum.butian.net/share/3048</a>
-<a href="https://akaieurus.github.io/2024/05/20/2024%E5%9B%BD%E8%B5%9B%E5%88%9D%E8%B5%9Bpwn-wp/#SuperHeap">https://akaieurus.github.io/2024/05/20/2024%E5%9B%BD%E8%B5%9B%E5%88%9D%E8%B5%9Bpwn-wp/#SuperHeap</a></p>
+<p><a href="https://forum.butian.net/share/3048">https://forum.butian.net/share/3048</a><br><a href="https://akaieurus.github.io/2024/05/20/2024%E5%9B%BD%E8%B5%9B%E5%88%9D%E8%B5%9Bpwn-wp/#SuperHeap">https://akaieurus.github.io/2024/05/20/2024%E5%9B%BD%E8%B5%9B%E5%88%9D%E8%B5%9Bpwn-wp/#SuperHeap</a></p>
 <h2 id="检查">检查</h2>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-001-83ea076848.png" alt="图片"></p>
 <h2 id="逆向分析">逆向分析</h2>
@@ -1527,8 +1511,7 @@ exit:
 }
 </code></pre>
 <h2 id="漏洞">漏洞</h2>
-<p>这里存在有依赖关系的延迟；每个结构体中的 isvalid 变量表示上一步是否已经执行完毕
-分为三个阶段</p>
+<p>这里存在有依赖关系的延迟；每个结构体中的 isvalid 变量表示上一步是否已经执行完毕<br>分为三个阶段</p>
 <ul>
 <li>解析得到 vid（存在检查：寄存器索引和寄存器中存放的内容，即访问地址，不能超过 data_size）</li>
 <li>执行得到 alu</li>
@@ -1540,38 +1523,9 @@ exit:
 <li>通过寄存器实现任意地址写：将目标写入地址减去 database 的值后存入寄存器，再使用 mem 形式的 mov [register+database], value or register，将值写入任意地址</li>
 <li>任意地址读也类似：将目标读取地址减去 database 的值后存入寄存器，再使用 mem 形式的 mov register, [register+database]，寄存器中就会保存目标地址处的内容</li>
 </ul>
-<p>泄露 libc 地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-002-bad68651a2.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-003-6c8ba81806.png" alt="图片"></p>
-<p>泄露 database 的地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-004-1401d0a2fd.png" alt="图片">
-泄露 environ 地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-005-bd33d19878.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-006-6fb67ae9e7.png" alt="图片">
-获取 environ 中的栈地址</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-007-44c0b2106f.png" alt="图片">
-获取对应的返回地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-008-f8bb3c8b46.png" alt="图片">
-泄露 PIE 地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-009-085b4c2866.png" alt="图片">
-获取 PIE 基址
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-010-0ca7827064.png" alt="图片">
-控制 database 在 vm 上的位置
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-011-a81127b86b.png" alt="图片">
-将栈上保存返回地址的位置，写入 vm 结构体中的 database 所在处
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-012-97c466171f.png" alt="图片">
-写入 ret
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-013-128b1814c4.png" alt="图片">
-写入 pop rdi ret
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-014-c30b37db48.png" alt="图片">
-写入 /bin/sh
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-015-e5e3eca216.png" alt="图片">
-写入 system 地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-016-de1cee10e4.png" alt="图片">
-当没有指令可执行时，vm::run 退出，随后执行之前写入的 ROP；末尾添加的 ret 用于执行 system 时的对齐
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-017-2d01e36a5c.png" alt="图片">
-结果
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-018-8f81d65e30.png" alt="图片"></p>
+<p>泄露 libc 地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-002-bad68651a2.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-003-6c8ba81806.png" alt="图片"></p>
+<p>泄露 database 的地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-004-1401d0a2fd.png" alt="图片"><br>泄露 environ 地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-005-bd33d19878.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-006-6fb67ae9e7.png" alt="图片"><br>获取 environ 中的栈地址</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-007-44c0b2106f.png" alt="图片"><br>获取对应的返回地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-008-f8bb3c8b46.png" alt="图片"><br>泄露 PIE 地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-009-085b4c2866.png" alt="图片"><br>获取 PIE 基址<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-010-0ca7827064.png" alt="图片"><br>控制 database 在 vm 上的位置<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-011-a81127b86b.png" alt="图片"><br>将栈上保存返回地址的位置，写入 vm 结构体中的 database 所在处<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-012-97c466171f.png" alt="图片"><br>写入 ret<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-013-128b1814c4.png" alt="图片"><br>写入 pop rdi ret<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-014-c30b37db48.png" alt="图片"><br>写入 /bin/sh<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-015-e5e3eca216.png" alt="图片"><br>写入 system 地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-016-de1cee10e4.png" alt="图片"><br>当没有指令可执行时，vm::run 退出，随后执行之前写入的 ROP；末尾添加的 ret 用于执行 system 时的对齐<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-017-2d01e36a5c.png" alt="图片"><br>结果<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139037094/image-018-8f81d65e30.png" alt="图片"></p>
 <h2 id="参考利用脚本">参考利用脚本</h2>
 <pre><code class="language-python">from pwn import *
 context.log_level=&#39;debug&#39;
@@ -1788,9 +1742,7 @@ p.interactive()
 <h2 id="思路-4">思路</h2>
 <ol>
 <li>利用 house of orange 泄露堆地址和 libc 地址</li>
-<li>然后利用 free 后 edit 直接修改 fd，进而控制并获得目标地址 malloc_hook，把 onegadget 写入 malloc_hook
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139031304/image-001-92256d156c.png" alt="图片">
-这里 show 的输出不会被零字节截断，所以可以一次性泄露堆地址和 libc 地址</li>
+<li>然后利用 free 后 edit 直接修改 fd，进而控制并获得目标地址 malloc_hook，把 onegadget 写入 malloc_hook<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139031304/image-001-92256d156c.png" alt="图片"><br>这里 show 的输出不会被零字节截断，所以可以一次性泄露堆地址和 libc 地址</li>
 </ol>
 <pre><code class="language-c">__int64 show()
 {
@@ -1875,9 +1827,7 @@ p.interactive()
 </code></pre>
 <h1 id="2024-cicsn-superheap">2024 cicsn SuperHeap</h1>
 <h2 id="参考资料-1">参考资料</h2>
-<p><a href="https://hakuya.work/post/7">https://hakuya.work/post/7</a>
-<a href="https://akaieurus.github.io/2024/05/20/2024%E5%9B%BD%E8%B5%9B%E5%88%9D%E8%B5%9Bpwn-wp/#SuperHeap">https://akaieurus.github.io/2024/05/20/2024%E5%9B%BD%E8%B5%9B%E5%88%9D%E8%B5%9Bpwn-wp/#SuperHeap</a>
-<a href="https://blog.csdn.net/m0_63437215/article/details/127914567">https://blog.csdn.net/m0_63437215/article/details/127914567</a></p>
+<p><a href="https://hakuya.work/post/7">https://hakuya.work/post/7</a><br><a href="https://akaieurus.github.io/2024/05/20/2024%E5%9B%BD%E8%B5%9B%E5%88%9D%E8%B5%9Bpwn-wp/#SuperHeap">https://akaieurus.github.io/2024/05/20/2024%E5%9B%BD%E8%B5%9B%E5%88%9D%E8%B5%9Bpwn-wp/#SuperHeap</a><br><a href="https://blog.csdn.net/m0_63437215/article/details/127914567">https://blog.csdn.net/m0_63437215/article/details/127914567</a></p>
 <h2 id="沙箱">沙箱</h2>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-001-fdae40cf0a.png" alt="图片"></p>
 <h2 id="protobuf-展示">Protobuf 展示</h2>
@@ -2991,26 +2941,18 @@ __int64 __golang search_book(
 <p>但感觉光靠 edit 的任意长度溢出就已经足够了。不过 add、edit、delete、show 都会检查 chunk_array 中对应 index 的项是否非零</p>
 <p>add 会先对输入数据进行 base32 解码，然后进行 protobuf 反序列化，再对前四个字段进行 base64 解码</p>
 <ol>
-<li><p>我们可以直接从已释放的 chunk 中获取，利用其中残留的数据。bookstruct 所在的结构体大小是 0x40，其余四个 chunk 是 0x20
- 一开始就存在大量 chunk。要泄漏堆地址：分配两次；第 7 个 0x20 chunk 的 fd 部分正好是下一部分所在地址右移 12 位的结果，所以我们可以通过 tcache bin 泄漏出堆地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-002-ae1b77fc1a.png" alt="图片">
-分配第 8 个 0x20 chunk 时会去 fastbin 里找，一旦在那里找到，fastbin 中的 chunk 就会被转移到 tcache 中</p>
+<li><p>我们可以直接从已释放的 chunk 中获取，利用其中残留的数据。bookstruct 所在的结构体大小是 0x40，其余四个 chunk 是 0x20<br> 一开始就存在大量 chunk。要泄漏堆地址：分配两次；第 7 个 0x20 chunk 的 fd 部分正好是下一部分所在地址右移 12 位的结果，所以我们可以通过 tcache bin 泄漏出堆地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-002-ae1b77fc1a.png" alt="图片"><br>分配第 8 个 0x20 chunk 时会去 fastbin 里找，一旦在那里找到，fastbin 中的 chunk 就会被转移到 tcache 中</p>
 </li>
-<li><p>然后泄漏 libc 基址。虽然有很多没用的、已释放的 chunk 在干扰，但我们只需让我们构造的堆布局大小不与这些已释放的 chunk 匹配即可；至于那些我们不会用到的布局中的堆，就让它们仍然来自 bin
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-003-4e43c2a590.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-004-b6c9e44f0e.png" alt="图片">
-我们需要分配一个非 tcache 大小、且不来自 bin 的 chunk，这样它被释放后就能进入 unsorted bin；然后通过溢出填充它，就可以泄漏出来。接下来，分配的 book_struct 不能来自 bin；由于溢出是经过 content 的，content chunk 同样不能来自 bin。把两者链接起来，就能让第一个的 content 溢出到第二个的 content 里</p>
+<li><p>然后泄漏 libc 基址。虽然有很多没用的、已释放的 chunk 在干扰，但我们只需让我们构造的堆布局大小不与这些已释放的 chunk 匹配即可；至于那些我们不会用到的布局中的堆，就让它们仍然来自 bin<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-003-4e43c2a590.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-004-b6c9e44f0e.png" alt="图片"><br>我们需要分配一个非 tcache 大小、且不来自 bin 的 chunk，这样它被释放后就能进入 unsorted bin；然后通过溢出填充它，就可以泄漏出来。接下来，分配的 book_struct 不能来自 bin；由于溢出是经过 content 的，content chunk 同样不能来自 bin。把两者链接起来，就能让第一个的 content 溢出到第二个的 content 里</p>
 </li>
 <li><p>实现任意地址写：把某个 book_struct 结构体某个字段的地址覆盖为 stderr，然后我们就可以写 stderr 的内容。这同样需要一个 book_struct chunk、一个 content chunk，以及下一个 book_struct</p>
 </li>
 </ol>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-005-1ee8da5f9e.png" alt="图片">
-由于 0x40 大小的分配会从已释放的 chunk 中分裂出来，我们得先把它们全部消耗掉（只要确保没有一个大于 0x40），从 smallbin 中消耗它们。然后此时的分配就会从之前释放的 0x500 chunk 中分裂出来，这同样让我们能够溢出并修改 book_struct，从而写入 stderr，进而修改 stderr</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-005-1ee8da5f9e.png" alt="图片"><br>由于 0x40 大小的分配会从已释放的 chunk 中分裂出来，我们得先把它们全部消耗掉（只要确保没有一个大于 0x40），从 smallbin 中消耗它们。然后此时的分配就会从之前释放的 0x500 chunk 中分裂出来，这同样让我们能够溢出并修改 book_struct，从而写入 stderr，进而修改 stderr</p>
 <ol start="4">
 <li>house of apple 2 + setcontext + orw 读取 flag。由于最终执行被篡改的 vtable 中的函数时，rdi 是 stderr，rdx 是 wide_data，我们把 wide_data+0xa0 构造为 wide_data 上 ROP 链部分的位置，wide_data+0xa8 构造为 ret</li>
 </ol>
-<p>这里似乎 write_ptr 也需要非零
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-006-66321f0cb8.png" alt="图片"></p>
+<p>这里似乎 write_ptr 也需要非零<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435944/image-006-66321f0cb8.png" alt="图片"></p>
 <pre><code class="language-c">.text:00000000000580DD                 mov     rsp, [rdx+0A0h]
 .text:00000000000580E4                 mov     rbx, [rdx+80h]
 .text:00000000000580EB                 mov     rbp, [rdx+78h]
@@ -3158,10 +3100,7 @@ p.interactive()
 <h2 id="参考资料-2">参考资料</h2>
 <p><a href="https://www.y4ng.cn/posts/pwn/protobuf/#ciscn-2024-ezbuf">https://www.y4ng.cn/posts/pwn/protobuf/#ciscn-2024-ezbuf</a></p>
 <h2 id="protobuf">protobuf</h2>
-<p>当时完全没看出来用的是 protobuf，提取工具也没提取出来。还是做题太少，很多关键结构都没认出是 protobuf。
-下次可以搜索 ProtobufCMessageDescriptor 结构体的魔数（通常是 0x28AAEEF9），以此定位 ProtobufCMessageDescriptor。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-001-dc709b3ee3.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-002-925901461d.png" alt="图片"></p>
+<p>当时完全没看出来用的是 protobuf，提取工具也没提取出来。还是做题太少，很多关键结构都没认出是 protobuf。<br>下次可以搜索 ProtobufCMessageDescriptor 结构体的魔数（通常是 0x28AAEEF9），以此定位 ProtobufCMessageDescriptor。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-001-dc709b3ee3.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-002-925901461d.png" alt="图片"></p>
 <h2 id="逆向笔记">逆向笔记</h2>
 <pre><code class="language-c">const ProtobufCMessageDescriptor devicemsg__descriptor =
 {
@@ -3822,19 +3761,11 @@ struct ProtobufCBinaryData {
 bytes类型，转化为c语言结构时会变成一个结构体，里面存放长度和内容指针。IDA由于没有内置相关结构信息，将其当做八字节数组进行解析，因此会产生一个有6个记录的错觉，实际上后两个参数是同一个记录内置的两条记录。
 </code></pre>
 <h2 id="思路-6">思路</h2>
-<p>add 会检查索引，然后为该索引分配一个固定大小为 0x40 的 chunk，并把 whatcon 的内容复制进去。delete 可以使用 10 次，会检查索引范围以及对应索引的 chunk 是否为 NULL，但 free 后没有清空指针。show 可以使用 3 次，也会检查索引范围以及对应索引的 chunk 是否为 NULL；当 whatsthis == &#39;\xFF&#39; 和 whatsize == 48 都不满足时，输出 chunk 内容。
-存在 double free 和释放后查看的问题。</p>
+<p>add 会检查索引，然后为该索引分配一个固定大小为 0x40 的 chunk，并把 whatcon 的内容复制进去。delete 可以使用 10 次，会检查索引范围以及对应索引的 chunk 是否为 NULL，但 free 后没有清空指针。show 可以使用 3 次，也会检查索引范围以及对应索引的 chunk 是否为 NULL；当 whatsthis == &#39;\xFF&#39; 和 whatsize == 48 都不满足时，输出 chunk 内容。<br>存在 double free 和释放后查看的问题。</p>
 <ol>
-<li>add 时会先分配一个 0x50 的 chunk，以及一个与 data 等长的 chunk，两者都从 unsorted bin 中取出。内容先写入与 data 等长的 chunk，最后由 memcpy 将 data chunk 的内容写入分配好的 0x40 chunk。这里可以利用残留的 libc 数据泄露地址。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-003-d0d9caa6ca.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-004-5a4b70462b.png" alt="图片"></li>
-<li>泄露堆地址：直接泄露没有用，因为 memcpy 的行为以及必须写入内容的要求，会把残留的堆地址覆盖掉。直接释放进 tcache 即可泄露。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-005-3c2db48857.png" alt="图片"></li>
-<li>构造任意写。但 delete 恰好只允许使用 10 次，因此只能获得一次任意写。不过此时 tcache bin 中还有很多其他 chunk，可以写入 tcache bin 来实现多次任意写。要泄露栈地址，可以任意写 stdout，再泄露栈地址。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-006-0e4882f232.png" alt="图片">
- <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-007-2b6d50e230.png" alt="图片">
- IO_2_1_stdout：_flags = 0xFBAD1800，然后把后面的三个 read 参数设为 0，write_base 与 write_ptr 之间的范围就是我们要输出的地址范围。
- <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-008-9797faaf54.png" alt="图片"></li>
+<li>add 时会先分配一个 0x50 的 chunk，以及一个与 data 等长的 chunk，两者都从 unsorted bin 中取出。内容先写入与 data 等长的 chunk，最后由 memcpy 将 data chunk 的内容写入分配好的 0x40 chunk。这里可以利用残留的 libc 数据泄露地址。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-003-d0d9caa6ca.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-004-5a4b70462b.png" alt="图片"></li>
+<li>泄露堆地址：直接泄露没有用，因为 memcpy 的行为以及必须写入内容的要求，会把残留的堆地址覆盖掉。直接释放进 tcache 即可泄露。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-005-3c2db48857.png" alt="图片"></li>
+<li>构造任意写。但 delete 恰好只允许使用 10 次，因此只能获得一次任意写。不过此时 tcache bin 中还有很多其他 chunk，可以写入 tcache bin 来实现多次任意写。要泄露栈地址，可以任意写 stdout，再泄露栈地址。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-006-0e4882f232.png" alt="图片"><br> <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-007-2b6d50e230.png" alt="图片"><br> IO_2_1_stdout：_flags = 0xFBAD1800，然后把后面的三个 read 参数设为 0，write_base 与 write_ptr 之间的范围就是我们要输出的地址范围。<br> <img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-008-9797faaf54.png" alt="图片"></li>
 <li>malloc 分配到 tcache bin 上，再次修改 tcache bin，使后续分配能够落到栈上。</li>
 </ol>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20CISCN/assets/csdn-139435895/image-009-c6e962957c.png" alt="图片"></p>

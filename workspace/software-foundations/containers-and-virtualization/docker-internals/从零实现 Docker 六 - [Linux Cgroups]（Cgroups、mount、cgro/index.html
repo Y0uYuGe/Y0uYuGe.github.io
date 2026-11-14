@@ -21,8 +21,7 @@
 <h1 id="cgroups">Cgroups</h1>
 <p>它用于限制一组进程使用的资源（如 CPU、内存、存储、网络等）</p>
 <h1 id="mount">mount</h1>
-<p>设备的存储结构就是一个文件系统，挂载就是把它与计算机上的某个目录结构关联起来，也就是一种映射
-卸载会解除这种映射，同时把修改应用到原设备存储的内容上</p>
+<p>设备的存储结构就是一个文件系统，挂载就是把它与计算机上的某个目录结构关联起来，也就是一种映射<br>卸载会解除这种映射，同时把修改应用到原设备存储的内容上</p>
 <p>mount 命令在 Linux 和类 Unix 系统中用于将文件系统挂载到指定的挂载点（目录）。通过挂载，文件系统中的文件和目录就可以在指定的挂载点下访问。</p>
 <p>mount 命令的基本语法如下：</p>
 <pre><code class="language-bash">mount [options] &lt;device&gt; &lt;mount_point&gt;
@@ -32,50 +31,33 @@
 <p>例如，如果要把 /dev/sdb1 设备挂载到 /mnt 目录，可以使用以下命令：</p>
 <pre><code class="language-bash">mount /dev/sdb1 /mnt
 </code></pre>
-<p>mount 命令可以查看系统当前挂载的文件系统信息，使用 mount 命令会显示当前挂载点与设备的对应关系。
-文件系统：</p>
+<p>mount 命令可以查看系统当前挂载的文件系统信息，使用 mount 命令会显示当前挂载点与设备的对应关系。<br>文件系统：</p>
 <h1 id="cgroup-文件系统中的相关组件">cgroup 文件系统中的相关组件</h1>
 <ul>
 <li>cgroups：就是文件夹，包含当前 cgroup 的一些配置文件（以文件形式）和子 cgroup 的文件夹</li>
 <li>subsystem：与系统相关，负责管理操作系统的不同功能；进一步说，是这些功能对应的进程；再进一步，是被管理进程所使用的资源。对应 cgroups 中各个 cgroup 的进程的资源限制（以文件形式指定）</li>
-<li>hierarchy：由 cgroups 组成的树状组织目录结构
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-001-3ef2a92786.png" alt="图片"></li>
+<li>hierarchy：由 cgroups 组成的树状组织目录结构<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-001-3ef2a92786.png" alt="图片"></li>
 </ul>
 <h1 id="ubuntu2204-上的演示">ubuntu22.04 上的演示</h1>
-<p>由于版本不同，文件系统已由原来的 cgroup 升级为 cgroup2
-以前的 task 文件现在对应 cgroup.procs</p>
+<p>由于版本不同，文件系统已由原来的 cgroup 升级为 cgroup2<br>以前的 task 文件现在对应 cgroup.procs</p>
 <pre><code class="language-bash">llk@llk-virtual-machine:~$ mkdir cgroup-test
 llk@llk-virtual-machine:~$ sudo mount -t cgroup2  name=cgroup-test  ./cgroup-test
 </code></pre>
-<p>文件是当前 cgroup 的配置文件，文件夹是子 cgroup
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-002-36f454c791.png" alt="图片">
-子 group 会继承父 group 的一部分
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-003-8cd2be22eb.png" alt="图片">
-此时当前进程的 cgroup 层级变为 /，表示它位于 cgroup 文件系统的根节点，因为它的进程号被写入了根 cgroup
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-004-38e3fce820.png" alt="图片">
-可以看到挂载后，对原文件系统的修改生效了
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-005-05e7fbc00b.png" alt="图片"></p>
+<p>文件是当前 cgroup 的配置文件，文件夹是子 cgroup<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-002-36f454c791.png" alt="图片"><br>子 group 会继承父 group 的一部分<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-003-8cd2be22eb.png" alt="图片"><br>此时当前进程的 cgroup 层级变为 /，表示它位于 cgroup 文件系统的根节点，因为它的进程号被写入了根 cgroup<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-004-38e3fce820.png" alt="图片"><br>可以看到挂载后，对原文件系统的修改生效了<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-005-05e7fbc00b.png" alt="图片"></p>
 <h1 id="使用-cgroup-的示例">使用 Cgroup 的示例</h1>
 <pre><code class="language-bash">llk@llk-virtual-machine:~/cgroup-test$ echo $$
 18807
 </code></pre>
 <pre><code class="language-c">cat /proc/18807/cgroup # 会显示当前进程的cgroup所在cgroup文件系统中的位置
 </code></pre>
-<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-006-18d465eea5.png" alt="图片">
-在 ubuntu22.04 中，cgroup 对当前进程设置的内存限制在 memory.max 中，查看显示为 max，表示不限制
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-007-378fef2139.png" alt="图片">
-修改 memory.max 后运行 stress 与不修改直接运行 stress 的区别
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-008-cf792ad927.png" alt="图片"></p>
-<p>注意内存使用百分比的变化
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-009-91a977cdcb.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-006-18d465eea5.png" alt="图片"><br>在 ubuntu22.04 中，cgroup 对当前进程设置的内存限制在 memory.max 中，查看显示为 max，表示不限制<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-007-378fef2139.png" alt="图片"><br>修改 memory.max 后运行 stress 与不修改直接运行 stress 的区别<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-008-cf792ad927.png" alt="图片"></p>
+<p>注意内存使用百分比的变化<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-009-91a977cdcb.png" alt="图片"></p>
 <h1 id="docker-使用-cgroups">Docker 使用 cgroups</h1>
 <p>对镜像执行 docker run 会启动一个容器，并为该容器分配一个 cgroup</p>
 <blockquote>
 <p>在 Ubuntu 22.04 中，Docker 容器的 cgroup 位于 /sys/fs/cgroup 目录下的 system.slice 目录中。每个容器都会在 system.slice 目录下创建一个对应的目录，目录名类似 docker-<container_id>.scope</p>
 </blockquote>
-<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-010-6650bcf92f.png" alt="图片">
-cgroup 相关的配置文件
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-011-d2c93fe7c1.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-010-6650bcf92f.png" alt="图片"><br>cgroup 相关的配置文件<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-011-d2c93fe7c1.png" alt="图片"></p>
 <h1 id="go-代码">Go 代码</h1>
 <ul>
 <li>/proc/self/exe 是一个特殊路径，指向当前正在运行的可执行文件。而 os.Args[0] 是程序的第一个命令行参数，即程序自身的路径。</li>
@@ -138,10 +120,7 @@ func main(){
 }
 </code></pre>
 <h1 id="结果">结果</h1>
-<p>运行到等待回车的地方，此时查看，发现都已修改成功
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-012-3ab7d540ae.png" alt="图片">
-按下回车后，发现 stress 的内存资源已被限制
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-013-eb8f149b8d.png" alt="图片"></p>
+<p>运行到等待回车的地方，此时查看，发现都已修改成功<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-012-3ab7d540ae.png" alt="图片"><br>按下回车后，发现 stress 的内存资源已被限制<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%20Docker%20%E5%85%AD%20-%20%5BLinux%20Cgroups%5D%EF%BC%88Cgroups%E3%80%81mount%E3%80%81cgro/assets/csdn-137052385/image-013-eb8f149b8d.png" alt="图片"></p>
 
     </article>
     

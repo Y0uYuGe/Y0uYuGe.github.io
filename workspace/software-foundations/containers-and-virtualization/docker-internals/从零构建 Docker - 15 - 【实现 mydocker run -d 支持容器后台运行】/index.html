@@ -62,8 +62,7 @@
 }
 </code></pre>
 <ol start="3">
-<li>最后要注意，主进程不能删除该进程创建的 cgroup，否则会出现下面的问题。这就是删除 cgroup 导致的问题：原因是该 cgroup 中还有一些正在运行的进程，在这些进程结束前删除 cgroup 会失败
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-001-43eaa202ed.png" alt="图片"></li>
+<li>最后要注意，主进程不能删除该进程创建的 cgroup，否则会出现下面的问题。这就是删除 cgroup 导致的问题：原因是该 cgroup 中还有一些正在运行的进程，在这些进程结束前删除 cgroup 会失败<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-001-43eaa202ed.png" alt="图片"></li>
 </ol>
 <p>解决办法：在 -it 模式下最后再删除，后台运行时则不删除</p>
 <pre><code class="language-go">if it{ //-it实现交互，那么当前终端就不能关闭退出，还需留给子进程使用
@@ -74,17 +73,10 @@
 		llkdockercgroups.Remove(cgroups_path) //-d后台运行的话不能删除cgroup
 	}
 </code></pre>
-<p>这是 docker 在后台运行
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-002-aa5da50e8b.png" alt="图片">
-而使用 -it 运行的最终效果如下
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-003-2720c37c59.png" alt="图片"></p>
+<p>这是 docker 在后台运行<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-002-aa5da50e8b.png" alt="图片"><br>而使用 -it 运行的最终效果如下<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-003-2720c37c59.png" alt="图片"></p>
 <h1 id="一个莫名其妙的问题">一个莫名其妙的问题</h1>
 <p>我发现调试时使用 <code>log.Infof</code> 之类的函数，输出最后并没有在终端上完整显示，但用 <code>ps -ef|grep -e PPID -e top</code> 检查发现它确实在运行</p>
-<p>比如下面的 9550 进程就是在后台运行的 top 进程
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-004-f5597c2ac4.png" alt="图片">
-但在终端上显示时，有时显示不全，有时又能完整显示
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-005-e9e3ae3c0e.png" alt="图片">
-这里我让子进程与当前终端共用同一个标准输入、输出和错误，否则就看不到相关的调试信息</p>
+<p>比如下面的 9550 进程就是在后台运行的 top 进程<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-004-f5597c2ac4.png" alt="图片"><br>但在终端上显示时，有时显示不全，有时又能完整显示<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-005-e9e3ae3c0e.png" alt="图片"><br>这里我让子进程与当前终端共用同一个标准输入、输出和错误，否则就看不到相关的调试信息</p>
 <pre><code class="language-go">func new_contain_process(it bool,volume string)  (*exec.Cmd,*os.File,string){	
 	
 	readpipe,writepipe,err:=os.Pipe()
@@ -116,8 +108,7 @@
 }
 </code></pre>
 <h1 id="关于之前-upper-层中出现-root-的补充">关于之前 upper 层中出现 root 的补充</h1>
-<p>之前我一直是复制之前写好的 docker，在复制品上继续写新东西，结果发现其中的 busybox 和刚解压出来的 busybox 相比少了很多东西，于是重新解压生成了 busybox 来使用。之前我发现每次调用相关命令时 upper 中都会出现 root，但当时并没有被修改的文件。这次用了完整的 busybox，发现出现了下面的内容，所以确实是调用命令导致日志记录发生了变化
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-006-a92ece28fe.png" alt="图片"></p>
+<p>之前我一直是复制之前写好的 docker，在复制品上继续写新东西，结果发现其中的 busybox 和刚解压出来的 busybox 相比少了很多东西，于是重新解压生成了 busybox 来使用。之前我发现每次调用相关命令时 upper 中都会出现 root，但当时并没有被修改的文件。这次用了完整的 busybox，发现出现了下面的内容，所以确实是调用命令导致日志记录发生了变化<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-006-a92ece28fe.png" alt="图片"></p>
 <h1 id="运行某些命令时出现找不到文件或目录的原因">运行某些命令时出现“找不到文件或目录”的原因</h1>
 <p>当时容器在挂载前查找相关命令，找到的是宿主机上的命令。但我们想要的是 pivot_root 之后根目录下相关命令的路径，所以之后执行这个宿主机路径时就会提示找不到路径，因为那时是以容器的根目录为相对参照的</p>
 <pre><code class="language-go">
@@ -168,9 +159,7 @@ func Contain_init(){
 <h1 id="代码">代码</h1>
 <p><a href="https://github.com/FULLK/llkdocker/tree/main/run_d_docker">https://github.com/FULLK/llkdocker/tree/main/run_d_docker</a></p>
 <h1 id="效果">效果</h1>
-<p>最后我多次启动了 <code>sudo ./run_docker run -d top</code>，在 <code>cgroup.procs</code> 中可以看到它们（有些是之前的 <code>sudo ./run_docker run -it /bin/sh</code> 添加的，因为我最后把主进程结束时自动删除 cgroup 的功能关掉了）。最后可以看到在后台运行的 top 进程
-`
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-007-df9ddfdbcd.png" alt="图片"></p>
+<p>最后我多次启动了 <code>sudo ./run_docker run -d top</code>，在 <code>cgroup.procs</code> 中可以看到它们（有些是之前的 <code>sudo ./run_docker run -it /bin/sh</code> 添加的，因为我最后把主进程结束时自动删除 cgroup 的功能关掉了）。最后可以看到在后台运行的 top 进程<br>`<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2015%20-%20%E3%80%90%E5%AE%9E%E7%8E%B0%20mydocker%20run%20-d%20%E6%94%AF%E6%8C%81%E5%AE%B9%E5%99%A8%E5%90%8E%E5%8F%B0%E8%BF%90%E8%A1%8C%E3%80%91/assets/csdn-139237660/image-007-df9ddfdbcd.png" alt="图片"></p>
 
     </article>
     

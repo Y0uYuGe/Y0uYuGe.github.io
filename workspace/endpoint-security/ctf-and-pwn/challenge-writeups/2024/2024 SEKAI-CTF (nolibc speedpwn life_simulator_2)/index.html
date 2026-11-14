@@ -27,8 +27,7 @@
     NX:       NX enabled
     PIE:      PIE enabled
 </code></pre>
-<p>看了下保护，感觉是溢出；只能注册一个账号并用这个账号登录。
-<del>可以通过数据段中残留的 PIE 地址泄露 PIE</del> <del>后来 Nightu 师傅说可以直接读文件——感觉自己好蠢</del> </p>
+<p>看了下保护，感觉是溢出；只能注册一个账号并用这个账号登录。<br><del>可以通过数据段中残留的 PIE 地址泄露 PIE</del> <del>后来 Nightu 师傅说可以直接读文件——感觉自己好蠢</del> </p>
 <p><del>后来 tplus 师傅利用了 size 是缓冲区长度而不是整个 chunk 长度这一点，可以溢出修改系统调用号。我当时其实也想到了，但那时源码没逆清楚；后来好好逆了一遍，确实有一个非常明显的 bug</del> </p>
 <pre><code class="language-c">char *__fastcall alloc(int size)
 {
@@ -161,8 +160,7 @@ FILE *seed_generator;
 <p>明显的 game_history 溢出，可以对 bss 中更高的地址进行任意写。发送全 1 可以把 game_history 对应的位置 1，发送 0 可以把 game_history 对应的位置 0。</p>
 <p>溢出修改 seed_generator 的文件结构体——但是没有地址泄露。我想从栈上的残留泄露 libc，却发现变量都会被输入赋值。<del>问了 eurus 师傅，说通过 scanf 输入 - 不会改变残留的 libc，于是就能泄露 libc。没想到 scanf 输入 - 会让残留的 libc 保持不变——我还是太菜了</del> </p>
 <p>这应该是调用 libc 函数时在栈帧上留下的 libc 地址，然后通过 simulate 中的 cmp 进行爆破；每次 simulate 留下的栈帧都是一样的。</p>
-<p>爆破利用的是残留 libc 的低 20 位和最高 4 位保持不变这一点（这是我在 ubuntu22.04 上运行看到的，其他师傅的 wp 好像说是低 12 位——不过爆破原理是一样的）。
-libc 的最低位是 0，所以从低到高填 1 位；当长度相等时，返回的是 0 而不是 1，由此得到 1 的位数。</p>
+<p>爆破利用的是残留 libc 的低 20 位和最高 4 位保持不变这一点（这是我在 ubuntu22.04 上运行看到的，其他师傅的 wp 好像说是低 12 位——不过爆破原理是一样的）。<br>libc 的最低位是 0，所以从低到高填 1 位；当长度相等时，返回的是 0 而不是 1，由此得到 1 的位数。</p>
 <ul>
 <li>长度：libc 的最低位是 0，所以从低到高填 1 位；当长度相等时，返回的是 0 而不是 1，由此得到 1 的位数。</li>
 <li>位：爆破中间的 24 位，从低到高把位置 1；爆破规则如下：</li>
@@ -459,8 +457,7 @@ companies.erase(it, companies.end());
 <h2 id="思路">思路</h2>
 <p>保护全开。</p>
 <p><del>从题目描述来看，好像是从 worker 入手——没用</del> </p>
-<p><del>只发现了一个整数溢出，感觉没什么用；同时注意到 clear 不太正常，因为它没有 free，只是清零</del> 
-问了 nightu 师傅才知道是逻辑问题——我是真没注意到……感觉好久没有注意过这种逻辑漏洞了。</p>
+<p><del>只发现了一个整数溢出，感觉没什么用；同时注意到 clear 不太正常，因为它没有 free，只是清零</del><br>问了 nightu 师傅才知道是逻辑问题——我是真没注意到……感觉好久没有注意过这种逻辑漏洞了。</p>
 <p>整数溢出其实还是有用的。以后要注意溢出后的结果对程序执行流的影响——可能会有意想不到的惊喜。同时，以后也要把代码逻辑理清楚。</p>
 <p>在受整数溢出影响的值中，可能影响程序控制流的是 <code>company_budget</code>：它会影响 total_net_worth，使其也发生越界。但越界后的 total_net_worth 在其他执行流中似乎仍能被正常理解（逻辑上是正常的）。那么，越界的 <code>company_budget</code> 唯一可能影响程序执行流的地方就是这里——不过这个发现的逻辑相当离谱。</p>
 <pre><code class="language-c">void Company::elapse_week() {
@@ -664,9 +661,7 @@ pwndbg&gt; tele 0x5be0f554e6c0
 <p>剩下的部分，一开始想用 ROP 劫持，却找不到可以打的点；有一个写堆地址的地方我以为没用……</p>
 <p>问了 tplus 师傅——太强了：写堆地址 -&gt; 任意地址写堆地址 -&gt; 写 tcache_struct -&gt; fd 指到栈上构造 ROP。</p>
 <p>由于 worker 无法伪造——这里 worker 的前八个字节是字符串的地址——所以字符串也要弄大一点，然后让字符串内容包含栈地址，这样就出来了。</p>
-<p>关系如下图所示：
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)/assets/csdn-141507613/image-004-bffb56a241.png" alt="图片">
-move_worker 从 project1 移到 project2 时，如果 vector_begin 是 tcache_struct 上的相关地址，就会把一个堆地址写到 tcache_struct 上；然后通过该堆块的 fd 申请到栈上做 ROP。相关的伪造结构都通过申请字符串堆块来替换。</p>
+<p>关系如下图所示：<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20SEKAI-CTF%20(nolibc%20speedpwn%20life_simulator_2)/assets/csdn-141507613/image-004-bffb56a241.png" alt="图片"><br>move_worker 从 project1 移到 project2 时，如果 vector_begin 是 tcache_struct 上的相关地址，就会把一个堆地址写到 tcache_struct 上；然后通过该堆块的 fd 申请到栈上做 ROP。相关的伪造结构都通过申请字符串堆块来替换。</p>
 <p>注意，如果输入的字符中含有 &quot;\x20&quot; 字节，会被识别为空格，从而导致出错。</p>
 <h2 id="vector-插入逻辑">vector 插入逻辑</h2>
 <pre><code class="language-c">__int64 __fastcall std::vector&lt;Worker *&gt;::emplace_back&lt;Worker *&amp;&gt;(__int64 a1, __int64 a2)

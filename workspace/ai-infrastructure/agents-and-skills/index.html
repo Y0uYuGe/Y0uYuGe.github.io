@@ -84,8 +84,7 @@ magicskills install anthropics/skills
 </ul>
 <h2 id="3-为每个-agent-分别创建一个-skills-集合">3. 为每个 Agent 分别创建一个 <code>Skills</code> 集合</h2>
 <p>这一步是整个设计中最关键的部分。</p>
-<p>不是直接把某个 skill 目录复制到某个 Agent 使用 skill 的目录下，
-而是先为每个 Agent 创建一个命名的 <code>Skills</code> 集合，挑选它实际需要用到的 skill。</p>
+<p>不是直接把某个 skill 目录复制到某个 Agent 使用 skill 的目录下，<br>而是先为每个 Agent 创建一个命名的 <code>Skills</code> 集合，挑选它实际需要用到的 skill。</p>
 <p>例如：</p>
 <ul>
 <li>对于 Codex、Cursor、Claude Code、Windsurf、Aider 这类 Agent 应用，这里的每个示例默认对应一个 Agent，所以通常只需创建一个 <code>Skills</code> 集合</li>
@@ -141,8 +140,7 @@ magicskills addskills llamaindex_agent1_skills --skill-list c_2_ast pdf  # 假�
 magicskills addskills llamaindex_agent2_skills --skill-list c_2_ast docx  # 假设当前 LlamaIndex agent2 需要的 skill 是 c_2_ast 和 docx，将这两个 skill 封装为一个 Skills 集合 llamaindex_agent2_skills 给 LlamaIndex agent2 使用
 </code></pre>
 <p>这一步说明了一件极其关键的事：</p>
-<p>共享 skill 池中的每个 skill 能力，都可以自由组合进多个不同 Agent 的 <code>Skills</code> 集合中。
-也就是说，同一个 <code>c_2_ast</code> skill——在不被复制的情况下——可以同时进入 Codex、Cursor、Claude Code、LangChain、LangGraph、AutoGen 等不同系统的能力边界。</p>
+<p>共享 skill 池中的每个 skill 能力，都可以自由组合进多个不同 Agent 的 <code>Skills</code> 集合中。<br>也就是说，同一个 <code>c_2_ast</code> skill——在不被复制的情况下——可以同时进入 Codex、Cursor、Claude Code、LangChain、LangGraph、AutoGen 等不同系统的能力边界。</p>
 <h2 id="4-再根据各个-runtime-的使用方式进行适配">4. 再根据各个 runtime 的使用方式进行适配</h2>
 <p>有了各自的 <code>Skills</code> 集合之后，接下来就是 runtime 适配的事了。</p>
 <p>对于读取 <code>AGENTS.md</code> 或 <code>CLAUDE.md</code> 的 runtime（如 Codex、Cursor、Claude Code、Windsurf、Aider），可以使用：</p>
@@ -170,8 +168,7 @@ skills = REGISTRY.get_skills(&quot;langchain_agent1_skills&quot;)
 <p>之后，通过各个框架自己的 <code>tool / function</code> 机制，把 <code>skills.skill_tool(...)</code> 和 <code>skills.tool_description</code> 接入到各个 agent 中。</p>
 <h2 id="这其中最极端也最有价值的部分是什么">这其中最极端、也最有价值的部分是什么？</h2>
 <p>最极端的部分在于：</p>
-<p>你不是在为每个 Agent 分别维护一份独立的 skill 副本，
-而是为所有 Agent 维护同一份底层共享 skill 池，按需为每个 Agent 划分出自己的 <code>Skills</code> 集合，最后再根据 runtime 的差异进行适配。</p>
+<p>你不是在为每个 Agent 分别维护一份独立的 skill 副本，<br>而是为所有 Agent 维护同一份底层共享 skill 池，按需为每个 Agent 划分出自己的 <code>Skills</code> 集合，最后再根据 runtime 的差异进行适配。</p>
 <p>这意味着：</p>
 <ul>
 <li>同一个 skill，在不被复制的情况下，可以服务于上述所有 agent 系统</li>

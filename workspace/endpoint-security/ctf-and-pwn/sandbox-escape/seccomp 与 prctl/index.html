@@ -20,17 +20,14 @@
     <article class="post-body">
 <h1 id="ctf-pwn-沙箱逃逸-seccomp-和-prctl-1">CTF-PWN-沙箱逃逸 [seccomp 和 prctl-1]</h1>
 <h2 id="什么是-seccomp">什么是 seccomp</h2>
-<p>它可以禁用某些系统调用，只允许某些系统调用
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135430526/image-001-f38fed0a0c.png" alt="图片"></p>
+<p>它可以禁用某些系统调用，只允许某些系统调用<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135430526/image-001-f38fed0a0c.png" alt="图片"></p>
 <h2 id="ifndef-define-endif-的使用">#ifndef #define #endif 的使用</h2>
 <p>#ifndef #define #endif 的作用是防止头文件被重复包含。</p>
 <blockquote>
 <p> 其实“被重复包含”是指一个头文件在同一个 cpp 文件中被包含了多次。这种错误常常是由于嵌套包含造成的，或者干脆就是包含了多次。比如：a.h 文件中有 #include &quot;c.h&quot;，而 b.cpp 中同时有 #include &quot;a.h&quot; 和 #include &quot;c.h&quot;，这就会导致 c.h 被重复包含。</p>
 </blockquote>
 <blockquote>
-<p>头文件被重复包含的后果：
-有些头文件被重复包含只会增加编译器的工作量，不会引起大问题，只是编译效率低一些。但对于大工程来说，编译效率低是件很严重的事。
-有些头文件被重复包含会引起错误。比如在头文件中定义了全局变量（虽然不推荐这种做法，但 C 规范确实允许），重复包含会导致重复定义，可能会报错。</p>
+<p>头文件被重复包含的后果：<br>有些头文件被重复包含只会增加编译器的工作量，不会引起大问题，只是编译效率低一些。但对于大工程来说，编译效率低是件很严重的事。<br>有些头文件被重复包含会引起错误。比如在头文件中定义了全局变量（虽然不推荐这种做法，但 C 规范确实允许），重复包含会导致重复定义，可能会报错。</p>
 </blockquote>
 <pre><code class="language-c">    下面给一个#ifndef/#define/#endif的格式：
 
@@ -63,17 +60,13 @@
 <pre><code class="language-c">seccomp_init(uint32_t def_action)
 </code></pre>
 <blockquote>
-<p>def_action 是过滤器的工作模式
-seccomp_init 是初始化的过滤状态，这里用的是 SCMP_ACT_ALLOW，表示默认允许所有 syscall。如果初始状态是 SCMP_ACT_KILL，则表示默认不允许所有 syscall</p>
+<p>def_action 是过滤器的工作模式<br>seccomp_init 是初始化的过滤状态，这里用的是 SCMP_ACT_ALLOW，表示默认允许所有 syscall。如果初始状态是 SCMP_ACT_KILL，则表示默认不允许所有 syscall</p>
 </blockquote>
 <p>seccomp_rule_add(ctx, SCMP_ACT_KILL, SCMP_SYS(execve), 0);</p>
 <pre><code class="language-c">int seccomp_rule_add(scmp_filter_ctx &quot; ctx &quot;, uint32_t &quot; action &quot;,int &quot; syscall &quot;,unsigned int &quot; arg_cnt &quot;, &quot; ... &quot;);
 </code></pre>
 <blockquote>
-<p>  ctx：初始化时定义的过滤器
-action：规则模式，即匹配到系统调用后执行的操作，与初始化时过滤器的 def_action 类型相同
-syscall：系统调用号，可以用 SCMP_SYS(函数名) 代替具体的调用号
-arg_cnt：需要的参数限制规则数量。seccomp_rule_add 的参数限制接口定义在 seccomp.h.in 中，主要涉及取参数操作 SCMP_AX 和比较操作 scmp_compare。只有这些规则全部满足时，这个 seccomp_rule_add 函数才会执行成功</p>
+<p>  ctx：初始化时定义的过滤器<br>action：规则模式，即匹配到系统调用后执行的操作，与初始化时过滤器的 def_action 类型相同<br>syscall：系统调用号，可以用 SCMP_SYS(函数名) 代替具体的调用号<br>arg_cnt：需要的参数限制规则数量。seccomp_rule_add 的参数限制接口定义在 seccomp.h.in 中，主要涉及取参数操作 SCMP_AX 和比较操作 scmp_compare。只有这些规则全部满足时，这个 seccomp_rule_add 函数才会执行成功</p>
 </blockquote>
 <blockquote>
 <p>如果只需匹配系统调用而不管参数内容：则 arg_cnt=0。如果匹配到系统调用后，还要根据参数内容决定是否执行 action：arg_cnt=N（规则数），后面再跟 N 个参数</p>
@@ -173,11 +166,7 @@ seccomp_rule_add(ctx, SCMP_ACT_KILL, SCMP_SYS(write),1,SCMP_A2(SCMP_CMP_EQ,0x10)
 </code></pre>
 <pre><code class="language-c">prctl(PR_SET_NO_NEW_PRIVS,1,0,0,0);
 </code></pre>
-<p>当 option 为 PR_SET_NO_NEW_PRIVS(38) 且 arg2 为 1 时，无法获得任何权限，也就是说可以 getshell，但无法获得 root 权限
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135430526/image-002-cce7c0096f.png" alt="图片">
-当 option 为 PR_SET_SECCOMP(22) 时，效果与上面的 seccomp 相同，只是这里的格式略有不同，同样取决于参数 2
-<strong>如果 arg2 为 SECCOMP_MODE_STRICT(1)，则只允许 read、write、_exit（不是 exit_group）和 sigreturn 这几个系统调用
-如果 arg2 为 SECCOMP_MODE_FILTER(2)，则为过滤模式，对 syscall 的限制通过 arg3 以 BPF（Berkeley Packet Filter）的形式传入，即一个指向 struct sock_fprog 数组的指针</strong></p>
+<p>当 option 为 PR_SET_NO_NEW_PRIVS(38) 且 arg2 为 1 时，无法获得任何权限，也就是说可以 getshell，但无法获得 root 权限<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135430526/image-002-cce7c0096f.png" alt="图片"><br>当 option 为 PR_SET_SECCOMP(22) 时，效果与上面的 seccomp 相同，只是这里的格式略有不同，同样取决于参数 2<br><strong>如果 arg2 为 SECCOMP_MODE_STRICT(1)，则只允许 read、write、_exit（不是 exit_group）和 sigreturn 这几个系统调用<br>如果 arg2 为 SECCOMP_MODE_FILTER(2)，则为过滤模式，对 syscall 的限制通过 arg3 以 BPF（Berkeley Packet Filter）的形式传入，即一个指向 struct sock_fprog 数组的指针</strong></p>
 <pre><code class="language-c">/*
  *	Try and keep these values and structures similar to BSD, especially
  *	the BPF code definitions which need to match so you can share filters
@@ -321,8 +310,7 @@ struct seccomp_data {
 </code></pre>
 <p>这里 code 15 是 BPF_JMP(0x05)|BPF_JEQ(0x10) 的结果，是一条相等则跳转的指令：相等则跳到下一条指令，否则跳到下一条指令再加 0x19 的位置，比较的是累加器与 k 的值，累加器的值就是前面取出的 arch</p>
 <h2 id="seccomp_export_bpf">seccomp_export_bpf</h2>
-<p><a href="https://veritas501.github.io/2018_05_05-seccomp%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/#How-to-reverse">参考</a>
-seccomp_export_bpf 函数可以把设置好的 seccomp 以 BPF 的形式导出</p>
+<p><a href="https://veritas501.github.io/2018_05_05-seccomp%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/#How-to-reverse">参考</a><br>seccomp_export_bpf 函数可以把设置好的 seccomp 以 BPF 的形式导出</p>
 <pre><code class="language-c">//gcc -g simple_syscall_seccomp.c -o simple_syscall_seccomp -lseccomp
 #include &lt;unistd.h&gt;
 #include &lt;seccomp.h&gt;
@@ -401,20 +389,12 @@ int main(void){
 <h2 id="沙箱逃逸-prctl-题目">沙箱逃逸 prctl 题目</h2>
 <h2 id="hitcon-ctf-2017-quals-impeccable-artifact-libc-224">HITCON CTF 2017 Quals Impeccable Artifact libc 2.24</h2>
 <h3 id="flag-文件">flag 文件</h3>
-<p>此时的 flag 文件，在该文件夹下自己创建一个即可
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-001-cefaa27d10.png" alt="图片">
-此时我设置的 flag 为</p>
+<p>此时的 flag 文件，在该文件夹下自己创建一个即可<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-001-cefaa27d10.png" alt="图片"><br>此时我设置的 flag 为</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-002-fd89529a30.png" alt="图片"></p>
 <h3 id="对应的-prctl-函数">对应的 prctl 函数</h3>
-<p>第一行禁用特权
-第二行根据定义的 BPF 建立沙箱
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-003-1640dc6b58.png" alt="图片"></p>
+<p>第一行禁用特权<br>第二行根据定义的 BPF 建立沙箱<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-003-1640dc6b58.png" alt="图片"></p>
 <h3 id="检查">检查</h3>
-<p>保护全开
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-004-d647aded92.png" alt="图片">
-查看沙箱规则
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-005-d87215e8ed.png" alt="图片">
-首先检查架构，如果不是 ARCH_X86_64 则禁止该系统调用。然后取出系统调用的第二个参数复制给 X，再获取系统调用号。接着判断系统调用号是否与 read、write、fstat、lseek 相同，相同则允许执行。如果都不相同，则判断是否等于 mmap，若是，则判断系统调用的第二个参数是否为奇数，为奇数则禁止，否则允许。如果系统调用号与 mmap 不同，则判断是否等于 mprotect，若是，同样判断第二个参数是否为奇数，奇数禁止，否则允许。如果系统调用号与 mprotect 不同，则判断系统调用号是否等于系统调用的第二个参数，相等则允许该系统调用。否则判断系统调用号是否等于 brk、exit、exit_group，相等则允许，都不相同则禁止该系统调用</p>
+<p>保护全开<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-004-d647aded92.png" alt="图片"><br>查看沙箱规则<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-005-d87215e8ed.png" alt="图片"><br>首先检查架构，如果不是 ARCH_X86_64 则禁止该系统调用。然后取出系统调用的第二个参数复制给 X，再获取系统调用号。接着判断系统调用号是否与 read、write、fstat、lseek 相同，相同则允许执行。如果都不相同，则判断是否等于 mmap，若是，则判断系统调用的第二个参数是否为奇数，为奇数则禁止，否则允许。如果系统调用号与 mmap 不同，则判断是否等于 mprotect，若是，同样判断第二个参数是否为奇数，奇数禁止，否则允许。如果系统调用号与 mprotect 不同，则判断系统调用号是否等于系统调用的第二个参数，相等则允许该系统调用。否则判断系统调用号是否等于 brk、exit、exit_group，相等则允许，都不相同则禁止该系统调用</p>
 <h3 id="源码">源码</h3>
 <pre><code class="language-c">__int64 __fastcall main(__int64 a1, char **a2, char **a3)
 {
@@ -458,21 +438,10 @@ int main(void){
 </code></pre>
 <p>即：输入一个位置，然后可以向该位置写入数据或显示该位置的数据。输入的位置没有检查，因此可以任意读、任意写</p>
 <h3 id="思路">思路</h3>
-<p>注意数组与 var_8 之间还有八个字节，var_8 对应的下标为 201
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-006-bcc7762618.png" alt="图片"></p>
-<p>首先，由于 main 结尾的 ret 指令会返回到 libc_start_main+241 的位置，我们可以用 show 越界显示该地址，对应的数组下标为 203。这样就泄露了 libc 基址，进而得到各种 gadget 的地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-007-b34fd548c3.png" alt="图片">
-由于我们的目标是读取 flag 文件的内容，所以需要 open 函数，然后 read，再 write。调用 open 系统调用需要 rdx=rax 才能成功
-由于要先把文件内容读入内存再通过 write 输出，我们还需要知道内存中的某个位置。此时发现栈上存在一个栈地址，对应数组下标 205。该栈地址减去返回地址得到 0xE0，因此对应的下标为 231
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-008-261f47cd4b.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-009-52a7f5bc72.png" alt="图片">
-将这样得到的栈地址减去 231*8 即得到数组的起始地址，然后在该位置输入 open 的第一个参数，即 ./flag。注意由于此时函数输入的是整数，输入的字节会以逆序放入内存，而 open 调用时参数是字符串，会从低地址到高地址逐字节转换。所以需要逆序输入 ./flag 的字节，即按 galf/. 的字节输入。</p>
+<p>注意数组与 var_8 之间还有八个字节，var_8 对应的下标为 201<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-006-bcc7762618.png" alt="图片"></p>
+<p>首先，由于 main 结尾的 ret 指令会返回到 libc_start_main+241 的位置，我们可以用 show 越界显示该地址，对应的数组下标为 203。这样就泄露了 libc 基址，进而得到各种 gadget 的地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-007-b34fd548c3.png" alt="图片"><br>由于我们的目标是读取 flag 文件的内容，所以需要 open 函数，然后 read，再 write。调用 open 系统调用需要 rdx=rax 才能成功<br>由于要先把文件内容读入内存再通过 write 输出，我们还需要知道内存中的某个位置。此时发现栈上存在一个栈地址，对应数组下标 205。该栈地址减去返回地址得到 0xE0，因此对应的下标为 231<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-008-261f47cd4b.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-009-52a7f5bc72.png" alt="图片"><br>将这样得到的栈地址减去 231*8 即得到数组的起始地址，然后在该位置输入 open 的第一个参数，即 ./flag。注意由于此时函数输入的是整数，输入的字节会以逆序放入内存，而 open 调用时参数是字符串，会从低地址到高地址逐字节转换。所以需要逆序输入 ./flag 的字节，即按 galf/. 的字节输入。</p>
 <p>接下来构造 ROP 链即可：首先 open(数组起始地址, 0, 2)，rax=2。这里构造的 rdx 对函数没有作用，只是为了让第二个参数等于 rax 的值，从而能成功调用系统调用。</p>
-<p>然后 read(上一步 open 的返回值即 rax 的值, 栈上某区域的地址, 要写入的输入长度)，rax=0。这里需要先把 rax 的值传给 rdi，再将 rax 置为 0。
-此时找不到 mov rdi, rax; ret; ，每个 gadget 后面都跟着跳转。我们需要控制跳转目标，使最终能回到 ROP 链。为此需要事先控制 rcx：如果 rcx 中是 pop ; ret gadget 的地址，就仍然可以返回到 mov rdi, rax; call rcx 之后的 gadget（因为 call 会把返回地址压栈，pop 之后 ret 正好落到 mov rdi, rax; call rcx 后面的 gadget 上）。所以需要事先在栈上准备好 pop ; ret gadget 的地址，然后先执行 pop rcx; ret，使 rcx 变为 pop ; ret gadget 的地址。另外两个参数比较容易控制
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-010-e49a508009.png" alt="图片">
-最后 write(1, read 写入的地址, 输出长度)，rax=1。这里只需修改 rax 和 rdi，rsi 和 rdx 保持不变（与 read 的 rsi、rdx 相同）。最终输出 flag
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-011-7060bdea9e.png" alt="图片"></p>
+<p>然后 read(上一步 open 的返回值即 rax 的值, 栈上某区域的地址, 要写入的输入长度)，rax=0。这里需要先把 rax 的值传给 rdi，再将 rax 置为 0。<br>此时找不到 mov rdi, rax; ret; ，每个 gadget 后面都跟着跳转。我们需要控制跳转目标，使最终能回到 ROP 链。为此需要事先控制 rcx：如果 rcx 中是 pop ; ret gadget 的地址，就仍然可以返回到 mov rdi, rax; call rcx 之后的 gadget（因为 call 会把返回地址压栈，pop 之后 ret 正好落到 mov rdi, rax; call rcx 后面的 gadget 上）。所以需要事先在栈上准备好 pop ; ret gadget 的地址，然后先执行 pop rcx; ret，使 rcx 变为 pop ; ret gadget 的地址。另外两个参数比较容易控制<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-010-e49a508009.png" alt="图片"><br>最后 write(1, read 写入的地址, 输出长度)，rax=1。这里只需修改 rax 和 rdi，rsi 和 rdx 保持不变（与 read 的 rsi、rdx 相同）。最终输出 flag<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/seccomp%20%E4%B8%8E%20prctl/assets/csdn-135453403/image-011-7060bdea9e.png" alt="图片"></p>
 <h3 id="exp">exp</h3>
 <pre><code class="language-python">#!/usr/bin/env python
 

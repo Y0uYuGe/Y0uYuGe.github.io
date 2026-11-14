@@ -38,8 +38,7 @@
 <h1 id="检查">检查</h1>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-001-8d0289df15.png" alt="图片"></p>
 <h1 id="沙箱">沙箱</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-002-a4ca690f5e.png" alt="图片">
-可以看到沙箱只允许 open 和 read</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-002-a4ca690f5e.png" alt="图片"><br>可以看到沙箱只允许 open 和 read</p>
 <h1 id="ida-源码">IDA 源码</h1>
 <h2 id="main">main</h2>
 <pre><code class="language-c">__int64 __fastcall main(__int64 a1, char **a2, char **a3)
@@ -101,51 +100,27 @@
 <h2 id="void-mmapvoid-addr-size_t-length-int-prot-int-flags-int-fd-o">void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);</h2>
 <p><a href="https://www.cnblogs.com/binlovetech/p/17712761.html">深入理解 mmap</a></p>
 <blockquote>
-<p>If addr is NULL, then the kernel chooses the (page-aligned)
-   address at which to create the mapping; this is the most portable
-   method of creating a new mapping.  If addr is not NULL, then the
-   kernel takes it as a hint about where to place the mapping; on
-   Linux, the kernel will pick a nearby page boundary (but always
-   above or equal to the value specified by
-   /proc/sys/vm/mmap_min_addr) and attempt to create the mapping
-   there.  If another mapping already exists there, the kernel picks
-   a new address that may or may not depend on the hint.  The
-   address of the new mapping is returned as the result of the call.</p>
+<p>If addr is NULL, then the kernel chooses the (page-aligned)<br>   address at which to create the mapping; this is the most portable<br>   method of creating a new mapping.  If addr is not NULL, then the<br>   kernel takes it as a hint about where to place the mapping; on<br>   Linux, the kernel will pick a nearby page boundary (but always<br>   above or equal to the value specified by<br>   /proc/sys/vm/mmap_min_addr) and attempt to create the mapping<br>   there.  If another mapping already exists there, the kernel picks<br>   a new address that may or may not depend on the hint.  The<br>   address of the new mapping is returned as the result of the call.</p>
 </blockquote>
 <blockquote>
-<p>Linux 为 mmap 分配虚拟内存时，总是从距 addr 最近的页边界开始，并保证地址不低于 /proc/sys/vm/mmap_min_addr 所指定的值。
-可以看到 mmap_min_addr = 65536 = 0x10000，所以我们就确定了程序使用 mmap 函数在 0x10000 处分配了一页空间。</p>
+<p>Linux 为 mmap 分配虚拟内存时，总是从距 addr 最近的页边界开始，并保证地址不低于 /proc/sys/vm/mmap_min_addr 所指定的值。<br>可以看到 mmap_min_addr = 65536 = 0x10000，所以我们就确定了程序使用 mmap 函数在 0x10000 处分配了一页空间。</p>
 </blockquote>
 <ul>
 <li>addr：指定映射的起始地址。通常设为 NULL，让系统自动选择一个合适的地址。如果设置了 MAP_FIXED 标志，则必须提供一个具体地址。</li>
 <li>length：映射的长度，即要映射的内存大小，单位为字节。</li>
-<li>prot：映射的访问权限，可以是以下值的组合：
-PROT_READ：可读
-PROT_WRITE：可写
-PROT_EXEC：可执行
-PROT_NONE：不可访问</li>
-<li>flags：映射的属性，可以是以下值的组合：
-MAP_SHARED：对映射的写入会写回文件
-MAP_PRIVATE：对映射的写入不会写回文件
-MAP_FIXED：使用指定的映射起始地址；如果在指定地址无法成功建立映射，则调用失败
-fd：文件描述符，指定映射的数据来源。如果为 -1，则不关联任何文件。</li>
+<li>prot：映射的访问权限，可以是以下值的组合：<br>PROT_READ：可读<br>PROT_WRITE：可写<br>PROT_EXEC：可执行<br>PROT_NONE：不可访问</li>
+<li>flags：映射的属性，可以是以下值的组合：<br>MAP_SHARED：对映射的写入会写回文件<br>MAP_PRIVATE：对映射的写入不会写回文件<br>MAP_FIXED：使用指定的映射起始地址；如果在指定地址无法成功建立映射，则调用失败<br>fd：文件描述符，指定映射的数据来源。如果为 -1，则不关联任何文件。</li>
 <li>offset：文件映射的偏移量，表示映射从文件的哪个位置开始。通常设为 0。</li>
-<li>返回值：
-成功时，返回映射的起始地址；
-失败时，返回 MAP_FAILED（通常是 (void *)-1）。</li>
+<li>返回值：<br>成功时，返回映射的起始地址；<br>失败时，返回 MAP_FAILED（通常是 (void *)-1）。</li>
 </ul>
 <h2 id="rangeij">range(i,j)</h2>
 <p>对应 i 到 j-1</p>
 <h2 id="编写相关-shellcode">编写相关 shellcode</h2>
 <p><a href="https://docs.pwntools.com/en/stable/shellcraft/amd64.html">函数生成器的官方文档</a></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-003-5413256134.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-004-56a9f2bcde.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-005-985715a775.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-003-5413256134.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-004-56a9f2bcde.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-005-985715a775.png" alt="图片"></p>
 <h2 id="发现">发现</h2>
 <p>我们发现，当 open 中的参数同样是字符串时，对应生成的 shellcode 也不同</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-006-63f3575cd1.png" alt="图片">
-参数是字符串和不是字符串时，对应的内容也不同
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-007-227559a2e2.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-006-63f3575cd1.png" alt="图片"><br>参数是字符串和不是字符串时，对应的内容也不同<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-007-227559a2e2.png" alt="图片"></p>
 <h2 id="-的用法">&quot;&#39; 的用法</h2>
 <p><a href="https://blog.csdn.net/GreenHandCGL/article/details/79703863">三引号的用法</a></p>
 <h2 id="爆破错误时的异常">爆破错误时的异常</h2>
@@ -172,10 +147,7 @@ fd：文件描述符，指定映射的数据来源。如果为 -1，则不关联
             break
 </code></pre>
 <h1 id="exp">exp</h1>
-<p>注意如果打开的文件过多，系统会报错：OSError: [Errno 24] Too many open files。所以我们每次爆破的 flag 字节数是有限的，需要调整下标
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-010-f645bf3071.png" alt="图片">
-但我发现我的 exp 并没有这个问题
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-011-3d28c9b774.png" alt="图片"></p>
+<p>注意如果打开的文件过多，系统会报错：OSError: [Errno 24] Too many open files。所以我们每次爆破的 flag 字节数是有限的，需要调整下标<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-010-f645bf3071.png" alt="图片"><br>但我发现我的 exp 并没有这个问题<br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-011-3d28c9b774.png" alt="图片"></p>
 <pre><code class="language-python">import time
 from pwn  import*
 
@@ -217,12 +189,7 @@ for i in range(s,e):
 
 </code></pre>
 <h1 id="结果">结果</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-012-073aeaa8aa.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-013-6e197214f3.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-014-f523eaa65e.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-015-adbb7f9767.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-016-7bfce7191d.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-017-6d1a3ee1c6.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-012-073aeaa8aa.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-013-6e197214f3.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-014-f523eaa65e.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-015-adbb7f9767.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-016-7bfce7191d.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/sandbox-escape/CTF-PWN-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8-%5B%E4%BE%A7%E4%BF%A1%E9%81%93%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3%5D%20(2021%20%E8%93%9D%E5%B8%BD%E6%9D%AF%E5%88%9D%E8%B5%9B%20-%20slient)/assets/csdn-136073146/image-017-6d1a3ee1c6.png" alt="图片"></p>
 
     </article>
     

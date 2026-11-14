@@ -22,139 +22,51 @@
 <h2 id="回顾二叉查找树">回顾：二叉查找树</h2>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-001-d43a04564c.png" alt="图片"></p>
 <h2 id="5-叉查找树">5 叉查找树</h2>
-<p>把范围划分得更细，不同划分里的值进入不同的子树
-四个数做划分，所以有五个区间
-现在一个结点对应多个关键字。如果到了叶结点仍然没有对应的关键字，查找就失败了——这时再看它落在叶结点关键字的哪个区间
-每个结点可以只放一个关键字，也可以放多个关键字，其子树的数量自然也随之不同
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-002-c3248ace8c.png" alt="图片"></p>
+<p>把范围划分得更细，不同划分里的值进入不同的子树<br>四个数做划分，所以有五个区间<br>现在一个结点对应多个关键字。如果到了叶结点仍然没有对应的关键字，查找就失败了——这时再看它落在叶结点关键字的哪个区间<br>每个结点可以只放一个关键字，也可以放多个关键字，其子树的数量自然也随之不同<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-002-c3248ace8c.png" alt="图片"></p>
 <h3 id="如何查找">如何查找</h3>
 <h4 id="查找成功">查找成功</h4>
-<p>9 小于 22，所以进入左子树到达其根结点。比较关键字——可以顺序查找也可以折半查找。这里没找到该关键字，但找到了所在的范围区间，于是跳到三棵子树中的第二棵，再次顺序查找，找到了对应的关键字——查找成功
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-003-b3f23db8ac.png" alt="图片"></p>
+<p>9 小于 22，所以进入左子树到达其根结点。比较关键字——可以顺序查找也可以折半查找。这里没找到该关键字，但找到了所在的范围区间，于是跳到三棵子树中的第二棵，再次顺序查找，找到了对应的关键字——查找成功<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-003-b3f23db8ac.png" alt="图片"></p>
 <h4 id="查找失败">查找失败</h4>
 <p>41 大于 22，所以先到右子树，比较关键字，进入对应的第二棵子树，再比较关键字，进入对应的第二棵子树——但它是空的，所以没找到该关键字</p>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-004-ae8573011a.png" alt="图片"></p>
 <h4 id="如何保证查找效率">如何保证查找效率</h4>
-<p>让树尽可能矮，这样需要比较的次数就少
-子树数 = 关键字数 + 1
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-005-6f7589d3d0.png" alt="图片">
-所有子树的高度相同
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-006-338e8d8450.png" alt="图片"></p>
+<p>让树尽可能矮，这样需要比较的次数就少<br>子树数 = 关键字数 + 1<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-005-6f7589d3d0.png" alt="图片"><br>所有子树的高度相同<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-006-338e8d8450.png" alt="图片"></p>
 <h2 id="b-树">B 树</h2>
-<p>结点是多路的，且每个结点的各子树高度平衡，所以叫多路平衡查找树。
-m 阶 B 树可以是空树，此时没有任何结点
-每个结点至多有 m 棵子树，至多有 m-1 个关键字
-至于最小值：除根结点外，最少子树数可以是 0——不对，是 2。如果是 1，那么根结点的关键字有两个分支，一个有高度另一个没有，就违反了 B 树的要求
-其他结点至少有 ceil(m/2) 棵子树。
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-007-72d9553940.png" alt="图片"></p>
-<p>这里的叶结点都是空结点；终端结点不是空结点
-非叶结点的结构：关键字从小到大排列，比较关键字时如果找到第一个大于要查找关键字的 Pi，那么对应的子树根就是 Ki</p>
-<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-008-3ea0df3bce.png" alt="图片">
-下面是简单的小结
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-009-07267919e8.png" alt="图片"></p>
+<p>结点是多路的，且每个结点的各子树高度平衡，所以叫多路平衡查找树。<br>m 阶 B 树可以是空树，此时没有任何结点<br>每个结点至多有 m 棵子树，至多有 m-1 个关键字<br>至于最小值：除根结点外，最少子树数可以是 0——不对，是 2。如果是 1，那么根结点的关键字有两个分支，一个有高度另一个没有，就违反了 B 树的要求<br>其他结点至少有 ceil(m/2) 棵子树。<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-007-72d9553940.png" alt="图片"></p>
+<p>这里的叶结点都是空结点；终端结点不是空结点<br>非叶结点的结构：关键字从小到大排列，比较关键字时如果找到第一个大于要查找关键字的 Pi，那么对应的子树根就是 Ki</p>
+<p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-008-3ea0df3bce.png" alt="图片"><br>下面是简单的小结<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-009-07267919e8.png" alt="图片"></p>
 <h2 id="b-树的高度">B 树的高度</h2>
-<p>最小高度时，树要尽可能满：从根开始，每个结点都有 m 棵子树，所以每个结点有 m-1 个关键字。
-每层的结点数是 m 的幂，每个结点有 m-1 个关键字，关键字总数为 n
-这里 n 对应满 m 叉树的上限，由此可以推出 h 的最小值</p>
+<p>最小高度时，树要尽可能满：从根开始，每个结点都有 m 棵子树，所以每个结点有 m-1 个关键字。<br>每层的结点数是 m 的幂，每个结点有 m-1 个关键字，关键字总数为 n<br>这里 n 对应满 m 叉树的上限，由此可以推出 h 的最小值</p>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-010-ddcc31fd37.png" alt="图片"></p>
 <p>最大高度对应分支最少的情况：根结点至少有 2 个分支，其他结点至少有 ceil(m/2) 个分支</p>
-<p>这里用到了叶结点的关系
-为什么含 n 个关键字的 B 树一定有 n+1 个叶结点？因为可以把 B 树的本质想象成划分区间，划分出来的所有区间最终都落在叶结点上。所以含 n 个关键字的 B 树一定有 n+1 个叶结点</p>
-<p>但最高 B 树叶结点数的下界其实如图所示——第 h+1 层有……个叶结点——因为终端结点的关键字数可以无限增加
-设 h 为最高 B 树的高度，那么这棵最高 B 树中除终端结点外，每个结点的关键字数都必须是每个结点关键字数的最小值，而终端结点的关键字数可以大于或等于每个结点关键字数的最小值</p>
+<p>这里用到了叶结点的关系<br>为什么含 n 个关键字的 B 树一定有 n+1 个叶结点？因为可以把 B 树的本质想象成划分区间，划分出来的所有区间最终都落在叶结点上。所以含 n 个关键字的 B 树一定有 n+1 个叶结点</p>
+<p>但最高 B 树叶结点数的下界其实如图所示——第 h+1 层有……个叶结点——因为终端结点的关键字数可以无限增加<br>设 h 为最高 B 树的高度，那么这棵最高 B 树中除终端结点外，每个结点的关键字数都必须是每个结点关键字数的最小值，而终端结点的关键字数可以大于或等于每个结点关键字数的最小值</p>
 <p>所以对于高度为 h 的最高 B 树，叶结点数的最小值就是图中按等比数列推出来的那个值，而最大值必然小于由该等比数列推出的叶结点关键字数加上终端结点的关键字数，因为终端结点的关键字总数可以增加——如果相等的话，高度还能继续增加</p>
-<p>因此，对于含 n 个关键字、最大高度为 h 的 B 树，其叶结点数必然大于高度为 h 的 B 树的最少叶结点数（按等比数列推出）
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-011-9371c40831.png" alt="图片">这里用到的是：如果关键字总数小于每个结点都取最少关键字数的树的关键字总数，那么高度一定小于 h，因为如果仍然是 h，由于任何结点的关键字数都不能再少，就不成立了。所以如果最大高度是 h，那么关键字总数一定大于高度为 h、每个结点都取最少关键字数的树的关键字总数
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-012-6b0fd3c657.png" alt="图片"></p>
+<p>因此，对于含 n 个关键字、最大高度为 h 的 B 树，其叶结点数必然大于高度为 h 的 B 树的最少叶结点数（按等比数列推出）<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-011-9371c40831.png" alt="图片">这里用到的是：如果关键字总数小于每个结点都取最少关键字数的树的关键字总数，那么高度一定小于 h，因为如果仍然是 h，由于任何结点的关键字数都不能再少，就不成立了。所以如果最大高度是 h，那么关键字总数一定大于高度为 h、每个结点都取最少关键字数的树的关键字总数<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-012-6b0fd3c657.png" alt="图片"></p>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-013-ead66bee9a.png" alt="图片"></p>
 <h2 id="总结">总结</h2>
-<p>B：balance，平衡。也就是左右子树平衡——高度相同
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-014-872794c129.png" alt="图片"></p>
+<p>B：balance，平衡。也就是左右子树平衡——高度相同<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135153867/image-014-872794c129.png" alt="图片"></p>
 <h1 id="数据结构与算法---b-树的插入与删除">数据结构与算法 - B 树的插入与删除</h1>
 <h2 id="b-树的插入">B 树的插入</h2>
-<p>先填满根节点的关键字数；满了之后就分裂成树
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-001-be85044da1.png" alt="图片">
-分裂规则
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-002-faec9550da.png" alt="图片">
-现在插入 90：从根节点往下查找，再插入终端节点的关键字中
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-003-04f1fc17ba.png" alt="图片">
-插入方式如上；注意插入终端节点时必须遵循终端节点的大小顺序
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-004-5b7a1366f6.png" alt="图片"></p>
-<p>现在插入 88；插入终端节点后发现 99 溢出，于是按规则再次分裂成树
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-005-9e8ee7cd7b.png" alt="图片">
-分裂的结果
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-006-3736933314.png" alt="图片">
-插入 83 和 87
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-007-162d3c6cc3.png" alt="图片">
-插入 80——溢出，于是再次分裂成树
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-008-52c62a1f09.png" alt="图片">
-分裂产生的父节点成为原父节点的一个关键字
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-009-64ce79f8d6.png" alt="图片">
-再插入 92、93、94——此时终端节点的关键字数溢出
- <img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-010-7f99db00ec.png" alt="图片">
- 分裂成树
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-011-21b22200ab.png" alt="图片">
-再插入 73、74、75——插入后溢出
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-012-285411ce48.png" alt="图片">
-再次分裂成树，此时发现原父节点也已经满了
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-013-66e67de734.png" alt="图片">
-把原父节点也分裂成树</p>
+<p>先填满根节点的关键字数；满了之后就分裂成树<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-001-be85044da1.png" alt="图片"><br>分裂规则<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-002-faec9550da.png" alt="图片"><br>现在插入 90：从根节点往下查找，再插入终端节点的关键字中<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-003-04f1fc17ba.png" alt="图片"><br>插入方式如上；注意插入终端节点时必须遵循终端节点的大小顺序<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-004-5b7a1366f6.png" alt="图片"></p>
+<p>现在插入 88；插入终端节点后发现 99 溢出，于是按规则再次分裂成树<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-005-9e8ee7cd7b.png" alt="图片"><br>分裂的结果<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-006-3736933314.png" alt="图片"><br>插入 83 和 87<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-007-162d3c6cc3.png" alt="图片"><br>插入 80——溢出，于是再次分裂成树<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-008-52c62a1f09.png" alt="图片"><br>分裂产生的父节点成为原父节点的一个关键字<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-009-64ce79f8d6.png" alt="图片"><br>再插入 92、93、94——此时终端节点的关键字数溢出<br> <img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-010-7f99db00ec.png" alt="图片"><br> 分裂成树<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-011-21b22200ab.png" alt="图片"><br>再插入 73、74、75——插入后溢出<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-012-285411ce48.png" alt="图片"><br>再次分裂成树，此时发现原父节点也已经满了<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-013-66e67de734.png" alt="图片"><br>把原父节点也分裂成树</p>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-014-c5ebbcfb9f.png" alt="图片"></p>
 <h2 id="总结-1">总结</h2>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-015-07d8240af2.png" alt="图片"></p>
 <h2 id="b-树的删除">B 树的删除</h2>
-<p>现在删除 60
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-016-9d8fa3855a.png" alt="图片">
-直接删除该关键字即可，然后检查终端节点的关键字数是否仍然合法
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-017-a1b8d6bb44.png" alt="图片">
-现在删除 80——可以用它的直接前驱或直接后继替换。这里找到直接前驱 77
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-018-717275d1f3.png" alt="图片">
-用 77 替换被删除的节点
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-019-46692682c3.png" alt="图片">
-现在删除 77；找到直接后继 82
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-020-4e6a3f2294.png" alt="图片">
-用 82 替换
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-021-422de871a7.png" alt="图片">
-现在删除 38；发现该节点的关键字数低于下限
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-022-b87a386127.png" alt="图片">
-将 49 下移，70 上移 <img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-023-d1a7563064.png" alt="图片">
-现在删除 90
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-024-46796a79c3.png" alt="图片">
-现在将 88 下移，87 上移
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-025-aedc52f6f2.png" alt="图片">
-现在删除 49；发现该节点的关键字数低于下限
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-026-b4661b129f.png" alt="图片">
-现在将右兄弟（71 72）与原父节点对应的关键字（70）合并
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-027-a690781ca3.png" alt="图片">
-此时包含 73 的节点关键字数低于下限，所以把它与父节点和兄弟节点合并。此时根节点关键字数为 0，可以删除
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-028-740af6d6d0.png" alt="图片"></p>
+<p>现在删除 60<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-016-9d8fa3855a.png" alt="图片"><br>直接删除该关键字即可，然后检查终端节点的关键字数是否仍然合法<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-017-a1b8d6bb44.png" alt="图片"><br>现在删除 80——可以用它的直接前驱或直接后继替换。这里找到直接前驱 77<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-018-717275d1f3.png" alt="图片"><br>用 77 替换被删除的节点<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-019-46692682c3.png" alt="图片"><br>现在删除 77；找到直接后继 82<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-020-4e6a3f2294.png" alt="图片"><br>用 82 替换<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-021-422de871a7.png" alt="图片"><br>现在删除 38；发现该节点的关键字数低于下限<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-022-b87a386127.png" alt="图片"><br>将 49 下移，70 上移 <img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-023-d1a7563064.png" alt="图片"><br>现在删除 90<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-024-46796a79c3.png" alt="图片"><br>现在将 88 下移，87 上移<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-025-aedc52f6f2.png" alt="图片"><br>现在删除 49；发现该节点的关键字数低于下限<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-026-b4661b129f.png" alt="图片"><br>现在将右兄弟（71 72）与原父节点对应的关键字（70）合并<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-027-a690781ca3.png" alt="图片"><br>此时包含 73 的节点关键字数低于下限，所以把它与父节点和兄弟节点合并。此时根节点关键字数为 0，可以删除<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-028-740af6d6d0.png" alt="图片"></p>
 <h2 id="总结-2">总结</h2>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135308416/image-029-acdb7e6a17.png" alt="图片"></p>
 <h1 id="数据结构与算法---b-树性质查找">数据结构与算法 - B+ 树（性质、查找）</h1>
 <h2 id="b-树-1">B+ 树</h2>
-<p>B 树结点中关键字个数 + 1 = 该 B 树结点的子树个数
-B+ 树结点中关键字的个数等于该结点子树的个数
-叶结点包含全部关键字，并且相互之间都链接在一起
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-001-c971a8b623.png" alt="图片"></p>
+<p>B 树结点中关键字个数 + 1 = 该 B 树结点的子树个数<br>B+ 树结点中关键字的个数等于该结点子树的个数<br>叶结点包含全部关键字，并且相互之间都链接在一起<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-001-c971a8b623.png" alt="图片"></p>
 <h2 id="叶结点">叶结点</h2>
-<p>根结点也可以是叶结点
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-002-e6ab7a1153.png" alt="图片"></p>
+<p>根结点也可以是叶结点<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-002-e6ab7a1153.png" alt="图片"></p>
 <h2 id="b-树的查找">B+ 树的查找</h2>
 <h3 id="第一种查找方式">第一种查找方式</h3>
-<p>先比较根结点中的关键字，如果某个关键字大于要查找的关键字，就进入该关键字对应的子树，然后依次继续比较。9 匹配，于是进入 9 对应的子树
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-003-3add6f386b.png" alt="图片">
-在 9 对应的子树中查找，找到匹配的关键字
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-004-4d84790cf2.png" alt="图片">
-查找 7：它小于 15，于是进入 15 对应的子树；再次查找，发现它小于 9，于是进入 9 对应的子树
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-005-ac7758009b.png" alt="图片">
-在 9 对应的子树中查找，找到比 8 小的关键字。由于这次比较发生在叶结点，并且只找到更小的关键字而没有相等的，因此认为查找失败
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-006-95f99641a1.png" alt="图片"></p>
+<p>先比较根结点中的关键字，如果某个关键字大于要查找的关键字，就进入该关键字对应的子树，然后依次继续比较。9 匹配，于是进入 9 对应的子树<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-003-3add6f386b.png" alt="图片"><br>在 9 对应的子树中查找，找到匹配的关键字<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-004-4d84790cf2.png" alt="图片"><br>查找 7：它小于 15，于是进入 15 对应的子树；再次查找，发现它小于 9，于是进入 9 对应的子树<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-005-ac7758009b.png" alt="图片"><br>在 9 对应的子树中查找，找到比 8 小的关键字。由于这次比较发生在叶结点，并且只找到更小的关键字而没有相等的，因此认为查找失败<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-006-95f99641a1.png" alt="图片"></p>
 <h3 id="第二种查找方式">第二种查找方式</h3>
-<p>顺序查找：利用链接叶结点的指针，逐个比较叶结点的关键字
-先与最左边叶结点中的关键字比较——没找到——然后进入第二个叶结点的关键字
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-007-abe84af541.png" alt="图片">
-比较后，9 相等——匹配成功
-<img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-008-3951b29883.png" alt="图片"></p>
+<p>顺序查找：利用链接叶结点的指针，逐个比较叶结点的关键字<br>先与最左边叶结点中的关键字比较——没找到——然后进入第二个叶结点的关键字<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-007-abe84af541.png" alt="图片"><br>比较后，9 相等——匹配成功<br><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-008-3951b29883.png" alt="图片"></p>
 <h2 id="总结-3">总结</h2>
 <p><img src="/workspace/software-foundations/data-structures/data-structures-and-algorithms/04-%E6%9F%A5%E6%89%BE/B%20%E6%A0%91%E4%B8%8E%20B%2B%20%E6%A0%91/assets/csdn-135315667/image-009-3938aa6460.png" alt="图片"></p>
 

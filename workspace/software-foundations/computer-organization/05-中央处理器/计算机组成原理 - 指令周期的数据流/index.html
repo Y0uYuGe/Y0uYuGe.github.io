@@ -21,31 +21,21 @@
 <h1 id="概览">概览</h1>
 <p><img src="https://i-blog.csdnimg.cn/blog_migrate/3810b0b8f0d78b3389989995f8fdc7db.png" alt="图片"></p>
 <h1 id="指令周期">指令周期</h1>
-<p>取指令需要访问存储器，而指令译码由 CPU 完成，所需时间很短。
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-002-46882f23e9.png" alt="图片">
-时钟周期组成机器周期，机器周期组成指令周期
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-003-58c6859fdf.png" alt="图片">
-间址周期：由形式地址获取有效地址所花费的时间（一个地址中的内容是真正需要访问的内容的地址）<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-004-200a0db67d.png" alt="图片"></p>
+<p>取指令需要访问存储器，而指令译码由 CPU 完成，所需时间很短。<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-002-46882f23e9.png" alt="图片"><br>时钟周期组成机器周期，机器周期组成指令周期<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-003-58c6859fdf.png" alt="图片"><br>间址周期：由形式地址获取有效地址所花费的时间（一个地址中的内容是真正需要访问的内容的地址）<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-004-200a0db67d.png" alt="图片"></p>
 <h1 id="指令周期流程">指令周期流程</h1>
-<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-005-175a81f582.png" alt="图片">
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-006-9759802822.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-005-175a81f582.png" alt="图片"><br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-006-9759802822.png" alt="图片"></p>
 <h2 id="指令周期的数据流---取指周期">指令周期的数据流 - 取指周期</h2>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-007-c3d97e4a41.png" alt="图片"></p>
 <h2 id="指令周期的数据流---间址周期">指令周期的数据流 - 间址周期</h2>
-<p>间址周期获取的是指令操作数的有效地址，以便在执行周期访问真正的操作数
-MDR 在取指周期保存的是指令
-有些机器会用获得的有效地址覆盖 IR 中的形式地址
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-008-78eff10bd8.png" alt="图片"></p>
+<p>间址周期获取的是指令操作数的有效地址，以便在执行周期访问真正的操作数<br>MDR 在取指周期保存的是指令<br>有些机器会用获得的有效地址覆盖 IR 中的形式地址<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-008-78eff10bd8.png" alt="图片"></p>
 <h2 id="指令周期的数据流---执行周期">指令周期的数据流 - 执行周期</h2>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-009-d4052877e8.png" alt="图片"></p>
 <h2 id="指令周期的数据流---中断周期">指令周期的数据流 - 中断周期</h2>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-010-8596cc2008.png" alt="图片"></p>
 <h2 id="指令执行方案">指令执行方案</h2>
-<p>一条指令的不同阶段使用不同的资源。所以当一条指令处于第二阶段时，它第一阶段所使用的资源可以被另一条指令的第一阶段使用，从而实现并行
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-011-4f8250e36c.png" alt="图片"></p>
+<p>一条指令的不同阶段使用不同的资源。所以当一条指令处于第二阶段时，它第一阶段所使用的资源可以被另一条指令的第一阶段使用，从而实现并行<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-011-4f8250e36c.png" alt="图片"></p>
 <h1 id="总结">总结</h1>
-<p>时钟频率反映了 CPU 每秒发出多少个时钟节拍
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-012-64281d1048.png" alt="图片"></p>
+<p>时钟频率反映了 CPU 每秒发出多少个时钟节拍<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81/assets/csdn-135066018/image-012-64281d1048.png" alt="图片"></p>
 
     </article>
     

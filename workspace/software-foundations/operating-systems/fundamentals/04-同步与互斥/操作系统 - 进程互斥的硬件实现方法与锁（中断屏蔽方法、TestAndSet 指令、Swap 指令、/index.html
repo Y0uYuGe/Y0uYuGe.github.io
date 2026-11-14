@@ -21,18 +21,13 @@
 <h1 id="概述">概述</h1>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-001-ccac2791ba.png" alt="图片"></p>
 <h1 id="中断屏蔽方法">中断屏蔽方法</h1>
-<p>不适用于多处理机：多处理机系统中不同处理机上的进程也可能关中断后访问临界资源，因此可能有多个进程同时访问临界资源。
-<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-002-bf0e921b40.png" alt="图片"></p>
+<p>不适用于多处理机：多处理机系统中不同处理机上的进程也可能关中断后访问临界资源，因此可能有多个进程同时访问临界资源。<br><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-002-bf0e921b40.png" alt="图片"></p>
 <h1 id="testandset-指令">TestAndSet 指令</h1>
 <p>Test-and-Set 是一种用于实现进程间互斥的特殊硬件指令，通常用于控制对共享资源（临界资源）的访问。</p>
 <p>具体来说，Test-and-Set 指令由两个步骤组成：</p>
-<p>测试步骤：检查指定内存地址（通常是一个标志位）的当前值。
-设置步骤：将该内存地址置为 1（或某个预设值）。
-这两个步骤构成一个原子操作，即执行过程中不会被其他处理器打断，保证了操作的同步性。</p>
+<p>测试步骤：检查指定内存地址（通常是一个标志位）的当前值。<br>设置步骤：将该内存地址置为 1（或某个预设值）。<br>这两个步骤构成一个原子操作，即执行过程中不会被其他处理器打断，保证了操作的同步性。</p>
 <p>Test-and-Set 指令通常应用于以下场景：</p>
-<p>当进程需要进入临界区时，执行 Test-and-Set 指令检查锁的状态。
-如果返回的旧值为 0（表示锁未被占用），进程就进入临界区，并将锁置为 1，阻止其他进程进入。
-当进程离开临界区时，将锁置为 0（解锁），允许其他进程进入。</p>
+<p>当进程需要进入临界区时，执行 Test-and-Set 指令检查锁的状态。<br>如果返回的旧值为 0（表示锁未被占用），进程就进入临界区，并将锁置为 1，阻止其他进程进入。<br>当进程离开临界区时，将锁置为 0（解锁），允许其他进程进入。</p>
 <p>让权等待：无法访问临界区时仍处于 while 循环中，导致一直占用 CPU。</p>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-003-aca234996e.png" alt="图片"></p>
 <h2 id="为什么适用于多处理机">为什么适用于多处理机</h2>
@@ -41,15 +36,12 @@
 <p>其次，TestAndSet 指令允许处理器直接与内存交互，而无需操作系统的介入。这使它在多处理机环境中非常有用，因为它可以减少对操作系统内核的依赖，从而提高系统的效率和响应速度。</p>
 <p>最后，虽然 TestAndSet 指令在某些情况下可能不适合用户进程，但在多处理器系统的内核进程中，它仍然是实现临界资源互斥访问的非常有价值的工具。</p>
 <h1 id="swap-指令">Swap 指令</h1>
-<p>把 lock 的值交给 old（对应此时临界区的上锁状态），然后 lock 的值被置为 true；由于 old 的值一开始被设为 true，之后再对 lock 进行检查。
-<img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-004-930b3c678d.png" alt="图片"></p>
+<p>把 lock 的值交给 old（对应此时临界区的上锁状态），然后 lock 的值被置为 true；由于 old 的值一开始被设为 true，之后再对 lock 进行检查。<br><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-004-930b3c678d.png" alt="图片"></p>
 <h1 id="小结">小结</h1>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-005-1914ef378a.png" alt="图片"></p>
 <h1 id="进程互斥锁">进程互斥：锁</h1>
-<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-006-92e2cdda23.png" alt="图片">
-如果在忙等期间临界区被解锁，就不需要切换进程上下文。这样相比于等待，代价就很低。另一方面，如果在忙等期间进程被调下处理机、切换到其他进程，那么如果此时临界区恰好解锁了，还得切换回原来那个忙等着访问临界资源的进程，才能使用临界区（当然，这样做的前提是进程从上锁、使用临界区到解锁的总时间比较短，这样其他进程忙等的时间也比较短）。</p>
-<p>不适用于单处理机：因为在忙等期间，即使另一个进程想要解锁，也必须等到忙等时间结束。
- <img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-007-9e093e37a5.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-006-92e2cdda23.png" alt="图片"><br>如果在忙等期间临界区被解锁，就不需要切换进程上下文。这样相比于等待，代价就很低。另一方面，如果在忙等期间进程被调下处理机、切换到其他进程，那么如果此时临界区恰好解锁了，还得切换回原来那个忙等着访问临界资源的进程，才能使用临界区（当然，这样做的前提是进程从上锁、使用临界区到解锁的总时间比较短，这样其他进程忙等的时间也比较短）。</p>
+<p>不适用于单处理机：因为在忙等期间，即使另一个进程想要解锁，也必须等到忙等时间结束。<br> <img src="/workspace/software-foundations/operating-systems/fundamentals/04-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%EF%BC%88%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95%E3%80%81TestAndSet%20%E6%8C%87%E4%BB%A4%E3%80%81Swap%20%E6%8C%87%E4%BB%A4%E3%80%81/assets/csdn-136045657/image-007-9e093e37a5.png" alt="图片"></p>
 
     </article>
     

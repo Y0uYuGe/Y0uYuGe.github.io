@@ -23,21 +23,8 @@
 <h1 id="hector_mapping">hector_mapping</h1>
 <p>hector_mapping 是一个基于激光雷达（LIDAR）的 SLAM（同步定位与地图构建）节点，适用于没有里程计且计算资源有限的场景。</p>
 <ul>
-<li>订阅的话题
-scan (sensor_msgs/LaserScan)
-SLAM 系统使用的激光雷达扫描数据。
-syscommand (std_msgs/String)
-系统命令。如果字符串等于 &quot;reset&quot;，地图和机器人位姿会被重置为初始状态。</li>
-<li>发布的话题
-map_metadata (nav_msgs/MapMetaData)
-可以从这个话题获取地图数据，数据是锁存的，并会定期更新。
-map (nav_msgs/OccupancyGrid)
-可以从这个话题获取地图数据，数据是锁存的，并会定期更新。
-slam_out_pose (geometry_msgs/PoseStamped)
-估计的机器人位姿，不带协方差。
-poseupdate (geometry_msgs/PoseWithCovarianceStamped)
-估计的机器人位姿，带有高斯估计的不确定性。
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-001-bdbba5e8a9.png" alt="图片"></li>
+<li>订阅的话题<br>scan (sensor_msgs/LaserScan)<br>SLAM 系统使用的激光雷达扫描数据。<br>syscommand (std_msgs/String)<br>系统命令。如果字符串等于 &quot;reset&quot;，地图和机器人位姿会被重置为初始状态。</li>
+<li>发布的话题<br>map_metadata (nav_msgs/MapMetaData)<br>可以从这个话题获取地图数据，数据是锁存的，并会定期更新。<br>map (nav_msgs/OccupancyGrid)<br>可以从这个话题获取地图数据，数据是锁存的，并会定期更新。<br>slam_out_pose (geometry_msgs/PoseStamped)<br>估计的机器人位姿，不带协方差。<br>poseupdate (geometry_msgs/PoseWithCovarianceStamped)<br>估计的机器人位姿，带有高斯估计的不确定性。<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-001-bdbba5e8a9.png" alt="图片"></li>
 </ul>
 <pre><code class="language-bash">sudo apt install ros-noetic-hector-mapping
 </code></pre>
@@ -66,35 +53,11 @@ poseupdate (geometry_msgs/PoseWithCovarianceStamped)
 </code></pre>
 <h1 id="hector_mapping-参数设置">Hector_Mapping 参数设置</h1>
 <ol>
-<li><p>~map_update_distance_thresh
-类型：double（浮点数）
-默认值：0.4
-单位：米（m）
-作用：
-这是地图更新的距离阈值。机器人至少移动 0.4 米（默认值）才会触发地图更新。
-详细说明：
-如果机器人移动的距离小于这个阈值，地图不会更新。
-该参数与 ~map_update_angle_thresh 配合使用，满足任一条件即会触发地图更新。</p>
+<li><p>~map_update_distance_thresh<br>类型：double（浮点数）<br>默认值：0.4<br>单位：米（m）<br>作用：<br>这是地图更新的距离阈值。机器人至少移动 0.4 米（默认值）才会触发地图更新。<br>详细说明：<br>如果机器人移动的距离小于这个阈值，地图不会更新。<br>该参数与 ~map_update_angle_thresh 配合使用，满足任一条件即会触发地图更新。</p>
 </li>
-<li><p>~map_update_angle_thresh
-类型：double（浮点数）
-默认值：0.9
-单位：弧度（rad）
-作用：
-这是地图更新的角度阈值。机器人至少旋转 0.9 弧度（默认值）才会触发地图更新。
-详细说明：
-如果机器人的旋转角度小于这个阈值，地图不会更新。
-该参数与 ~map_update_distance_thresh 配合使用，满足任一条件即会触发地图更新。</p>
+<li><p>~map_update_angle_thresh<br>类型：double（浮点数）<br>默认值：0.9<br>单位：弧度（rad）<br>作用：<br>这是地图更新的角度阈值。机器人至少旋转 0.9 弧度（默认值）才会触发地图更新。<br>详细说明：<br>如果机器人的旋转角度小于这个阈值，地图不会更新。<br>该参数与 ~map_update_distance_thresh 配合使用，满足任一条件即会触发地图更新。</p>
 </li>
-<li><p>~map_pub_period
-类型：double（浮点数）
-默认值：2.0
-单位：秒（s）
-作用：
-这是发布地图的时间间隔。地图数据每 2.0 秒（默认值）发布一次。
-详细说明：
-即使机器人没有移动或旋转，地图仍会按这个间隔定期发布。
-该参数与 ~map_update_distance_thresh 和 ~map_update_angle_thresh 无关，只控制地图发布的频率。</p>
+<li><p>~map_pub_period<br>类型：double（浮点数）<br>默认值：2.0<br>单位：秒（s）<br>作用：<br>这是发布地图的时间间隔。地图数据每 2.0 秒（默认值）发布一次。<br>详细说明：<br>即使机器人没有移动或旋转，地图仍会按这个间隔定期发布。<br>该参数与 ~map_update_distance_thresh 和 ~map_update_angle_thresh 无关，只控制地图发布的频率。</p>
 </li>
 </ol>
 <pre><code class="language-bash">&lt;launch&gt;
@@ -113,8 +76,7 @@ poseupdate (geometry_msgs/PoseWithCovarianceStamped)
 <p>ROS（机器人操作系统）中的 <strong>TF（Transform）系统</strong>是管理坐标系变换的核心工具。它允许用户定义和查询机器人系统中不同坐标系之间的关系，例如机器人底盘、传感器、机械臂等之间的相对位置和朝向。TF 系统在机器人导航、感知和控制中起着至关重要的作用。</p>
 <hr>
 <ol>
-<li><strong>TF 系统的基本概念</strong>
-  1.1 坐标系（Frame）</li>
+<li><strong>TF 系统的基本概念</strong><br>  1.1 坐标系（Frame）</li>
 </ol>
 <ul>
 <li><p>在机器人系统中，每个部件（如传感器、机械臂、底盘等）都有自己的坐标系。</p>
@@ -132,8 +94,7 @@ poseupdate (geometry_msgs/PoseWithCovarianceStamped)
 </ul>
 <hr>
 <ol start="2">
-<li><strong>TF 系统的核心功能</strong>
- 2.1 发布变换（Publish Transform）</li>
+<li><strong>TF 系统的核心功能</strong><br> 2.1 发布变换（Publish Transform）</li>
 </ol>
 <ul>
 <li>通过 <code>tf::TransformBroadcaster</code> 发布坐标系之间的变换关系。</li>
@@ -151,9 +112,7 @@ poseupdate (geometry_msgs/PoseWithCovarianceStamped)
 </ul>
 <hr>
 <ol start="3">
-<li><strong>TF 系统的使用</strong>
- 3.1 发布变换
-下面是一个发布变换的示例：</li>
+<li><strong>TF 系统的使用</strong><br> 3.1 发布变换<br>下面是一个发布变换的示例：</li>
 </ol>
 <pre><code class="language-cpp">#include &lt;ros/ros.h&gt;
 #include &lt;tf/transform_broadcaster.h&gt;
@@ -186,8 +145,7 @@ int main(int argc, char** argv) {
 <li>发布从 <code>base_link</code>（机器人底盘）到 <code>laser</code>（激光雷达）的变换。</li>
 <li>该变换包括平移 <code>(0.1, 0.0, 0.2)</code> 和旋转 <code>(0, 0, 0, 1)</code>（无旋转）。</li>
 </ul>
-<p> 3.2 查询变换
-下面是一个查询变换的示例：</p>
+<p> 3.2 查询变换<br>下面是一个查询变换的示例：</p>
 <pre><code class="language-cpp">#include &lt;ros/ros.h&gt;
 #include &lt;tf/transform_listener.h&gt;
 
@@ -233,8 +191,7 @@ int main(int argc, char** argv) {
 </ul>
 <hr>
 <ol start="4">
-<li><strong>TF 系统的常用工具</strong>
- 4.1 <code>tf_monitor</code></li>
+<li><strong>TF 系统的常用工具</strong><br> 4.1 <code>tf_monitor</code></li>
 </ol>
 <ul>
 <li>查看 TF 树的当前状态。</li>
@@ -266,18 +223,12 @@ int main(int argc, char** argv) {
 tf2_msgs/TFMessage
 </code></pre>
 <p><a href="https://docs.ros.org/en/api/tf2_msgs/html/msg/TFMessage.html">https://docs.ros.org/en/api/tf2_msgs/html/msg/TFMessage.html</a></p>
-<p>tf2_msgs/TFMessage 是 ROS（机器人操作系统）中用于传递多个坐标变换信息的消息类型。
-transforms：这是一个包含多个 geometry_msgs/TransformStamped 消息的数组。每个 TransformStamped 消息表示坐标系之间的一个变换关系。
-用途：TFMessage 通常用于在 ROS 节点之间传递多个坐标变换数据。例如，一个节点可以发布一个包含多个坐标系之间变换关系的 TFMessage，其他节点可以订阅该消息来获取变换信息。</p>
+<p>tf2_msgs/TFMessage 是 ROS（机器人操作系统）中用于传递多个坐标变换信息的消息类型。<br>transforms：这是一个包含多个 geometry_msgs/TransformStamped 消息的数组。每个 TransformStamped 消息表示坐标系之间的一个变换关系。<br>用途：TFMessage 通常用于在 ROS 节点之间传递多个坐标变换数据。例如，一个节点可以发布一个包含多个坐标系之间变换关系的 TFMessage，其他节点可以订阅该消息来获取变换信息。</p>
 <p>geometry_msgs/TransformStamped 是用于表示带时间戳的坐标变换的消息类型。</p>
 <ol>
-<li>header：这是一个 std_msgs/Header 消息，包含时间戳和坐标系信息。
-header.stamp：时间戳，表示变换的时间。
-header.frame_id：父坐标系的名称。</li>
+<li>header：这是一个 std_msgs/Header 消息，包含时间戳和坐标系信息。<br>header.stamp：时间戳，表示变换的时间。<br>header.frame_id：父坐标系的名称。</li>
 <li>child_frame_id：子坐标系的名称，表示变换是从父坐标系到子坐标系。</li>
-<li>transform：这是一个 geometry_msgs/Transform 消息，包含平移和旋转信息。
-transform.translation：平移向量，包含 x、y、z 分量，即子坐标系原点在父坐标系中的位置。
-transform.rotation：旋转四元数，包含 x、y、z、w 分量，描述子坐标系 x、y、z 轴的旋转，或者说物体相对于另一个坐标系的旋转角度和朝向。</li>
+<li>transform：这是一个 geometry_msgs/Transform 消息，包含平移和旋转信息。<br>transform.translation：平移向量，包含 x、y、z 分量，即子坐标系原点在父坐标系中的位置。<br>transform.rotation：旋转四元数，包含 x、y、z、w 分量，描述子坐标系 x、y、z 轴的旋转，或者说物体相对于另一个坐标系的旋转角度和朝向。</li>
 </ol>
 <pre><code class="language-bash">rostopic echo /tf
 </code></pre>
@@ -292,15 +243,12 @@ transform.rotation：旋转四元数，包含 x、y、z、w 分量，描述子�
 </code></pre>
 <p>Hector Mapping 是一种基于激光雷达的 SLAM 算法，其核心思想是通过激光雷达点云与障碍物的配准来定位。在 Hector Mapping 中，机器人的位移主要由激光雷达点云配准算法计算，不使用里程计数据。为了在 RViz 中显示地图和机器人模型，Hector Mapping 会输出一个 map 到 odom 的 TF 来抵消不断增长的里程计 TF，使 base_footprint 的位置始终与 scanmatcher_frame 保持一致。</p>
 <p>运行 Hector Mapping 时，如果机器人进入两侧墙壁光滑的走廊，激光雷达只能扫描到两侧的墙壁，导致障碍物点云配准认为机器人没有前进，误以为是激光雷达数据的噪声，于是定位在小范围内抖动。此时 Hector Mapping 会输出一个与机器人运动方向相反的 TF 来抵消里程计的变化，使 base_footprint 的位置与 scanmatcher_frame 保持一致。</p>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-003-031a19d855.png" alt="雷达">
-直接由激光雷达点云匹配得到的位移就是 scanmatcher_frame。</p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-003-031a19d855.png" alt="雷达"><br>直接由激光雷达点云匹配得到的位移就是 scanmatcher_frame。</p>
 <pre><code class="language-bash">roslaunch wpr_simulation wpb_corridor_hector.launch 
 </code></pre>
 <p>Gmapping 是另一种常用的 SLAM 算法。其核心思想是先用里程计估计机器人的位移，再将激光雷达点云与障碍物轮廓进行拟合来修正里程计误差。在 Gmapping 中，机器人的位移主要由里程计估计，激光雷达点云配准算法只起修正里程计误差的作用。Gmapping 输出的是从 map 到 odom 再到 base_footprint 的 TF。</p>
 <p>运行 Gmapping 时，随着机器人进入两侧墙壁光滑的走廊，map 和 odom 的位置开始出现偏差，并有明显的跳变。这是由激光雷达点云与障碍物配准的定位跳变造成的。即便如此，由于里程计仍在工作，机器人的定位会继续前进，最终的建图结果与实际场地基本一致。</p>
-<p>map 到 odom 的位置是障碍物点云匹配的偏移量。
-odom 到 base_footprint 的位置是里程计的偏移量。
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-004-e8ff08302a.png" alt="图片"></p>
+<p>map 到 odom 的位置是障碍物点云匹配的偏移量。<br>odom 到 base_footprint 的位置是里程计的偏移量。<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-004-e8ff08302a.png" alt="图片"></p>
 <h1 id="gmapping">Gmapping</h1>
 <pre><code class="language-bash">roslaunch wpr_simulation wpb_stage_robocup.launch 
 </code></pre>
@@ -308,23 +256,8 @@ odom 到 base_footprint 的位置是里程计的偏移量。
 </code></pre>
 <p>slam_gmapping 是一个用于同步定位与地图构建（SLAM）的 ROS（机器人操作系统）节点。它接收激光扫描数据（sensor_msgs/LaserScan）并构建地图（nav_msgs/OccupancyGrid），地图可以通过 ROS 话题或服务获取。</p>
 <ul>
-<li>订阅的话题
-tf (tf/tfMessage)
-作用：提供激光雷达、底盘和里程计之间的坐标变换。
-说明：这些变换是构建地图和定位机器人所必需的。
-scan (sensor_msgs/LaserScan)
-作用：接收用于创建地图的激光扫描数据。
-说明：激光扫描数据是构建地图的主要输入。</li>
-<li>发布的话题
-map_metadata (nav_msgs/MapMetaData)
-作用：获取地图元数据。
-说明：该话题发布地图的元数据，包括地图的分辨率、尺寸等。数据是锁存的，并会定期更新。
-map (nav_msgs/OccupancyGrid)
-作用：获取地图数据。
-说明：该话题发布以占据栅格表示的地图数据。数据是锁存的，并会定期更新。
-~entropy (std_msgs/Float64)
-作用：估计机器人位姿分布的熵。
-说明：熵值越高，表示机器人位姿的不确定性越大。这是 1.1.0 版本起新增的功能。</li>
+<li>订阅的话题<br>tf (tf/tfMessage)<br>作用：提供激光雷达、底盘和里程计之间的坐标变换。<br>说明：这些变换是构建地图和定位机器人所必需的。<br>scan (sensor_msgs/LaserScan)<br>作用：接收用于创建地图的激光扫描数据。<br>说明：激光扫描数据是构建地图的主要输入。</li>
+<li>发布的话题<br>map_metadata (nav_msgs/MapMetaData)<br>作用：获取地图元数据。<br>说明：该话题发布地图的元数据，包括地图的分辨率、尺寸等。数据是锁存的，并会定期更新。<br>map (nav_msgs/OccupancyGrid)<br>作用：获取地图数据。<br>说明：该话题发布以占据栅格表示的地图数据。数据是锁存的，并会定期更新。<br>~entropy (std_msgs/Float64)<br>作用：估计机器人位姿分布的熵。<br>说明：熵值越高，表示机器人位姿的不确定性越大。这是 1.1.0 版本起新增的功能。</li>
 <li>所需的变换</li>
 </ul>
 <frame of incoming scans> → base_link
@@ -357,8 +290,7 @@ rosrun wpr_simulation  keyboard_vel_ctrl
 &lt;/launch&gt;
 </code></pre>
 <h1 id="gmapping-参数设置">gmapping 参数设置</h1>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-005-2c990b411e.png" alt="图片">
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-006-970e4bb2f2.png" alt="图片"></p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-005-2c990b411e.png" alt="图片"><br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-006-970e4bb2f2.png" alt="图片"></p>
 <pre><code class="language-bash">&lt;launch&gt;
 &lt;include file=&quot;$(find wpr_simulation)/launch/wpb_stage_robocup.launch&quot;   /&gt;
 &lt;node pkg=&quot;gmapping&quot; type=&quot;slam_gmapping&quot; name=&quot;slam_gmapping&quot; &gt;
@@ -373,8 +305,7 @@ rosrun wpr_simulation  keyboard_vel_ctrl
 <h1 id="地图的保存与加载">地图的保存与加载</h1>
 <p><code>map_server</code> 是 ROS（机器人操作系统）中一个重要的功能包，主要用于处理地图数据。它提供两个主要功能：<code>map_server</code> 节点和 <code>map_saver</code> 命令行工具。下面详细说明其功能：</p>
 <ol>
-<li><strong>map_server 节点</strong>
-<code>map_server</code> 节点从磁盘读取地图文件，并通过 ROS 服务提供地图数据。地图数据通常以两种文件格式存储：</li>
+<li><strong>map_server 节点</strong><br><code>map_server</code> 节点从磁盘读取地图文件，并通过 ROS 服务提供地图数据。地图数据通常以两种文件格式存储：</li>
 </ol>
 <ul>
 <li><strong>YAML 文件</strong>：描述地图的元数据，包括地图的分辨率、原点、阈值等信息。</li>
@@ -394,14 +325,11 @@ rosrun wpr_simulation  keyboard_vel_ctrl
 </code></pre>
 <p>该命令启动 <code>map_server</code> 节点，并加载 <code>mymap.yaml</code> 文件中指定的地图。</p>
 <ol start="2">
-<li><strong>map_saver 工具</strong>
-<code>map_saver</code> 是一个用于将地图保存到磁盘的命令行工具，通常用于保存 SLAM（同步定位与地图构建）生成的地图。</li>
+<li><strong>map_saver 工具</strong><br><code>map_saver</code> 是一个用于将地图保存到磁盘的命令行工具，通常用于保存 SLAM（同步定位与地图构建）生成的地图。</li>
 </ol>
 <p>主要功能：</p>
 <ul>
-<li><strong>保存地图</strong>：<code>map_saver</code> 从指定的 ROS 话题读取地图数据，并保存为 <code>.pgm</code> 和 <code>.yaml</code> 文件。
-默认话题：/map（消息类型：nav_msgs/OccupancyGrid）
-自定义话题：可以通过 map:=<topic_name> 指定其他话题。</li>
+<li><strong>保存地图</strong>：<code>map_saver</code> 从指定的 ROS 话题读取地图数据，并保存为 <code>.pgm</code> 和 <code>.yaml</code> 文件。<br>默认话题：/map（消息类型：nav_msgs/OccupancyGrid）<br>自定义话题：可以通过 map:=<topic_name> 指定其他话题。</li>
 <li><strong>自定义阈值</strong>：可以通过 <code>--occ</code> 和 <code>--free</code> 参数设置占据区域和空闲区域的阈值。</li>
 </ul>
 <p> 使用示例：</p>
@@ -409,8 +337,7 @@ rosrun wpr_simulation  keyboard_vel_ctrl
 </code></pre>
 <p>该命令将地图保存为 <code>mymap.pgm</code> 和 <code>mymap.yaml</code> 文件。</p>
 <ol start="3">
-<li><strong>地图格式</strong>
-地图由两个文件组成：</li>
+<li><strong>地图格式</strong><br>地图由两个文件组成：</li>
 </ol>
 <ul>
 <li><strong>YAML 文件</strong>：包含地图的元数据，如分辨率、原点、阈值等。</li>
@@ -429,8 +356,7 @@ negate: 0
 </li>
 <li><p><code>resolution</code>：地图的分辨率，单位为米/像素。</p>
 </li>
-<li><p><code>origin</code>：地图左下角像素的二维位姿，格式为 (x, y, yaw)，其中 yaw 表示逆时针旋转（yaw=0 表示无旋转）。当前系统的许多部分会忽略 yaw。
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-007-b21de046f1.png" alt="图片"></p>
+<li><p><code>origin</code>：地图左下角像素的二维位姿，格式为 (x, y, yaw)，其中 yaw 表示逆时针旋转（yaw=0 表示无旋转）。当前系统的许多部分会忽略 yaw。<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/assets/csdn-145568423/image-007-b21de046f1.png" alt="图片"></p>
 </li>
 <li><p><code>occupied_thresh</code> 和 <code>free_thresh</code>：分别是占据区域和空闲区域的阈值。</p>
 </li>
@@ -438,8 +364,7 @@ negate: 0
 </li>
 </ul>
 <ol start="4">
-<li><strong>取值解释</strong>
-地图中的像素值可以解释为三种状态：</li>
+<li><strong>取值解释</strong><br>地图中的像素值可以解释为三种状态：</li>
 </ol>
 <ul>
 <li><strong>Trinary（三值）</strong>：像素值被解释为空闲（0）、占据（100）或未知（-1）。</li>

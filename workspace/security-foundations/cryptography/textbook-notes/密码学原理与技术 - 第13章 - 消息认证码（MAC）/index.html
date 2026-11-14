@@ -19,35 +19,26 @@
     <div class="meta"><time>2025-01-04</time><span class="tag">#密码学</span><span class="tag">#哈希算法</span><span class="tag">#算法</span><span class="tag">#哈希</span></div>
     <article class="post-body">
 <h1 id="概述">概述</h1>
-<p>可以理解为对称形式的数字签名，但与数字签名之间仍有很多不同
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-001-e45fb0a586.png" alt="图片"></p>
+<p>可以理解为对称形式的数字签名，但与数字签名之间仍有很多不同<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-001-e45fb0a586.png" alt="图片"></p>
 <h1 id="mac-的原理">MAC 的原理</h1>
 <p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-002-9650c04a9b.png" alt="图片"></p>
 <p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-003-226475c802.png" alt="图片"></p>
 <h1 id="消息认证码的性质">消息认证码的性质</h1>
-<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-004-c8f4c59169.png" alt="图片">
-消息认证 = 数据源认证</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-004-c8f4c59169.png" alt="图片"><br>消息认证 = 数据源认证</p>
 <h1 id="消息认证码mac的安全性">消息认证码（MAC）的安全性</h1>
 <p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-005-ea33bd448c.png" alt="图片"></p>
 <h1 id="基于哈希函数的-mac">基于哈希函数的 MAC</h1>
 <p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-006-c1d47bd746.png" alt="图片"></p>
-<p>前缀攻击：直接在原消息后面追加消息分组
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-007-dbe492dbc4.png" alt="图片"></p>
-<p>后缀攻击：两个 x 产生碰撞，从而生成一个合法的消息和认证码
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-008-84b3115949.png" alt="图片"></p>
+<p>前缀攻击：直接在原消息后面追加消息分组<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-007-dbe492dbc4.png" alt="图片"></p>
+<p>后缀攻击：两个 x 产生碰撞，从而生成一个合法的消息和认证码<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-008-84b3115949.png" alt="图片"></p>
 <h1 id="hmac">HMAC</h1>
-<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-009-a9531ee12f.png" alt="图片">
-这里的 h 是哈希函数</p>
-<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-010-9e9a4535f6.png" alt="图片">
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-011-1380713a51.png" alt="图片">
-这里的 h 可以理解为哈希函数中的压缩函数</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-009-a9531ee12f.png" alt="图片"><br>这里的 h 是哈希函数</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-010-9e9a4535f6.png" alt="图片"><br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-011-1380713a51.png" alt="图片"><br>这里的 h 可以理解为哈希函数中的压缩函数</p>
 <h1 id="基于分组密码的-mac">基于分组密码的 MAC</h1>
 <p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-012-e79cbc8d8b.png" alt="图片"></p>
 <h2 id="cbc-mac">CBC-MAC</h2>
 <p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-013-f02170b11c.png" alt="图片"></p>
-<p> 最后一步使用 k1 而不是 k 会更安全
- <img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-014-a5971b7656.png" alt="图片">
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-015-291f9065bb.png" alt="图片"></p>
+<p> 最后一步使用 k1 而不是 k 会更安全<br> <img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-014-a5971b7656.png" alt="图片"><br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%20-%20%E7%AC%AC13%E7%AB%A0%20-%20%E6%B6%88%E6%81%AF%E8%AE%A4%E8%AF%81%E7%A0%81%EF%BC%88MAC%EF%BC%89/assets/csdn-144933553/image-015-291f9065bb.png" alt="图片"></p>
 
     </article>
     

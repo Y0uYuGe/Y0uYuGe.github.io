@@ -19,15 +19,11 @@
     <div class="meta"><time>2024-06-10</time><span class="tag">#内核</span><span class="tag">#Pwn</span><span class="tag">#CTF</span></div>
     <article class="post-body">
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://arttnba3.cn/2021/02/21/OS-0X01-LINUX-KERNEL-PART-II/">https://arttnba3.cn/2021/02/21/OS-0X01-LINUX-KERNEL-PART-II/</a>
-<a href="https://bbs.kanxue.com/thread-276403.htm#msg_header_h1_2">https://bbs.kanxue.com/thread-276403.htm#msg_header_h1_2</a></p>
+<p><a href="https://arttnba3.cn/2021/02/21/OS-0X01-LINUX-KERNEL-PART-II/">https://arttnba3.cn/2021/02/21/OS-0X01-LINUX-KERNEL-PART-II/</a><br><a href="https://bbs.kanxue.com/thread-276403.htm#msg_header_h1_2">https://bbs.kanxue.com/thread-276403.htm#msg_header_h1_2</a></p>
 <p><a href="https://kiprey.github.io/2021/10/kernel_pwn_introduction/#d-%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90">https://kiprey.github.io/2021/10/kernel_pwn_introduction/#d-%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90</a></p>
 <h1 id="slub-分配器">slub 分配器</h1>
 <p>这篇博客讲得很不错：<a href="https://www.cnblogs.com/LoyenWang/p/11922887.html">https://www.cnblogs.com/LoyenWang/p/11922887.html</a></p>
-<p>一个 kmem_cache = 一类大小相同的对象
-一个 slub cache = 多个 slub page = 很多个大小相同的对象
-一个 slub page = 2^n 个物理页 = 多个大小相同的对象
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-001-5672e68416.png" alt="图片"></p>
+<p>一个 kmem_cache = 一类大小相同的对象<br>一个 slub cache = 多个 slub page = 很多个大小相同的对象<br>一个 slub page = 2^n 个物理页 = 多个大小相同的对象<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-001-5672e68416.png" alt="图片"></p>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-002-b7d4e33502.png" alt="图片"></p>
 <h2 id="kmem_cache_cpu">kmem_cache_cpu</h2>
 <p>void **freelist：指向下一个可分配对象的指针。在 SLAB 分配器中，对象被释放时不会立即归还给全局内存池，而是被链接进这个空闲链表。这样，当再次需要分配对象时，可以从这个链表中快速取出，提高分配速度。</p>
@@ -96,8 +92,7 @@ int main() {
 </ul>
 <p>所以子进程实际上是从 <code>fork()</code> 调用点开始执行程序的一份拷贝的，但它会根据 <code>fork()</code> 的返回值跳转到特定的代码路径。这使得父进程和子进程能够执行不同的逻辑，协同完成复杂的任务。</p>
 <h1 id="cpu-绑定">CPU 绑定</h1>
-<p>确保同一大小类别的分配对象来自同一个 kmem_cache_cpu
-例如，把某个对象释放进 1 号 kmem_cache_cpu 的 freelist 之后，希望下次分配时能再拿到这个刚释放的对象；如果此时处于不同的 CPU 上，就拿不回来了</p>
+<p>确保同一大小类别的分配对象来自同一个 kmem_cache_cpu<br>例如，把某个对象释放进 1 号 kmem_cache_cpu 的 freelist 之后，希望下次分配时能再拿到这个刚释放的对象；如果此时处于不同的 CPU 上，就拿不回来了</p>
 <pre><code class="language-c">#define _GNU_SOURCE
 #include &lt;sched.h&gt;
 
@@ -119,8 +114,7 @@ void bind_cpu(int core)
 <p>不知道为什么，没有题目配合地学东西总感觉很难受</p>
 <pre><code class="language-c">-cpu kvm64,+smep
 </code></pre>
-<p>开启 SMEP 是为了防止用户态（Ring 3）内存页中的代码在 Ring 0（最高特权级，通常是操作系统内核态）中被执行。
-直接来看加载驱动的源码</p>
+<p>开启 SMEP 是为了防止用户态（Ring 3）内存页中的代码在 Ring 0（最高特权级，通常是操作系统内核态）中被执行。<br>直接来看加载驱动的源码</p>
 <h1 id="检查">检查</h1>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-003-cc8d0a6a96.png" alt="图片"></p>
 <h1 id="babtdriver_init">babtdriver_init</h1>
@@ -128,8 +122,7 @@ void bind_cpu(int core)
 <li>分配一个设备号</li>
 <li>初始化设备结构体</li>
 <li>把设备添加到内核的设备列表中</li>
-<li>创建设备类和设备实例
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-004-6e185bea85.png" alt="图片"></li>
+<li>创建设备类和设备实例<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-004-6e185bea85.png" alt="图片"></li>
 </ol>
 <h2 id="struct-cdev">struct cdev</h2>
 <pre><code class="language-c">struct cdev { // 结构体cdev的定义，大小为0x68字节
@@ -403,16 +396,12 @@ void bind_cpu(int core)
 </ol>
 <p>调用 device_create 函数来动态创建一个逻辑设备并初始化该新逻辑设备；同时将它与第一个参数对应的逻辑类关联起来，并把这个逻辑设备添加到 Linux 内核系统的设备驱动模型中。这样，该函数会自动在 /sys/devices/virtual 下创建一个新的逻辑设备目录，并在 /dev 目录下创建该逻辑类对应的设备文件。</p>
 <h1 id="babyopen">babyopen</h1>
-<p>babydev_struct 是一个全局变量
-在 kmalloc_caches[6] 中分配了一个大小为 64 的对象，并更新 babydev_struct 的 device_buf 和 device_buf_len
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-007-efc2ca65ed.png" alt="图片"></p>
+<p>babydev_struct 是一个全局变量<br>在 kmalloc_caches[6] 中分配了一个大小为 64 的对象，并更新 babydev_struct 的 device_buf 和 device_buf_len<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-007-efc2ca65ed.png" alt="图片"></p>
 <h1 id="babyrelease">babyrelease</h1>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-008-b323dd7973.png" alt="图片">babydev_struct.device_buf 被释放，但该函数既没有把 device_buf 指针置为 NULL，也没有把 device_buf_len 置为 0。</p>
 <h1 id="babyread">babyread</h1>
-<p>IDA 有点问题，直接看汇编
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-009-8d5994c5eb.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-010-0bfbe8cf46.png" alt="图片">
-更正后的版本</p>
+<p>IDA 有点问题，直接看汇编<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-009-8d5994c5eb.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-010-0bfbe8cf46.png" alt="图片"><br>更正后的版本</p>
 <pre><code class="language-c"> if ( babydev_struct.device_buf_len &gt; length )
   {
     copy_to_user(buffer, babydev_struct.device_buf, length);
@@ -421,8 +410,7 @@ void bind_cpu(int core)
 </code></pre>
 <p>它检查 device_buf 不为空，然后检查读取长度是否在 device_buf 范围内，接着把 device_buf 上的内存拷贝到用户态的 buff 中</p>
 <h1 id="babywrite">babywrite</h1>
-<p>同样，IDA 也有点问题
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-011-567c44aee6.png" alt="图片"></p>
+<p>同样，IDA 也有点问题<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-011-567c44aee6.png" alt="图片"></p>
 <pre><code class="language-c"> if ( babydev_struct.device_buf_len &gt; length )
   {
     copy_from_user(babydev_struct.device_buf, buffer, length);
@@ -431,8 +419,7 @@ void bind_cpu(int core)
 </code></pre>
 <p>把用户态缓冲区中的数据拷贝进内核态的 device_buf</p>
 <h1 id="babyioctl">babyioctl</h1>
-<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-012-c1a13a2ce1.png" alt="图片">
-先 kfree，然后重新分配；分配的大小应为 a4，然后设置 device_buf 和 device_buf_len</p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-012-c1a13a2ce1.png" alt="图片"><br>先 kfree，然后重新分配；分配的大小应为 a4，然后设置 device_buf 和 device_buf_len</p>
 <h1 id="提取-vmlinux">提取 vmlinux</h1>
 <pre><code class="language-c">sudo apt install python3-pip
 sudo pip3 install --upgrade lz4 git+https://github.com/marin-m/vmlinux-to-elf
@@ -444,14 +431,8 @@ vmlinux-to-elf bzImage vmlinux
 <h1 id="调试">调试</h1>
 <pre><code class="language-c">sudo apt-get install qemu-system-x86 qemu-utils
 </code></pre>
-<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-013-9aba2c942f.png" alt="图片">
-解决方法
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-014-3b6444acac.png" alt="图片">
-出现了这个东西，但看起来不影响调试
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-015-7988e819bc.png" alt="图片"></p>
-<p>解决方法：<a href="https://github.com/pwndbg/pwndbg/issues/2171">https://github.com/pwndbg/pwndbg/issues/2171</a>
-用 sudo gdb 就能消除这个问题
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-016-027375652d.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-013-9aba2c942f.png" alt="图片"><br>解决方法<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-014-3b6444acac.png" alt="图片"><br>出现了这个东西，但看起来不影响调试<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-015-7988e819bc.png" alt="图片"></p>
+<p>解决方法：<a href="https://github.com/pwndbg/pwndbg/issues/2171">https://github.com/pwndbg/pwndbg/issues/2171</a><br>用 sudo gdb 就能消除这个问题<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-016-027375652d.png" alt="图片"></p>
 <h1 id="思路">思路</h1>
 <p>绑定到单个 CPU，否则 UAF 可能不会成功；但这道题启动时带了 <code> -smp cores=1,threads=1</code>——1 核 1 线程——所以不需要绑定</p>
 <ol>
@@ -494,8 +475,7 @@ int main() {
 <p>重新打包</p>
 <pre><code class="language-c">find . | cpio -o --format=newc &gt; rootfs.cpio
 </code></pre>
-<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-017-754f299c17.png" alt="图片">
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-018-a4c49bb86c.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-017-754f299c17.png" alt="图片"><br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-Kernel%EF%BC%9A%E5%88%9D%E6%8E%A2/assets/csdn-139439389/image-018-a4c49bb86c.png" alt="图片"></p>
 
     </article>
     

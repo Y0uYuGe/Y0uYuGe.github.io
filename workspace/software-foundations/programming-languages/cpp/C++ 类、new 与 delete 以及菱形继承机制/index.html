@@ -19,14 +19,11 @@
     <div class="meta"><time>2024-06-02</time><span class="tag">#c++</span><span class="tag">#java</span><span class="tag">#redis</span></div>
     <article class="post-body">
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://showlinkroom.me/2017/08/21/C-%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/">https://showlinkroom.me/2017/08/21/C-%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/</a>
-<a href="https://www.cnblogs.com/bonelee/p/17299985.html">https://www.cnblogs.com/bonelee/p/17299985.html</a>
-<a href="https://xz.aliyun.com/t/5242?time__1311=n4%2bxnD07itGQ=D54AKDsA3xCuU=wQNY4D&alichlgref=https://xz.aliyun.com/u/15779#toc-3">https://xz.aliyun.com/t/5242?time__1311=n4%2BxnD07itGQ%3DD54AKDsA3xCuU%3DwQNY4D&amp;alichlgref=https%3A%2F%2Fxz.aliyun.com%2Fu%2F15779#toc-3</a></p>
+<p><a href="https://showlinkroom.me/2017/08/21/C-%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/">https://showlinkroom.me/2017/08/21/C-%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/</a><br><a href="https://www.cnblogs.com/bonelee/p/17299985.html">https://www.cnblogs.com/bonelee/p/17299985.html</a><br><a href="https://xz.aliyun.com/t/5242?time__1311=n4%2bxnD07itGQ=D54AKDsA3xCuU=wQNY4D&alichlgref=https://xz.aliyun.com/u/15779#toc-3">https://xz.aliyun.com/t/5242?time__1311=n4%2BxnD07itGQ%3DD54AKDsA3xCuU%3DwQNY4D&amp;alichlgref=https%3A%2F%2Fxz.aliyun.com%2Fu%2F15779#toc-3</a></p>
 <h1 id="虚函数">虚函数</h1>
 <p>在 C++ 中，虚函数是一种特殊的成员函数，它允许派生类重写或覆盖基类中定义的函数，从而实现多态。虚函数的关键特性和用途可以总结如下：</p>
 <ol>
-<li><p><strong>声明与定义</strong>：
-声明虚函数时，需要在基类的成员函数声明前加上 <code>virtual</code> 关键字。例如：</p>
+<li><p><strong>声明与定义</strong>：<br>声明虚函数时，需要在基类的成员函数声明前加上 <code>virtual</code> 关键字。例如：</p>
 <pre><code class="language-cpp">class Base {
 public:
     virtual void someFunction() {
@@ -43,11 +40,9 @@ public:
 };
 </code></pre>
 </li>
-<li><p><strong>虚函数表（VTable）</strong>：
-实现虚函数的机制通常涉及虚函数表（vtable）。每个含有虚函数的类都有一个 vtable，其中存放该类所有虚函数的地址。每个对象都有一个指向对应类 vtable 的指针（称为 vptr）。通过基类指针或引用调用虚函数时，程序根据对象的 vptr 找到正确的 vtable，并调用实际对象类型的函数实现。</p>
+<li><p><strong>虚函数表（VTable）</strong>：<br>实现虚函数的机制通常涉及虚函数表（vtable）。每个含有虚函数的类都有一个 vtable，其中存放该类所有虚函数的地址。每个对象都有一个指向对应类 vtable 的指针（称为 vptr）。通过基类指针或引用调用虚函数时，程序根据对象的 vptr 找到正确的 vtable，并调用实际对象类型的函数实现。</p>
 </li>
-<li><p><strong>纯虚函数与抽象类</strong>：
-如果基类中的某个虚函数没有实现，并在声明中用 <code>= 0</code> 初始化，该函数就称为纯虚函数。含有纯虚函数的类不能被实例化，只能作为基类被继承，这样的类称为抽象类。</p>
+<li><p><strong>纯虚函数与抽象类</strong>：<br>如果基类中的某个虚函数没有实现，并在声明中用 <code>= 0</code> 初始化，该函数就称为纯虚函数。含有纯虚函数的类不能被实例化，只能作为基类被继承，这样的类称为抽象类。</p>
 </li>
 </ol>
 <h1 id="使用虚函数的类结构">使用虚函数的类结构</h1>
@@ -56,8 +51,7 @@ public:
 <p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-002-f48a66ae3b.png" alt="图片"></p>
 <ul>
 <li>new 的本质其实是 malloc + 构造函数</li>
-<li>delete 的本质是析构函数 + free
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-003-1b7ef71681.png" alt="图片"></li>
+<li>delete 的本质是析构函数 + free<br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-003-1b7ef71681.png" alt="图片"></li>
 </ul>
 <h1 id="源码">源码</h1>
 <pre><code class="language-cpp">#include &lt;iostream&gt;
@@ -117,15 +111,9 @@ int main() {
 }
 </code></pre>
 <h1 id="ida-反编译">IDA 反编译</h1>
-<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-004-40e0cee1a0.png" alt="图片">
-子类构造函数
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-005-23515cabeb.png" alt="图片">
-基类构造函数
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-006-9b9b713224.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-004-40e0cee1a0.png" alt="图片"><br>子类构造函数<br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-005-23515cabeb.png" alt="图片"><br>基类构造函数<br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-006-9b9b713224.png" alt="图片"></p>
 <h1 id="子类虚表与基类虚表">子类虚表与基类虚表</h1>
-<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-007-80ecca9bdd.png" alt="图片">
-含有纯虚函数的抽象类的虚表中填的是 <code>__cxa_pure_virtual</code>——有多少个纯虚函数就有多少个 <code>__cxa_pure_virtual</code>。Student 类的虚表中分别是它所实现的虚函数，虚表上方是该类 typeinfo 的地址
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-008-f4bf481c32.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-007-80ecca9bdd.png" alt="图片"><br>含有纯虚函数的抽象类的虚表中填的是 <code>__cxa_pure_virtual</code>——有多少个纯虚函数就有多少个 <code>__cxa_pure_virtual</code>。Student 类的虚表中分别是它所实现的虚函数，虚表上方是该类 typeinfo 的地址<br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-008-f4bf481c32.png" alt="图片"></p>
 <ul>
 <li>RTTI（Run-Time Type Information，运行时类型信息）是 C++ 的一项特性，允许程序在运行时识别对象的类型。</li>
 <li><code>typeid</code> 运算符和 <code>dynamic_cast</code> 都是基于 RTTI 实现的。</li>
@@ -143,13 +131,11 @@ int main() {
 </li>
 </ol>
 <h1 id="函数调用">函数调用</h1>
-<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-009-548ecddc25.png" alt="图片">
-对于虚函数</p>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-009-548ecddc25.png" alt="图片"><br>对于虚函数</p>
 <ol>
 <li>先从对象的前八个字节取得虚表地址</li>
 <li>通过虚表地址和对应偏移得到函数地址</li>
-<li>调用函数
-对于非虚函数</li>
+<li>调用函数<br>对于非虚函数</li>
 <li>直接调用 text 段中实现的函数</li>
 </ol>
 <h1 id="菱形继承">菱形继承</h1>
@@ -201,13 +187,8 @@ int main(int argc, char** argv) {
 }
 </code></pre>
 <p>B 和 C 继承自 A；D 继承自 B 和 C</p>
-<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-010-ccf282c28d.png" alt="图片">虚表地址减 24 处的内容为 32；把它加到起始地址上，对应的 V4 就是 A 的对象在 D 中的内存位置。offset vbase 应该是到虚基类的偏移，即相对于 A 的偏移
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-011-62b96a0764.png" alt="图片">
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-012-a6efddd581.png" alt="图片">
-给该对象空间内各个父类对象的前八个字节赋值时，所用的地址是本对象虚表中不同父类虚函数所对应的地址
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-013-e84daedf9a.png" alt="图片"></p>
-<p>此时对应的虚表地址，所以**两次取值得到 D::function 的地址，参数是对象本身
-<img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-014-6e4404e454.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-010-ccf282c28d.png" alt="图片">虚表地址减 24 处的内容为 32；把它加到起始地址上，对应的 V4 就是 A 的对象在 D 中的内存位置。offset vbase 应该是到虚基类的偏移，即相对于 A 的偏移<br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-011-62b96a0764.png" alt="图片"><br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-012-a6efddd581.png" alt="图片"><br>给该对象空间内各个父类对象的前八个字节赋值时，所用的地址是本对象虚表中不同父类虚函数所对应的地址<br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-013-e84daedf9a.png" alt="图片"></p>
+<p>此时对应的虚表地址，所以**两次取值得到 D::function 的地址，参数是对象本身<br><img src="/workspace/software-foundations/programming-languages/cpp/C%2B%2B%20%E7%B1%BB%E3%80%81new%20%E4%B8%8E%20delete%20%E4%BB%A5%E5%8F%8A%E8%8F%B1%E5%BD%A2%E7%BB%A7%E6%89%BF%E6%9C%BA%E5%88%B6/assets/csdn-136693224/image-014-6e4404e454.png" alt="图片"></p>
 
     </article>
     

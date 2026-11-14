@@ -27,13 +27,9 @@
 <li>merged：视图层，在这里能看到 lower 和 upper 的所有内容</li>
 <li>work：overlayfs 内部使用</li>
 </ul>
-<p>在容器内创建一个新文件时
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-001-b386a9069a.png" alt="图片">
-当前的 upper 层会被修改，但 lower 层不会改变
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-002-41fdb16bd9.png" alt="图片"></p>
+<p>在容器内创建一个新文件时<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-001-b386a9069a.png" alt="图片"><br>当前的 upper 层会被修改，但 lower 层不会改变<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-002-41fdb16bd9.png" alt="图片"></p>
 <h1 id="execcommandtar--xvf-busyboxtarurl--c-busyboxurlcombinedoutpu"><code>exec.Command(&quot;tar&quot;, &quot;-xvf&quot;, busyboxTarURL, &quot;-C&quot;, busyboxURL).CombinedOutput()</code></h1>
-<p><code>exec.Command(&quot;tar&quot;, &quot;-xvf&quot;, busyboxTarURL, &quot;-C&quot;, busyboxURL).CombinedOutput()</code> 这行代码会启动一个新进程来执行 <code>tar</code> 命令，并自动执行
-<code>CombinedOutput</code> 调用这个方法会执行该命令，并收集标准输出（stdout）和标准错误（stderr）合并后的输出。如果命令执行成功，会返回一个包含输出内容的字节数组；如果执行过程中出现错误，就会返回该错误（通常意味着命令执行失败）</p>
+<p><code>exec.Command(&quot;tar&quot;, &quot;-xvf&quot;, busyboxTarURL, &quot;-C&quot;, busyboxURL).CombinedOutput()</code> 这行代码会启动一个新进程来执行 <code>tar</code> 命令，并自动执行<br><code>CombinedOutput</code> 调用这个方法会执行该命令，并收集标准输出（stdout）和标准错误（stderr）合并后的输出。如果命令执行成功，会返回一个包含输出内容的字节数组；如果执行过程中出现错误，就会返回该错误（通常意味着命令执行失败）</p>
 <h1 id="execcommand"><code>exec.Command</code></h1>
 <p>Go 中的 <code>exec.Command</code> 函数用于执行外部命令，其基本格式为：</p>
 <pre><code class="language-go">cmd := exec.Command(command, arg1, arg2, ..., argN)
@@ -166,12 +162,9 @@ func delete_upper_work_merged(rooturl string){
 <h1 id="效果展示">效果展示</h1>
 <ul>
 <li>使用 sudo 运行后，upper 层一开始什么都没有，但只要有命令运行，就会创建一个 root 文件夹，因为它是以 root 用户执行的。名称可能会影响文件夹的修改，因为 merged 中的 root 文件夹里什么都没有</li>
-<li>新建一个文件：修改会出现在 upper 中，也会出现在 merged 中，但不会出现在 lower 中
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-003-1da66e4f41.png" alt="图片"><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-004-d3b755a8ca.png" alt="图片"></li>
-<li>查看文件内容
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-005-4742059f67.png" alt="图片"></li>
-<li>退出后
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-006-b1dc6b62e1.png" alt="图片"></li>
+<li>新建一个文件：修改会出现在 upper 中，也会出现在 merged 中，但不会出现在 lower 中<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-003-1da66e4f41.png" alt="图片"><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-004-d3b755a8ca.png" alt="图片"></li>
+<li>查看文件内容<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-005-4742059f67.png" alt="图片"></li>
+<li>退出后<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC%2012%20%E7%AF%87%20-%20%EF%BC%BBoverlayfs%EF%BC%BD/assets/csdn-138041121/image-006-b1dc6b62e1.png" alt="图片"></li>
 </ul>
 
     </article>

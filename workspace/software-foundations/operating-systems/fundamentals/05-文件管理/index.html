@@ -19,13 +19,9 @@
     <div class="meta"><time>2024-06-29</time><span class="tag">#数据库</span><span class="tag">#linux</span><span class="tag">#运维</span></div>
     <article class="post-body">
 <h1 id="概述">概述</h1>
-<p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-001-7d1aa13c17.png" alt="图片">
-文件数据存放在外存中
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-002-8cf725c6a4.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-001-7d1aa13c17.png" alt="图片"><br>文件数据存放在外存中<br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-002-8cf725c6a4.png" alt="图片"></p>
 <h1 id="文件块和磁盘块">文件块和磁盘块</h1>
-<p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-003-59319065b2.png" alt="图片">
- 在文件内部，任意位置都可以通过逻辑块号和块内偏移来定位
- <img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-004-aea6e914b8.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-003-59319065b2.png" alt="图片"><br> 在文件内部，任意位置都可以通过逻辑块号和块内偏移来定位<br> <img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-004-aea6e914b8.png" alt="图片"></p>
 <h1 id="连续分配">连续分配</h1>
 <p>  逻辑块号类似于偏移量</p>
 <p>  连续分配是一种文件存储策略，文件的所有部分都存放在磁盘或其他存储介质上的连续块中。这种存储方式支持两种访问方式：顺序访问和直接访问。</p>
@@ -35,42 +31,24 @@
 <p>直接访问是指能够立即访问文件中任意位置的能力。在连续分配中，只要知道文件第一个块的地址，就可以通过简单的算术计算出文件中任意块的地址。这是因为每个块的大小是固定的，所以只需要知道块号（相对于文件起始块的偏移），乘以块大小，就能算出该块在磁盘上的绝对位置。这样即使从文件中间或末尾读取数据，也能快速定位到正确的磁盘位置，而不必从头开始顺序读取。</p>
 <h3 id="为什么连续分配能同时支持这两种访问方式">为什么连续分配能同时支持这两种访问方式？</h3>
 <p>连续分配之所以能同时支持顺序访问和直接访问，是由其数据布局特点决定的。文件连续存放，避免了顺序读取时不必要的寻道；而固定的块大小和位置关系又使得可以根据块号直接计算出物理地址，从而支持直接访问。这种灵活性使连续分配在许多应用中非常有效，尤其是既需要快速顺序读取又需要随机访问的场景，例如数据库和多媒体文件。</p>
-<p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-005-a3dd1f2525.png" alt="图片">
-  采用连续分配时，文件的磁盘块是相邻的，所以移动距离短
-  <img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-006-ecf0561251.png" alt="图片">扩展时同样要求连续，因此有时需要迁移
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-007-20896ff367.png" alt="图片">
-紧凑需要移动磁盘块中的内容，比较耗时
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-008-6aea8767f8.png" alt="图片">
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-009-47aac7bc6c.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-005-a3dd1f2525.png" alt="图片"><br>  采用连续分配时，文件的磁盘块是相邻的，所以移动距离短<br>  <img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-006-ecf0561251.png" alt="图片">扩展时同样要求连续，因此有时需要迁移<br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-007-20896ff367.png" alt="图片"><br>紧凑需要移动磁盘块中的内容，比较耗时<br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-008-6aea8767f8.png" alt="图片"><br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-009-47aac7bc6c.png" alt="图片"></p>
 <h1 id="链接分配">链接分配</h1>
 <h2 id="隐式链接">隐式链接</h2>
-<p>访问第 n 个逻辑块就要沿着第 n 个指针走；第零个逻辑块是起始块
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-010-df629e3400.png" alt="图片">
-只需在尾部加一个链表结点，然后更新 FCB 即可
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-011-1b344d76f0.png" alt="图片"></p>
+<p>访问第 n 个逻辑块就要沿着第 n 个指针走；第零个逻辑块是起始块<br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-010-df629e3400.png" alt="图片"><br>只需在尾部加一个链表结点，然后更新 FCB 即可<br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-011-1b344d76f0.png" alt="图片"></p>
 <h2 id="显式链接">显式链接</h2>
-<p>把用于链接文件各物理块的指针不放在块内，而是放在一张表中
-之所以是隐式的，是因为每个物理块对应的下一块是按顺序存放的，所以不需要再记录物理块号
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-012-1fb42bf617.png" alt="图片"></p>
+<p>把用于链接文件各物理块的指针不放在块内，而是放在一张表中<br>之所以是隐式的，是因为每个物理块对应的下一块是按顺序存放的，所以不需要再记录物理块号<br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-012-1fb42bf617.png" alt="图片"></p>
 <p>零代表起始块号对应的物理块；大于零则表示还需要继续找下一块</p>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-013-9335d94b3b.png" alt="图片"></p>
 <h2 id="小结">小结</h2>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-014-7c72e9f575.png" alt="图片"></p>
 <h2 id="索引分配">索引分配</h2>
 <p>文件名 -&gt; FCB 中的索引块 -&gt; 内存中的索引表 -&gt; 逻辑块号（隐含）-&gt; 物理块号 </p>
-<p>24 位 &lt; 2^30 &lt; 32 位
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-015-75839139ce.png" alt="图片">
-扩展时只需在索引表中增加表项即可
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-016-99ec960a12.png" alt="图片">
-当单个磁盘块对应的索引表放不下文件的全部物理块时
-<img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-017-809d636f38.png" alt="图片"></p>
+<p>24 位 &lt; 2^30 &lt; 32 位<br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-015-75839139ce.png" alt="图片"><br>扩展时只需在索引表中增加表项即可<br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-016-99ec960a12.png" alt="图片"><br>当单个磁盘块对应的索引表放不下文件的全部物理块时<br><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-017-809d636f38.png" alt="图片"></p>
 <h2 id="链接方案">链接方案</h2>
-<p>一个文件对应多个索引块，以链表形式相连，FCB 中只需记录第一个索引块的块号
-读入索引块后再确定下一个索引块</p>
+<p>一个文件对应多个索引块，以链表形式相连，FCB 中只需记录第一个索引块的块号<br>读入索引块后再确定下一个索引块</p>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-018-113b5aef88.png" alt="图片"></p>
 <h2 id="多层索引">多层索引</h2>
-<p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-019-16b1184b9e.png" alt="图片">
-但当文件的块数比较少时，多层索引有些浪费，而且还需要多次读磁盘</p>
+<p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-019-16b1184b9e.png" alt="图片"><br>但当文件的块数比较少时，多层索引有些浪费，而且还需要多次读磁盘</p>
 <h2 id="混合索引">混合索引</h2>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/05-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/assets/csdn-140068113/image-020-d7eeb997b6.png" alt="图片"></p>
 <h2 id="小结-1">小结</h2>

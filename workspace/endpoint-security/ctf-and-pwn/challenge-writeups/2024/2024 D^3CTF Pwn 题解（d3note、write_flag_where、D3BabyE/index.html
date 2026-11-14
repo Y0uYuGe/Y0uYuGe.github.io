@@ -21,10 +21,7 @@
 <h1 id="d3note-libc-237">d3note libc 2.37</h1>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-001-d281c593ab.png" alt="图片"></p>
 <h2 id="源码">源码</h2>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-002-aeeddd051b.png" alt="图片">
-索引可以越界，show 也没有检查，直接输出。在这里找到 GOT 表，然后开始查找。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-003-0a9dd08f94.png" alt="图片">
-然后寻找一个能存放 free 的 GOT 地址的 PIE 地址，而且这个 PIE 地址必须按 8 对齐；也不能再低，因为更低的 GOT 地址没有写权限——没找到。尝试寻找一个 PIE 地址，其中存放另一个保存着 chunk_array 的 PIE 地址——没找到。再找一个 PIE 地址，其中存放 chunk_array 下方的 PIE 地址——找到了，而且可写。然后修改 chunk_array 中的 len 和 ptr，实现任意地址读写，再写 GOT 表</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-002-aeeddd051b.png" alt="图片"><br>索引可以越界，show 也没有检查，直接输出。在这里找到 GOT 表，然后开始查找。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-003-0a9dd08f94.png" alt="图片"><br>然后寻找一个能存放 free 的 GOT 地址的 PIE 地址，而且这个 PIE 地址必须按 8 对齐；也不能再低，因为更低的 GOT 地址没有写权限——没找到。尝试寻找一个 PIE 地址，其中存放另一个保存着 chunk_array 的 PIE 地址——没找到。再找一个 PIE 地址，其中存放 chunk_array 下方的 PIE 地址——找到了，而且可写。然后修改 chunk_array 中的 len 和 ptr，实现任意地址读写，再写 GOT 表</p>
 <h2 id="利用脚本">利用脚本</h2>
 <pre><code class="language-python">from pwn import *
 context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)
@@ -190,8 +187,7 @@ int main(int argc, char *argv[]) {
 	    }
 </code></pre>
 <ul>
-<li>然后开始循环，逐字符读取 stdin 缓冲区，每个字符都要通过相关检查才会加入当前字符缓冲区
- 正常的数字字符会进入</li>
+<li>然后开始循环，逐字符读取 stdin 缓冲区，每个字符都要通过相关检查才会加入当前字符缓冲区<br> 正常的数字字符会进入</li>
 </ul>
 <pre><code class="language-c">	char_buffer_add (&amp;charbuf, c);
 		if (width &gt; 0)
@@ -340,8 +336,7 @@ int main(int argc, char *argv[]) {
 	 return negative ? -i : i;
 </code></pre>
 <h2 id="修改-write">修改 write</h2>
-<p><a href="https://blog.xmcve.com/2024/04/29/D3CTF-2024-Writeup/#title-4">https://blog.xmcve.com/2024/04/29/D3CTF-2024-Writeup/#title-4</a>
-原本 write 会将 flag 数组某个偏移处的字节值，写入 <code> open(&quot;/proc/self/mem&quot;, O_RDWR)</code> 返回的文件描述符。不难想到，可以将文件描述符改为标准输出，让内容回显</p>
+<p><a href="https://blog.xmcve.com/2024/04/29/D3CTF-2024-Writeup/#title-4">https://blog.xmcve.com/2024/04/29/D3CTF-2024-Writeup/#title-4</a><br>原本 write 会将 flag 数组某个偏移处的字节值，写入 <code> open(&quot;/proc/self/mem&quot;, O_RDWR)</code> 返回的文件描述符。不难想到，可以将文件描述符改为标准输出，让内容回显</p>
 <pre><code class="language-c">unsigned __int64 __fastcall write(unsigned int a1, const char *a2, size_t a3)
 {
   unsigned __int64 result; // rax
@@ -374,9 +369,7 @@ int main(int argc, char *argv[]) {
   return result;
 }
 </code></pre>
-<p>这里根据 _libc_single_threaded 进入不同分支；如果 __libc_single_threaded 为零，就通过栈上某个偏移处的内容传递参数
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-005-c57b890210.png" alt="图片">
-服务端处理客户端连接时，会将 socket 文件描述符重定向到 0、1、2，使标准输入、标准输出和标准错误都指向同一个连接 socket。这样，客户端向 socket 发送的数据，会成为服务端程序从 0 读取的输入；客户端接收的数据，则来自服务端向 2 输出的内容，进而输出到 socket</p>
+<p>这里根据 _libc_single_threaded 进入不同分支；如果 __libc_single_threaded 为零，就通过栈上某个偏移处的内容传递参数<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-005-c57b890210.png" alt="图片"><br>服务端处理客户端连接时，会将 socket 文件描述符重定向到 0、1、2，使标准输入、标准输出和标准错误都指向同一个连接 socket。这样，客户端向 socket 发送的数据，会成为服务端程序从 0 读取的输入；客户端接收的数据，则来自服务端向 2 输出的内容，进而输出到 socket</p>
 <pre><code class="language-bash">.text:000000000011B2C4 8B 7C 24 08     mov     edi, dword ptr [rsp+28h+fd] ; fd
 </code></pre>
 <ol>
@@ -586,8 +579,7 @@ void *__fastcall pmio_write(const char ****a1, unsigned __int64 addr, __int64 va
 <li>pmio_write 向 buf 中某个位置写入 666，再由 pmio_read 读取该位置，使 key++ 满足 pmio_write 越界写入的条件；随后越界写入，将函数指针改为 system 地址</li>
 <li>mmio_write 调用该函数指针，且参数可以控制为 /bin/sh</li>
 </ul>
-<p>mmio_read 部分有点问题：<code>&amp;state-&gt;buf[(unsigned int)(state-&gt;base + addr)]</code> 这里应该是 addr/8*8
-最后写入 rand_r 地址时，只写低四字节就够了</p>
+<p>mmio_read 部分有点问题：<code>&amp;state-&gt;buf[(unsigned int)(state-&gt;base + addr)]</code> 这里应该是 addr/8*8<br>最后写入 rand_r 地址时，只写低四字节就够了</p>
 <p>最后，由于 val 只能是四字节，因此是 system(sh\x00)</p>
 <h2 id="利用脚本-1">利用脚本</h2>
 <pre><code class="language-c">#include &lt;assert.h&gt;
@@ -649,8 +641,7 @@ int main()
 <pre><code class="language-c">
 Z zval**类型
 </code></pre>
-<p>然后在某个扩展库中找到结构体定义，并在 IDA 中创建结构体
-存在 off by null</p>
+<p>然后在某个扩展库中找到结构体定义，并在 IDA 中创建结构体<br>存在 off by null</p>
 <pre><code class="language-c">unsigned __int64 __fastcall zif_addHacker(__int64 a1, __int64 a2)
 {
   __int64 index; // rbp
@@ -744,8 +735,7 @@ if (size &lt;= 64) {
 	}
 		
 </code></pre>
-<p>如果对应的 bin 已初始化（不为 NULL），就以类似 tcache 的方式分配；否则通过 zend_mm_alloc_small_slow 初始化，并返回第一个
-当 size 位于 small 范围内时，进入这个函数，</p>
+<p>如果对应的 bin 已初始化（不为 NULL），就以类似 tcache 的方式分配；否则通过 zend_mm_alloc_small_slow 初始化，并返回第一个<br>当 size 位于 small 范围内时，进入这个函数，</p>
 <pre><code class="language-c">static zend_always_inline void *zend_mm_alloc_small(zend_mm_heap *heap, int bin_num ZEND_FILE_LINE_DC ZEND_FILE_LINE_ORIG_DC)
 {
 #if ZEND_MM_STAT
@@ -813,17 +803,12 @@ static zend_never_inline void *zend_mm_alloc_small_slow(zend_mm_heap *heap, uint
 b* __libc_start_main+128 会调用一个函数去解析php
 该函数然后call rax会进入另一个函数
 </code></pre>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-007-7ffa0aa257.png" alt="图片">
-在另一个函数中，最终调用 <code>call qword ptr [rdx+0x10]</code> 来加载库</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-007-7ffa0aa257.png" alt="图片"><br>在另一个函数中，最终调用 <code>call qword ptr [rdx+0x10]</code> 来加载库</p>
 <pre><code class="language-bash">b*pie+0x247861  和php版本有关
 </code></pre>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2024/2024%20D%5E3CTF%20Pwn%20%E9%A2%98%E8%A7%A3%EF%BC%88d3note%E3%80%81write_flag_where%E3%80%81D3BabyE/assets/csdn-140712704/image-008-6138e8617b.png" alt="图片"></p>
 <h2 id="利用脚本-2">利用脚本</h2>
-<p>这里选择一个 bin 尚未初始化的 size，因此获得的第一个 chunk 按页对齐，即低字节为零字节
-然后，第一次 addhacker 分配时，首个 chunk 的零字节溢出会修改当前链表中首个 chunk 的 next 指针的低字节，
-再次 addhacker，这次申请的第二个 chunk 会分配到第一次分配所得首个 chunk 的位置，
-此时可以修改最初首个 chunk 的 chunk2ptr 和 size（edithacker 需要），再将其覆盖为 efree 的 GOT 地址，
-然后使用 edithacker 将其改为 system 即可。最后，addhacker 将命令存入第二个分配的 chunk，再对最后一次 addhacker 的索引执行 removehacker</p>
+<p>这里选择一个 bin 尚未初始化的 size，因此获得的第一个 chunk 按页对齐，即低字节为零字节<br>然后，第一次 addhacker 分配时，首个 chunk 的零字节溢出会修改当前链表中首个 chunk 的 next 指针的低字节，<br>再次 addhacker，这次申请的第二个 chunk 会分配到第一次分配所得首个 chunk 的位置，<br>此时可以修改最初首个 chunk 的 chunk2ptr 和 size（edithacker 需要），再将其覆盖为 efree 的 GOT 地址，<br>然后使用 edithacker 将其改为 system 即可。最后，addhacker 将命令存入第二个分配的 chunk，再对最后一次 addhacker 的索引执行 removehacker</p>
 <pre><code class="language-php">&lt;?php
 $heap_base = 0;
 $libc_base = 0;

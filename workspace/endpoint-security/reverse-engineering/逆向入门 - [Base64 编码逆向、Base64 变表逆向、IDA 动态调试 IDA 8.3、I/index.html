@@ -21,8 +21,7 @@
 <h1 id="异或">异或</h1>
 <p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-001-613ea3d394.png" alt="图片"></p>
 <h1 id="base64-编码逆向">Base64 编码逆向</h1>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-002-5ec56270c2.png" alt="图片">
-Base64 编码是一种用于把二进制数据转换成文本字符串的编码方式，常用于在文本协议中传输二进制数据，或在文本文件中存储二进制数据。</p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-002-5ec56270c2.png" alt="图片"><br>Base64 编码是一种用于把二进制数据转换成文本字符串的编码方式，常用于在文本协议中传输二进制数据，或在文本文件中存储二进制数据。</p>
 <p>遇到非常复杂的函数时，可以找出函数中用到的常量，到搜索引擎上搜索，也许能找到相关源码，再进行对比。</p>
 <pre><code class="language-c">/*base64.c*/  
 #include &quot;base64.h&quot;  
@@ -119,29 +118,21 @@ unsigned char *base64_decode(unsigned char *code)
 <p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-003-d7376a6a41.png" alt="图片"></p>
 <h1 id="ida-动态调试-ida-83">IDA 动态调试 IDA 8.3</h1>
 <p>我们可以通过动态调试得知某些值或它们的变化情况，也可以通过观察函数执行前后相关值的变化来推测函数的作用。</p>
-<p>在 Windows 机器上运行的 IDA 可以直接动态调试 exe 文件，但不能调试 elf 文件。
-如果需要调试 elf 文件，就需要选择远程调试。</p>
+<p>在 Windows 机器上运行的 IDA 可以直接动态调试 exe 文件，但不能调试 elf 文件。<br>如果需要调试 elf 文件，就需要选择远程调试。</p>
 <p><a href="https://bbs.kanxue.com/thread-247830.htm">远程调试参考链接</a></p>
 <h2 id="把-ida-的服务端组件从-windows-移到-ubuntu">把 IDA 的服务端组件从 Windows 移到 Ubuntu</h2>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-004-09c32a2a87.png" alt="图片">
-linux_server：运行在 Linux 计算机上的服务端组件，用于调试 32 位 Linux 应用程序。
-linux_server64：运行在 64 位 Linux 计算机上的服务端组件，用于调试 64 位 Linux 应用程序。</p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-004-09c32a2a87.png" alt="图片"><br>linux_server：运行在 Linux 计算机上的服务端组件，用于调试 32 位 Linux 应用程序。<br>linux_server64：运行在 64 位 Linux 计算机上的服务端组件，用于调试 64 位 Linux 应用程序。</p>
 <h2 id="运行组件">运行组件</h2>
-<p>根据要调试的 elf 文件类型运行不同的组件。
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-005-7e0d705a44.png" alt="图片"></p>
+<p>根据要调试的 elf 文件类型运行不同的组件。<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-005-7e0d705a44.png" alt="图片"></p>
 <h2 id="在-ida-中选择调试器">在 IDA 中选择调试器</h2>
 <p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-006-0f90b3ac26.png" alt="图片"></p>
 <h2 id="选择设置">选择设置</h2>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-007-381968fba3.png" alt="图片">
-点击 OK 之后
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-008-43bff998d9.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-007-381968fba3.png" alt="图片"><br>点击 OK 之后<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-008-43bff998d9.png" alt="图片"></p>
 <h2 id="相关的动态调试功能">相关的动态调试功能</h2>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-009-5d489e59be.png" alt="图片">
-run to cursor：运行到光标处</p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-009-5d489e59be.png" alt="图片"><br>run to cursor：运行到光标处</p>
 <p>快捷键 A：尝试把一段数据指定为字符串字面量。</p>
 <h1 id="ida-动态调试求解-rc4">IDA 动态调试求解 RC4</h1>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-010-6522fb927f.png" alt="图片">
-同样，根据输入和输出来推测。</p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-010-6522fb927f.png" alt="图片"><br>同样，根据输入和输出来推测。</p>
 <h2 id="绕过反调试">绕过反调试</h2>
 <pre><code class="language-c">int __cdecl main_0(int argc, const char **argv, const char **envp)
 {
@@ -298,30 +289,11 @@ run to cursor：运行到光标处</p>
   return a1;
 }
 </code></pre>
-<p>这时就需要用附加调试来绕过反调试。
-核心思路是让程序在非调试状态下正常运行过反调试函数，然后再介入调试。
-先用 IDA 打开对应的文件，在反调试函数之后、此时 exe 尚未运行到的地方下断点。
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-011-1354512071.png" alt="图片"></p>
-<p>选择调试器
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-012-c9d10e1bd6.png" alt="图片">
-直接运行 exe 文件
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-013-2b7206e9ca.png" alt="图片">
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-014-e284d0d6d8.png" alt="图片">
-选择对应的正在运行的 exe 文件
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-015-e81821088b.png" alt="图片">
-此时程序会固定停在这个位置
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-016-b7093de7b6.png" alt="图片">
-然后继续运行
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-017-f002891b36.png" alt="图片">
-然后输入
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-018-eaee8ddfad.png" alt="图片">
-程序停在之前设置的断点处
-<img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-019-db2ca893a7.png" alt="图片">
-现在就可以调试了。</p>
+<p>这时就需要用附加调试来绕过反调试。<br>核心思路是让程序在非调试状态下正常运行过反调试函数，然后再介入调试。<br>先用 IDA 打开对应的文件，在反调试函数之后、此时 exe 尚未运行到的地方下断点。<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-011-1354512071.png" alt="图片"></p>
+<p>选择调试器<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-012-c9d10e1bd6.png" alt="图片"><br>直接运行 exe 文件<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-013-2b7206e9ca.png" alt="图片"><br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-014-e284d0d6d8.png" alt="图片"><br>选择对应的正在运行的 exe 文件<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-015-e81821088b.png" alt="图片"><br>此时程序会固定停在这个位置<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-016-b7093de7b6.png" alt="图片"><br>然后继续运行<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-017-f002891b36.png" alt="图片"><br>然后输入<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-018-eaee8ddfad.png" alt="图片"><br>程序停在之前设置的断点处<br><img src="/workspace/endpoint-security/reverse-engineering/%E9%80%86%E5%90%91%E5%85%A5%E9%97%A8%20-%20%5BBase64%20%E7%BC%96%E7%A0%81%E9%80%86%E5%90%91%E3%80%81Base64%20%E5%8F%98%E8%A1%A8%E9%80%86%E5%90%91%E3%80%81IDA%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%20IDA%208.3%E3%80%81I/assets/csdn-136367715/image-019-db2ca893a7.png" alt="图片"><br>现在就可以调试了。</p>
 <h1 id="ida-代码修复与数组识别">IDA 代码修复与数组识别</h1>
 <p>根据某些提示把若干数组合并成一个大数组。</p>
-<p>可以先根据熟悉的函数判断相关变量的类型，进而确定某些函数的参数类型。
-根据不熟悉函数的实际用途和定义，修改其参数类型和返回值类型。</p>
+<p>可以先根据熟悉的函数判断相关变量的类型，进而确定某些函数的参数类型。<br>根据不熟悉函数的实际用途和定义，修改其参数类型和返回值类型。</p>
 
     </article>
     

@@ -21,8 +21,7 @@
 <h1 id="2023-安洵杯---pwn---my_qq">2023 安洵杯 - PWN - [my_qq]</h1>
 <p><a href="https://ycznkvrmzo.feishu.cn/docx/G17xduF91omE5nxgkgfc1W93nqb">https://ycznkvrmzo.feishu.cn/docx/G17xduF91omE5nxgkgfc1W93nqb</a></p>
 <h2 id="环境搭建">环境搭建</h2>
-<p>直接运行会报错，提示缺少很多共享库，逐个下载即可。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-136396920/image-001-733294f3a7.png" alt="图片"></p>
+<p>直接运行会报错，提示缺少很多共享库，逐个下载即可。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-136396920/image-001-733294f3a7.png" alt="图片"></p>
 <h2 id="相关知识">相关知识</h2>
 <h2 id="rsa-公钥加密">RSA 公钥加密</h2>
 <p>RSA 公钥加密的具体实现包括以下步骤：</p>
@@ -72,11 +71,7 @@
 <p>打个简单的比方：如果你想在一张纸上写点东西给别人看，但又不希望这张纸存在（可能出于安全考虑，或者只是想临时存放一些信息），你可以想象在空中写字，别人可以直接从空中读到这些字，然后这些字就消失了。内存 BIO 本质上就是在程序的内存中做这件事。</p>
 <p>举个例子：</p>
 <p>假设你正在开发一个应用，需要生成一些敏感数据，比如一份报告或一份授权证书，但你不希望这些数据被保存到文件系统中。你可以这样做：</p>
-<p>使用 BIO_s_mem() 创建一个内存 BIO。
-把敏感数据写入这个内存 BIO。
-需要读取或传递这些敏感数据时，从这个内存 BIO 中读取。
-用完之后丢弃内存 BIO，因为它从一开始就只存在于内存中，所以不会在磁盘上留下任何痕迹。
-下面是一段说明上述步骤的伪代码：</p>
+<p>使用 BIO_s_mem() 创建一个内存 BIO。<br>把敏感数据写入这个内存 BIO。<br>需要读取或传递这些敏感数据时，从这个内存 BIO 中读取。<br>用完之后丢弃内存 BIO，因为它从一开始就只存在于内存中，所以不会在磁盘上留下任何痕迹。<br>下面是一段说明上述步骤的伪代码：</p>
 <pre><code class="language-c">
 // 创建内存BIO
 BIO *bio = BIO_new(BIO_s_mem());
@@ -214,15 +209,8 @@ qword_7500: MySQL连接句柄，由mysql_init函数分配并初始化。
   strftime(s, 0x100uLL, &quot;%Y-%m-%d %H:%M:%S&quot;, tp);
   printf(&quot;Current time: %s\n&quot;, s);
 </code></pre>
-<p>定义了一个 time_t 类型的变量 timer，通常用于存储系统时间（自 1970 年 1 月 1 日以来的秒数）。
-定义了一个 struct tm 类型的指针变量 tp。struct tm 是 C 标准库中的结构体，用于存储详细的时间和日期信息，如年、月、日、时、分、秒等。
-定义了一个长度为 264 字节的字符数组 s，用于存储格式化后的日期时间字符串。
-定义了一个无符号 64 位整数 v4，用于获取当前函数的栈帧基指针，这是一种用于检测栈溢出的常见安全措施。这行代码特定于 x86_64 架构，并依赖于特定的编译器实现。
-接下来是主要的程序逻辑：</p>
-<p>使用 time 函数更新 timer 变量，获取当前系统时间。
-调用 localtime 函数把 timer 变量的值转换为本地时间，并把结果存入 tp 所指向的 struct tm 结构体中。
-使用 strftime 函数把 tp 所指向的 struct tm 结构体中的时间格式化为“年-月-日 时:分:秒”的格式，并把格式化后的字符串存入数组 s。0x100 是格式化字符串的最大长度，即 256 字节。
-使用 printf 函数打印出包含当前时间的字符串。</p>
+<p>定义了一个 time_t 类型的变量 timer，通常用于存储系统时间（自 1970 年 1 月 1 日以来的秒数）。<br>定义了一个 struct tm 类型的指针变量 tp。struct tm 是 C 标准库中的结构体，用于存储详细的时间和日期信息，如年、月、日、时、分、秒等。<br>定义了一个长度为 264 字节的字符数组 s，用于存储格式化后的日期时间字符串。<br>定义了一个无符号 64 位整数 v4，用于获取当前函数的栈帧基指针，这是一种用于检测栈溢出的常见安全措施。这行代码特定于 x86_64 架构，并依赖于特定的编译器实现。<br>接下来是主要的程序逻辑：</p>
+<p>使用 time 函数更新 timer 变量，获取当前系统时间。<br>调用 localtime 函数把 timer 变量的值转换为本地时间，并把结果存入 tp 所指向的 struct tm 结构体中。<br>使用 strftime 函数把 tp 所指向的 struct tm 结构体中的时间格式化为“年-月-日 时:分:秒”的格式，并把格式化后的字符串存入数组 s。0x100 是格式化字符串的最大长度，即 256 字节。<br>使用 printf 函数打印出包含当前时间的字符串。</p>
 <h2 id="本题的通信流程仅供参考">本题的通信流程（仅供参考）</h2>
 <ol>
 <li>生成密钥对：客户端和服务端都需要生成各自的 RSA 密钥对，每对都包括一个公钥和一个私钥。公钥是公开的，可以安全地分享给任何人；私钥是保密的，不能泄露。</li>
@@ -680,8 +668,7 @@ server_p.interactive()
 <h2 id="检查">检查</h2>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135360737/image-001-a4b007d724.png" alt="图片"></p>
 <h2 id="准备">准备</h2>
-<p>在当前文件夹或其他地方创建一个 flag 文件，内容随意 :smile:
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135360737/image-002-0a404c3bf5.png" alt="图片"></p>
+<p>在当前文件夹或其他地方创建一个 flag 文件，内容随意 :smile:<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135360737/image-002-0a404c3bf5.png" alt="图片"></p>
 <h3 id="说明">说明</h3>
 <p>记得同时把动态链接器和动态库文件也设置为 777 权限，否则文件无法成功执行</p>
 <blockquote>
@@ -752,9 +739,7 @@ server_p.interactive()
 </code></pre>
 <p>添加了一些沙箱规则</p>
 <h3 id="沙箱规则">沙箱规则</h3>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135360737/image-005-7710c39cd4.png" alt="图片">
-允许 read、write、open、rt_sigreturn、chmod 函数（显然可能需要用到 SROP）
-不允许 exit_group 函数</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135360737/image-005-7710c39cd4.png" alt="图片"><br>允许 read、write、open、rt_sigreturn、chmod 函数（显然可能需要用到 SROP）<br>不允许 exit_group 函数</p>
 <h3 id="sub_40136e">sub_40136E()</h3>
 <pre><code class="language-c">__int64 sub_40136E()
 {
@@ -779,19 +764,10 @@ server_p.interactive()
 <li>然后往 v1 读入 58 字节</li>
 </ol>
 <h2 id="思路-1">思路</h2>
-<p>存在栈溢出漏洞，且只能修改 rbp 和返回地址——显然需要栈迁移
-如果栈迁移后直接使用从 onegadget 得到的 shellcode，需要满足的条件比较苛刻，而且还需要获取 libc 基址
-获取基址应该可以通过执行两次 sub_40136E() 函数来实现（从第二次开始，需要把 rsp 恢复成符合 call 调用方式的样子，即 rsp 需要减 8），因为 v1 既有输出也有输入。满足对应 shellcode 的条件比较麻烦——期待大家的尝试
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135360737/image-006-7e79d8a573.png" alt="图片"></p>
+<p>存在栈溢出漏洞，且只能修改 rbp 和返回地址——显然需要栈迁移<br>如果栈迁移后直接使用从 onegadget 得到的 shellcode，需要满足的条件比较苛刻，而且还需要获取 libc 基址<br>获取基址应该可以通过执行两次 sub_40136E() 函数来实现（从第二次开始，需要把 rsp 恢复成符合 call 调用方式的样子，即 rsp 需要减 8），因为 v1 既有输出也有输入。满足对应 shellcode 的条件比较麻烦——期待大家的尝试<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135360737/image-006-7e79d8a573.png" alt="图片"></p>
 <p>所以如果没法 getshell，就用 orw——结合沙箱来看这也很明显。orw 需要很多与 syscall 相关的 gadget，在没有获取 libc 基址的情况下，对应的 gadget 可以通过 SROP 实现</p>
 <ol>
-<li><p>第一次输入构造栈迁移之后的 ROP 链
-ROP 链：
-构造第一次 read 的 sigreturn 帧，把我们需要的 flag 文件路径字符串输入到可写内存位置
-此时是否需要 chmod 的 sigreturn 帧，视情况而定
-构造第一次 open 的 sigreturn 帧，打开 flag 对应的文件；对应的文件描述符为 3
-构造第二次 read 的 sigreturn 帧，将 flag 文件的内容读入某个可写的内存位置
-构造第一次 write 的 sigreturn 帧，把写入内存中的 flag 内容输出到终端，从而获得 flag</p>
+<li><p>第一次输入构造栈迁移之后的 ROP 链<br>ROP 链：<br>构造第一次 read 的 sigreturn 帧，把我们需要的 flag 文件路径字符串输入到可写内存位置<br>此时是否需要 chmod 的 sigreturn 帧，视情况而定<br>构造第一次 open 的 sigreturn 帧，打开 flag 对应的文件；对应的文件描述符为 3<br>构造第二次 read 的 sigreturn 帧，将 flag 文件的内容读入某个可写的内存位置<br>构造第一次 write 的 sigreturn 帧，把写入内存中的 flag 内容输出到终端，从而获得 flag</p>
 </li>
 <li><p>第二次输入执行栈迁移，跳转到上面构造的 ROP 链</p>
 </li>
@@ -799,29 +775,11 @@ ROP 链：
 <h2 id="说明-1">说明</h2>
 <p>rt_sigreturn 系统调用函数会更新所有寄存器的值，未设置的默认为 0，所以把每个需要的寄存器都设置好即可——不存在依赖顺序的先后更新关系。</p>
 <blockquote>
-<p>创建文件 1 和文件 2 时，由于进程启动时先打开了 0、1、2（分别对应 stdin、stdout、stderr），所以 fd1=3，fd2=4。
-文件 1 关闭后，fd=3 被释放，所以创建文件 3 时，fd3 会被分配当前最小的描述符，也就是刚释放的 fd1，所以 fd=3。</p>
+<p>创建文件 1 和文件 2 时，由于进程启动时先打开了 0、1、2（分别对应 stdin、stdout、stderr），所以 fd1=3，fd2=4。<br>文件 1 关闭后，fd=3 被释放，所以创建文件 3 时，fd3 会被分配当前最小的描述符，也就是刚释放的 fd1，所以 fd=3。</p>
 </blockquote>
-<p>open 和 chmod 函数的参数设置有点特殊，因为涉及字符串，在 sigreturn 帧中设置起来比较麻烦。
-对于 chmod</p>
+<p>open 和 chmod 函数的参数设置有点特殊，因为涉及字符串，在 sigreturn 帧中设置起来比较麻烦。<br>对于 chmod</p>
 <blockquote>
-<p>int chmod(const char *pathname, mode_t mode);
-第二个参数有如下设置，可以通过 OR 组合同时设置
-S_ISUID	set-user-ID on execution
-S_ISGID	set-group-ID on execution
-S_ISVTX	saved-text (sticky bit)
-S_IRWXU	user read, write, execute
-S_IRUSR	user read
-S_IWUSR	user write
-S_IXUSR	user execute
-S_IRWXG	group read, write, execute
-S_IRGRP	group read
-S_IWGRP	group write
-S_IXGRP	group execute
-S_IRWXO	others read, write, execute
-S_IROTH	others read
-S_IWOTH	others write
-S_IXOTH	others execute</p>
+<p>int chmod(const char *pathname, mode_t mode);<br>第二个参数有如下设置，可以通过 OR 组合同时设置<br>S_ISUID	set-user-ID on execution<br>S_ISGID	set-group-ID on execution<br>S_ISVTX	saved-text (sticky bit)<br>S_IRWXU	user read, write, execute<br>S_IRUSR	user read<br>S_IWUSR	user write<br>S_IXUSR	user execute<br>S_IRWXG	group read, write, execute<br>S_IRGRP	group read<br>S_IWGRP	group write<br>S_IXGRP	group execute<br>S_IRWXO	others read, write, execute<br>S_IROTH	others read<br>S_IWOTH	others write<br>S_IXOTH	others execute</p>
 </blockquote>
 <p>sigreturn 帧中对应的设置是 constants.S_IRUSR | constants.S_IRGRP | constants.S_IROTH，即 用户读 | 组读 | 其他用户读</p>
 <pre><code class="language-python">fram_chmod=SigreturnFrame()
@@ -844,8 +802,7 @@ O_WRONLY（只写）、
 
 O_RDWR（可读写）
 </code></pre>
-<p>打开/创建文件时，必须使用上述三个常量之一
-以下常量是可选的；这些选项与上面的必选项按位或运算，组成 flags 参数。</p>
+<p>打开/创建文件时，必须使用上述三个常量之一<br>以下常量是可选的；这些选项与上面的必选项按位或运算，组成 flags 参数。</p>
 <ul>
 <li>O_APPEND 表示追加；如果原文件有内容，这次写入会写到文件的最末尾。</li>
 <li>O_CREAT 表示：如果指定的文件不存在，则创建该文件</li>
@@ -1033,8 +990,7 @@ s.interactive()
 <h1 id="2023-安洵杯---pwn---side_channel">2023 安洵杯 - PWN - [side_channel]</h1>
 <h2 id="side_channel-libc-237">side_channel libc 2.37</h2>
 <h2 id="检查-1">检查</h2>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135636845/image-001-9f0dd2b68c.png" alt="图片">
-write 被禁用了；可以使用 open、read 和 mprotect</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135636845/image-001-9f0dd2b68c.png" alt="图片"><br>write 被禁用了；可以使用 open、read 和 mprotect</p>
 <h2 id="ida-源码">IDA 源码</h2>
 <pre><code class="language-c">__int64 __fastcall main(int a1, char **a2, char **a3)
 {
@@ -1118,16 +1074,11 @@ write 被禁用了；可以使用 open、read 和 mprotect</p>
 }
 </code></pre>
 <h2 id="思路-2">思路</h2>
-<p>与之前的题目类似，但这里需要进行旁路（side-channel）爆破，并使用 mprotect 修改内存段属性。
-把栈迁移到 bss 段，然后使用 SROP 依次调用 open、read、mprotect 和 shellcode。
-使用 mprotect 之后，也就是 syscall 之后，pop rbp, ret；此时 ret 处栈顶的内容就是 bss 上 shellcode 的地址。</p>
+<p>与之前的题目类似，但这里需要进行旁路（side-channel）爆破，并使用 mprotect 修改内存段属性。<br>把栈迁移到 bss 段，然后使用 SROP 依次调用 open、read、mprotect 和 shellcode。<br>使用 mprotect 之后，也就是 syscall 之后，pop rbp, ret；此时 ret 处栈顶的内容就是 bss 上 shellcode 的地址。</p>
 <h3 id="选择合适的-syscall-gadget">选择合适的 syscall gadget</h3>
-<p>用 ROPgadget 什么都没找到。
-但在 IDA 中检查却确实存在——就当是吸取一次教训。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135636845/image-002-356c4743c1.png" alt="图片"></p>
+<p>用 ROPgadget 什么都没找到。<br>但在 IDA 中检查却确实存在——就当是吸取一次教训。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135636845/image-002-356c4743c1.png" alt="图片"></p>
 <h3 id="寻找可以写入-shellcode-的内存区域">寻找可以写入 shellcode 的内存区域</h3>
-<p>为了能够写入并执行 shellcode，该区域需要具有 w 和 x 权限。检查下来发现没有一处符合，因此需要修改内存段的权限。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135636845/image-003-d38761f359.png" alt="图片"></p>
+<p>为了能够写入并执行 shellcode，该区域需要具有 w 和 x 权限。检查下来发现没有一处符合，因此需要修改内存段的权限。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20%E5%AE%89%E6%B4%B5%E6%9D%AF%20PWN/assets/csdn-135636845/image-003-d38761f359.png" alt="图片"></p>
 <h3 id="使用-mprotect-修改属性">使用 mprotect() 修改属性</h3>
 <p>mprotect() 函数把起始地址为 start、长度为 len 的内存区域的保护属性，修改为 prot 指定的值。</p>
 <pre><code class="language-c">#include &lt;unistd.h&gt;
@@ -1135,8 +1086,7 @@ write 被禁用了；可以使用 open、read 和 mprotect</p>
 int mprotect(const void *start, size_t len, int prot);
 </code></pre>
 <p><strong>注意 start 必须是页的起始地址，len 必须是页大小的整数倍</strong></p>
-<p><strong>注意即使原来的属性包含 PROT_READ 和 PROT_WRITE，如果传给 mprotect 的参数是 PROT_EXEC，那么就只会保留 PROT_EXEC 这一个属性；此时任何读或写操作都会引发异常</strong>
-prot 可以取以下值，多个属性之间可以用 &quot;|&quot; 组合：</p>
+<p><strong>注意即使原来的属性包含 PROT_READ 和 PROT_WRITE，如果传给 mprotect 的参数是 PROT_EXEC，那么就只会保留 PROT_EXEC 这一个属性；此时任何读或写操作都会引发异常</strong><br>prot 可以取以下值，多个属性之间可以用 &quot;|&quot; 组合：</p>
 <ul>
 <li><p>PROT_READ：表示内存段的内容可写；</p>
 </li>
@@ -1150,8 +1100,7 @@ prot 可以取以下值，多个属性之间可以用 &quot;|&quot; 组合：</p
 <p>需要指出的是，指定的内存范围必须覆盖完整的内存页（4K）。范围的起始地址 start 必须是内存页的起始地址，范围长度 len 必须是页大小的整数倍。</p>
 <p>如果调用成功，返回 0；如果失败，返回 -1 并设置 errno 来指明具体的失败原因。主要的出错原因如下：</p>
 <ol>
-<li><p>EACCES
-内存无法被设置为相应的权限。例如，如果你以只读方式 mmap(2) 一个文件，然后又用带 PROT_WRITE 标志的 mprotect() 来处理它，就会出现这种情况。</p>
+<li><p>EACCES<br>内存无法被设置为相应的权限。例如，如果你以只读方式 mmap(2) 一个文件，然后又用带 PROT_WRITE 标志的 mprotect() 来处理它，就会出现这种情况。</p>
 </li>
 <li><p>EINVAL</p>
 </li>

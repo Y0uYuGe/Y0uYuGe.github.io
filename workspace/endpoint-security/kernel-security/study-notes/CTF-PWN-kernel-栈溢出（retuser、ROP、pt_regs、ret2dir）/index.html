@@ -19,11 +19,7 @@
     <div class="meta"><time>2024-07-09</time><span class="tag">#kernel</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#ROP</span></div>
     <article class="post-body">
 <h1 id="参考">参考</h1>
-<p><a href="https://arttnba3.cn/2021/03/03/PWN-0X00-LINUX-KERNEL-PWN-PART-I/#0x01-Kernel-ROP-basic">https://arttnba3.cn/2021/03/03/PWN-0X00-LINUX-KERNEL-PWN-PART-I/#0x01-Kernel-ROP-basic</a>
-<a href="https://bbs.kanxue.com/thread-276403.htm#msg_header_h2_7">https://bbs.kanxue.com/thread-276403.htm#msg_header_h2_7</a>
-<a href="https://xz.aliyun.com/t/7625?time__1311=n4%2bxnD0G0=G=n4Gwx05%2b4hri=deY5GOKweD&alichlgref=https://www.google.com.hk/#toc-8">https://xz.aliyun.com/t/7625?time__1311=n4%2BxnD0G0%3DG%3Dn4Gwx05%2B4hri%3DdeY5GOKweD&amp;alichlgref=https%3A%2F%2Fwww.google.com.hk%2F#toc-8</a>
-<a href="https://kiprey.github.io/2021/10/kernel_pwn_introduction/#5-kernel-%E7%9A%84-UAF-%E5%88%A9%E7%94%A8">https://kiprey.github.io/2021/10/kernel_pwn_introduction/#5-kernel-%E7%9A%84-UAF-%E5%88%A9%E7%94%A8</a>
-<a href="https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=171982506416800211525431&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&utm_term=kernel&spm=1018.2226.3001.4450">https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&amp;request_id=171982506416800211525431&amp;biz_id=0&amp;utm_medium=distribute.pc_search_result.none-task-blog-2<del>blog</del>first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&amp;utm_term=kernel&amp;spm=1018.2226.3001.4450</a></p>
+<p><a href="https://arttnba3.cn/2021/03/03/PWN-0X00-LINUX-KERNEL-PWN-PART-I/#0x01-Kernel-ROP-basic">https://arttnba3.cn/2021/03/03/PWN-0X00-LINUX-KERNEL-PWN-PART-I/#0x01-Kernel-ROP-basic</a><br><a href="https://bbs.kanxue.com/thread-276403.htm#msg_header_h2_7">https://bbs.kanxue.com/thread-276403.htm#msg_header_h2_7</a><br><a href="https://xz.aliyun.com/t/7625?time__1311=n4%2bxnD0G0=G=n4Gwx05%2b4hri=deY5GOKweD&alichlgref=https://www.google.com.hk/#toc-8">https://xz.aliyun.com/t/7625?time__1311=n4%2BxnD0G0%3DG%3Dn4Gwx05%2B4hri%3DdeY5GOKweD&amp;alichlgref=https%3A%2F%2Fwww.google.com.hk%2F#toc-8</a><br><a href="https://kiprey.github.io/2021/10/kernel_pwn_introduction/#5-kernel-%E7%9A%84-UAF-%E5%88%A9%E7%94%A8">https://kiprey.github.io/2021/10/kernel_pwn_introduction/#5-kernel-%E7%9A%84-UAF-%E5%88%A9%E7%94%A8</a><br><a href="https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=171982506416800211525431&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&utm_term=kernel&spm=1018.2226.3001.4450">https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&amp;request_id=171982506416800211525431&amp;biz_id=0&amp;utm_medium=distribute.pc_search_result.none-task-blog-2<del>blog</del>first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&amp;utm_term=kernel&amp;spm=1018.2226.3001.4450</a></p>
 <h1 id="qwb2018-core">qwb2018 core</h1>
 <h1 id="检查">检查</h1>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-001-eb9da32ba9.png" alt="图片"></p>
@@ -32,17 +28,10 @@
 <li>调用 proc_create 函数创建一个新的 proc 文件系统条目</li>
 <li>&amp;core_fops 是指向 file_operations 结构体的指针，该结构体定义了 open、read、write 等文件操作函数。</li>
 </ul>
-<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-002-5c78a4e1e8.png" alt="图片">
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-003-27d9a6c82a.png" alt="图片">core_copy_func 存在栈溢出：它可以把 63 字节的 name 复制到栈上的 v2 数组中</p>
-<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-004-4f0069ad0d.png" alt="图片">
-name 是内核数据，用户数据可以通过 core_write 复制进 name
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-005-002cdb4487.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-002-5c78a4e1e8.png" alt="图片"><br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-003-27d9a6c82a.png" alt="图片">core_copy_func 存在栈溢出：它可以把 63 字节的 name 复制到栈上的 v2 数组中</p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-004-4f0069ad0d.png" alt="图片"><br>name 是内核数据，用户数据可以通过 core_write 复制进 name<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-005-002cdb4487.png" alt="图片"></p>
 <h1 id="调试">调试</h1>
-<p>记得设置 root，否则什么都看不到
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-006-887ad87f38.png" alt="图片">
-然后关闭 KASLR，方便下断点
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-007-974d6d1758.png" alt="图片">
-查看模块相关的段以及内核中存在的符号函数</p>
+<p>记得设置 root，否则什么都看不到<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-006-887ad87f38.png" alt="图片"><br>然后关闭 KASLR，方便下断点<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-007-974d6d1758.png" alt="图片"><br>查看模块相关的段以及内核中存在的符号函数</p>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-008-53bf92289a.png" alt="图片"></p>
 <h1 id="打包上传测试脚本">打包上传测试脚本</h1>
 <pre><code class="language-bash">#!/bin/sh
@@ -54,24 +43,11 @@ mv core.cpio ..
 cd ..
 ./start.sh
 </code></pre>
-<p>未开启 SMAP/SMEP 时，可以用 ret2usr 从内核态直接访问并执行用户态代码。
-PS：用 ret2usr 提权时，一定不要使用库函数（它们会触发系统调用，导致内核 panic）</p>
+<p>未开启 SMAP/SMEP 时，可以用 ret2usr 从内核态直接访问并执行用户态代码。<br>PS：用 ret2usr 提权时，一定不要使用库函数（它们会触发系统调用，导致内核 panic）</p>
 <h1 id="retuser">retuser</h1>
-<p>思路是：在内核态执行时，把一个用户程序的返回地址写入内核态栈，然后跳到用户代码，执行用户程序定义的函数，同时完成提权，并模拟返回用户态的过程
-rip 是切换到内核态时最后压入的值；iretq 通过 pop 恢复寄存器，顺序从 rip 到 ss
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-009-465f8d1e9b.png" alt="图片">
-返回地址变成了用户态代码，执行 <code>commit_creds(prepare_kernel_cred(0));</code>
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-010-343d6ef17c.png" alt="图片">
-切换到用户态
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-011-735b610551.png" alt="图片"></p>
-<p>此次 iretq 时，栈上是前面设置好的结构
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-012-eebf0ae0b9.png" alt="图片">
-通过恢复 rip，执行跳到 getshell 函数
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-013-7408589604.png" alt="图片">
-提权成功
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-014-ffea44002a.png" alt="图片"></p>
-<p><code> __attribute__((packed))</code> 是 GCC 编译器的扩展属性，告诉编译器在打包结构体成员时不要添加任何填充。通常，编译器会在结构体成员之间添加填充字节以保证数据对齐，这会增大结构体的大小。
-使用 packed 属性可以确保 trap_frame 结构体在内存中紧凑排布，每个成员紧跟上一个成员，没有额外的填充。</p>
+<p>思路是：在内核态执行时，把一个用户程序的返回地址写入内核态栈，然后跳到用户代码，执行用户程序定义的函数，同时完成提权，并模拟返回用户态的过程<br>rip 是切换到内核态时最后压入的值；iretq 通过 pop 恢复寄存器，顺序从 rip 到 ss<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-009-465f8d1e9b.png" alt="图片"><br>返回地址变成了用户态代码，执行 <code>commit_creds(prepare_kernel_cred(0));</code><br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-010-343d6ef17c.png" alt="图片"><br>切换到用户态<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-011-735b610551.png" alt="图片"></p>
+<p>此次 iretq 时，栈上是前面设置好的结构<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-012-eebf0ae0b9.png" alt="图片"><br>通过恢复 rip，执行跳到 getshell 函数<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-013-7408589604.png" alt="图片"><br>提权成功<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-014-ffea44002a.png" alt="图片"></p>
+<p><code> __attribute__((packed))</code> 是 GCC 编译器的扩展属性，告诉编译器在打包结构体成员时不要添加任何填充。通常，编译器会在结构体成员之间添加填充字节以保证数据对齐，这会增大结构体的大小。<br>使用 packed 属性可以确保 trap_frame 结构体在内存中紧凑排布，每个成员紧跟上一个成员，没有额外的填充。</p>
 <ol>
 <li><p><strong><code>#define KERNCALL __attribute__((regparm(3)))</code></strong>：</p>
 <ul>
@@ -226,11 +202,9 @@ int main() {
 </code></pre>
 <p>通过溢出执行用户代码，实现提权并切换到用户态</p>
 <h1 id="kernel-rop">kernel rop</h1>
-<p>开启 SMEP 和 SMAP 后，内核空间无法执行用户空间的代码，也无法访问用户空间的数据或跳到用户空间的代码执行。
-利用 ROP 在内核中执行 commit_creds(prepare_kernel_cred(0)) 完成提权，然后 iret 返回用户空间，执行 getshell 函数</p>
+<p>开启 SMEP 和 SMAP 后，内核空间无法执行用户空间的代码，也无法访问用户空间的数据或跳到用户空间的代码执行。<br>利用 ROP 在内核中执行 commit_creds(prepare_kernel_cred(0)) 完成提权，然后 iret 返回用户空间，执行 getshell 函数</p>
 <h2 id="init_cred">init_cred</h2>
-<p>可以找到 init_cred，直接把它作为 commit_creds 的参数，而不需要 prepare_creds
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-015-2db6e2991b.png" alt="图片"></p>
+<p>可以找到 init_cred，直接把它作为 commit_creds 的参数，而不需要 prepare_creds<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-015-2db6e2991b.png" alt="图片"></p>
 <pre><code class="language-c">#include &lt;fcntl.h&gt;
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -499,15 +473,9 @@ int main() {
 }
 </code></pre>
 <h2 id="用-swapgs_restore_regs_and_return_to_usermode-绕过-kpti">用 swapgs_restore_regs_and_return_to_usermode 绕过 KPTI</h2>
-<p><a href="https://b0ldfrev.gitbook.io/note/linux_kernel/kernelpwn-zhuang-tai-qie-huan-yuan-li-ji-kpti-rao-guo">https://b0ldfrev.gitbook.io/note/linux_kernel/kernelpwn-zhuang-tai-qie-huan-yuan-li-ji-kpti-rao-guo</a>
-把 CPU 类型改为 kvm64 后，就开启了 KPTI 保护。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-017-a798d1ecfe.png" alt="图片">
-在开启 KPTI 的内核上，如果提权返回用户态（iretq/sysret）之前没有设置好 CR3 寄存器的值，进程就找不到当前程序正确的页表，从而触发段错误，程序退出。</p>
+<p><a href="https://b0ldfrev.gitbook.io/note/linux_kernel/kernelpwn-zhuang-tai-qie-huan-yuan-li-ji-kpti-rao-guo">https://b0ldfrev.gitbook.io/note/linux_kernel/kernelpwn-zhuang-tai-qie-huan-yuan-li-ji-kpti-rao-guo</a><br>把 CPU 类型改为 kvm64 后，就开启了 KPTI 保护。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-017-a798d1ecfe.png" alt="图片"><br>在开启 KPTI 的内核上，如果提权返回用户态（iretq/sysret）之前没有设置好 CR3 寄存器的值，进程就找不到当前程序正确的页表，从而触发段错误，程序退出。</p>
 <p>一种更省事的方法是用 <code>swapgs_restore_regs_and_return_to_usermode</code> 函数来返回：</p>
-<p>可以用 <code>cat /proc/kallsyms| grep swapgs_restore_regs_and_return_to_usermode</code> 找到它的内核地址
- swapgs_restore_regs_and_return_to_usermode 的代码如下
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-018-140e2b02e3.png" alt="图片">
-跳过开头的 pop 指令同样可以返回用户态，即把程序流导向 mov rdi, rsp 指令；栈布局只需如下即可——具体原因可以调试查看</p>
+<p>可以用 <code>cat /proc/kallsyms| grep swapgs_restore_regs_and_return_to_usermode</code> 找到它的内核地址<br> swapgs_restore_regs_and_return_to_usermode 的代码如下<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-018-140e2b02e3.png" alt="图片"><br>跳过开头的 pop 指令同样可以返回用户态，即把程序流导向 mov rdi, rsp 指令；栈布局只需如下即可——具体原因可以调试查看</p>
 <pre><code class="language-c">rsp  ----&gt;  mov_rdi_rsp
             0
             0
@@ -518,12 +486,7 @@ int main() {
             ss
 </code></pre>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-019-f67bd1e438.png" alt="图片"></p>
-<p>进入内核前的 CR3	
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-020-9a43c0f983.png" alt="图片">
-进入内核后的 CR3	
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-021-f1781857c9.png" alt="图片">
-用户态代码开始执行时发生 page_fault
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-022-41969187b1.png" alt="图片"><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-023-daef4c63f2.png" alt="图片"></p>
+<p>进入内核前的 CR3	<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-020-9a43c0f983.png" alt="图片"><br>进入内核后的 CR3	<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-021-f1781857c9.png" alt="图片"><br>用户态代码开始执行时发生 page_fault<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-022-41969187b1.png" alt="图片"><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-023-daef4c63f2.png" alt="图片"></p>
 <pre><code class="language-c">#include &lt;fcntl.h&gt;
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -816,15 +779,8 @@ mov     cr3, rdi
 <p>来设置 CR3 寄存器，再按 iretq/sysret 的要求构造好内容，然后返回即可。</p>
 <h1 id="kernel-rop-ret2user">kernel rop + ret2user</h1>
 <p>先用一个 ROP mov gadget 把 cr4 设为 0x6f0（这个值可以把原始 cr4 的值和 0xFFFFF 相与得到）来关闭 SMEP 和 SMAP，然后 iret 到用户空间执行提权代码。这样同样可以绕过 SMAP 和 SMEP </p>
-<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-024-8225a9edfb.png" alt="图片">
-此时已开启
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-025-609decdfd0.png" alt="图片">
-通过 pop 后接 mov 来设置 cr4
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-026-440b6b7514.png" alt="图片">
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-027-85ae0aca58.png" alt="图片"></p>
-<p>然后就可以直接跳到用户态代码执行
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-028-a2a67338ce.png" alt="图片">
-用户态代码接着执行 <code>commit_creds(prepare_kernel_cred(0))</code> 或 <code>commit_creds(init_cred)</code>，然后返回用户态并跳到 <code>system(&quot;/bin/sh&quot;);</code></p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-024-8225a9edfb.png" alt="图片"><br>此时已开启<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-025-609decdfd0.png" alt="图片"><br>通过 pop 后接 mov 来设置 cr4<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-026-440b6b7514.png" alt="图片"><br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-027-85ae0aca58.png" alt="图片"></p>
+<p>然后就可以直接跳到用户态代码执行<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-028-a2a67338ce.png" alt="图片"><br>用户态代码接着执行 <code>commit_creds(prepare_kernel_cred(0))</code> 或 <code>commit_creds(init_cred)</code>，然后返回用户态并跳到 <code>system(&quot;/bin/sh&quot;);</code></p>
 <pre><code class="language-c">#include &lt;fcntl.h&gt;
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -964,8 +920,7 @@ int main() {
     return 0;
 }
 </code></pre>
-<p>参考博客说这种方法无法绕过 SMAP，但我在这里写了个测试，发现它确实能绕过 SMAP——可以访问用户空间的数据
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-029-302b26df22.png" alt="图片"></p>
+<p>参考博客说这种方法无法绕过 SMAP，但我在这里写了个测试，发现它确实能绕过 SMAP——可以访问用户空间的数据<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-029-302b26df22.png" alt="图片"></p>
 <h1 id="用-pt_regs-构造-kernel-rop">用 pt_regs 构造 kernel ROP</h1>
 <p>如果溢出受限，只能覆盖返回地址，就需要把栈迁移到别处来构造 ROP 链。可以把 ROP 链构造在 pt_regs 上。</p>
 <p> 一次 syscall 会进入 entry_SYSCALL_64，它把所有寄存器压入内核栈，形成一个 pt_regs 结构。这个结构本质上位于内核栈的底部，定义如下：</p>
@@ -1007,14 +962,8 @@ int main() {
 <blockquote>
 <p>由于内核栈只有一页大小，所以只需要找到一个形如 &quot;add rsp, val ; ret&quot; 的 gadget，然后利用之前设置并压入的寄存器内容来完成 ROP 链</p>
 </blockquote>
-<p>当前 rsp 与 pt_regs 之间的偏移 <img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-030-9777bfc0d9.png" alt="图片">
- pt_regs 总共 0xa8 字节
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-031-02efd50494.png" alt="图片">
-<strong>还要注意，pt_regs 中 r11 和 rcx 对应的位置分别被 eflags 和返回地址（被设为 system(&quot;/bin/sh&quot;)）覆盖，不受我们控制。</strong>
-用 add rsp, value 或 pop 指令把 rsp 移到 pt_regs，例如 <code>add    rsp,0xc8   pop    rbx pop    rbp   pop    r12   pop    r13  ret</code> 可以达到加 0xe8 的效果</p>
-<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-032-0e496389f1.png" alt="图片">
-所以在溢出之前先设置好寄存器；syscall 压入栈底的内容在迁移后作为 ROP 链，然后溢出执行调整 rsp 的 gadget，最后通过之前设置的寄存器进行 ROP
-这里用 swapgs_restore_regs_and_return_to_usermode 切换回用户态；需要调整偏移，使执行最终能返回到原来的返回地址 <code>system(&quot;/bin/sh&quot;)</code></p>
+<p>当前 rsp 与 pt_regs 之间的偏移 <img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-030-9777bfc0d9.png" alt="图片"><br> pt_regs 总共 0xa8 字节<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-031-02efd50494.png" alt="图片"><br><strong>还要注意，pt_regs 中 r11 和 rcx 对应的位置分别被 eflags 和返回地址（被设为 system(&quot;/bin/sh&quot;)）覆盖，不受我们控制。</strong><br>用 add rsp, value 或 pop 指令把 rsp 移到 pt_regs，例如 <code>add    rsp,0xc8   pop    rbx pop    rbp   pop    r12   pop    r13  ret</code> 可以达到加 0xe8 的效果</p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN-kernel-%E6%A0%88%E6%BA%A2%E5%87%BA%EF%BC%88retuser%E3%80%81ROP%E3%80%81pt_regs%E3%80%81ret2dir%EF%BC%89/assets/csdn-139583501/image-032-0e496389f1.png" alt="图片"><br>所以在溢出之前先设置好寄存器；syscall 压入栈底的内容在迁移后作为 ROP 链，然后溢出执行调整 rsp 的 gadget，最后通过之前设置的寄存器进行 ROP<br>这里用 swapgs_restore_regs_and_return_to_usermode 切换回用户态；需要调整偏移，使执行最终能返回到原来的返回地址 <code>system(&quot;/bin/sh&quot;)</code></p>
 <pre><code class="language-c">#include &lt;fcntl.h&gt;
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -1130,11 +1079,9 @@ int main() {
 </blockquote>
 <p>通俗地说，就是可以在某个内核地址处找到一块由用户态控制的内存</p>
 <ol>
-<li>mmap 大量内存（ROP 链等）以提高命中概率
-用 mmap 一页一页地分配；除了放在末尾的 ROP 链，前面的部分都填上 ret 的地址</li>
+<li>mmap 大量内存（ROP 链等）以提高命中概率<br>用 mmap 一页一页地分配；除了放在末尾的 ROP 链，前面的部分都填上 ret 的地址</li>
 <li>泄露某个 slab 的地址并计算 physmap 地址（开启 KASLR 时，physmap 地址是随机化的）</li>
-<li>把内核执行流劫持到 physmap 上
- 先把栈迁移到 pt_regs，然后用 <code>pop rsp ret </code> 把栈迁移到 physmap 上</li>
+<li>把内核执行流劫持到 physmap 上<br> 先把栈迁移到 pt_regs，然后用 <code>pop rsp ret </code> 把栈迁移到 physmap 上</li>
 </ol>
 <pre><code class="language-c">#include &lt;fcntl.h&gt;
 #include &lt;stdio.h&gt;

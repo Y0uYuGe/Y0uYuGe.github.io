@@ -25,15 +25,9 @@
 <p>什么是 Y 文件？Y 文件是 Yacc（Yet Another Compiler-Compiler）使用的开发者文件，Yacc 是一个用于生成源代码解析器的程序；Y 文件包含如何定义一种编程语言的形式化声明，用于生成各种语言的解析器。</p>
 <h1 id="反引号">反引号</h1>
 <p>【<code>】学名叫&quot;反引号&quot;，被反引号括起来的内容表示要执行的命令。 例如 </code>dirname $0` 就表示需要执行命令 dirname $0。</p>
-<p>$0：当前 shell 程序的文件名
-dirname $0 获取当前 shell 程序的路径
-cd <code>dirname $0</code> 进入当前 shell 程序所在的目录</p>
+<p>$0：当前 shell 程序的文件名<br>dirname $0 获取当前 shell 程序的路径<br>cd <code>dirname $0</code> 进入当前 shell 程序所在的目录</p>
 <blockquote>
-<p>反引号括起来的字符串被 shell 解释为命令行，在执行时，shell 首先执行该命令行，并以它的标准输出结果取代整个反引号（包括两个反引号）部分
-例如：
-$echo 当前目录是 <code>pwd</code>
-       当前目录是 /home/user8
-shell 执行此命令时，首先执行 <code>pwd</code> 中的命令，然后用结果替换整个反引号部分，再进行输出</p>
+<p>反引号括起来的字符串被 shell 解释为命令行，在执行时，shell 首先执行该命令行，并以它的标准输出结果取代整个反引号（包括两个反引号）部分<br>例如：<br>$echo 当前目录是 <code>pwd</code><br>       当前目录是 /home/user8<br>shell 执行此命令时，首先执行 <code>pwd</code> 中的命令，然后用结果替换整个反引号部分，再进行输出</p>
 </blockquote>
 <p>【&quot;&quot;】：被双引号括起来的内容中可以包含 $（美元符号：取变量值）、`（反引号：执行命令）、\（反斜杠：转义），其余都视为字符串。</p>
 <p>【&#39;&#39;】：被单引号括起来的内容全部视为字符串，包括上面提到的三个特殊字符。</p>
@@ -233,87 +227,28 @@ int main(void) {
 <blockquote>
 <p>可以在 C 语言中写一个字符串，在中间用转义字符 &quot;\0&quot; 插入一个空字符，然后打印该字符串。编译运行后会发现空字符后面的字符没有被打印出来。</p>
 </blockquote>
-<p>最后一行是 <code>state.spawn_off = (STAGE_H + 1) * STAGE_W / 2;</code>
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-001-e1b2c12957.png" alt="图片"></p>
-<p>由此可知
-state.spawn_off
-state 的位置
-通过 strcpy 溢出到 state.spawn_off</p>
-<p>原来的
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-002-6d0534dc36.png" alt="图片">
-因为 .y 后面会自动跟上 \x00，所以直接把原来的 0110 覆盖为 0079
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-003-e623b4f035.png" alt="图片">
-此时地图变为
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-004-e173f7f939.png" alt="图片">
-接下来我们能控制的输入就是移动方向了，但不得不承认数组可能存在越界问题——下标超出范围但仍然可以访问。这样我们就能访问到后面 is_push 等数组的内容。</p>
+<p>最后一行是 <code>state.spawn_off = (STAGE_H + 1) * STAGE_W / 2;</code><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-001-e1b2c12957.png" alt="图片"></p>
+<p>由此可知<br>state.spawn_off<br>state 的位置<br>通过 strcpy 溢出到 state.spawn_off</p>
+<p>原来的<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-002-6d0534dc36.png" alt="图片"><br>因为 .y 后面会自动跟上 \x00，所以直接把原来的 0110 覆盖为 0079<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-003-e623b4f035.png" alt="图片"><br>此时地图变为<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-004-e173f7f939.png" alt="图片"><br>接下来我们能控制的输入就是移动方向了，但不得不承认数组可能存在越界问题——下标超出范围但仍然可以访问。这样我们就能访问到后面 is_push 等数组的内容。</p>
 <p>接下来考虑能否修改规则或者终点的位置。首先在规则层面，我们知道移动一般是在地图内，不能越界，但这题似乎没有限制越界，所以从右边界继续移动会到下一行左边界的开头。</p>
 <p>通过这样移动并推动物体，我们就可以修改 is_push 之后的内容，从而修改规则。</p>
 <p>但是……终点这个东西……暂时没有办法。</p>
-<p>那就看看 step_game 和 move 函数里的规则能否被利用。
-单看代码，move 和 step_game 函数似乎都没问题，于是……只好枚举可能的组合——当前位置、移动后的位置、移动后的位置再移动后的位置，以及各种可能的坐标。结合 cool anti-cheat system，我猜测如果终点附近某个位置既是 you 又是 stop，并且在仍处于循环内时能够移动，那么就可以绕过 stop 到达终点。</p>
-<p>因为循环退出后会有检查
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-005-b18c7fa395.png" alt="图片"></p>
-<p>但如何构造一个既是 you 又是 stop 的坐标呢？
-方案一：原位置——目前无法直接实现</p>
+<p>那就看看 step_game 和 move 函数里的规则能否被利用。<br>单看代码，move 和 step_game 函数似乎都没问题，于是……只好枚举可能的组合——当前位置、移动后的位置、移动后的位置再移动后的位置，以及各种可能的坐标。结合 cool anti-cheat system，我猜测如果终点附近某个位置既是 you 又是 stop，并且在仍处于循环内时能够移动，那么就可以绕过 stop 到达终点。</p>
+<p>因为循环退出后会有检查<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-005-b18c7fa395.png" alt="图片"></p>
+<p>但如何构造一个既是 you 又是 stop 的坐标呢？<br>方案一：原位置——目前无法直接实现</p>
 <p>方案二：移动后的位置——不可行</p>
 <p>最粗暴的方法就是直接把 you 移动到 stop 的位置上</p>
-<p>但原则上是移动不过去的，如图，函数做了限制
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-006-a09a5625a5.png" alt="图片">
-那怎么办？这时就用上可以修改规则的能力了。要绕过它只能修改 is_stop，但无论怎么改，&amp; 判断只会更容易成立而不会更少——所以放弃</p>
+<p>但原则上是移动不过去的，如图，函数做了限制<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-006-a09a5625a5.png" alt="图片"><br>那怎么办？这时就用上可以修改规则的能力了。要绕过它只能修改 is_stop，但无论怎么改，&amp; 判断只会更容易成立而不会更少——所以放弃</p>
 <p>方案三：移动后的位置再移动后的位置——可行</p>
 <p>因为此时处理的是移动后的位置和移动后位置再移动后的位置，移动后的位置也需要是 you，那么让再移动后的位置为 stop 即可。</p>
-<p>因为没有检查移动后位置再移动后的位置是否为 stop，所以可行。
-但此时还需要通过检查
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-007-cd097d0eb3.png" alt="图片">
-这时可以修改规则让 push 包含 you，这样当某物是 you 时，检查都能成立。</p>
-<p>修改规则如下
-首先对应
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-008-7c54fb0e10.png" alt="图片">
-下面的内存是
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-009-030f7eacae.png" alt="图片">
-因为最后要让 @ 处于最后一行，然后向下移动就能修改 is_push 等数组的内容（数组越界修改）
-修改 stop 没有用，因为修改后的位置会比原位置更高；应该修改 push 的位置或者 you 的位置
-图太难画了，借用一下官方的
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-010-c0c4b06260.png" alt="图片"></p>
-<p>此时初始地图为
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-011-9169787735.png" alt="图片">
-然后移动到
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-012-c090989c19.png" alt="图片">
-利用数组越界到达
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-013-97550f8d31.png" alt="图片">
-移动到
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-014-cffd6f7b12.png" alt="图片">
-再次越界到
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-015-439eb693af.png" alt="图片">
-移动到
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-016-3edd68ec62.png" alt="图片">
-如果现在把 @ 移到 push 的第三个位置上，虽然 push 包含了 you，但地图上已经没有 you 了，也就无法再移动——这样不行。
-那么可以把物体推到 push 的第三个位置，这样地图上仍有 you。但是……无论在哪，移动后的位置都不能是 you……所以也不行
-于是只好修改 you 的规则，让地图上有多个 you 物体。唯一适合我们的位置是右上角 IX 的位置（循环内移动的位置朝同一方向移动）。但 X 必须清除；用 S 作为 you 肯定不行，而右下角的 O 又无法移动到 push 的第二个位置或 you 的第二个位置上（推箱子的性质），所以只能含泪先选 S 作为 you，再把它填到第二个位置，使地图上的 you 变为 I</p>
-<p>推箱子
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-017-610a55d601.png" alt="图片"></p>
+<p>因为没有检查移动后位置再移动后的位置是否为 stop，所以可行。<br>但此时还需要通过检查<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-007-cd097d0eb3.png" alt="图片"><br>这时可以修改规则让 push 包含 you，这样当某物是 you 时，检查都能成立。</p>
+<p>修改规则如下<br>首先对应<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-008-7c54fb0e10.png" alt="图片"><br>下面的内存是<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-009-030f7eacae.png" alt="图片"><br>因为最后要让 @ 处于最后一行，然后向下移动就能修改 is_push 等数组的内容（数组越界修改）<br>修改 stop 没有用，因为修改后的位置会比原位置更高；应该修改 push 的位置或者 you 的位置<br>图太难画了，借用一下官方的<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-010-c0c4b06260.png" alt="图片"></p>
+<p>此时初始地图为<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-011-9169787735.png" alt="图片"><br>然后移动到<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-012-c090989c19.png" alt="图片"><br>利用数组越界到达<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-013-97550f8d31.png" alt="图片"><br>移动到<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-014-cffd6f7b12.png" alt="图片"><br>再次越界到<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-015-439eb693af.png" alt="图片"><br>移动到<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-016-3edd68ec62.png" alt="图片"><br>如果现在把 @ 移到 push 的第三个位置上，虽然 push 包含了 you，但地图上已经没有 you 了，也就无法再移动——这样不行。<br>那么可以把物体推到 push 的第三个位置，这样地图上仍有 you。但是……无论在哪，移动后的位置都不能是 you……所以也不行<br>于是只好修改 you 的规则，让地图上有多个 you 物体。唯一适合我们的位置是右上角 IX 的位置（循环内移动的位置朝同一方向移动）。但 X 必须清除；用 S 作为 you 肯定不行，而右下角的 O 又无法移动到 push 的第二个位置或 you 的第二个位置上（推箱子的性质），所以只能含泪先选 S 作为 you，再把它填到第二个位置，使地图上的 you 变为 I</p>
+<p>推箱子<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-017-610a55d601.png" alt="图片"></p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-018-1da6fdd874.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-019-731a8fe5d2.png" alt="图片">向下推
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-020-3c98779571.png" alt="图片">
-现在就能控制 S 作为 you 了，所有 S 物体一起移动。注意：如果先移动的 you 的下一个位置也是 you，那么下一个 you 会跳两格</p>
-<p>然后移动到
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-021-6816bb27f3.png" alt="图片">
-把两个都推进去
-现在我可以移动了
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-022-1451a24184.png" alt="图片">
-向左移动使它们对齐，再向右移动消除 X
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-023-29b7e86bd6.png" alt="图片">
-然后摆成这样，方便它们左右相邻
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-024-5264d638b2.png" alt="图片">
-然后
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-025-d7703f2873.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-026-df88f93133.png" alt="图片">
-最后输入一个 d 即可</p>
-<p>此时由于原位置本身就是 you，移动后的位置也必须是 you，循环执行时，移动后的位置再移动后的位置变成了 stop|you。当循环再到来时，位置为之前移动后的位置，由于上一次循环末尾已将对应移动后位置的 should_update 置 0，所以这里会 continue
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-027-eb7780325d.png" alt="图片">
-然后循环到达之前移动后位置再移动后的位置，这时能移动吗？
-没想到确实能移动
-因为该位置的 should_update 没有被置 0，并且它是 you；而 stop 检查的是该位置将要移动到的下一个位置——我们之前设置好的下一个位置的方向是朝着终点的。下一个位置正是终点，于是成功到达终点。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-019-731a8fe5d2.png" alt="图片">向下推<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-020-3c98779571.png" alt="图片"><br>现在就能控制 S 作为 you 了，所有 S 物体一起移动。注意：如果先移动的 you 的下一个位置也是 you，那么下一个 you 会跳两格</p>
+<p>然后移动到<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-021-6816bb27f3.png" alt="图片"><br>把两个都推进去<br>现在我可以移动了<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-022-1451a24184.png" alt="图片"><br>向左移动使它们对齐，再向右移动消除 X<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-023-29b7e86bd6.png" alt="图片"><br>然后摆成这样，方便它们左右相邻<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-024-5264d638b2.png" alt="图片"><br>然后<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-025-d7703f2873.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-026-df88f93133.png" alt="图片"><br>最后输入一个 d 即可</p>
+<p>此时由于原位置本身就是 you，移动后的位置也必须是 you，循环执行时，移动后的位置再移动后的位置变成了 stop|you。当循环再到来时，位置为之前移动后的位置，由于上一次循环末尾已将对应移动后位置的 should_update 置 0，所以这里会 continue<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/TSG%20CTF%202023%20%5BBABA%20PWN%20GAME%5D/assets/csdn-134221334/image-027-eb7780325d.png" alt="图片"><br>然后循环到达之前移动后位置再移动后的位置，这时能移动吗？<br>没想到确实能移动<br>因为该位置的 should_update 没有被置 0，并且它是 you；而 stop 检查的是该位置将要移动到的下一个位置——我们之前设置好的下一个位置的方向是朝着终点的。下一个位置正是终点，于是成功到达终点。</p>
 <p>exp</p>
 <pre><code class="language-python">from pwn import *
 context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)

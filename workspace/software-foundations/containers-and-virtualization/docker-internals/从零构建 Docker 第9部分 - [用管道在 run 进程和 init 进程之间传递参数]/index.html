@@ -69,8 +69,7 @@
 <p>如果找到了对应可执行文件的路径，<code>LookPath</code> 函数会返回该路径；如果没有找到，则返回一个空字符串和一个错误对象。这个功能通常用于在执行外部命令之前验证某个命令是否存在；这是执行 <code>exec.Command</code> 之前常见的一个预先步骤。</p>
 <p>例如，假设你有一个 <code>cmdArray := []string{&quot;ls&quot;, &quot;-l&quot;, &quot;.&quot;}</code>，想要执行 <code>ls -l .</code> 命令。在执行该命令之前，你可能会先调用 <code>exec.LookPath(cmdArray[0])</code>，检查系统上是否存在名为 <code>ls</code> 的可执行文件。如果存在，就可以安全地创建并执行 <code>exec.Command(cmdArray[0], cmdArray[1:]...)</code>。</p>
 <h1 id="syscallexec">syscall.Exec</h1>
-<p><a href="https://xieys.club/go-syscall-exec/">https://xieys.club/go-syscall-exec/</a>
-<a href="https://gobyexample-cn.github.io/execing-processes">https://gobyexample-cn.github.io/execing-processes</a></p>
+<p><a href="https://xieys.club/go-syscall-exec/">https://xieys.club/go-syscall-exec/</a><br><a href="https://gobyexample-cn.github.io/execing-processes">https://gobyexample-cn.github.io/execing-processes</a></p>
 <p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20%E7%AC%AC9%E9%83%A8%E5%88%86%20-%20%5B%E7%94%A8%E7%AE%A1%E9%81%93%E5%9C%A8%20run%20%E8%BF%9B%E7%A8%8B%E5%92%8C%20init%20%E8%BF%9B%E7%A8%8B%E4%B9%8B%E9%97%B4%E4%BC%A0%E9%80%92%E5%8F%82%E6%95%B0%5D/assets/csdn-137634609/image-001-d13e698297.png" alt="图片"></p>
 <h1 id="stringssplitmsgstr-"><code>strings.Split(msgStr, &quot; &quot;)</code></h1>
 <p><code>strings.Split(msgStr, &quot; &quot;)</code> 是 Go 中的一个字符串处理函数，来自 &quot;strings&quot; 包。该函数接受两个参数：</p>

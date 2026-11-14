@@ -22,33 +22,21 @@
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-001-c8a8729924.png" alt="图片"></p>
 <h1 id="进程的概念">进程的概念</h1>
 <p>任务管理器：显示正在运行的进程</p>
-<p>打开 QQ 前后对比
-<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-002-578c5f678c.png" alt="图片">
-打开三个 QQ 就得到三个进程</p>
+<p>打开 QQ 前后对比<br><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-002-578c5f678c.png" alt="图片"><br>打开三个 QQ 就得到三个进程</p>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-003-a9af0ed899.png" alt="图片"></p>
 <h1 id="进程的组成---pcb">进程的组成 - PCB</h1>
-<p>PCB 中包含进程的大量信息
-<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-004-1e6dacf050.png" alt="图片"></p>
-<p>每个进程的 PID 都不同，
-<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-005-3c951391d2.png" alt="图片"></p>
+<p>PCB 中包含进程的大量信息<br><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-004-1e6dacf050.png" alt="图片"></p>
+<p>每个进程的 PID 都不同，<br><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-005-3c951391d2.png" alt="图片"></p>
 <h1 id="pcb-中存放了什么">PCB 中存放了什么</h1>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-006-99186e0eb3.png" alt="图片"></p>
 <h1 id="程序是如何运行的">程序是如何运行的</h1>
-<p>进程实体可以理解为进程运行时属于它的那部分内存
-进程是程序的一次执行，进程实体是进程在执行的某一时刻驻留在内存中的部分
-<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-007-27dc00e4f9.png" alt="图片"></p>
+<p>进程实体可以理解为进程运行时属于它的那部分内存<br>进程是程序的一次执行，进程实体是进程在执行的某一时刻驻留在内存中的部分<br><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-007-27dc00e4f9.png" alt="图片"></p>
 <h1 id="进程的组成---程序段数据段">进程的组成 - 程序段、数据段</h1>
-<p> 操作系统以进程为单位分配资源
- 注意进程存在的唯一标志
- <img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-008-63c3330013.png" alt="图片"></p>
+<p> 操作系统以进程为单位分配资源<br> 注意进程存在的唯一标志<br> <img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-008-63c3330013.png" alt="图片"></p>
 <h1 id="进程的特征">进程的特征</h1>
-<p>动态性，因为它一直在执行、一直在变化
-独立性：进程不依赖其他进程运行或获取资源
-<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-009-b7a046d942.png" alt="图片"></p>
+<p>动态性，因为它一直在执行、一直在变化<br>独立性：进程不依赖其他进程运行或获取资源<br><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-009-b7a046d942.png" alt="图片"></p>
 <h1 id="总结">总结</h1>
-<p>注意进程存在的唯一标志和进程最基本的特征
-引入线程后，调度的最小单位变成了线程，但进程仍是独立获得资源的最小单位
-<img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-010-a3b84ab1c5.png" alt="图片"></p>
+<p>注意进程存在的唯一标志和进程最基本的特征<br>引入线程后，调度的最小单位变成了线程，但进程仍是独立获得资源的最小单位<br><img src="/workspace/software-foundations/operating-systems/fundamentals/02-%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%A6%82%E5%BF%B5%E3%80%81%E7%BB%84%E6%88%90%E5%92%8C%E7%89%B9%E5%BE%81%EF%BC%88PCB%E3%80%81%E7%A8%8B%E5%BA%8F%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84%EF%BC%89/assets/csdn-135769669/image-010-a3b84ab1c5.png" alt="图片"></p>
 
     </article>
     

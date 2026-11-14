@@ -22,22 +22,11 @@
 <p>  时序控制即提供每条指令对应的各个操作信号的先后顺序</p>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-001-494ba61801.png" alt="图片"></p>
 <h1 id="运算器和控制器的功能">运算器和控制器的功能</h1>
-<p>中断处理可能处理 I/O 中断，也可能处理由异常引起的中断 
-在这里插入图片描述
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-002-fd7f4dba59.png" alt="图片"></p>
+<p>中断处理可能处理 I/O 中断，也可能处理由异常引起的中断<br>在这里插入图片描述<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-002-fd7f4dba59.png" alt="图片"></p>
 <h1 id="运算器的基本结构">运算器的基本结构</h1>
-<p>要运算的数据放在寄存器中
-H 为高位，L 为低位
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-003-086b7deb38.png" alt="图片"></p>
+<p>要运算的数据放在寄存器中<br>H 为高位，L 为低位<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-003-086b7deb38.png" alt="图片"></p>
 <h2 id="专用数据通路方式">专用数据通路方式</h2>
-<p>这里所有寄存器同时向左右两边发送数据，所以需要进行选择
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-004-7e24149b1a.png" alt="图片">
-MUX 根据某些输入决定输出哪一路
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-005-794acd0a8a.png" alt="图片">
-三态门
-Rout 输入决定这一路能否输出
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-006-31492a2701.png" alt="图片">
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-007-a0d7b1d510.png" alt="图片"></p>
+<p>这里所有寄存器同时向左右两边发送数据，所以需要进行选择<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-004-7e24149b1a.png" alt="图片"><br>MUX 根据某些输入决定输出哪一路<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-005-794acd0a8a.png" alt="图片"><br>三态门<br>Rout 输入决定这一路能否输出<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-006-31492a2701.png" alt="图片"><br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-007-a0d7b1d510.png" alt="图片"></p>
 <h2 id="cpu-内部单总线方式">CPU 内部单总线方式</h2>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-008-0bd1f27550.png" alt="图片"></p>
 <p>暂存寄存器可以暂存从主存或某些寄存器读出的数据</p>
@@ -45,24 +34,11 @@ Rout 输入决定这一路能否输出
 <p>绿色的 in 信号同样根据某些输入决定数据能否写入寄存器</p>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-009-7484c00a63.png" alt="图片"></p>
 <h1 id="控制器的基本结构">控制器的基本结构</h1>
-<p>CPU 内部总线
-指令中的地址码信息需要输出到 CPU 内部总线上
- 指令译码器选中某一根输出线，微操作信号发生器根据该信号产生微操作序列
-微操作信号发生器每收到一次时序系统的信号，就发出该微操作的信号，执行一个微操作</p>
-<p>MAR：主存中某个内容的存储地址
-CPU 内部总线：CPU 内部各部件传送数据的公共通路
-地址总线和数据总线：CPU 与其他部件之间传送数据的公共通路
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-010-8a74d3f673.png" alt="图片"></p>
+<p>CPU 内部总线<br>指令中的地址码信息需要输出到 CPU 内部总线上<br> 指令译码器选中某一根输出线，微操作信号发生器根据该信号产生微操作序列<br>微操作信号发生器每收到一次时序系统的信号，就发出该微操作的信号，执行一个微操作</p>
+<p>MAR：主存中某个内容的存储地址<br>CPU 内部总线：CPU 内部各部件传送数据的公共通路<br>地址总线和数据总线：CPU 与其他部件之间传送数据的公共通路<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-010-8a74d3f673.png" alt="图片"></p>
 <h1 id="cpu-的基本结构">CPU 的基本结构</h1>
-<p>可编程：可以通过汇编语言改变寄存器的值
-PC：跳转指令
-PSW：产生标志位，跳转指令也需要读取
-ACC：一些运算会改变 ACC 的值
-R0 R1 R2 R3：可以通过汇编修改</p>
-<p>红色表示可见，灰色表示不可见
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-011-9b215e02dd.png" alt="图片">
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-012-ebdb40013c.png" alt="图片">
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-013-b7298eec28.png" alt="图片"></p>
+<p>可编程：可以通过汇编语言改变寄存器的值<br>PC：跳转指令<br>PSW：产生标志位，跳转指令也需要读取<br>ACC：一些运算会改变 ACC 的值<br>R0 R1 R2 R3：可以通过汇编修改</p>
+<p>红色表示可见，灰色表示不可见<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-011-9b215e02dd.png" alt="图片"><br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-012-ebdb40013c.png" alt="图片"><br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-013-b7298eec28.png" alt="图片"></p>
 <h1 id="小结">小结</h1>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20CPU%20%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%93%E6%9E%84/assets/csdn-135039843/image-014-f65b48a788.png" alt="图片"></p>
 

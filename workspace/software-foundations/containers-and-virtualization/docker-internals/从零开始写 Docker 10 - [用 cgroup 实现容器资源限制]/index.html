@@ -244,18 +244,13 @@ func main() {
 <h1 id="ubuntu-2204-上的-cpu-相关配置">Ubuntu 22.04 上的 CPU 相关配置</h1>
 <p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/assets/csdn-137721319/image-002-c46ea1b937.png" alt="图片"></p>
 <ol>
-<li><p><code>cpuset.cpus</code>：
-这个文件显示当前 cgroup 可以使用的 CPU 列表。如果该文件为空，表示当前 cgroup 可以使用所有 CPU 资源。</p>
+<li><p><code>cpuset.cpus</code>：<br>这个文件显示当前 cgroup 可以使用的 CPU 列表。如果该文件为空，表示当前 cgroup 可以使用所有 CPU 资源。</p>
 </li>
-<li><p><code>cpuset.cpus.effective</code>：
-这个文件显示当前 cgroup 实际可以使用的 CPU 列表。这个列表可能比 <code>cpuset.cpus</code> 更精确，因为它考虑了父 cgroup 的 CPU 分配。</p>
+<li><p><code>cpuset.cpus.effective</code>：<br>这个文件显示当前 cgroup 实际可以使用的 CPU 列表。这个列表可能比 <code>cpuset.cpus</code> 更精确，因为它考虑了父 cgroup 的 CPU 分配。</p>
 </li>
 </ol>
 <blockquote>
-<p>在 cgroup 体系中，每个 cgroup 都可以设置自己的 CPU 分配策略。创建子 cgroup 时，它会继承父 cgroup 的 CPU 分配策略。
-cpuset.cpus 文件表示当前 cgroup 可以使用的 CPU 列表。但这个列表可能并不完全准确，因为它没有考虑父 cgroup 的 CPU 分配。
-而 cpuset.cpus.effective 文件考虑了父 cgroup 的 CPU 分配，所以它显示的 CPU 列表更精确。它实际上是根据当前 cgroup 及其父 cgroup 的 CPU 分配策略计算出来的。
-例如，如果父 cgroup 只允许使用 CPU 0 和 CPU 1，那么即使子 cgroup 可以使用所有 CPU，cpuset.cpus.effective 也只会显示 CPU 0 和 CPU 1。</p>
+<p>在 cgroup 体系中，每个 cgroup 都可以设置自己的 CPU 分配策略。创建子 cgroup 时，它会继承父 cgroup 的 CPU 分配策略。<br>cpuset.cpus 文件表示当前 cgroup 可以使用的 CPU 列表。但这个列表可能并不完全准确，因为它没有考虑父 cgroup 的 CPU 分配。<br>而 cpuset.cpus.effective 文件考虑了父 cgroup 的 CPU 分配，所以它显示的 CPU 列表更精确。它实际上是根据当前 cgroup 及其父 cgroup 的 CPU 分配策略计算出来的。<br>例如，如果父 cgroup 只允许使用 CPU 0 和 CPU 1，那么即使子 cgroup 可以使用所有 CPU，cpuset.cpus.effective 也只会显示 CPU 0 和 CPU 1。</p>
 </blockquote>
 <ul>
 <li><code>cpuset.cpus</code> 为空，表示当前 cgroup 可以使用所有 CPU 资源。</li>
@@ -264,10 +259,8 @@ cpuset.cpus 文件表示当前 cgroup 可以使用的 CPU 列表。但这个列�
 <p>这意味着即使当前 cgroup 可以使用所有 CPU 资源，由于父 cgroup 的限制，它实际上也只能使用 CPU 0 和 CPU 1。</p>
 <p>通过查看这两个文件，可以了解当前 cgroup 的 CPU 使用情况，并根据需要进行调整。如果需要更改 CPU 分配，可以修改这些文件的内容。</p>
 <ol start="3">
-<li>cpu.max
-CPU 使用率由前一个值与后一个值的比值决定；max 表示最大，即百分之百。</li>
-<li>memory.max
- max 表示最大。</li>
+<li>cpu.max<br>CPU 使用率由前一个值与后一个值的比值决定；max 表示最大，即百分之百。</li>
+<li>memory.max<br> max 表示最大。</li>
 </ol>
 <h1 id="top">top</h1>
 <p>可以使用 <code>top</code> 命令查看进程的 CPU 使用情况。具体步骤如下：</p>
@@ -310,17 +303,13 @@ CPU 使用率由前一个值与后一个值的比值决定；max 表示最大，
 </ol>
 <pre><code>cat /proc/cpuinfo
 </code></pre>
-<p>该命令会输出系统中所有 CPU 的详细信息，包括 CPU 编号。
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/assets/csdn-137721319/image-004-593fa57280.png" alt="图片"></p>
+<p>该命令会输出系统中所有 CPU 的详细信息，包括 CPU 编号。<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/assets/csdn-137721319/image-004-593fa57280.png" alt="图片"></p>
 <h1 id="注意-1">注意</h1>
 <p>我发现运行一次之后，第二次运行会失败。原因是挂载的文件系统 /proc 没有卸载；把它卸载掉，或者重新挂载到当前的 /proc 即可。</p>
 <h1 id="踩坑">踩坑</h1>
-<p>context.Args()：所有 flag 识别完之后，剩下的都属于 Args()
-context.Bool()：只要有 -it 就生效，不会占用后面的参数
-context.String()：会占用后面的参数，把它当作该 flag 对应的字符串</p>
+<p>context.Args()：所有 flag 识别完之后，剩下的都属于 Args()<br>context.Bool()：只要有 -it 就生效，不会占用后面的参数<br>context.String()：会占用后面的参数，把它当作该 flag 对应的字符串</p>
 <h1 id="启动后查看-top">启动后查看 top</h1>
-<p>由于启动后 /proc 文件系统被挂载到了运行的位置，在本地使用 top 就不行了；这时把它挂载回来即可。
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/assets/csdn-137721319/image-005-a24194c299.png" alt="图片"></p>
+<p>由于启动后 /proc 文件系统被挂载到了运行的位置，在本地使用 top 就不行了；这时把它挂载回来即可。<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/assets/csdn-137721319/image-005-a24194c299.png" alt="图片"></p>
 <h1 id="显示进程使用的-cpu-编号">显示进程使用的 CPU 编号</h1>
 <p>要查看当前进程正在使用哪个 CPU，可以使用 <code>top</code> 命令中的一些额外选项。</p>
 <p>步骤如下：</p>
@@ -345,8 +334,7 @@ context.String()：会占用后面的参数，把它当作该 flag 对应的字�
 <h1 id="代码">代码</h1>
 <p><a href="https://github.com/FULLK/llkdocker/tree/main/cgroup_docker">https://github.com/FULLK/llkdocker/tree/main/cgroup_docker</a></p>
 <h1 id="结果">结果</h1>
-<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/assets/csdn-137721319/image-006-e128619a72.png" alt="图片">
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/assets/csdn-137721319/image-007-aad3f953d7.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/assets/csdn-137721319/image-006-e128619a72.png" alt="图片"><br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%2010%20-%20%5B%E7%94%A8%20cgroup%20%E5%AE%9E%E7%8E%B0%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6%5D/assets/csdn-137721319/image-007-aad3f953d7.png" alt="图片"></p>
 
     </article>
     

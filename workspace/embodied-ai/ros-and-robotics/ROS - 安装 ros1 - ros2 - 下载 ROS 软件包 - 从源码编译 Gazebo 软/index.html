@@ -19,14 +19,9 @@
     <div class="meta"><time>2025-02-03</time><span class="tag">#缓存</span><span class="tag">#机器人</span><span class="tag">#ROS</span><span class="tag">#Gazebo</span></div>
     <article class="post-body">
 <h1 id="vscode">vscode</h1>
-<p>ROS+CMake Tools
-C++ 代码补全太慢了
-<a href="https://www.cnblogs.com/dc2333/articles/17299832.html">修复 vscode 中 C++ IntelliSense 速度慢的问题</a></p>
+<p>ROS+CMake Tools<br>C++ 代码补全太慢了<br><a href="https://www.cnblogs.com/dc2333/articles/17299832.html">修复 vscode 中 C++ IntelliSense 速度慢的问题</a></p>
 <h1 id="安装-ros1ros2">安装 ros1/ros2</h1>
-<p><a href="https://www.8kiz.cn/archives/5473.html">在 Ubuntu20.04 上同时安装 ROS1 和 ROS2</a>
-<a href="https://wiki.ros.org/">https://wiki.ros.org/</a>
-<a href="https://wiki.ros.org/noetic/Installation/Ubuntu">https://wiki.ros.org/noetic/Installation/Ubuntu</a>
-通过 fishros 安装 ros1 和 ros2，不需要 VPN；每次打开终端时它都会自动询问我要激活哪一个</p>
+<p><a href="https://www.8kiz.cn/archives/5473.html">在 Ubuntu20.04 上同时安装 ROS1 和 ROS2</a><br><a href="https://wiki.ros.org/">https://wiki.ros.org/</a><br><a href="https://wiki.ros.org/noetic/Installation/Ubuntu">https://wiki.ros.org/noetic/Installation/Ubuntu</a><br>通过 fishros 安装 ros1 和 ros2，不需要 VPN；每次打开终端时它都会自动询问我要激活哪一个</p>
 <p><a href="https://jike.dev/posts/wsl2-access-clash-network-proxy/">WSL2 访问 Clash 网络代理</a></p>
 <pre><code class="language-bash">wget http://fishros.com/install -O fishros &amp;&amp; . fishros
 </code></pre>
@@ -54,16 +49,10 @@ rosrun rqt_robot_steering rqt_robot_steering
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-001-8f3b858754.png" alt="图片"></p>
 <p>建议不要用 <code>conda init</code> 来初始化终端，否则环境会出大问题；直接使用原生环境即可。如果已经配置过了，可以用 <code>conda init --reverse</code> 来撤销</p>
 <h1 id="从源码编译-gazebo-软件包">从源码编译 Gazebo 软件包</h1>
-<p>在 GitHub 上找到它
-然后创建一个文件夹
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-002-36c65ba256.png" alt="图片"></p>
+<p>在 GitHub 上找到它<br>然后创建一个文件夹<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-002-36c65ba256.png" alt="图片"></p>
 <pre><code class="language-bash"> git clone https://github.com/6-robot/wpr_simulation
 </code></pre>
-<p>下载完成后，进入文件夹，如下图所示
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-003-e91c2d78f5.png" alt="图片">
-然后下载依赖
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-004-120de5ec10.png" alt="图片">
-回到原目录进行编译</p>
+<p>下载完成后，进入文件夹，如下图所示<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-003-e91c2d78f5.png" alt="图片"><br>然后下载依赖<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-004-120de5ec10.png" alt="图片"><br>回到原目录进行编译</p>
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-005-9a2213c4f7.png" alt="图片"></p>
 <pre><code class="language-bash">source ~/catkin_ws/devel/setup.bash
 roslaunch wpr_simulation  wpb_simple.launch
@@ -77,8 +66,7 @@ roslaunch wpr_simulation  wpb_simple.launch
 <p>左右分割：Alt+Shift+=</p>
 <p>上下分割：Alt+Shift+-</p>
 <p>关闭分割：Ctrl+Shift+w</p>
-<p>新建会话：Ctrl+Shift+d
-当按下 Alt+Shift+D 时，面板会自动分割，并在新面板中复制当前会话。</p>
+<p>新建会话：Ctrl+Shift+d<br>当按下 Alt+Shift+D 时，面板会自动分割，并在新面板中复制当前会话。</p>
 <p>在面板之间移动光标</p>
 <pre><code class="language-bash">Alt+上箭头/下箭头/左箭头/右箭头
 </code></pre>
@@ -87,8 +75,7 @@ roslaunch wpr_simulation  wpb_simple.launch
 </code></pre>
 <h1 id="节点-软件包">节点 + 软件包</h1>
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-007-e9b3d13bff.png" alt="Image"></p>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-008-f41dee1650.png" alt="Image">
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-009-d42d8e4f0d.png" alt="Image"></p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-008-f41dee1650.png" alt="Image"><br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-009-d42d8e4f0d.png" alt="Image"></p>
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-010-85ca32fa8e.png" alt="Image"></p>
 <pre><code class="language-cpp">#include&lt;ros/ros.h&gt;
 int main(int argc, char  *argv[])
@@ -153,8 +140,7 @@ if __name__==&quot;__main__&quot;:
 <pre><code class="language-bash"> rostopic echo /chao
 </code></pre>
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-012-38b9996a04.png" alt="图片"><code> rostopic hz  /chao</code> 是每秒发送的消息数量</p>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-013-d8557c1a7f.png" alt="图片">
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-014-ba2e644dc1.png" alt="图片"></p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-013-d8557c1a7f.png" alt="图片"><br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-014-ba2e644dc1.png" alt="图片"></p>
 <h1 id="订阅者">订阅者</h1>
 <pre><code class="language-cpp">#include&lt;ros/ros.h&gt;
 #include&lt;std_msgs/String.h&gt;
@@ -202,8 +188,7 @@ if __name__==&quot;__main__&quot;:
     sub2=rospy.Subscriber(&quot;yao&quot;,String,yao_callback,queue_size=10)
     rospy.spin()
 </code></pre>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-015-4a58c5c261.png" alt="图片">
-话题由 ROS 系统管理；只要有人发布或订阅，话题就会自动被创建</p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-015-4a58c5c261.png" alt="图片"><br>话题由 ROS 系统管理；只要有人发布或订阅，话题就会自动被创建</p>
 <p>例如，当我运行订阅者节点时，对应的话题也会出现</p>
 <h1 id="各自的缓冲队列-整体流程">各自的缓冲队列 + 整体流程</h1>
 <p>在 ROS（Robot Operating System）中，节点之间通过话题（topic）进行通信。发布者负责向某个话题发送消息，而订阅者负责从该话题接收消息。10 是队列大小，用于控制发布者和订阅者之间消息的缓冲行为。</p>
@@ -255,9 +240,7 @@ if __name__==&quot;__main__&quot;:
         vel_pub.publish(vel_msg)
         rate.sleep()
 </code></pre>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-018-92e22d9840.png" alt="图片">
-向话题发送速度消息包
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-019-58d52bb807.png" alt="图片"></p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-018-92e22d9840.png" alt="图片"><br>向话题发送速度消息包<br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-019-58d52bb807.png" alt="图片"></p>
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/assets/csdn-145401027/image-020-44a8b75a8a.png" alt="图片"></p>
 
     </article>

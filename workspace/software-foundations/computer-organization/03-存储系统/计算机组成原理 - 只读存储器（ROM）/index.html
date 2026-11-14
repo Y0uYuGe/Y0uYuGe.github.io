@@ -21,15 +21,9 @@
 <h1 id="背景">背景</h1>
 <p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%AA%E8%AF%BB%E5%AD%98%E5%82%A8%E5%99%A8%EF%BC%88ROM%EF%BC%89/assets/csdn-134433640/image-001-15f8e6934d.png" alt="图片"></p>
 <h1 id="各类-rom-介绍">各类 ROM 介绍</h1>
-<p>位密度：单位尺寸内存储的二进制位数
-MROM：信息由厂家写入，写入后无法更改
-PROM：信息由个人写入，写入后无法更改
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%AA%E8%AF%BB%E5%AD%98%E5%82%A8%E5%99%A8%EF%BC%88ROM%EF%BC%89/assets/csdn-134433640/image-002-3c80378ae5.png" alt="图片"></p>
+<p>位密度：单位尺寸内存储的二进制位数<br>MROM：信息由厂家写入，写入后无法更改<br>PROM：信息由个人写入，写入后无法更改<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%AA%E8%AF%BB%E5%AD%98%E5%82%A8%E5%99%A8%EF%BC%88ROM%EF%BC%89/assets/csdn-134433640/image-002-3c80378ae5.png" alt="图片"></p>
 <h1 id="重要的-rom">重要的 ROM</h1>
-<p>我们知道 CPU 是从内存中按顺序逐条读取指令并执行的。但刚开机时，内存中的数据是清空的，而操作系统等指令又必须运行机器才能正常启动，这些操作系统指令却存放在外存上，怎么办？
-这时就需要 BIOS 芯片。虽然它是位于主板上的一块芯片，但从逻辑上我们把它归为内存，因为 CPU 会按顺序逐条执行这块芯片上的指令，就像从内存中逐条读取指令并执行一样，所以我们把它归为内存。
-内存也会统一给 BIOS 分配地址：BIOS 是内存的起始部分，其余的内存部分从 BIOS 末尾的地址开始
-<img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%AA%E8%AF%BB%E5%AD%98%E5%82%A8%E5%99%A8%EF%BC%88ROM%EF%BC%89/assets/csdn-134433640/image-003-92dad1a636.png" alt="图片"></p>
+<p>我们知道 CPU 是从内存中按顺序逐条读取指令并执行的。但刚开机时，内存中的数据是清空的，而操作系统等指令又必须运行机器才能正常启动，这些操作系统指令却存放在外存上，怎么办？<br>这时就需要 BIOS 芯片。虽然它是位于主板上的一块芯片，但从逻辑上我们把它归为内存，因为 CPU 会按顺序逐条执行这块芯片上的指令，就像从内存中逐条读取指令并执行一样，所以我们把它归为内存。<br>内存也会统一给 BIOS 分配地址：BIOS 是内存的起始部分，其余的内存部分从 BIOS 末尾的地址开始<br><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%AA%E8%AF%BB%E5%AD%98%E5%82%A8%E5%99%A8%EF%BC%88ROM%EF%BC%89/assets/csdn-134433640/image-003-92dad1a636.png" alt="图片"></p>
 <h1 id="总结">总结</h1>
 <p>随机存取：给定一个访问地址，无论地址如何变化，只要在范围内，访问时间都相同</p>
 <p><img src="/workspace/software-foundations/computer-organization/03-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%8F%AA%E8%AF%BB%E5%AD%98%E5%82%A8%E5%99%A8%EF%BC%88ROM%EF%BC%89/assets/csdn-134433640/image-004-1d72a00bd4.png" alt="图片"></p>

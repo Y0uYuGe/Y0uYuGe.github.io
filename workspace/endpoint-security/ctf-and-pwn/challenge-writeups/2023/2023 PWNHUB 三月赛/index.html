@@ -70,8 +70,7 @@
 <pre><code class="language-bash">ln file.txt link.txt
 </code></pre>
 <ol start="2">
-<li>通过这条命令，我们创建了一个硬链接 link.txt，它与原文件 file.txt 共享同一个 inode 和数据块。即使我们删除了原文件 file.txt，link.txt 依然存在，仍然可以继续访问其内容。
-创建符号链接（软链接）：假设当前目录下有一个名为 file.txt 的文件，使用以下命令创建一个名为 link.txt 的符号链接：</li>
+<li>通过这条命令，我们创建了一个硬链接 link.txt，它与原文件 file.txt 共享同一个 inode 和数据块。即使我们删除了原文件 file.txt，link.txt 依然存在，仍然可以继续访问其内容。<br>创建符号链接（软链接）：假设当前目录下有一个名为 file.txt 的文件，使用以下命令创建一个名为 link.txt 的符号链接：</li>
 </ol>
 <pre><code class="language-bash">ln -s file.txt link.txt
 </code></pre>
@@ -83,10 +82,7 @@
 <li>（3）如果原文件被删除，硬链接依然可以访问，数据不会丢失，因为硬链接与原文件共享同一个 inode 和数据块。而删除原文件后，符号链接将无法访问原文件的内容。</li>
 </ul>
 <h2 id="unsorted-bin-与-main_arena-之间的偏移">unsorted bin 与 main_arena 之间的偏移</h2>
-<p>malloc_hook 位于 main_arena 上方 0x10 处
-main_arena+96=unsorted bin
-main_arena-0x10=__malloc_hook
-__malloc_hook=unsorted bin-0x10-96</p>
+<p>malloc_hook 位于 main_arena 上方 0x10 处<br>main_arena+96=unsorted bin<br>main_arena-0x10=__malloc_hook<br>__malloc_hook=unsorted bin-0x10-96</p>
 <h2 id="思路">思路</h2>
 <p>存在 UAF 和 double free 漏洞，</p>
 <ol>
@@ -202,8 +198,7 @@ pause()
 <li>stdout 结构体地址的最后三个十六进制位是固定的，但倒数第四位由于 ASLR 是随机的。由于我们只能写两个字节，没法写一个半字节，所以倒数第四位只能通过爆破来猜。</li>
 </ol>
 <h2 id="漏洞">漏洞</h2>
-<p>只能申请大小在 0x50~0x70 之间的 chunk，chunk 数组下标在 15 以内。
-可以利用数组越界写 tcache 中存放的 bin 地址对应的 chunk（相当于 free 后 edit，修改已释放 chunk 的 fd）。同时没有 show 函数，所以需要通过 stdout_leak 泄露 libc。</p>
+<p>只能申请大小在 0x50~0x70 之间的 chunk，chunk 数组下标在 15 以内。<br>可以利用数组越界写 tcache 中存放的 bin 地址对应的 chunk（相当于 free 后 edit，修改已释放 chunk 的 fd）。同时没有 show 函数，所以需要通过 stdout_leak 泄露 libc。</p>
 <h2 id="利用">利用</h2>
 <ul>
 <li>tcache 上 bin 的起始 chunk 中需要有残留的 libc 地址，这样数组越界时就可以修改它来进行爆破</li>
@@ -329,8 +324,7 @@ while True:
 <p>在 libc 中有一个名为 _environ 的全局变量，它存储着当前进程环境变量的地址，也就是栈上的某个地址</p>
 <h2 id="漏洞-1">漏洞</h2>
 <p>_free_hook 被禁用。malloc 的大小范围是 0x200 到 0x800，并且索引被限制在 15 以内</p>
-<p>存在 show after free 和 edit after free，但编辑只能进行三次 <code>  change_chunk(chunk_addr_array[index] + 9LL, chunk_size_array[index] - 48LL);</code>，同时还存在同一个 chunk 被两个不同索引同时使用的情况（两个不同的索引对应同一个 chunk）
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20PWNHUB%20%E4%B8%89%E6%9C%88%E8%B5%9B/assets/csdn-136851894/image-001-d837a1f731.png" alt="图片"></p>
+<p>存在 show after free 和 edit after free，但编辑只能进行三次 <code>  change_chunk(chunk_addr_array[index] + 9LL, chunk_size_array[index] - 48LL);</code>，同时还存在同一个 chunk 被两个不同索引同时使用的情况（两个不同的索引对应同一个 chunk）<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2023/2023%20PWNHUB%20%E4%B8%89%E6%9C%88%E8%B5%9B/assets/csdn-136851894/image-001-d837a1f731.png" alt="图片"></p>
 <h2 id="利用-1">利用</h2>
 <p>沙箱禁用了 execve</p>
 <p>在 Linux 系统中，system(&quot;/bin/sh&quot;) 函数调用会引出一系列系统调用。system() 是 C 标准库中用于执行命令字符串的函数——此处用于启动一个 shell。该函数通常执行以下步骤：</p>
@@ -493,13 +487,11 @@ p.interactive()
 <pre><code class="language-c">chunk_70_1_addr[index]
 </code></pre>
 <h2 id="scanf">scanf</h2>
-<p>注意 scanf 的参数是栈顶第一个元素的位置。如果此时输入 <code>-</code>，scanf 不会向其第一个参数的位置写入任何数据，但仍会认为输入任务已完成
-由于此时栈顶的值是 io_files_jump 的地址，而栈顶元素的值最终会被赋给 printf 打印的参数，所以最终可以泄露 libc 基地址</p>
+<p>注意 scanf 的参数是栈顶第一个元素的位置。如果此时输入 <code>-</code>，scanf 不会向其第一个参数的位置写入任何数据，但仍会认为输入任务已完成<br>由于此时栈顶的值是 io_files_jump 的地址，而栈顶元素的值最终会被赋给 printf 打印的参数，所以最终可以泄露 libc 基地址</p>
 <h2 id="栈地址">栈地址</h2>
 <p>栈地址、libc 基地址和堆基地址之间没有固定偏移</p>
 <h2 id="漏洞点">漏洞点</h2>
-<p>size 最大为 0x78，且只能 edit 两次；edit 存在 off-by-one
-利用 off-by-one 修改 size，从而可以 free 后再 malloc，进而获得对其他 chunk 的 fd 的控制</p>
+<p>size 最大为 0x78，且只能 edit 两次；edit 存在 off-by-one<br>利用 off-by-one 修改 size，从而可以 free 后再 malloc，进而获得对其他 chunk 的 fd 的控制</p>
 <h2 id="思路-1">思路</h2>
 <ul>
 <li>利用 scanf 的参数与 printf 最终打印的参数之间的关联，以及 scanf 遇到 - 时的行为，泄露 libc 基地址</li>

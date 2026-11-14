@@ -21,23 +21,17 @@
 <h1 id="概述">概述</h1>
 <p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%E3%80%81%E5%8D%8F%E8%AE%AE%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%9C%8D%E5%8A%A1/assets/csdn-135726896/image-001-27fc04daca.png" alt="图片"></p>
 <h1 id="为什么要分层">为什么要分层</h1>
-<p>发送文件之前有大量的准备工作要做
-<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%E3%80%81%E5%8D%8F%E8%AE%AE%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%9C%8D%E5%8A%A1/assets/csdn-135726896/image-002-0b389b219b.png" alt="图片">
-把这些准备工作分解成小问题，逐层解决，即分层解决</p>
+<p>发送文件之前有大量的准备工作要做<br><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%E3%80%81%E5%8D%8F%E8%AE%AE%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%9C%8D%E5%8A%A1/assets/csdn-135726896/image-002-0b389b219b.png" alt="图片"><br>把这些准备工作分解成小问题，逐层解决，即分层解决</p>
 <h1 id="如何分层">如何分层</h1>
-<p>各层之间相互独立，每一层所做的工作各不相同
-层次的边界应当自然清晰，层间接口既要体现层与层之间的关系，又要简洁明了，接口不宜过多</p>
+<p>各层之间相互独立，每一层所做的工作各不相同<br>层次的边界应当自然清晰，层间接口既要体现层与层之间的关系，又要简洁明了，接口不宜过多</p>
 <p>同一层的对等实体所做的操作是相反的</p>
 <p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%E3%80%81%E5%8D%8F%E8%AE%AE%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%9C%8D%E5%8A%A1/assets/csdn-135726896/image-003-5b01bfee17.png" alt="图片"></p>
 <h1 id="从形式上理解分层">从形式上理解分层</h1>
-<p>只有下层向上层提供服务
-SDU 可以看作本层为完成用户所请求的功能而需要传输的数据
-PDU 会成为下一层的 SDU</p>
+<p>只有下层向上层提供服务<br>SDU 可以看作本层为完成用户所请求的功能而需要传输的数据<br>PDU 会成为下一层的 SDU</p>
 <h1 id="概念">概念</h1>
 <p>从功能的角度来描述，即不同的功能划分出不同的结构层次</p>
 <p>有了接口，上层才能使用下层提供的服务</p>
-<p>实现与体系结构的区别，就像写代码与整体设计的区别
-<img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%E3%80%81%E5%8D%8F%E8%AE%AE%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%9C%8D%E5%8A%A1/assets/csdn-135726896/image-004-d33463c9a8.png" alt="图片"></p>
+<p>实现与体系结构的区别，就像写代码与整体设计的区别<br><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%E3%80%81%E5%8D%8F%E8%AE%AE%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%9C%8D%E5%8A%A1/assets/csdn-135726896/image-004-d33463c9a8.png" alt="图片"></p>
 <h1 id="总结">总结</h1>
 <p><img src="/workspace/software-foundations/computer-networks/01-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84%E3%80%81%E5%8D%8F%E8%AE%AE%E3%80%81%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%9C%8D%E5%8A%A1/assets/csdn-135726896/image-005-3edbd01036.png" alt="图片"></p>
 

@@ -28,36 +28,24 @@
 <p><a href="https://www.solvusoft.com/zh-cn/file-extensions/file-extension-sfc/">https://www.solvusoft.com/zh-cn/file-extensions/file-extension-sfc/</a></p>
 <p><a href="https://github.com/srdnlen/srdnlenctf-2025_public/tree/main/pwn_A_childs_dream">https://github.com/srdnlen/srdnlenctf-2025_public/tree/main/pwn_A_childs_dream</a></p>
 <p>提示说用 mesen 模拟器运行，下载和使用可以参考下面的链接。</p>
-<p><a href="https://www.bilibili.com/video/BV1CM3FeoE6i?spm_id_from=333.788.videopod.sections&vd_source=a1be939c65919194c77b8a6a36c14a6e">mesen下载和使用推荐</a>
-或者详见官方文档。
-<a href="https://www.mesen.ca/docs/">https://www.mesen.ca/docs/</a></p>
-<p>编写 FC/SFC 模拟器
-<a href="https://www.youtube.com/watch?v=nViZg02IMQo&list=PLrOv9FMX8xJHqMvSGB_9G9nZZ_4IgteYf&index=1">NES Emulator From Scratch</a>
-<a href="https://www.bilibili.com/video/BV1QK4y1J7RB?spm_id_from=333.788.videopod.episodes&vd_source=a1be939c65919194c77b8a6a36c14a6e">编程实现简单的FC模拟器</a></p>
+<p><a href="https://www.bilibili.com/video/BV1CM3FeoE6i?spm_id_from=333.788.videopod.sections&vd_source=a1be939c65919194c77b8a6a36c14a6e">mesen下载和使用推荐</a><br>或者详见官方文档。<br><a href="https://www.mesen.ca/docs/">https://www.mesen.ca/docs/</a></p>
+<p>编写 FC/SFC 模拟器<br><a href="https://www.youtube.com/watch?v=nViZg02IMQo&list=PLrOv9FMX8xJHqMvSGB_9G9nZZ_4IgteYf&index=1">NES Emulator From Scratch</a><br><a href="https://www.bilibili.com/video/BV1QK4y1J7RB?spm_id_from=333.788.videopod.episodes&vd_source=a1be939c65919194c77b8a6a36c14a6e">编程实现简单的FC模拟器</a></p>
 <h1 id="使用">使用</h1>
 <p>任天堂 yyds。</p>
 <p>w d：左右移动；u：结束游戏；i：崩溃或卡死；L：暂停</p>
-<p>mesen 提供了与不同游戏按键对应的模拟键盘按键。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-001-54bdc57ed2.png" alt="图片"></p>
+<p>mesen 提供了与不同游戏按键对应的模拟键盘按键。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-001-54bdc57ed2.png" alt="图片"></p>
 <h1 id="漏洞">漏洞</h1>
 <p>一开始完全不知道从哪下手，逆不动，只能调试找输入的处理点以及游戏开始运行的位置。</p>
 <p>尝试寻找处理输入的地方：调试时不断继续运行，发现会在这里停顿一会儿。从指令含义来看，应该是在等待输入产生中断。</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-002-73b4a91cc0.png" alt="图片">
-直接在游戏里输入来调试完全不行，因为它每个周期的输出太快了——还没来得及输入就已经回来了。好在可以通过调试器的控制器发送输入。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-002-73b4a91cc0.png" alt="图片"><br>直接在游戏里输入来调试完全不行，因为它每个周期的输出太快了——还没来得及输入就已经回来了。好在可以通过调试器的控制器发送输入。</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-003-5351550599.png" alt="图片"></p>
 <p>然后随便试了试各个按键，发现按 R 键直接卡死，然后就没有然后了……</p>
 <p><del>看了 writeup，说里面有 flag，自己打印出来就行。没想到，太菜了</del></p>
-<p>然后搜索发现在 D658 处有个 flag。
-发现 DEEE 函数用到了这个地址，而且只有这一处——可能是输出 flag 的。它应该属于 DEDF 函数，因为和上面的代码之间隔着一个 RTL。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-004-146de1fcb3.png" alt="图片"></p>
+<p>然后搜索发现在 D658 处有个 flag。<br>发现 DEEE 函数用到了这个地址，而且只有这一处——可能是输出 flag 的。它应该属于 DEDF 函数，因为和上面的代码之间隔着一个 RTL。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-004-146de1fcb3.png" alt="图片"></p>
 <p>所以问题是如何调用 DEDF 函数。</p>
 <h1 id="处理逻辑">处理逻辑</h1>
-<p>WAI 中断之后执行流去了哪里？因为我发现 WAI 之后点单步没有反应。
-我想看看怎么进入中断处理程序——也许那里就是处理我输入的地方——因为我注意到从 WAI 到下一条指令，游戏前进了一帧。
-上网搜 mesen 怎么进入中断处理程序，得知是进入 NMI。</p>
-<p>然后通过这个
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-005-05dc2a7ccc.png" alt="图片">
-进入了中断处理程序。</p>
+<p>WAI 中断之后执行流去了哪里？因为我发现 WAI 之后点单步没有反应。<br>我想看看怎么进入中断处理程序——也许那里就是处理我输入的地方——因为我注意到从 WAI 到下一条指令，游戏前进了一帧。<br>上网搜 mesen 怎么进入中断处理程序，得知是进入 NMI。</p>
+<p>然后通过这个<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-005-05dc2a7ccc.png" alt="图片"><br>进入了中断处理程序。</p>
 <p>但我好像想错了——也许调试器和实际执行之间有延迟？因为里面并没有处理输入。</p>
 <p>然后上网搜，苦于中文资料太少，没找到有用的东西，就去看了 writeup。</p>
 <blockquote>
@@ -80,11 +68,9 @@ SELECT = 819
 B = 32768
 Y = 16384
 </code></pre>
-<p>那么怎么处理呢？<del>还是不知道，我是废物</del>
-应该需要用到这些输入按键的值。writeup 说去搜索哪里用到了存放按键值的地址。有一处——NMI 中地址 208 处的一条指令。</p>
+<p>那么怎么处理呢？<del>还是不知道，我是废物</del><br>应该需要用到这些输入按键的值。writeup 说去搜索哪里用到了存放按键值的地址。有一处——NMI 中地址 208 处的一条指令。</p>
 <blockquote>
-<p>发现下面会把按键值存到地址 39 处供之后使用。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-006-7c32cc4c7d.png" alt="图片"></p>
+<p>发现下面会把按键值存到地址 39 处供之后使用。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-006-7c32cc4c7d.png" alt="图片"></p>
 </blockquote>
 <p>但之后就返回了，回到原来 WAI 之后的那条指令。没什么用。</p>
 <p>writeup 提到去看存放相同内容的地址的引用——也没什么用。<del>可能只是我太菜了</del></p>
@@ -113,23 +99,16 @@ Y = 16384
 00CD77 [004D77]  80 E5          BRA $00CD5E
    
 </code></pre>
-<p>和其他按键对比，发现按 R 时没有 JSL $00E069，直接走到 RTL，而且也没有回到 BRA $00CD5E。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-007-26a2220e28.png" alt="图片"></p>
-<p>但在 00C0AC 开始时，返回地址此时还是正常的。<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-008-c486b90905.png" alt="图片">
-发现实际的返回地址比栈上保存的返回地址大 1，而且在内存查看器中，返回地址的起始字节似乎和当前栈指针隔了一个字节。可能只是这种汇编的特性。</p>
-<p>所以问题出在这一段：
-<code>00C0AC [0040AC]  3B             TSC to 00C8EA [0048EA]  6B             RTL</code>
-它不仅修改了返回地址，而且也没有进入 00E069。</p>
+<p>和其他按键对比，发现按 R 时没有 JSL $00E069，直接走到 RTL，而且也没有回到 BRA $00CD5E。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-007-26a2220e28.png" alt="图片"></p>
+<p>但在 00C0AC 开始时，返回地址此时还是正常的。<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-008-c486b90905.png" alt="图片"><br>发现实际的返回地址比栈上保存的返回地址大 1，而且在内存查看器中，返回地址的起始字节似乎和当前栈指针隔了一个字节。可能只是这种汇编的特性。</p>
+<p>所以问题出在这一段：<br><code>00C0AC [0040AC]  3B             TSC to 00C8EA [0048EA]  6B             RTL</code><br>它不仅修改了返回地址，而且也没有进入 00E069。</p>
 <p>然后设置条件断点，在栈上的返回地址发生变化时自动断下。</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-009-a6764edfac.png" alt="图片">
-发现进入了 <code>00C3F7 [0043F7]  22 01 83 01    JSL $018301</code></p>
-<p><code>                     --------sub start-------- It changed after 018301 [008301]  A3 04          LDA $04,S</code>
-进一步调试发现是 <code>018316 [008316]  20 28 00       JSR $0028</code> 导致的，它跳到 0028 处执行。</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-009-a6764edfac.png" alt="图片"><br>发现进入了 <code>00C3F7 [0043F7]  22 01 83 01    JSL $018301</code></p>
+<p><code>                     --------sub start-------- It changed after 018301 [008301]  A3 04          LDA $04,S</code><br>进一步调试发现是 <code>018316 [008316]  20 28 00       JSR $0028</code> 导致的，它跳到 0028 处执行。</p>
 <pre><code class="language-bash">000028 [000028]  54 00 7F       MVN $7F,$00
 00002B [00002B]  60             RTS      
 </code></pre>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-010-1541df5205.png" alt="图片">
-用 AI 逆向了一下，大致逻辑如下：</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-010-1541df5205.png" alt="图片"><br>用 AI 逆向了一下，大致逻辑如下：</p>
 <pre><code class="language-c">// 假设有一个 `stack[]` 数组表示堆栈，`memory[]` 数组表示内存
 
 void subroutine() {
@@ -185,12 +164,7 @@ A 减 1：A = 0 - 1 = -1（以十六进制表示为 $FFFF）。
 <p>乱按的时候发现，之前按过的按键会让之后按 R 产生不同的结果，猜测两者可能有关，于是打算下断点观察 0x7f0000 的内容。测试后发现上下键会影响返回地址——大概是上键 +1、下键 -1——但修改的位置不同，似乎和左右移动有关。另外球不能掉下去，否则会被清零。</p>
 <p>这部分没有完全逆清楚，有时间再看。</p>
 <blockquote>
-<p>补充：
-想看看每个按键是怎么处理的。我认为应该在代码逻辑的前面部分，因为在这一段里 R 键的表现和其他按键不同，而且发现其他按键不会执行
-00C3F7 [0043F7]  22 01 83 01    JSL $018301
-再往上看一点，正好有一个 R 键的值 0x10
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-011-4c747ab6e2.png" alt="图片">
-结合前面出现的一堆与各个按键值进行 AND 的操作，这里应该就是在进入相应函数之前处理按键值的地方。所以从 <code>00C0AC [0040AC]  3B             TSC to 00C8EA [0048EA]  6B             RTL</code> 的代码应该就是处理输入的——中间有跳转是因为代码不连续。</p>
+<p>补充：<br>想看看每个按键是怎么处理的。我认为应该在代码逻辑的前面部分，因为在这一段里 R 键的表现和其他按键不同，而且发现其他按键不会执行<br>00C3F7 [0043F7]  22 01 83 01    JSL $018301<br>再往上看一点，正好有一个 R 键的值 0x10<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-011-4c747ab6e2.png" alt="图片"><br>结合前面出现的一堆与各个按键值进行 AND 的操作，这里应该就是在进入相应函数之前处理按键值的地方。所以从 <code>00C0AC [0040AC]  3B             TSC to 00C8EA [0048EA]  6B             RTL</code> 的代码应该就是处理输入的——中间有跳转是因为代码不连续。</p>
 </blockquote>
 <pre><code class="language-bash">                     --------sub start--------
 00C0AC [0040AC]  3B             TSC
@@ -1046,14 +1020,8 @@ A 减 1：A = 0 - 1 = -1（以十六进制表示为 $FFFF）。
                      ----------------
 </code></pre>
 <blockquote>
-<p>丢给 AI 逆向。代码的核心逻辑围绕 $328B 的状态展开。通过从 $328B 中提取特定的位标志（如 $0080、$0100、
-$0200、$0400、$0800、$1000、$2000 等），程序判断当前状态。
-根据设置了哪个位标志，程序分派到不同的处理逻辑分支。例如，如果设置了 $0080 位，就跳转到特定的处理逻辑；否则继续检查其他位。
-搜索了一下 328B，开头附近有一处。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-012-4bd2d011f4.png" alt="图片">
-这里把地址 39 处的值存入 328B，而地址 39 处的内容正是之前存放的按键值。全都串起来了，舒服。</p>
-<p>接下来逆向每个按键如何影响 0x7F0000 处的位置。
-有影响的按键如下：</p>
+<p>丢给 AI 逆向。代码的核心逻辑围绕 $328B 的状态展开。通过从 $328B 中提取特定的位标志（如 $0080、$0100、<br>$0200、$0400、$0800、$1000、$2000 等），程序判断当前状态。<br>根据设置了哪个位标志，程序分派到不同的处理逻辑分支。例如，如果设置了 $0080 位，就跳转到特定的处理逻辑；否则继续检查其他位。<br>搜索了一下 328B，开头附近有一处。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-012-4bd2d011f4.png" alt="图片"><br>这里把地址 39 处的值存入 328B，而地址 39 处的内容正是之前存放的按键值。全都串起来了，舒服。</p>
+<p>接下来逆向每个按键如何影响 0x7F0000 处的位置。<br>有影响的按键如下：</p>
 <p>A 键</p>
 <pre><code>00C0C0 [0040C0]  29 80 00       AND #$0080
 00C0C3 [0040C3]  85 00          STA $00
@@ -1290,18 +1258,12 @@ $0200、$0400、$0800、$1000、$2000 等），程序判断当前状态。
                      ----------------
 
 </code></pre>
-<p>完全逆不动。用内存监视断点，逻辑如下：间接解引用地址 00 得到其值，然后 +1，再放回去。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-013-f4b67105c0.png" alt="图片">
-地址 00 处存放的内容是这样得到的：
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-014-55a2296a52.png" alt="图片"></p>
+<p>完全逆不动。用内存监视断点，逻辑如下：间接解引用地址 00 得到其值，然后 +1，再放回去。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-013-f4b67105c0.png" alt="图片"><br>地址 00 处存放的内容是这样得到的：<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-014-55a2296a52.png" alt="图片"></p>
 <p>下面是偏移：把 3292 处存放的偏移加到原来的位置值上（不过两者都是零，因为之前被赋值为零），然后放回原位置。</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-015-9050bbb6f8.png" alt="图片"></p>
 <p>偏移存放在 3292。下断点调试看它如何变化，发现左右移动会改变它。</p>
-<p>直接搜索包含 3292 的指令。
-在左移的代码中找到了：加载 3292 处的内容，存到地址 00，加载到 A，加上 -1，再存回 3292。
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-016-66182c7f0b.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-017-1c71df5735.png" alt="图片">
-所以最终目标是把它变成 DEDF，同时还要保证球不掉下去。</p>
+<p>直接搜索包含 3292 的指令。<br>在左移的代码中找到了：加载 3292 处的内容，存到地址 00，加载到 A，加上 -1，再存回 3292。<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-016-66182c7f0b.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-017-1c71df5735.png" alt="图片"><br>所以最终目标是把它变成 DEDF，同时还要保证球不掉下去。</p>
 <p>因为它会自动加 1，所以目标是 DEDE：先减 1 变成 0xff，再一直减到 0xDE。非常考验手速。</p>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/2025%20Srdnlen%20CTF%20-%20A%20child's%20dream%EF%BC%88%E4%B8%80%E9%81%93%E4%BB%BB%E5%A4%A9%E5%A0%82%E6%B8%B8%E6%88%8F%20pwn%EF%BC%89/assets/csdn-145662993/image-018-abc3acf766.png" alt="图片"></p>
 <p>writeup 说借助 A 键一次可以改变 0x10——这样可能更容易，但我没想到。不过我觉得不用这个也能做到，只是需要手快。</p>

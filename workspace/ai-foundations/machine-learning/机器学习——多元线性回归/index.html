@@ -21,18 +21,11 @@
 <h1 id="代码">代码</h1>
 <p><a href="https://github.com/FULLK/AI_Study/tree/main/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92">https://github.com/FULLK/AI_Study/tree/main/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92</a></p>
 <h1 id="什么是回归任务">什么是回归任务</h1>
-<p>用历史数据训练模型、预测未来具体数值的任务就是回归任务。
-多元线性回归是众多回归算法中最基础的一种。</p>
+<p>用历史数据训练模型、预测未来具体数值的任务就是回归任务。<br>多元线性回归是众多回归算法中最基础的一种。</p>
 <h1 id="多元是什么意思">“多元”是什么意思</h1>
-<p>多元：多个维度——影响预测目标的多个因素。房子的售价取决于多个因素。
-三维空间中的线性：就是平面。
-更高维空间中的线性：统称为超平面。
-<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-001-a5db87bf85.png" alt="图片"></p>
+<p>多元：多个维度——影响预测目标的多个因素。房子的售价取决于多个因素。<br>三维空间中的线性：就是平面。<br>更高维空间中的线性：统称为超平面。<br><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-001-a5db87bf85.png" alt="图片"></p>
 <h1 id="什么是回归">什么是回归</h1>
-<p>回归：拟合数据点。
-拟合可以是线性的，也可以是非线性的。
-三维中的线性回归：用平面拟合数据点。
-三维中的非线性回归：用曲面拟合数据点。</p>
+<p>回归：拟合数据点。<br>拟合可以是线性的，也可以是非线性的。<br>三维中的线性回归：用平面拟合数据点。<br>三维中的非线性回归：用曲面拟合数据点。</p>
 <h1 id="什么是多元线性回归">什么是多元线性回归</h1>
 <p>多元线性回归：在多元空间中用线性形状（直线、平面、超平面）拟合数据点。</p>
 <h1 id="表达式">表达式</h1>
@@ -40,12 +33,10 @@
 <h1 id="什么时候使用多元线性回归">什么时候使用多元线性回归</h1>
 <p>什么时候用：当你怀疑它适用的时候——在未知情况下试一试，看是否合适。</p>
 <h1 id="注意">注意</h1>
-<p>算上 Y，实际上有 N+1 个维度：N 个 X 和 1 个 Y。
-<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-003-61b9e07e96.png" alt="图片"></p>
+<p>算上 Y，实际上有 N+1 个维度：N 个 X 和 1 个 Y。<br><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-003-61b9e07e96.png" alt="图片"></p>
 <p>Y 由一组 X 决定，具体来说，就是线性形状上与 X 对应位置处的 Y 值。</p>
 <h1 id="损失函数">损失函数</h1>
-<p>真实 Y 与预测 Y 之间的均方误差（Mean Squared Error）：回归任务常用的损失函数——越小拟合得越好。
-<img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-004-f4e824d5c2.png" alt="图片"></p>
+<p>真实 Y 与预测 Y 之间的均方误差（Mean Squared Error）：回归任务常用的损失函数——越小拟合得越好。<br><img src="/workspace/ai-foundations/machine-learning/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%A4%9A%E5%85%83%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92/assets/csdn-144494598/image-004-f4e824d5c2.png" alt="图片"></p>
 
     </article>
     

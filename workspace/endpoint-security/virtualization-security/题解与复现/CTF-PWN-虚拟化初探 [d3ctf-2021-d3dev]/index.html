@@ -19,9 +19,7 @@
     <div class="meta"><time>2024-06-20</time><span class="tag">#qemu</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#Docker</span></div>
     <article class="post-body">
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://x1ng.top/2021/11/26/qemu-pwn/">https://x1ng.top/2021/11/26/qemu-pwn/</a>
-<a href="https://bbs.kanxue.com/thread-275216.htm#msg_header_h1_0">https://bbs.kanxue.com/thread-275216.htm#msg_header_h1_0</a>
-<a href="https://xz.aliyun.com/t/6562?time__1311=n4%2BxnD0DRDBAi=GkDgiDlhjmYh2xuCllx7whD&alichlgref=https://www.bing.com/#toc-4">https://xz.aliyun.com/t/6562?time__1311=n4%2BxnD0DRDBAi%3DGkDgiDlhjmYh2xuCllx7whD&amp;alichlgref=https%3A%2F%2Fwww.bing.com%2F#toc-4</a></p>
+<p><a href="https://x1ng.top/2021/11/26/qemu-pwn/">https://x1ng.top/2021/11/26/qemu-pwn/</a><br><a href="https://bbs.kanxue.com/thread-275216.htm#msg_header_h1_0">https://bbs.kanxue.com/thread-275216.htm#msg_header_h1_0</a><br><a href="https://xz.aliyun.com/t/6562?time__1311=n4%2BxnD0DRDBAi=GkDgiDlhjmYh2xuCllx7whD&alichlgref=https://www.bing.com/#toc-4">https://xz.aliyun.com/t/6562?time__1311=n4%2BxnD0DRDBAi%3DGkDgiDlhjmYh2xuCllx7whD&amp;alichlgref=https%3A%2F%2Fwww.bing.com%2F#toc-4</a></p>
 <h1 id="基本流程">基本流程</h1>
 <p>qemu pwn 题目的附件和 Linux 内核题类似，会提供启动脚本、Linux 内核、文件系统，以及打过补丁的 qemu 文件。运行启动脚本，即可使用题目附件中的 qemu 文件启动虚拟机。</p>
 <p>启动脚本通常会添加一个内置漏洞的 PCI 设备，这一点也类似于内核题。不过，设备读写操作的实现代码位于打过补丁的 qemu 文件中，可以在 IDA 中搜索函数名，快速定位设备读写函数。</p>
@@ -32,40 +30,26 @@
 <h1 id="检查">检查</h1>
 <p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-003-cb9981154c.png" alt="图片"></p>
 <h1 id="启动信息">启动信息</h1>
-<p>新建 fs 文件夹
-进入 fs 文件夹</p>
+<p>新建 fs 文件夹<br>进入 fs 文件夹</p>
 <pre><code class="language-bash">cpio -idv &lt; rootfs.img的路径
 </code></pre>
-<p>将解包后的内容保存在当前文件夹中
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-004-d9be7015c6.png" alt="图片"></p>
+<p>将解包后的内容保存在当前文件夹中<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-004-d9be7015c6.png" alt="图片"></p>
 <pre><code class="language-bash">setsid /bin/cttyhack setuidgid 0 /bin/sh  #shell将以root权限执行
 </code></pre>
 <h1 id="逆向分析">逆向分析</h1>
 <p>将 qemu 文件放入 IDA</p>
 <ul>
 <li>搜索函数名，定位相关函数</li>
-<li>_libc_csu_init -&gt; _frame_dummy_init_array_entry -&gt; do_qemu_init_pci_d3dev_register_types <img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-005-8e76404687.png" alt="图片">
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-006-f0a4630e4d.png" alt="图片"><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-007-2e679af863.png" alt="图片">
-可以看到一些与 mmio 和 pmio 有关的函数
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-008-b5e49a205b.png" alt="图片"></li>
+<li>_libc_csu_init -&gt; _frame_dummy_init_array_entry -&gt; do_qemu_init_pci_d3dev_register_types <img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-005-8e76404687.png" alt="图片"><br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-006-f0a4630e4d.png" alt="图片"><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-007-2e679af863.png" alt="图片"><br>可以看到一些与 mmio 和 pmio 有关的函数<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-008-b5e49a205b.png" alt="图片"></li>
 </ul>
 <h1 id="漏洞">漏洞</h1>
 <p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-009-dcbb098ca2.png" alt="图片"></p>
 <p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-010-c4ae9f9c7b.png" alt="图片"></p>
-<p>将 opaque 转换为结构体
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-011-5c1e5af201.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-012-e660729f10.png" alt="图片">
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-013-95f6500683.png" alt="图片"></p>
-<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-014-7aff082d0f.png" alt="图片">
-这里有一段 TEA 加密，<del>问了 GPT</del>，会对 opaque-&gt;blocks[opaque-&gt;seek + (unsigned int)(addr &gt;&gt; 3)] 的高 32 位和低 32 位进行加密。</p>
-<p>当 opaque-&gt;mmio_read_part 为 1 时，返回高 32 位
-当 opaque-&gt;mmio_read_part 为 0 时，返回低 32 位
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-015-60b5c9483b.png" alt="图片">
-v4 = opaque-&gt;seek + (unsigned int)(addr &gt;&gt; 3)；当 opaque-&gt;mmio_write_part 为 0 时，修改 opaque-&gt;blocks[v4] = (unsigned int)val；</p>
-<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-016-b2f105decb.png" alt="图片">
-根据 addr 返回 opaque 中不同字段的值
-<img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-017-b23a2e5dd2.png" alt="图片">
-当 addr == 8 且 val &lt;= 0x100 时，设置 opaque-&gt;seek = val；当 addr &gt; 8 且 addr == 28 时，设置 opaque-&gt;r_seed = val，然后调用 <code>((__int64 (__fastcall *)(uint32_t *, __int64, uint64_t, _QWORD))opaque-&gt;rand_r)(                    &amp;opaque-&gt;r_seed,                    28LL,                    val,                    *(_QWORD *)&amp;size);</code> 否则，如果 addr 不为零，就将 opaque-&gt;key 清零</p>
+<p>将 opaque 转换为结构体<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-011-5c1e5af201.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-012-e660729f10.png" alt="图片"><br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-013-95f6500683.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-014-7aff082d0f.png" alt="图片"><br>这里有一段 TEA 加密，<del>问了 GPT</del>，会对 opaque-&gt;blocks[opaque-&gt;seek + (unsigned int)(addr &gt;&gt; 3)] 的高 32 位和低 32 位进行加密。</p>
+<p>当 opaque-&gt;mmio_read_part 为 1 时，返回高 32 位<br>当 opaque-&gt;mmio_read_part 为 0 时，返回低 32 位<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-015-60b5c9483b.png" alt="图片"><br>v4 = opaque-&gt;seek + (unsigned int)(addr &gt;&gt; 3)；当 opaque-&gt;mmio_write_part 为 0 时，修改 opaque-&gt;blocks[v4] = (unsigned int)val；</p>
+<p><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-016-b2f105decb.png" alt="图片"><br>根据 addr 返回 opaque 中不同字段的值<br><img src="/workspace/endpoint-security/virtualization-security/%E9%A2%98%E8%A7%A3%E4%B8%8E%E5%A4%8D%E7%8E%B0/CTF-PWN-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%9D%E6%8E%A2%20%5Bd3ctf-2021-d3dev%5D/assets/csdn-134677907/image-017-b23a2e5dd2.png" alt="图片"><br>当 addr == 8 且 val &lt;= 0x100 时，设置 opaque-&gt;seek = val；当 addr &gt; 8 且 addr == 28 时，设置 opaque-&gt;r_seed = val，然后调用 <code>((__int64 (__fastcall *)(uint32_t *, __int64, uint64_t, _QWORD))opaque-&gt;rand_r)(                    &amp;opaque-&gt;r_seed,                    28LL,                    val,                    *(_QWORD *)&amp;size);</code> 否则，如果 addr 不为零，就将 opaque-&gt;key 清零</p>
 <ol>
 <li>d3dev_mmio_write 和 d3dev_mmio_read 可以写入和读取 opaque-&gt;blocks[opaque-&gt;seek + (unsigned int)(addr &gt;&gt; 3)]</li>
 <li>d3dev_pmio_write 可以给 opaque-&gt;seek 赋值、调用 opaque-&gt;rand_r (  &amp;opaque-&gt;r_seed)、将 opaque-&gt;key 清零，并设置 opaque-&gt;memory_mode = val</li>

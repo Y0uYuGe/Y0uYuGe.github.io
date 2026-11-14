@@ -257,6 +257,7 @@ function setLeftView(v) {
   S.leftView = v;
   store.set('leftView', v);
   document.body.classList.toggle('left-tree', v === 'tree');
+  applyWidths();
   $('#tree').hidden = v !== 'tree';
   document.querySelectorAll('#left-view [data-left]').forEach((b) => b.classList.toggle('on', b.dataset.left === v));
   if (!S.data) return;
@@ -470,7 +471,7 @@ function openNode(p) {
   S.panelClosed = false;
   if (S.agent) { S.agent = null; S.panelKey = ''; renderMap(); }
   // 整页阅读时在左边导图上点另一篇文章：继续整页阅读
-  const h = '#/' + p + (S.reading && index.get(p)?.url ? '?read' : '');
+  const h = '#/' + p + (S.reading && (S.mode === 'local' || index.get(p)?.url) ? '?read' : '');
   if (location.hash === h || decodeURIComponent(location.hash) === h) { S.panelKey = ''; renderPanel(true); }
   else location.hash = h;
 }
@@ -482,6 +483,7 @@ function setView(v) {
   document.querySelectorAll('#views button').forEach((b) => b.classList.toggle('on', b.dataset.view === v));
   $('#map-view').hidden = v !== 'map';
   $('#work-view').hidden = v !== 'work';
+  applyWidths();
   $('#search').hidden = v !== 'map';
   if (!S.data) return;
   // sextant 的同一个会话只能连一个终端：两个视图不同时连
@@ -641,7 +643,7 @@ const liquid = (s) => s
 const isInboxSel = () => S.mode === 'local' && S.sel === S.data.inboxPath;
 
 function panelKeyOf(n, sessions, inbox) {
-  return JSON.stringify([n.path, n.note?.mtime, sessions.length, inbox.length, S.tab, S.noteView]);
+  return JSON.stringify([n.path, n.note?.mtime, sessions.length, inbox.length, S.tab, S.noteView, !!S.reading]);
 }
 
 async function renderPanel(force) {
@@ -701,8 +703,9 @@ async function renderPanel(force) {
   const cur = S.tab === 'files' ? 'files' : S.noteView;
   const pv = (k, label, tip) => `<button data-pv="${k}" class="${cur === k ? 'on' : ''}" title="${tip}">${label}</button>`;
   const views = note || files.length ? `<span class="seg pv">${note ? pv('doc', '文档', '直接编辑，停下 0.8 秒自动保存') + pv('map', '导图', '标题就是主题：点主题在旁边打开它的笔记 · Tab 子主题 · Enter 同级 · F2 改字 · ? 全部快捷键') : ''}${files.length ? pv('files', `附件 ${files.length}`, '文件夹里的图片、PDF 等') : ''}</span>` : '';
-  $('#panel-top').querySelector('.actions')?.insertAdjacentHTML('beforeend', views);
-  if (!local && views) $('#panel-top').insertAdjacentHTML('beforeend', `<div class="actions">${views}</div>`);
+  // 「文档 / 导图 / 附件」放在标题这一行的右边（和博客一样），工具按钮在下一行
+  const wide = n.path ? (S.reading ? `<a href="#/${esc(n.path)}" title="恢复原来的宽度（Esc）"><button>⤡ 退出整页</button></a>` : `<a href="#/${esc(n.path)}?read" title="文章区放大，导图留在左边"><button class="primary">⤢ 整页阅读</button></a>`) : '';
+  if (views || wide) $('#panel-top .titlerow').insertAdjacentHTML('beforeend', `<span class="bacts">${views}${wide}</span>`);
   $('#tabs').hidden = true;
 
   $('#panel').hidden = !!S.panelClosed;
@@ -809,6 +812,7 @@ function setReading(on) {
   document.body.classList.toggle('reading', on);
   if (on) { S.panelClosed = false; S.panelKey = ''; }
   else S.panelKey = '';
+  applyWidths();
   // 导图区域变宽 / 变窄了：让选中的节点留在视野里
   requestAnimationFrame(() => { map.drawMini(); if (S.sel !== null) map.reveal(S.sel); });
 }
@@ -1411,22 +1415,43 @@ function closePanel() {
 $('#close').onclick = closePanel;
 $('#wide').onclick = () => $('#panel').classList.toggle('wide');
 
-// 拖动分隔条调整面板宽度
+// 中间的分隔条：任何时候都能拖。三种情况各记各的宽度：
+//   左边是目录 → 拖的是目录栏宽度；整页阅读 → 拖的是放大后的文章区；平时 → 拖的是右边面板
+function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+function treeMode() { return S.leftView === 'tree' && S.view === 'map'; }
+function applyWidths() {
+  const panel = $('#panel'), left = $('#map-view');
+  if (treeMode()) {
+    left.style.flex = `0 0 ${clamp(store.get('treeWidth', 340), 200, innerWidth - 360)}px`;
+    panel.style.flex = '1';
+    panel.style.width = '';
+  } else {
+    left.style.flex = '';
+    panel.style.flex = '';
+    const w = S.reading ? store.get('readWidth', Math.round(innerWidth * 0.72)) : store.get('panelWidth', 0);
+    panel.style.width = w ? clamp(w, 320, innerWidth - 200) + 'px' : '';
+  }
+}
 {
-  const panel = $('#panel'), bar = $('#resizer');
-  const w = store.get('panelWidth', 0);
-  if (w) panel.style.width = w + 'px';
+  const panel = $('#panel'), bar = $('#resizer'), left = $('#map-view');
+  applyWidths();
   bar.addEventListener('pointerdown', (e) => {
     bar.setPointerCapture(e.pointerId);
     document.body.classList.add('resizing');
-    bar.onpointermove = (ev) => { panel.style.width = Math.max(320, Math.min(innerWidth - 200, innerWidth - ev.clientX)) + 'px'; };
+    bar.onpointermove = (ev) => {
+      if (treeMode()) left.style.flex = `0 0 ${clamp(ev.clientX - left.getBoundingClientRect().left, 200, innerWidth - 360)}px`;
+      else panel.style.width = clamp(innerWidth - ev.clientX, 320, innerWidth - 200) + 'px';
+    };
   });
   bar.addEventListener('pointerup', () => {
     bar.onpointermove = null;
     document.body.classList.remove('resizing');
-    store.set('panelWidth', panel.offsetWidth);
+    if (treeMode()) store.set('treeWidth', left.offsetWidth);
+    else store.set(S.reading ? 'readWidth' : 'panelWidth', panel.offsetWidth);
     S.noteMap?.render();
+    if (S.leftView === 'map') map.drawMini();
   });
+  addEventListener('resize', applyWidths);
 }
 
 // ---------- 收件箱（快速记录） ----------
@@ -1587,9 +1612,9 @@ function route() {
   }
   let p = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
   // 博客的整页阅读：#/文章路径?read，不离开首页（导图只是藏起来，返回是瞬间的）
-  const reading = S.mode === 'blog' && p.endsWith('?read');
+  const reading = p.endsWith('?read');
   if (reading) p = p.slice(0, -5);
-  setReading(reading && !!index.get(p)?.url);
+  setReading(reading && (S.mode === 'local' ? index.has(p) : !!index.get(p)?.url));
   if (S.mode === 'local' && p === S.data.inboxPath && !index.has(p)) {
     S.sel = p; renderMap(); S.panelKey = ''; return renderPanel();
   }

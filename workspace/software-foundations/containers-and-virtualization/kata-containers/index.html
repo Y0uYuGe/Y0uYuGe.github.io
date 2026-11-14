@@ -96,8 +96,7 @@
 <h3 id="对应到真实技术">对应到真实技术</h3>
 <p>回到 Kata Containers 的场景：shim 进程就像那位细心的家长，通过&quot;agent 协议&quot;与运行在虚拟机（guest）内部的 agent 通信。该协议确保宿主机上的管理进程能够安全地发送控制命令和获取状态信息，而不直接干预虚拟机的内部运作，从而维护容器的隔离性和安全性。这样，Kata Containers 就能在保证高性能的同时提供虚拟机级别的安全隔离。</p>
 <h1 id="runtime-部分">runtime 部分</h1>
-<p><img src="/workspace/software-foundations/containers-and-virtualization/kata-containers/assets/csdn-139076786/image-003-3b375467cb.png" alt="图片">
-想象你经营着一家非常特别的酒店，叫做&quot;容器客栈&quot;。这家客栈有一些特殊的规定和高科技设备，确保每位客人的住宿既舒适又安全。</p>
+<p><img src="/workspace/software-foundations/containers-and-virtualization/kata-containers/assets/csdn-139076786/image-003-3b375467cb.png" alt="图片"><br>想象你经营着一家非常特别的酒店，叫做&quot;容器客栈&quot;。这家客栈有一些特殊的规定和高科技设备，确保每位客人的住宿既舒适又安全。</p>
 <ol>
 <li><p><strong>前台（containerd）</strong>：containerd 就像酒店的前台，负责接待客人（即处理创建、启动和停止容器的请求）。有新客人入住或离开时，前台负责办理所有入住和退房手续。</p>
 </li>
@@ -261,8 +260,7 @@ type TaskService interface {
 </code></pre>
 <p> 启动 agent 服务的代码在 real_main 函数中。</p>
 <h2 id="启动容器之前">启动容器之前</h2>
-<p>在前面的图中，shim v2 之后通过 agent 创建容器（为实际容器提供基础环境），但这是通过 shim 的定义文件 agent.go 完成的
-<img src="/workspace/software-foundations/containers-and-virtualization/kata-containers/assets/csdn-139076786/image-006-ca0ae85615.png" alt="图片"></p>
+<p>在前面的图中，shim v2 之后通过 agent 创建容器（为实际容器提供基础环境），但这是通过 shim 的定义文件 agent.go 完成的<br><img src="/workspace/software-foundations/containers-and-virtualization/kata-containers/assets/csdn-139076786/image-006-ca0ae85615.png" alt="图片"></p>
 <p>目前创建和启动容器的部分是用 Rust 编写的</p>
 <h2 id="create_containerdo_create_container">create_container/do_create_container</h2>
 <h3 id="创建容器前的准备工作">创建容器前的准备工作</h3>

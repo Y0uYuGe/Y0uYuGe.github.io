@@ -20,11 +20,7 @@
     <article class="post-body">
 <p>本文首发于奇安信攻防社区 <a href="https://forum.butian.net/share/3818">https://forum.butian.net/share/3818</a></p>
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://man7.org/linux/man-pages/man7/pipe.7.html">pipe(7) — Linux 手册页</a>
-<a href="https://matteoschiff.com/ducts-writeup/">Ducts 题解</a>
-<a href="https://www.cnblogs.com/alantu2018/p/8477339.html">管道读写规则与管道容量、PIPE_BUF</a>
-<a href="https://www.cnblogs.com/gdk-0078/p/5172941.html">Linux 阻塞与等待队列机制</a>
-第一次在用户空间遇到管道竞争，挺有意思，学习一下</p>
+<p><a href="https://man7.org/linux/man-pages/man7/pipe.7.html">pipe(7) — Linux 手册页</a><br><a href="https://matteoschiff.com/ducts-writeup/">Ducts 题解</a><br><a href="https://www.cnblogs.com/alantu2018/p/8477339.html">管道读写规则与管道容量、PIPE_BUF</a><br><a href="https://www.cnblogs.com/gdk-0078/p/5172941.html">Linux 阻塞与等待队列机制</a><br>第一次在用户空间遇到管道竞争，挺有意思，学习一下</p>
 <blockquote>
 <p>衷心感谢 tpus 和 stc4k 师傅的帮助</p>
 </blockquote>
@@ -316,8 +312,7 @@ int main() {
 <li><code>signal(7)</code></li>
 </ul>
 <h1 id="竞争点">竞争点</h1>
-<p><a href="https://xie.infoq.cn/article/c2bdf20841b48d407b1485c9a">任意只读文件漏洞分析</a>
-位于 pipe_write 中</p>
+<p><a href="https://xie.infoq.cn/article/c2bdf20841b48d407b1485c9a">任意只读文件漏洞分析</a><br>位于 pipe_write 中</p>
 <p>大致来说：第一个进程向管道写入并释放锁后，其他进程依次开始写入，但都会像第一个进程一样，阻塞在 wait_event_interruptible_exclusive，之后才轮到读进程读取。读取结束后，各进程的 wait_event_interruptible_exclusive 返回，再获取锁并继续写入。</p>
 <p>因此，谁先写入，取决于谁从退出 wait_event_interruptible_exclusive 到获得锁的速度更快</p>
 <p>下面详细分析</p>
@@ -618,8 +613,7 @@ static int __wake_up_common(struct wait_queue_head *wq_head, unsigned int mode,
 <p>GOT 表可写</p>
 <h1 id="调试">调试</h1>
 <ul>
-<li><p>set detach-on-fork off
-这条 gdb 指令会使调试父进程或子进程时，另一进程自动暂停在 fork 位置。这里用于方便观察</p>
+<li><p>set detach-on-fork off<br>这条 gdb 指令会使调试父进程或子进程时，另一进程自动暂停在 fork 位置。这里用于方便观察</p>
 </li>
 <li><p>set follow-fork-mode parent   调试父进程</p>
 </li>
@@ -706,8 +700,7 @@ int main() {
     return 0;
 }
 </code></pre>
-<p>可以看到，pipe_write 阻塞后，pipe_read 唤醒的是另一个进程 B
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts/assets/csdn-142316842/image-001-d129fc7a95.png" alt="图片"></p>
+<p>可以看到，pipe_write 阻塞后，pipe_read 唤醒的是另一个进程 B<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts/assets/csdn-142316842/image-001-d129fc7a95.png" alt="图片"></p>
 <h1 id="逆向分析">逆向分析</h1>
 <pre><code class="language-c">int __fastcall main(int argc, const char **argv, const char **envp)
 {
@@ -993,11 +986,9 @@ void __fastcall __noreturn talk(int client_fd, int pipe_write)
 <h1 id="思路">思路</h1>
 <ul>
 <li>多个进程同时向管道写入超过管道缓冲区大小的内容，使一次管道接收流程在尚未收完时被打断</li>
-<li>随后唤醒另一个进程向管道写入，使剩余接收的数据来自另一个进程的管道写入；下一轮接收的便是我们自行构造的内容。不过，原始数据残留的那部分可能干扰后续接收中的管道流程，但问题不大，不会导致程序崩溃，只需成功一次即可
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts/assets/csdn-142316842/image-002-686bcee4f7.png" alt="图片"></li>
+<li>随后唤醒另一个进程向管道写入，使剩余接收的数据来自另一个进程的管道写入；下一轮接收的便是我们自行构造的内容。不过，原始数据残留的那部分可能干扰后续接收中的管道流程，但问题不大，不会导致程序崩溃，只需成功一次即可<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts/assets/csdn-142316842/image-002-686bcee4f7.png" alt="图片"></li>
 </ul>
-<p>另一个是 st4k 师傅的思路和示意图，如图所示
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts/assets/csdn-142316842/image-003-902e905b9c.png" alt="图片"></p>
+<p>另一个是 st4k 师傅的思路和示意图，如图所示<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/2025/%E7%AE%A1%E9%81%93%E7%AB%9E%E4%BA%89%20-%20m0leCon%20CTF%20Teaser%202025%20-%20ducts/assets/csdn-142316842/image-003-902e905b9c.png" alt="图片"></p>
 <p>实现同时写管道：通过信号量。先将数据发送过去，再通过信号量机制同时开始写入</p>
 <p>泄露 PIE：利用残留的 next 字段为 NULL_MESSAGE 变量，其中保存了 PIE 地址，可以通过 printf_message 泄露</p>
 <p>泄露 libc：已有 PIE 后，仍可利用上述管道竞争，让接收到的 message 是由 destory_buffer 构造的。这样就能控制 message 的全部字段；将 next 控制到 GOT 表附近，使 next 的 next 部分落到 GOT 表中，便可泄露 libc。写入时需要指定索引，可以先构造 command_flush 命令结构体以清空索引，再发送 message，最后 command_redact。注意：要确保 next 对应的 next 的 next 为空</p>

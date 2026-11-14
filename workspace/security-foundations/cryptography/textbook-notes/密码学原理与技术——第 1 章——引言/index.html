@@ -18,28 +18,23 @@
     <h1>密码学原理与技术——第 1 章——引言</h1>
     <div class="meta"><time>2024-12-02</time><span class="tag">#密码学</span><span class="tag">#网络</span><span class="tag">#安全</span></div>
     <article class="post-body">
-<p>复习 PPT——期中考试，可恶，全是按 PPT 出的。每天一章。
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-001-d96834dab5.png" alt="图片">
-所有的分组密码和流密码都是对称加密</p>
+<p>复习 PPT——期中考试，可恶，全是按 PPT 出的。每天一章。<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-001-d96834dab5.png" alt="图片"><br>所有的分组密码和流密码都是对称加密</p>
 <h1 id="对称加密">对称加密</h1>
-<p>动机：在不安全的信道上，能访问信道的第三方可以查看通信内容
-解决方案：用对称密码加密。第三方只能得到密文，而密文看起来就像随机比特</p>
+<p>动机：在不安全的信道上，能访问信道的第三方可以查看通信内容<br>解决方案：用对称密码加密。第三方只能得到密文，而密文看起来就像随机比特</p>
 <p>如果双方使用相同的密钥 K，加密和解密就是互逆运算</p>
 <p>重要说明：密钥必须通过安全信道在 Alice 和 Bob 之间传输。安全信道可以通过例如为 Wi-Fi 保护访问（WPA）协议手动安装密钥或由人工信使来实现。不过，只有在攻击者不知道密钥 K 的情况下系统才是安全的，这就把问题简化为 K 的安全传输和存储。</p>
 <h1 id="代换密码">代换密码</h1>
 <ul>
 <li>一种历史上的密码；是理解暴力攻击和分析攻击的好工具；它加密的是字母而不是比特（就像二战前的所有密码一样）</li>
 </ul>
-<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-002-75722742c2.png" alt="图片">
-暴力攻击（或穷举密钥搜索）</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-002-75722742c2.png" alt="图片"><br>暴力攻击（或穷举密钥搜索）</p>
 <ul>
 <li>需要（至少）1 个明文-密文对 (x0, y0)</li>
 <li>检查所有可能的密钥，直到满足条件：dK(y0) = x0（简单地尝试每一种可能的代换表，直到出现可理解的明文（注意每个代换表就是一个密钥）……有多少个代换表（= 密钥）？26 × 25 × ... × 3 × 2 × 1 = 26! ≈ 2^88）在今天的计算机上搜索 2^88 个密钥是完全不可行的</li>
 </ul>
 <p>为什么是 2^88？因为对于 26 个字母的代换表，每个字母都可以被其余 25 个字母中的任意一个替换，且不能重复</p>
 <ul>
-<li><p>字母频率分析
-英语中各字母出现的频率差别很大。而且：明文字母的频率在密文中会被保留下来。例如，“e”是英语中最常见的字母；在典型的英文文本中，几乎 13% 的字母是“e”。其次是“t”，约占 9%。</p>
+<li><p>字母频率分析<br>英语中各字母出现的频率差别很大。而且：明文字母的频率在密文中会被保留下来。例如，“e”是英语中最常见的字母；在典型的英文文本中，几乎 13% 的字母是“e”。其次是“t”，约占 9%。</p>
 <p> 攻击中不仅可以利用单个字母的频率，还可以利用字母对的频率（例如“th”在英语中非常常见）、三字母组的频率等等。</p>
 </li>
 </ul>
@@ -59,8 +54,7 @@
 <li><strong>说明</strong>：<ul>
 <li>在这种攻击中，攻击者只知道密文和加密算法，不知道任何对应的明文或密钥。</li>
 <li>攻击的目标是通过分析密文推导出明文或密钥。</li>
-<li>这是最难的攻击类型，因为已知的信息最少。
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-003-84f579979e.png" alt="图片"></li>
+<li>这是最难的攻击类型，因为已知的信息最少。<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-003-84f579979e.png" alt="图片"></li>
 </ul>
 </li>
 </ul>
@@ -75,8 +69,7 @@
 </li>
 <li><strong>说明</strong>：<ul>
 <li>在这种攻击中，攻击者已经获得了一些已知的明文及其对应的密文。</li>
-<li>通过分析这些明文-密文对，攻击者试图推导出加密算法的密钥，或其他未解密密文对应的明文。
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-004-9028875cde.png" alt="图片"></li>
+<li>通过分析这些明文-密文对，攻击者试图推导出加密算法的密钥，或其他未解密密文对应的明文。<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-004-9028875cde.png" alt="图片"></li>
 </ul>
 </li>
 </ul>
@@ -92,8 +85,7 @@
 <li><strong>说明</strong>：<ul>
 <li>在这种攻击中，攻击者可以选择一些明文，并通过加密机制得到其对应的密文。</li>
 <li>通过分析这些数据，攻击者试图推导出密钥或攻破算法。</li>
-<li>这种攻击假设攻击者能够部分控制加密系统。
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-005-821de60b07.png" alt="图片"></li>
+<li>这种攻击假设攻击者能够部分控制加密系统。<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-005-821de60b07.png" alt="图片"></li>
 </ul>
 </li>
 </ul>
@@ -109,8 +101,7 @@
 <li><strong>说明</strong>：<ul>
 <li>在这种攻击中，攻击者可以选择一些密文，并通过解密机制得到其对应的明文。</li>
 <li>通过分析解密后的数据，攻击者试图推导出密钥或攻破算法。</li>
-<li>这种攻击假设攻击者能够部分控制解密系统。
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-006-a88682e4f4.png" alt="图片"></li>
+<li>这种攻击假设攻击者能够部分控制解密系统。<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-006-a88682e4f4.png" alt="图片"></li>
 </ul>
 </li>
 </ul>
@@ -132,38 +123,25 @@
 <ul>
 <li><p>不同的模数得到不同的余数</p>
 </li>
-<li><p>模除法以及求逆元的方法
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-008-8099c9b848.png" alt="图片"></p>
+<li><p>模除法以及求逆元的方法<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-008-8099c9b848.png" alt="图片"></p>
 </li>
-<li><p>简化模运算中的幂运算
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-009-b3b4937319.png" alt="图片">
-中间结果 81 变小了，计算更容易</p>
+<li><p>简化模运算中的幂运算<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-009-b3b4937319.png" alt="图片"><br>中间结果 81 变小了，计算更容易</p>
 </li>
-<li><p>加、减、乘、除
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-010-e1e17a0cc3.png" alt="图片"></p>
+<li><p>加、减、乘、除<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-010-e1e17a0cc3.png" alt="图片"></p>
 </li>
 </ul>
 <h1 id="移位或凯撒密码即单表代换密码">移位（或凯撒）密码，即单表代换密码</h1>
-<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-011-59ca551a15.png" alt="图片">
-穷举密钥搜索（密钥空间只有 26）；字母频率分析，与针对代换密码的攻击类似</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-011-59ca551a15.png" alt="图片"><br>穷举密钥搜索（密钥空间只有 26）；字母频率分析，与针对代换密码的攻击类似</p>
 <h1 id="多表代换">多表代换</h1>
-<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-012-7ed192045d.png" alt="图片">
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-013-60b628e2a8.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-012-7ed192045d.png" alt="图片"><br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-013-60b628e2a8.png" alt="图片"></p>
 <h1 id="playfair-密码">Playfair 密码</h1>
-<p>从关键词中按出现顺序去掉与前面重复的字母，然后填入矩阵；再把 A 到 Z 中之前没有出现过的字母，按从左到右逐行的顺序依次填入矩阵
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-014-6ac3fca9f5.png" alt="图片"></p>
-<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-015-8b11eee560.png" alt="图片">
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-016-a585979a22.png" alt="图片"></p>
+<p>从关键词中按出现顺序去掉与前面重复的字母，然后填入矩阵；再把 A 到 Z 中之前没有出现过的字母，按从左到右逐行的顺序依次填入矩阵<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-014-6ac3fca9f5.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-015-8b11eee560.png" alt="图片"><br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-016-a585979a22.png" alt="图片"></p>
 <h1 id="维吉尼亚密码16-世纪罗马一种多表代换密码">维吉尼亚密码（16 世纪，罗马）——一种多表代换密码</h1>
-<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-017-b5293ed4c0.png" alt="图片">
-用密钥循环填充
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-018-ba3fc9119e.png" alt="图片">
-根据明文字母和密钥字母查表
-<img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-019-aadf2fa141.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-017-b5293ed4c0.png" alt="图片"><br>用密钥循环填充<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-018-ba3fc9119e.png" alt="图片"><br>根据明文字母和密钥字母查表<br><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-019-aadf2fa141.png" alt="图片"></p>
 <p>频率分析攻击在这里应该不起作用，因为明文中的频率与密文中出现的频率并不对应</p>
 <h1 id="仿射密码">仿射密码</h1>
-<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-020-9c31447685.png" alt="图片">
-密钥空间：a 有 12 种可能，b 有 26 种</p>
+<p><img src="/workspace/security-foundations/cryptography/textbook-notes/%E5%AF%86%E7%A0%81%E5%AD%A6%E5%8E%9F%E7%90%86%E4%B8%8E%E6%8A%80%E6%9C%AF%E2%80%94%E2%80%94%E7%AC%AC%201%20%E7%AB%A0%E2%80%94%E2%80%94%E5%BC%95%E8%A8%80/assets/csdn-144182736/image-020-9c31447685.png" alt="图片"><br>密钥空间：a 有 12 种可能，b 有 26 种</p>
 
     </article>
     

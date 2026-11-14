@@ -21,20 +21,16 @@
 <h1 id="概述">概述</h1>
 <p><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-001-b85ea807f1.png" alt="图片"></p>
 <h1 id="一块全新的磁盘硬盘">一块全新的磁盘（硬盘）</h1>
-<p>此时里面完全是空的
-<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-002-38a40b07ed.png" alt="图片"></p>
+<p>此时里面完全是空的<br><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-002-38a40b07ed.png" alt="图片"></p>
 <h1 id="在磁盘上安装操作系统之后">在磁盘上安装操作系统之后</h1>
 <p>操作系统位于 C 盘</p>
 <p>主引导记录不属于任何一个具体的磁盘分区 </p>
-<p>根目录：双击打开 C 盘后看到的文件和文件夹
-<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-003-de131f72ad.png" alt="图片"></p>
+<p>根目录：双击打开 C 盘后看到的文件和文件夹<br><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-003-de131f72ad.png" alt="图片"></p>
 <h1 id="操作系统的引导过程">操作系统的引导过程</h1>
 <p>BIOS：基本输入输出系统（basic input ouput system）</p>
-<p>开机时，CPU 首先到主存中执行 ROM 里的引导程序。该引导程序让 CPU 把磁盘的主引导记录读入内存，然后根据分区表执行磁盘引导程序。此时找到 C 盘，并把 C 盘的引导记录（PBR）读入内存，再执行该引导记录以找到启动管理器。接着从根目录中找到启动管理器并读入内存，CPU 随后执行启动管理器
-<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-004-02c1f2e9a5.png" alt="图片"></p>
+<p>开机时，CPU 首先到主存中执行 ROM 里的引导程序。该引导程序让 CPU 把磁盘的主引导记录读入内存，然后根据分区表执行磁盘引导程序。此时找到 C 盘，并把 C 盘的引导记录（PBR）读入内存，再执行该引导记录以找到启动管理器。接着从根目录中找到启动管理器并读入内存，CPU 随后执行启动管理器<br><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-004-02c1f2e9a5.png" alt="图片"></p>
 <h1 id="示例windows-操作系统的初始化程序">示例：Windows 操作系统的初始化程序</h1>
-<p>它会找到 /Windows/Boot 文件夹并执行其中的内容
-<img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-005-7fb56af4c9.png" alt="图片"></p>
+<p>它会找到 /Windows/Boot 文件夹并执行其中的内容<br><img src="/workspace/software-foundations/operating-systems/fundamentals/01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BC%95%E5%AF%BC%EF%BC%88%E7%A3%81%E7%9B%98%E3%80%81%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B%EF%BC%89/assets/csdn-135724316/image-005-7fb56af4c9.png" alt="图片"></p>
 
     </article>
     

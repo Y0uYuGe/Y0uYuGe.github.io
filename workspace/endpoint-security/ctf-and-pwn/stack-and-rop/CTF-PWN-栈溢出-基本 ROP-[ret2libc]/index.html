@@ -19,19 +19,14 @@
     <div class="meta"><time>2024-01-02</time><span class="tag">#CTF-PWN</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#ROP</span></div>
     <article class="post-body">
 <h1 id="re2libc">re2libc</h1>
-<p>ret2libc 就是控制程序执行 libc 库中的函数，通常是返回到某个函数的 PLT 处或函数的具体位置（即函数 GOT 表项的内容）
-有以下三种情况</p>
+<p>ret2libc 就是控制程序执行 libc 库中的函数，通常是返回到某个函数的 PLT 处或函数的具体位置（即函数 GOT 表项的内容）<br>有以下三种情况</p>
 <ul>
-<li>程序中既有 system 又有 /bin/sh，或者说在给出的可执行文件中能找到 system 函数的地址和 /bin/sh 字符串的地址
- <strong>这种情况直接构造参数调用函数即可</strong></li>
-<li>程序中只有 system，或者说在给出的可执行文件中能找到 system 函数的地址，但找不到 /bin/sh 字符串的地址。
- <strong>这种情况需要泄露某个可写输入位置的地址，先用输入函数输入 /bin/sh，再构造参数，最后调用 system</strong></li>
-<li>程序中既没有 system 也没有 /bin/sh，或者说在给出的可执行文件中既找不到 system 函数的地址，也找不到 /bin/sh 字符串的地址。
- <strong>这种情况需要先泄露 libc 中某个函数的地址，再通过偏移得到 libc 基址，然后计算出 libc 中 system 函数的地址和 /bin/sh 字符串的地址，最后调用</strong></li>
+<li>程序中既有 system 又有 /bin/sh，或者说在给出的可执行文件中能找到 system 函数的地址和 /bin/sh 字符串的地址<br> <strong>这种情况直接构造参数调用函数即可</strong></li>
+<li>程序中只有 system，或者说在给出的可执行文件中能找到 system 函数的地址，但找不到 /bin/sh 字符串的地址。<br> <strong>这种情况需要泄露某个可写输入位置的地址，先用输入函数输入 /bin/sh，再构造参数，最后调用 system</strong></li>
+<li>程序中既没有 system 也没有 /bin/sh，或者说在给出的可执行文件中既找不到 system 函数的地址，也找不到 /bin/sh 字符串的地址。<br> <strong>这种情况需要先泄露 libc 中某个函数的地址，再通过偏移得到 libc 基址，然后计算出 libc 中 system 函数的地址和 /bin/sh 字符串的地址，最后调用</strong></li>
 </ul>
 <h1 id="def-con-ctf-qualifier-2015-r0pbaby">DEF CON CTF Qualifier 2015 r0pbaby</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-001-0dd1b98ca1.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-002-8af3addd17.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-001-0dd1b98ca1.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-002-8af3addd17.png" alt="图片"></p>
 <h2 id="源码">源码</h2>
 <p>用 IDA 反汇编</p>
 <blockquote>
@@ -61,9 +56,7 @@
 <p>C 库函数 void (*signal(int sig, void (*func)(int)))(int) 设置一个处理信号的函数，即带有 sig 参数的信号处理程序。当发生信号处理时，会调用 func 对应的函数</p>
 </blockquote>
 <blockquote>
-<p>__printf_chk(1LL, &quot;libc.so.6: 0x%016llX\n&quot;, handle);
-%016llX 大致意思是用 0 填充、输出 16 位，以 unsigned long long 的形式但按十六进制输出
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-003-2891fd321c.png" alt="图片"></p>
+<p>__printf_chk(1LL, &quot;libc.so.6: 0x%016llX\n&quot;, handle);<br>%016llX 大致意思是用 0 填充、输出 16 位，以 unsigned long long 的形式但按十六进制输出<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-003-2891fd321c.png" alt="图片"></p>
 </blockquote>
 <pre><code class="language-c">__int64 __fastcall main(int a1, char **a2, char **a3)
 {
@@ -171,35 +164,17 @@ LABEL_24:
 <blockquote>
 <p>C 库函数 void *memcpy(void *str1, const void *str2, size_t n) 从存储区 str2 复制 n 个字节到存储区 str1。</p>
 </blockquote>
-<p>注意 nptr 是输入内容的起始地址，而 &amp;savedregs 顾名思义——在 IDA 中也可以验证——是栈上保存 rbp 的位置，v7 是输入的长度。这里存在溢出：memcpy 之后，复制的值可能覆盖到返回地址
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-004-e4a3995251.png" alt="图片"></p>
+<p>注意 nptr 是输入内容的起始地址，而 &amp;savedregs 顾名思义——在 IDA 中也可以验证——是栈上保存 rbp 的位置，v7 是输入的长度。这里存在溢出：memcpy 之后，复制的值可能覆盖到返回地址<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-004-e4a3995251.png" alt="图片"></p>
 <h2 id="思路">思路</h2>
 <h3 id="先获取-libc-基址">先获取 libc 基址</h3>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-005-561b186040.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-006-b96e374800.png" alt="图片">
-结果发现 0x00007FFFF7FBB680 中存放的是 libc 基址
-但没什么用，因为接收到的只是存放 libc 基址的那个地址</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-005-561b186040.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-006-b96e374800.png" alt="图片"><br>结果发现 0x00007FFFF7FBB680 中存放的是 libc 基址<br>但没什么用，因为接收到的只是存放 libc 基址的那个地址</p>
 <h3 id="获取-system-地址">获取 system 地址</h3>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-007-349119cf57.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-008-824561c7fe.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-007-349119cf57.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-008-824561c7fe.png" alt="图片"></p>
 <h3 id="溢出长度">溢出长度</h3>
-<p>一方面，IDA 显示是 8
-另一方面，也可以用 pattern 工具检查
-创建一个长度为 32 的字符串作为输入，然后出现报错 &quot;Program received signal SIGSEGV, Segmentation fault.&quot;</p>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-009-8412f7b4f8.png" alt="图片">
-此时查看 pc，下一条要执行的指令是 ret，栈顶是 0x6e41412441414241，它在输入字符串中的偏移为 8
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-010-9bda67ea81.png" alt="图片"></p>
+<p>一方面，IDA 显示是 8<br>另一方面，也可以用 pattern 工具检查<br>创建一个长度为 32 的字符串作为输入，然后出现报错 &quot;Program received signal SIGSEGV, Segmentation fault.&quot;</p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-009-8412f7b4f8.png" alt="图片"><br>此时查看 pc，下一条要执行的指令是 ret，栈顶是 0x6e41412441414241，它在输入字符串中的偏移为 8<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-010-9bda67ea81.png" alt="图片"></p>
 <h3 id="构造-payload">构造 payload</h3>
-<p>计算 system 函数、/bin/sh 以及 pop rdi; ret gadget 的偏移。得到 system 地址后就可以构造 payload 了
-find 用于搜索字符串
-ropsearch 用于搜索 gadget
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-011-58e400a662.png" alt="图片">
-计算相对 system 的差值
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-012-d3d8879ace.png" alt="图片">
-最后，先获取 system 的地址，再计算 pop rdi; ret gadget 的地址和 /bin/sh 的地址，构造 ROP 链
-此时会出现 SIGSEGV 错误
-这是因为 movaps 要求 rsp 16 字节对齐，所以在栈上加一个 8 字节的 ret 地址即可
-<img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-013-f857940006.png" alt="图片"></p>
+<p>计算 system 函数、/bin/sh 以及 pop rdi; ret gadget 的偏移。得到 system 地址后就可以构造 payload 了<br>find 用于搜索字符串<br>ropsearch 用于搜索 gadget<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-011-58e400a662.png" alt="图片"><br>计算相对 system 的差值<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-012-d3d8879ace.png" alt="图片"><br>最后，先获取 system 的地址，再计算 pop rdi; ret gadget 的地址和 /bin/sh 的地址，构造 ROP 链<br>此时会出现 SIGSEGV 错误<br>这是因为 movaps 要求 rsp 16 字节对齐，所以在栈上加一个 8 字节的 ret 地址即可<br><img src="/workspace/endpoint-security/ctf-and-pwn/stack-and-rop/CTF-PWN-%E6%A0%88%E6%BA%A2%E5%87%BA-%E5%9F%BA%E6%9C%AC%20ROP-%5Bret2libc%5D/assets/csdn-135327432/image-013-f857940006.png" alt="图片"></p>
 <h2 id="exp">exp</h2>
 <pre><code class="language-python">from pwn import *
 context(os=&quot;linux&quot;,arch=&quot;amd64&quot;,log_level=&quot;debug&quot;)

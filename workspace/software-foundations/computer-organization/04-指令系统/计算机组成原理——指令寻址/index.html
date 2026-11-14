@@ -21,20 +21,12 @@
 <h1 id="概述">概述</h1>
 <p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-001-180c87066a.png" alt="图片"></p>
 <h1 id="指令寻址">指令寻址</h1>
-<p>当主存按字编址时
-字：指一个存储字长的单位（对应下图中的两个字节）</p>
+<p>当主存按字编址时<br>字：指一个存储字长的单位（对应下图中的两个字节）</p>
 <h2 id="顺序寻址">顺序寻址</h2>
-<p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-002-5fbb4895e1.png" alt="图片">
-当主存不按字编址而按字节编址时，图中对应的 PC 寻址方式也会改变
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-003-ce048c6cab.png" alt="图片">
-多次访存发生在确定指令的总字节数之后，用来看是否还需要读入指令的其他部分。因为为了确定指令的总字节数，可能只取出了指令的一部分
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-004-8d106034c1.png" alt="图片"></p>
-<p>这里的 1 是刚取出的指令的字长]
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-005-d0aa307467.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-002-5fbb4895e1.png" alt="图片"><br>当主存不按字编址而按字节编址时，图中对应的 PC 寻址方式也会改变<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-003-ce048c6cab.png" alt="图片"><br>多次访存发生在确定指令的总字节数之后，用来看是否还需要读入指令的其他部分。因为为了确定指令的总字节数，可能只取出了指令的一部分<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-004-8d106034c1.png" alt="图片"></p>
+<p>这里的 1 是刚取出的指令的字长]<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-005-d0aa307467.png" alt="图片"></p>
 <h2 id="跳跃寻址">跳跃寻址</h2>
-<p>PC：下一条要执行的指令（取指令时 PC 会改变）
-跳跃寻址：由指令修改 PC 的值
-<img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-006-d63e152a0e.png" alt="图片"></p>
+<p>PC：下一条要执行的指令（取指令时 PC 会改变）<br>跳跃寻址：由指令修改 PC 的值<br><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-006-d63e152a0e.png" alt="图片"></p>
 <h1 id="总结">总结</h1>
 <p><img src="/workspace/software-foundations/computer-organization/04-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E2%80%94%E2%80%94%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80/assets/csdn-134822063/image-007-300e1c4722.png" alt=""></p>
 

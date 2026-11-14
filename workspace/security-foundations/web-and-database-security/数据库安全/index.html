@@ -22,8 +22,7 @@
 <h2 id="相关知识">相关知识</h2>
 <h3 id="web-应用工作原理简介">WEB 应用工作原理简介</h3>
 <p>WEB 的本意是蜘蛛网和网，在网页设计中称为网页。现在被广泛译为网络、互联网等技术领域。日常生活中，用户使用浏览器请求一个 URL。这个 URL 标识了特定服务器上的特定资源。服务器收到请求后，通过 HTTP 协议把生成的 HTML 页面发送给浏览器。</p>
-<p>早期的 WEB 页面内容简单，仅用 HTML 就足以满足用户需求，那时网站的主要内容是静态的。
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-001-1a166ae3b3.png" alt="图片"></p>
+<p>早期的 WEB 页面内容简单，仅用 HTML 就足以满足用户需求，那时网站的主要内容是静态的。<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-001-1a166ae3b3.png" alt="图片"></p>
 <p>随着用户需求的不断增加，不同用户往往有不同的需求，动态页面应运而生。动态页面具有以下三个特点：</p>
 <ol>
 <li><p>“交互性”：页面根据用户的请求和选择动态地变化和响应，以浏览器作为客户端界面。这将是未来 WEB 发展的大趋势。</p>
@@ -33,18 +32,11 @@
 <li><p>“因时因人而变”：不同的人在不同的时间访问同一个 URL，会产生不同的页面。</p>
 </li>
 </ol>
-<p>动态页面的工作原理如下：
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-002-f9a920e8ce.png" alt="图片"></p>
+<p>动态页面的工作原理如下：<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-002-f9a920e8ce.png" alt="图片"></p>
 <p>注意：第三步中会根据脚本的类型使用相应的解析器进行解析和执行，例如 index.php 交给 PHP 处理。</p>
 <h3 id="什么是-lamp">什么是 LAMP</h3>
-<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-003-e3221756b9.png" alt="图片">
-LAMP 是一个开源的 WEB 开发平台，使用 Linux 作为操作系统，Apache 作为 WEB 服务器，MySQL 作为关系型数据库管理系统，PHP 作为面向对象的脚本语言。一般情况下，Apache 监听 80 端口，接收来自公网的用户请求。</p>
-<p>Apache 由开放社区开发和维护，是一款成熟且功能丰富的服务器。
-MySQL 是一个开源的关系型数据库管理系统，用于存储应用数据。
-PHP：一种编程语言。PHP 开源脚本语言与 Apache 配合，帮助创建动态网页。例如，要从数据库中提取数据，只需把 PHP 代码放到页面中想要动态化的部分即可。
-四者的架构图如下所示：
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-004-01a3d3a7c4.png" alt="图片">
-来自公网的请求首先由 Apache 接收。Apache 根据 URL 所请求资源的类型（静态资源如 html、json、png、jpg 等；脚本如 php、asp 等）进行分发。如果是静态文件，就直接访问相应的文件系统并返回其内容。如果是 index.php 这样的脚本，就交给相应的脚本解释器；index.php 对应的是 PHP 解释器。PHP 执行完 index.php 的代码后，把结果返回给 Apache，Apache 再把得到的内容返回给用户。当 PHP 脚本中包含操作数据库的代码时，就会增加图中 PHP 访问数据库的过程，其他过程保持不变。</p>
+<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-003-e3221756b9.png" alt="图片"><br>LAMP 是一个开源的 WEB 开发平台，使用 Linux 作为操作系统，Apache 作为 WEB 服务器，MySQL 作为关系型数据库管理系统，PHP 作为面向对象的脚本语言。一般情况下，Apache 监听 80 端口，接收来自公网的用户请求。</p>
+<p>Apache 由开放社区开发和维护，是一款成熟且功能丰富的服务器。<br>MySQL 是一个开源的关系型数据库管理系统，用于存储应用数据。<br>PHP：一种编程语言。PHP 开源脚本语言与 Apache 配合，帮助创建动态网页。例如，要从数据库中提取数据，只需把 PHP 代码放到页面中想要动态化的部分即可。<br>四者的架构图如下所示：<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-004-01a3d3a7c4.png" alt="图片"><br>来自公网的请求首先由 Apache 接收。Apache 根据 URL 所请求资源的类型（静态资源如 html、json、png、jpg 等；脚本如 php、asp 等）进行分发。如果是静态文件，就直接访问相应的文件系统并返回其内容。如果是 index.php 这样的脚本，就交给相应的脚本解释器；index.php 对应的是 PHP 解释器。PHP 执行完 index.php 的代码后，把结果返回给 Apache，Apache 再把得到的内容返回给用户。当 PHP 脚本中包含操作数据库的代码时，就会增加图中 PHP 访问数据库的过程，其他过程保持不变。</p>
 <h3 id="练习">练习</h3>
 <p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-005-493efeed8e.png" alt="图片"></p>
 <h3 id="什么是-lnmp">什么是 LNMP</h3>
@@ -53,8 +45,7 @@ PHP：一种编程语言。PHP 开源脚本语言与 Apache 配合，帮助创�
 <h3 id="练习-1">练习</h3>
 <p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-006-62431786a6.png" alt="图片"></p>
 <h3 id="什么是-wnmp">什么是 WNMP</h3>
-<p>由于该平台有四层，LAMP 有时也被称为 LAMP 栈。这个栈可以构建在不同的操作系统上。当这些软件用在 Windows 操作系统上时，称为 WAMP；在 Macintosh 系统上称为 MAMP，在 Solaris 系统上称为 SAMP。
-W 代表 Windows，N 代表 Nginx，M 代表 MySQL，P 代表 PHP。</p>
+<p>由于该平台有四层，LAMP 有时也被称为 LAMP 栈。这个栈可以构建在不同的操作系统上。当这些软件用在 Windows 操作系统上时，称为 WAMP；在 Macintosh 系统上称为 MAMP，在 Solaris 系统上称为 SAMP。<br>W 代表 Windows，N 代表 Nginx，M 代表 MySQL，P 代表 PHP。</p>
 <h3 id="练习-2">练习</h3>
 <p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-007-f94e2576f7.png" alt="图片"></p>
 <h3 id="补充http-协议">补充：HTTP 协议</h3>
@@ -69,15 +60,9 @@ Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8
 </code></pre>
 <p>第一行表示使用 GET 请求方法获取路径为 / 的资源，使用 HTTP/1.1 协议。从第二行开始，每一行都是一个 HTTP 头，以 Header: Value 的形式表示。</p>
 <p>常用的 HTTP Header 包括：</p>
-<p>Host：表示请求的主机名，因为一台服务器上可能托管了多个网站，所以 Host 表示浏览器请求的是哪个域名；
-User-Agent：标识客户端本身。例如 Chrome 浏览器的标识类似 Mozilla/5.0 ... Chrome/79，IE 浏览器的标识类似 Mozilla/5.0 (Windows NT ...) like Gecko；
-Accept：表示浏览器能接收的资源类型，如 text/<em>、image/</em>，或者表示全部的 <em>/</em>；
-Accept-Language：表示浏览器偏好的语言，服务器可以据此返回不同语言的网页；
-Accept-Encoding：表示浏览器能支持的压缩类型，如 gzip、deflate、br。
-HTTP Header 的每一行都以 \r\n 结尾。如果遇到两个连续的 \r\n，后面就是 HTTP Body。HTTP Body 通常出现在 POST 请求中。</p>
+<p>Host：表示请求的主机名，因为一台服务器上可能托管了多个网站，所以 Host 表示浏览器请求的是哪个域名；<br>User-Agent：标识客户端本身。例如 Chrome 浏览器的标识类似 Mozilla/5.0 ... Chrome/79，IE 浏览器的标识类似 Mozilla/5.0 (Windows NT ...) like Gecko；<br>Accept：表示浏览器能接收的资源类型，如 text/<em>、image/</em>，或者表示全部的 <em>/</em>；<br>Accept-Language：表示浏览器偏好的语言，服务器可以据此返回不同语言的网页；<br>Accept-Encoding：表示浏览器能支持的压缩类型，如 gzip、deflate、br。<br>HTTP Header 的每一行都以 \r\n 结尾。如果遇到两个连续的 \r\n，后面就是 HTTP Body。HTTP Body 通常出现在 POST 请求中。</p>
 <blockquote>
-<p>\r 表示回到行首，\n 表示换到下一行
-&#39;\r&#39; 是回车，&#39;\n&#39; 是换行。前者把光标移到行首，后者把光标下移一行。平常使用的 Enter 就是两者的组合。</p>
+<p>\r 表示回到行首，\n 表示换到下一行<br>&#39;\r&#39; 是回车，&#39;\n&#39; 是换行。前者把光标移到行首，后者把光标下移一行。平常使用的 Enter 就是两者的组合。</p>
 </blockquote>
 <p>POST 请求示例：</p>
 <pre><code class="language-bash">POST / HTTP/1.1
@@ -107,21 +92,9 @@ Cache-Control: max-age=300
 </code></pre>
 <p>服务器响应的第一行是版本号 + 空格 + 数字 + 空格 + 文本，其中数字 2xx 表示成功，3xx 表示重定向，4xx 表示客户端引起的错误，5xx 表示服务器引起的错误。</p>
 <p>常见的响应码有：</p>
-<p>200 OK：表示成功；
-301 Moved Permanently：表示该 URL 已被永久重定向；
-302 Found：表示该 URL 需要临时重定向；
-304 Not Modified：表示资源未被修改，客户端可以使用本地缓存的版本；
-400 Bad Request：表示客户端发送了错误的请求，例如参数无效；
-401 Unauthorized：表示客户端因身份未经验证而不允许访问该 URL；
-403 Forbidden：表示服务器因权限问题拒绝了客户端的请求；
-404 Not Found：表示客户端请求了不存在的资源；
-500 Internal Server Error：表示服务器处理时发生了内部错误，例如无法连接数据库；
-503 Service Unavailable：表示服务器此刻暂时无法处理请求。</p>
+<p>200 OK：表示成功；<br>301 Moved Permanently：表示该 URL 已被永久重定向；<br>302 Found：表示该 URL 需要临时重定向；<br>304 Not Modified：表示资源未被修改，客户端可以使用本地缓存的版本；<br>400 Bad Request：表示客户端发送了错误的请求，例如参数无效；<br>401 Unauthorized：表示客户端因身份未经验证而不允许访问该 URL；<br>403 Forbidden：表示服务器因权限问题拒绝了客户端的请求；<br>404 Not Found：表示客户端请求了不存在的资源；<br>500 Internal Server Error：表示服务器处理时发生了内部错误，例如无法连接数据库；<br>503 Service Unavailable：表示服务器此刻暂时无法处理请求。</p>
 <p>从第二行开始，服务器返回的每一行都是一个 HTTP 头。服务器常返回的 HTTP Header 包括：</p>
-<p>Content-Type：表示响应内容的类型，如 text/html、image/jpeg；
-Content-Length：表示响应内容的长度（字节）；
-Content-Encoding：表示响应的压缩算法，如 gzip；
-Cache-Control：指示客户端如何缓存，例如 max-age=300 表示最多可以缓存 300 秒。</p>
+<p>Content-Type：表示响应内容的类型，如 text/html、image/jpeg；<br>Content-Length：表示响应内容的长度（字节）；<br>Content-Encoding：表示响应的压缩算法，如 gzip；<br>Cache-Control：指示客户端如何缓存，例如 max-age=300 表示最多可以缓存 300 秒。</p>
 <h3 id="练习-3">练习</h3>
 <p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135660851/image-008-093a573f80.png" alt="图片"></p>
 <h1 id="数据库安全---第一章-mysql-安全基础---web-环境搭建---lamp-2lamp---搭建-apache2-">数据库安全 - 第一章 MySQL 安全基础 - 【Web 环境搭建 - LAMP-2】（LAMP - 搭建 apache2 环境）</h1>
@@ -132,16 +105,12 @@ Cache-Control：指示客户端如何缓存，例如 max-age=300 表示最多可
 <p>Apache 软件基金会和 Apache HTTP Server 项目于 2021 年 6 月 1 日宣布发布 Apache HTTP Server（&quot;httpd&quot;）2.4.48 版本。Apache HTTP 服务器有两个名字：一个是 httpd，另一个是 apache2。实际上二者是同一个软件，只是对应<strong>不同操作系统的不同发行版</strong>。例如在 RHEL 6.2 中叫 httpd，而在 Ubuntu 中叫 apache2。</p>
 <p><strong>注意：apache2 和 httpd 的配置文件中使用的指令以及目录结构略有不同</strong></p>
 <h3 id="在-ubuntu1804-上安装-apache2">在 ubuntu18.04 上安装 apache2</h3>
-<p>在 ubuntu18.04 上有两种安装方式：从源代码安装和直接从软件仓库安装。这次只演示通过软件仓库安装。
-先更新仓库</p>
+<p>在 ubuntu18.04 上有两种安装方式：从源代码安装和直接从软件仓库安装。这次只演示通过软件仓库安装。<br>先更新仓库</p>
 <pre><code class="language-powershell">apt upadate
 </code></pre>
 <p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-002-be61d9ab98.png" alt="图片"></p>
 <h4 id="apt-命令">apt 命令</h4>
-<p>注意 -y 的含义
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-003-cf86d2da51.png" alt="图片">
-然后安装 apache2
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-004-9f8fefff77.png" alt="图片"></p>
+<p>注意 -y 的含义<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-003-cf86d2da51.png" alt="图片"><br>然后安装 apache2<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-004-9f8fefff77.png" alt="图片"></p>
 <pre><code class="language-powershell">apt install apache2 -y
 </code></pre>
 <h3 id="启动和停止-apache2">启动和停止 apache2</h3>
@@ -155,22 +124,14 @@ Cache-Control：指示客户端如何缓存，例如 max-age=300 表示最多可
 netstat -antp | grep apache2
 </code></pre>
 <blockquote>
-<p>netstat
--a 或 --all 显示所有连线中的 Socket。
--n 或 --numeric 直接使用 IP 地址，而不通过域名服务器。
--t 或 --tcp 显示 TCP 传输协议的连线状况。
--p 或 --programs 显示正在使用 Socket 的程序的 PID 和名称。
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-006-ee88cc7b64.png" alt="图片"></p>
+<p>netstat<br>-a 或 --all 显示所有连线中的 Socket。<br>-n 或 --numeric 直接使用 IP 地址，而不通过域名服务器。<br>-t 或 --tcp 显示 TCP 传输协议的连线状况。<br>-p 或 --programs 显示正在使用 Socket 的程序的 PID 和名称。<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-006-ee88cc7b64.png" alt="图片"></p>
 </blockquote>
 <pre><code class="language-powershell">systemctl enable apache2
 </code></pre>
 <p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-007-b7ee02e79f.png" alt="图片"></p>
 <h3 id="apache2-配置文件目录分析">apache2 配置文件目录分析</h3>
 <p>apache2 的配置文件位于 /etc/apache2 目录下。主配置文件是 apache2.conf</p>
-<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-008-2acc34dec7.png" alt="图片">
-打开文件查看
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-009-41ffefa875.png" alt="图片">
-其中包含</p>
+<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-008-2acc34dec7.png" alt="图片"><br>打开文件查看<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-009-41ffefa875.png" alt="图片"><br>其中包含</p>
 <pre><code class="language-markup"># It is split into several files forming the configuration hierarchy outlined 
 # below, all located in the /etc/apache2/ directory:(apache2的配置功能分成了多个文件，形成如下的配置层次结构)
 #
@@ -203,8 +164,7 @@ service apache2 start # 开启apache2服务
 cd /var/www/html/ &amp;&amp; ls
 </code></pre>
 <p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-010-0d4a1bdb36.png" alt="图片"></p>
-<p>可以看到默认的 index.html。用 firefox 浏览器访问 <a href="http://localhost/">http://localhost/</a> 会显示如下页面
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-011-3e47257217.png" alt="图片"></p>
+<p>可以看到默认的 index.html。用 firefox 浏览器访问 <a href="http://localhost/">http://localhost/</a> 会显示如下页面<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-011-3e47257217.png" alt="图片"></p>
 <p>我们在这个目录下创建的文件都可以通过 URL 访问。例如创建 hello.html</p>
 <pre><code class="language-html">&lt;html&gt;
     &lt;h1&gt;
@@ -212,15 +172,12 @@ cd /var/www/html/ &amp;&amp; ls
     &lt;/h1&gt;
 &lt;/html&gt;
 </code></pre>
-<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-012-a732dd69d1.png" alt="图片">
-访问它
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-013-f7435f86bf.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-012-a732dd69d1.png" alt="图片"><br>访问它<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-013-f7435f86bf.png" alt="图片"></p>
 <p>如果需要修改网站的根目录该怎么办？网站根目录可以在配置文件中配置。</p>
 <ul>
 <li>sites-enabled：apache2 当前正在使用的网站配置文件</li>
 </ul>
-<p>找到文件 /etc/apache2/sites-enabled/000-default.conf
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-014-870d4f543f.png" alt="图片"></p>
+<p>找到文件 /etc/apache2/sites-enabled/000-default.conf<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-014-870d4f543f.png" alt="图片"></p>
 <p>该文件配置了默认页面，内容如下：</p>
 <pre><code class="language-powershell">&lt;VirtualHost *:80&gt;
     # The ServerName directive sets the request scheme, hostname and port that
@@ -259,10 +216,8 @@ cd /var/www/html/ &amp;&amp; ls
 <pre><code class="language-powershell">mkdir /var/www/html/site1
 mv /var/www/html/hello.html /var/www/html/site1/
 </code></pre>
-<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-015-9e23eb157d.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-016-04308fad7e.png" alt="图片"></p>
-<p>然后在 /etc/apache2/sites-enabled/000-default.conf 中修改 DocumentRoot /var/www/html/site1
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-017-c597addc75.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-015-9e23eb157d.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-016-04308fad7e.png" alt="图片"></p>
+<p>然后在 /etc/apache2/sites-enabled/000-default.conf 中修改 DocumentRoot /var/www/html/site1<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-017-c597addc75.png" alt="图片"></p>
 <p>重启 apache2 服务</p>
 <pre><code class="language-powershell">service apache2 restart
 </code></pre>
@@ -278,12 +233,8 @@ mv /var/www/html/hello.html /var/www/html/site1/
 <li>AllowOverride None：忽略 .htacess 配置文件</li>
 <li>Require all granted：（这是最关键的配置）Require 是访问控制指令，all granted 表示允许所有访问请求。如果想拒绝所有请求，可以配置为 Require all denied</li>
 </ul>
-<p>所以，对于新建的 /tmp/www 和 /tmp/www2，我们也需要同样的配置。为这两个目录添加如下内容并重启 apache2 后，两个目录中的文件就都能正常访问了：
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-020-d1e9a7c23e.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-021-510020b44c.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-022-a1d6d57b13.png" alt="图片"></p>
-<p>访问结果
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-023-e17e0dcbfb.png" alt="图片"></p>
+<p>所以，对于新建的 /tmp/www 和 /tmp/www2，我们也需要同样的配置。为这两个目录添加如下内容并重启 apache2 后，两个目录中的文件就都能正常访问了：<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-020-d1e9a7c23e.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-021-510020b44c.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-022-a1d6d57b13.png" alt="图片"></p>
+<p>访问结果<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-023-e17e0dcbfb.png" alt="图片"></p>
 <h3 id="修改-apache2-监听端口">修改 apache2 监听端口</h3>
 <p>在某些场景下，我们需要修改 apache2 监听的端口</p>
 <p>可以通过修改 /etc/apache2/port.conf 和 /etc/apache2/sites-enabled/000-default.conf 配置文件来实现。</p>
@@ -307,10 +258,8 @@ Listen 80
 <p>修改后重启 apache2</p>
 <pre><code class="language-powershell">service apache2 restart
 </code></pre>
-<p>查看端口状态：<strong>netstat -antp</strong>
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-024-f1988e3499.png" alt="图片"></p>
-<p>可以看到端口已经切换。用浏览器访问时需要访问 81 端口：<a href="http://localhost:81/hello.html">http://localhost:81/hello.html</a>
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-025-61e833e81e.png" alt="图片"></p>
+<p>查看端口状态：<strong>netstat -antp</strong><br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-024-f1988e3499.png" alt="图片"></p>
+<p>可以看到端口已经切换。用浏览器访问时需要访问 81 端口：<a href="http://localhost:81/hello.html">http://localhost:81/hello.html</a><br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-025-61e833e81e.png" alt="图片"></p>
 <h3 id="apache2-监听多个端口">apache2 监听多个端口</h3>
 <p>在某些情况下，我们需要开放多个端口，每个端口对应一个站点，每个站点有不同的网站根目录。这种情况下 apache2 该如何配置？</p>
 <p>首先编辑 /etc/apache2/ports.conf，添加：</p>
@@ -318,9 +267,7 @@ Listen 80
 <p>如图所示：</p>
 <p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-026-2fc50089ed.png" alt="image-20210702155517787"></p>
 <p>此时重启 apache2 服务后，可以看到该端口已经在监听了。</p>
-<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-027-031d0d9144.png" alt="图片">
-访问 8080 端口相当于访问一个新站点，但由于还没有设置网站根目录，访问 <a href="http://localhost:8080/">http://localhost:8080/</a> 时会看到 apache2 的默认 index 页面。接下来我们设置对应的目录。（此时 8080 的站点目录与最初的默认目录相同，都是 /var/www/html/，因为 /etc/apache2/sites-enabled/ 中的 conf 文件只为 81 端口设置了根目录）
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-028-dd26b8d7ce.png" alt="图片"></p>
+<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-027-031d0d9144.png" alt="图片"><br>访问 8080 端口相当于访问一个新站点，但由于还没有设置网站根目录，访问 <a href="http://localhost:8080/">http://localhost:8080/</a> 时会看到 apache2 的默认 index 页面。接下来我们设置对应的目录。（此时 8080 的站点目录与最初的默认目录相同，都是 /var/www/html/，因为 /etc/apache2/sites-enabled/ 中的 conf 文件只为 81 端口设置了根目录）<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-028-dd26b8d7ce.png" alt="图片"></p>
 <p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-029-b0ca41d645.png" alt="图片"></p>
 <p>切换到目录 /etc/apache2/sites-enabled/</p>
 <pre><code class="language-powershell">
@@ -355,8 +302,7 @@ cd /etc/apache2/sites-enabled/
 &lt;/VirtualHost&gt;
 # vim: syntax=apache ts=4 sw=4 sts=4 sr noet
 </code></pre>
-<p>把 DocumentRoot 设为：/var/www/html/site2
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-030-b5f0ad42af.png" alt="图片"></p>
+<p>把 DocumentRoot 设为：/var/www/html/site2<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-030-b5f0ad42af.png" alt="图片"></p>
 <p>然后创建 /var/www/html/site2 目录，在其中创建 index.html 并写入</p>
 <pre><code class="language-html">&lt;html&gt;
     &lt;h1&gt;
@@ -364,10 +310,7 @@ cd /etc/apache2/sites-enabled/
     &lt;/h1&gt;
 &lt;/html&gt;
 </code></pre>
-<p>重启 apache2 服务，访问 <a href="http://localhost:8080/index.html">http://localhost:8080/index.html</a>
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-031-6524d60ac4.png" alt="图片">
-记住每次修改后都需要重启 apache2 才能生效
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-032-8eab751498.png" alt="图片"></p>
+<p>重启 apache2 服务，访问 <a href="http://localhost:8080/index.html">http://localhost:8080/index.html</a><br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-031-6524d60ac4.png" alt="图片"><br>记住每次修改后都需要重启 apache2 才能生效<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-032-8eab751498.png" alt="图片"></p>
 <h3 id="操作要求">操作要求</h3>
 <p>完成以下任务：</p>
 <ol>
@@ -377,13 +320,8 @@ cd /etc/apache2/sites-enabled/
 <li>将 apache2 默认监听端口修改为 81</li>
 <li>添加第二个监听端口 8080，根目录设为 /tmp/www2/。</li>
 </ol>
-<p>设置监听端口
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-033-2fa302e681.png" alt="图片">
-设置可访问的目录</p>
-<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-034-2c9f93120c.png" alt="图片">设置站点的端口和根目录
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-035-39f3a42cdc.png" alt="图片">
-<img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-036-cead08a256.png" alt="图片">
-重启 apache2</p>
+<p>设置监听端口<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-033-2fa302e681.png" alt="图片"><br>设置可访问的目录</p>
+<p><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-034-2c9f93120c.png" alt="图片">设置站点的端口和根目录<br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-035-39f3a42cdc.png" alt="图片"><br><img src="/workspace/security-foundations/web-and-database-security/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E5%85%A8/assets/csdn-135709202/image-036-cead08a256.png" alt="图片"><br>重启 apache2</p>
 
     </article>
     

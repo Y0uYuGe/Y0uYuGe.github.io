@@ -20,55 +20,36 @@
     <article class="post-body">
 <h1 id="微指令设计">微指令设计</h1>
 <h2 id="微指令格式">微指令格式</h2>
-<p>水平型微指令的操作控制部分对应一系列微命令的控制信号
-垂直型微指令中，一个微操作码对应一条微命令，因此一条水平型微指令可能对应多条垂直型微指令
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-001-b146997cbf.png" alt="图片"></p>
+<p>水平型微指令的操作控制部分对应一系列微命令的控制信号<br>垂直型微指令中，一个微操作码对应一条微命令，因此一条水平型微指令可能对应多条垂直型微指令<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-001-b146997cbf.png" alt="图片"></p>
 <h2 id="微指令编码方式">微指令编码方式</h2>
 <h3 id="水平型微指令操作控制部分的编码方式">水平型微指令操作控制部分的编码方式</h3>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-002-7cefaacd22.png" alt="图片"></p>
 <h4 id="直接编码">直接编码</h4>
-<p>一位对应一个微命令控制信号
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-003-d9a6a55ae7.png" alt="图片"></p>
+<p>一位对应一个微命令控制信号<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-003-d9a6a55ae7.png" alt="图片"></p>
 <h4 id="字段直接编码">字段直接编码</h4>
-<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-004-5efb8321c5.png" alt="图片">
-使用译码器后，同样的长度可以对应更多的微命令
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-005-f253d7d205.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-004-5efb8321c5.png" alt="图片"><br>使用译码器后，同样的长度可以对应更多的微命令<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-005-f253d7d205.png" alt="图片"></p>
 <h4 id="例题">例题</h4>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-006-3f7d15ea35.png" alt="图片"></p>
 <h4 id="字段间接编码">字段间接编码</h4>
-<p>有些需要二次译码
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-007-58479e32bc.png" alt="图片">
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-008-68a568cc00.png" alt="图片"></p>
+<p>有些需要二次译码<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-007-58479e32bc.png" alt="图片"><br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-008-68a568cc00.png" alt="图片"></p>
 <h2 id="微指令地址的形成方式">微指令地址的形成方式</h2>
-<p>任何一条指令的第一条微指令地址都是零地址，可由专用硬件产生
-中断周期的第一条微指令地址对所有指令都相同，可由硬件提供
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-009-8ce8aa3c1e.png" alt="图片">
-测试网络示意图
-微指令地址由 CMDR 某些位上的信息与一些测试源共同得到
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-010-262c4f6c2a.png" alt="图片"></p>
+<p>任何一条指令的第一条微指令地址都是零地址，可由专用硬件产生<br>中断周期的第一条微指令地址对所有指令都相同，可由硬件提供<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-009-8ce8aa3c1e.png" alt="图片"><br>测试网络示意图<br>微指令地址由 CMDR 某些位上的信息与一些测试源共同得到<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-010-262c4f6c2a.png" alt="图片"></p>
 <h2 id="例题-1">例题</h2>
-<p>最少只需要取指和执行
-这里每条指令对应的微程序指的是执行周期的微指令
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-011-5cd5e91bdc.png" alt="图片"></p>
+<p>最少只需要取指和执行<br>这里每条指令对应的微程序指的是执行周期的微指令<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-011-5cd5e91bdc.png" alt="图片"></p>
 <h2 id="总结">总结</h2>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-012-3540387ef2.png" alt="图片"></p>
 <h1 id="微程序控制单元的设计">微程序控制单元的设计</h1>
 <ol>
 <li>各阶段的微命令</li>
 <li>一条机器指令执行周期的微命令和节拍</li>
-<li>补充相关的微命令
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-013-f364fab851.png" alt="图片"></li>
+<li>补充相关的微命令<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-013-f364fab851.png" alt="图片"></li>
 <li>根据微命令的数量确定微指令格式</li>
 <li>确定微指令操作控制字段与各微命令的对应方式</li>
 </ol>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-014-3330200ed7.png" alt="图片"></p>
-<p>ID 是指令译码器
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-015-d5a2f0a013.png" alt="图片"></p>
+<p>ID 是指令译码器<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-015-d5a2f0a013.png" alt="图片"></p>
 <h2 id="微程序设计的分类">微程序设计的分类</h2>
-<p>动态微程序设计可以优化和扩展机器指令
-EPROM 是可修改的
-纳（Nano）指的是对微指令作进一步细分
-<img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-016-eff381498f.png" alt="图片"></p>
+<p>动态微程序设计可以优化和扩展机器指令<br>EPROM 是可修改的<br>纳（Nano）指的是对微指令作进一步细分<br><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-016-eff381498f.png" alt="图片"></p>
 <h2 id="硬布线控制与微程序控制的比较">硬布线控制与微程序控制的比较</h2>
 <p><img src="/workspace/software-foundations/computer-organization/05-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%20-%20%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E8%AE%BE%E8%AE%A1/assets/csdn-135084458/image-017-9f43995981.png" alt="图片"></p>
 

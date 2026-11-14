@@ -19,20 +19,17 @@
     <div class="meta"><time>2023-11-12</time><span class="tag">#学习</span></div>
     <article class="post-body">
 <h1 id="gnu-assembler">GNU assembler</h1>
-<p>GNU 汇编器将汇编代码翻译成机器码
-汇编指令是 CPU 机器指令的助记符，经过汇编后会变成由 1 和 0 组成、可被 CPU 读取和执行的机器码。</p>
+<p>GNU 汇编器将汇编代码翻译成机器码<br>汇编指令是 CPU 机器指令的助记符，经过汇编后会变成由 1 和 0 组成、可被 CPU 读取和执行的机器码。</p>
 <blockquote>
 <p>汇编源程序用于系统最基本的初始化，比如初始化栈指针、设置页表、操作 ARM 协处理器等；初始化完成后就可以跳转到 C 代码执行。</p>
 </blockquote>
 <h1 id="文件格式">文件格式</h1>
-<p>文件后缀为小写 s：汇编代码
-文件后缀为大写 S：需要预处理的汇编代码</p>
+<p>文件后缀为小写 s：汇编代码<br>文件后缀为大写 S：需要预处理的汇编代码</p>
 <h1 id="汇编语法">汇编语法</h1>
 <p>.long：定义四个字节的数据</p>
 <p>.section：定义一个段</p>
 <p>CLI 汇编指令是 Clear Interupt 的缩写，用于禁止中断；CLI 生效后，所有外部中断都被屏蔽，保证当前运行的代码不被打断，起到保护代码运行的作用</p>
-<p>hlt 指令使程序停止运行，处理器进入暂停状态，不执行任何操作，不影响标志位。当 RESET 线上有复位信号、CPU 响应非屏蔽中断、CPU 响应可屏蔽中断这三种情况之一发生时，CPU 脱离暂停状态，执行 HLT 的下一条指令。
-  如果在 hlt 指令之前执行了 cli，可屏蔽中断就无法唤醒 CPU</p>
+<p>hlt 指令使程序停止运行，处理器进入暂停状态，不执行任何操作，不影响标志位。当 RESET 线上有复位信号、CPU 响应非屏蔽中断、CPU 响应可屏蔽中断这三种情况之一发生时，CPU 脱离暂停状态，执行 HLT 的下一条指令。<br>  如果在 hlt 指令之前执行了 cli，可屏蔽中断就无法唤醒 CPU</p>
 <h1 id="相关命令">相关命令</h1>
 <pre><code class="language-bash">i686-elf-gcc -E *.S文件 ：停止在预处理阶段后，不会运行编译器，结果是预处理后的源码，会发送到标准输出（显示在命令行上）
 
@@ -77,8 +74,7 @@ xxd 目标文件即*.o文件：显示目标文件十六进制形式，按地址�
 </code></pre>
 <h2 id="section"></h2>
 <h1 id="结果">结果</h1>
-<p><img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%88GRUB%20%E5%BC%95%E5%AF%BC%E5%AE%9E%E6%88%98%EF%BC%89/assets/csdn-134363888/image-001-d730ea43bb.png" alt="图片">
-<img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%88GRUB%20%E5%BC%95%E5%AF%BC%E5%AE%9E%E6%88%98%EF%BC%89/assets/csdn-134363888/image-002-22a0768e2a.png" alt="图片"></p>
+<p><img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%88GRUB%20%E5%BC%95%E5%AF%BC%E5%AE%9E%E6%88%98%EF%BC%89/assets/csdn-134363888/image-001-d730ea43bb.png" alt="图片"><br><img src="/workspace/software-foundations/operating-systems/x86-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%88GRUB%20%E5%BC%95%E5%AF%BC%E5%AE%9E%E6%88%98%EF%BC%89/assets/csdn-134363888/image-002-22a0768e2a.png" alt="图片"></p>
 
     </article>
     

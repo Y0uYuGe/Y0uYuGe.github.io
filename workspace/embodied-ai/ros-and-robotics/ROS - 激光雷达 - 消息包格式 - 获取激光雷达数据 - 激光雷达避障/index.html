@@ -28,8 +28,7 @@
 </code></pre>
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%20-%20%E6%B6%88%E6%81%AF%E5%8C%85%E6%A0%BC%E5%BC%8F%20-%20%E8%8E%B7%E5%8F%96%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E6%95%B0%E6%8D%AE%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E9%81%BF%E9%9A%9C/assets/csdn-145435339/image-001-24bc6cdc20.png" alt="图片"></p>
 <h1 id="消息包格式">消息包格式</h1>
-<p>激光雷达消息包 <a href="https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/LaserScan.html">https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/LaserScan.html</a>
-<a href="https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/">https://docs.ros.org/en/noetic/api/sensor_msgs/html/</a></p>
+<p>激光雷达消息包 <a href="https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/LaserScan.html">https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/LaserScan.html</a><br><a href="https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/">https://docs.ros.org/en/noetic/api/sensor_msgs/html/</a></p>
 <p><code>rostopic echo /scan --noarr</code> 是一条 ROS（机器人操作系统）命令，用于订阅并显示 /scan 话题上的消息内容。--noarr 参数用于简化输出：不显示数组的完整内容，而是显示数组的类型和长度。</p>
 <pre><code class="language-bash">llk@LLK:~$ rostopic echo /scan --noarr
 header:
@@ -50,40 +49,24 @@ intensities: &quot;&lt;array type: float32, length: 360&gt;&quot;
 ---
 </code></pre>
 <ol>
-<li>header
-seq：消息的序列号，用于标识消息的先后顺序。在本例中，seq: 14445 表示这是第 14445 条消息。
-stamp：消息的时间戳，表示消息生成的时间。
-secs：时间戳的秒部分；secs: 1533 表示消息在第 1533 秒生成。
-nsecs：时间戳的纳秒部分；nsecs: 920000000 表示消息在 920,000,000 纳秒时生成。
-frame_id：消息的参考坐标系；frame_id: &quot;laser&quot; 表示消息的参考坐标系为 laser。</li>
-<li>angle_min 和 angle_max
-angle_min：扫描的起始角度，单位为弧度。angle_min: -3.141590118408203 表示扫描从 -π 弧度（即 -180 度）开始。
-angle_max：扫描的结束角度，单位为弧度。angle_max: 3.141590118408203 表示扫描到 π 弧度（即 180 度）结束。</li>
-<li>angle_increment
-angle_increment：扫描的角度增量，单位为弧度。angle_increment: 0.017501894384622574 表示相邻扫描点之间的角度增量约为 1 度（0.0175 弧度）。</li>
-<li>time_increment 和 scan_time
-time_increment：扫描中两次相邻测量之间的时间增量，单位为秒。time_increment: 0.0 表示相邻测量之间的时间增量为 0 秒，通常用于静态扫描。
-scan_time：完成一次完整扫描所需的时间，单位为秒。scan_time: 0.0 表示扫描时间为 0 秒，通常用于静态扫描。</li>
-<li>range_min 和 range_max
-range_min：激光雷达能够可靠测量的最小距离，单位为米。range_min: 0.23999999463558197 表示最小可测距离为 0.24 米。
-range_max：激光雷达能够可靠测量的最大距离，单位为米。range_max: 6.0 表示最大可测距离为 6 米。</li>
-<li>ranges 和 intensities
-ranges：浮点数组，包含激光雷达到各个障碍物的距离。ranges: &quot;&lt;array type: float32, length: 360&gt;&quot; 表示该数组包含 360 个浮点数，每个浮点数表示某个特定角度上的距离。
-intensities：浮点数组，包含与 ranges 数组中各距离对应的反射强度值。intensities: &quot;&lt;array type: float32, length: 360&gt;&quot; 表示该数组包含 360 个浮点数，每个浮点数表示某个特定角度上的反射强度。</li>
+<li>header<br>seq：消息的序列号，用于标识消息的先后顺序。在本例中，seq: 14445 表示这是第 14445 条消息。<br>stamp：消息的时间戳，表示消息生成的时间。<br>secs：时间戳的秒部分；secs: 1533 表示消息在第 1533 秒生成。<br>nsecs：时间戳的纳秒部分；nsecs: 920000000 表示消息在 920,000,000 纳秒时生成。<br>frame_id：消息的参考坐标系；frame_id: &quot;laser&quot; 表示消息的参考坐标系为 laser。</li>
+<li>angle_min 和 angle_max<br>angle_min：扫描的起始角度，单位为弧度。angle_min: -3.141590118408203 表示扫描从 -π 弧度（即 -180 度）开始。<br>angle_max：扫描的结束角度，单位为弧度。angle_max: 3.141590118408203 表示扫描到 π 弧度（即 180 度）结束。</li>
+<li>angle_increment<br>angle_increment：扫描的角度增量，单位为弧度。angle_increment: 0.017501894384622574 表示相邻扫描点之间的角度增量约为 1 度（0.0175 弧度）。</li>
+<li>time_increment 和 scan_time<br>time_increment：扫描中两次相邻测量之间的时间增量，单位为秒。time_increment: 0.0 表示相邻测量之间的时间增量为 0 秒，通常用于静态扫描。<br>scan_time：完成一次完整扫描所需的时间，单位为秒。scan_time: 0.0 表示扫描时间为 0 秒，通常用于静态扫描。</li>
+<li>range_min 和 range_max<br>range_min：激光雷达能够可靠测量的最小距离，单位为米。range_min: 0.23999999463558197 表示最小可测距离为 0.24 米。<br>range_max：激光雷达能够可靠测量的最大距离，单位为米。range_max: 6.0 表示最大可测距离为 6 米。</li>
+<li>ranges 和 intensities<br>ranges：浮点数组，包含激光雷达到各个障碍物的距离。ranges: &quot;&lt;array type: float32, length: 360&gt;&quot; 表示该数组包含 360 个浮点数，每个浮点数表示某个特定角度上的距离。<br>intensities：浮点数组，包含与 ranges 数组中各距离对应的反射强度值。intensities: &quot;&lt;array type: float32, length: 360&gt;&quot; 表示该数组包含 360 个浮点数，每个浮点数表示某个特定角度上的反射强度。</li>
 </ol>
 <h1 id="获取激光雷达数据">获取激光雷达数据</h1>
 <pre><code class="language-bash"> roslaunch  wpr_simulation  wpb_simple.launch
  rosrun wpr_simulation   demo_lidar_data
 </code></pre>
 <p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%20-%20%E6%B6%88%E6%81%AF%E5%8C%85%E6%A0%BC%E5%BC%8F%20-%20%E8%8E%B7%E5%8F%96%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E6%95%B0%E6%8D%AE%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E9%81%BF%E9%9A%9C/assets/csdn-145435339/image-002-7abec0e537.png" alt="图片"></p>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%20-%20%E6%B6%88%E6%81%AF%E5%8C%85%E6%A0%BC%E5%BC%8F%20-%20%E8%8E%B7%E5%8F%96%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E6%95%B0%E6%8D%AE%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E9%81%BF%E9%9A%9C/assets/csdn-145435339/image-003-c0eb507b93.png" alt="图片">
-<img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%20-%20%E6%B6%88%E6%81%AF%E5%8C%85%E6%A0%BC%E5%BC%8F%20-%20%E8%8E%B7%E5%8F%96%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E6%95%B0%E6%8D%AE%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E9%81%BF%E9%9A%9C/assets/csdn-145435339/image-004-adab9572f2.png" alt="图片"></p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%20-%20%E6%B6%88%E6%81%AF%E5%8C%85%E6%A0%BC%E5%BC%8F%20-%20%E8%8E%B7%E5%8F%96%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E6%95%B0%E6%8D%AE%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E9%81%BF%E9%9A%9C/assets/csdn-145435339/image-003-c0eb507b93.png" alt="图片"><br><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%20-%20%E6%B6%88%E6%81%AF%E5%8C%85%E6%A0%BC%E5%BC%8F%20-%20%E8%8E%B7%E5%8F%96%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E6%95%B0%E6%8D%AE%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E9%81%BF%E9%9A%9C/assets/csdn-145435339/image-004-adab9572f2.png" alt="图片"></p>
 <pre><code class="language-bash">catkin_create_pkg lidar_pkg roscpp rospy sensor_msgs
 </code></pre>
 <h1 id="激光雷达避障">激光雷达避障</h1>
 <p>收到激光雷达数据时，判断是否有障碍物，并据此旋转</p>
-<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%20-%20%E6%B6%88%E6%81%AF%E5%8C%85%E6%A0%BC%E5%BC%8F%20-%20%E8%8E%B7%E5%8F%96%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E6%95%B0%E6%8D%AE%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E9%81%BF%E9%9A%9C/assets/csdn-145435339/image-005-c1da97ed3c.png" alt="图片">
-在没有收到新的速度消息包时，机器人按上一个消息包指定的速度运动</p>
+<p><img src="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%20-%20%E6%B6%88%E6%81%AF%E5%8C%85%E6%A0%BC%E5%BC%8F%20-%20%E8%8E%B7%E5%8F%96%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E6%95%B0%E6%8D%AE%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E9%81%BF%E9%9A%9C/assets/csdn-145435339/image-005-c1da97ed3c.png" alt="图片"><br>在没有收到新的速度消息包时，机器人按上一个消息包指定的速度运动</p>
 <pre><code class="language-cpp">#include &lt;ros/ros.h&gt;
 #include &lt;sensor_msgs/LaserScan.h&gt;
 #include &lt;geometry_msgs/Twist.h&gt;

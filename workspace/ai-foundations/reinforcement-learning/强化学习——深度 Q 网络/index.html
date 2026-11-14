@@ -19,12 +19,9 @@
     <div class="meta"><time>2025-01-24</time><span class="tag">#强化学习</span><span class="tag">#DQN</span></div>
     <article class="post-body">
 <h1 id="深度-q-网络">深度 Q 网络</h1>
-<p><img src="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C/assets/csdn-145337075/image-001-b5d8ee3fe1.png" alt="图片">
-这种方法很适合网格游戏。因为网格游戏中的每个格子都是一个状态，是离散的，但现实生活中很多状态不是离散的而是连续的。所以我们可以用神经网络来处理离散状态的任务：输入是状态，输出是每个动作对应的 Q 值（也可以理解为概率）。这样，输入就可以是连续的——也就是说状态可以是连续的</p>
-<p>Q learning 和 DQN 之间没有本质区别。DQN 只是用神经网络——也就是一个函数（神经网络）——来代替原来的 Q 表。深度网络 + Q learning = DQN
-<img src="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C/assets/csdn-145337075/image-002-6713cb107d.png" alt="图片"></p>
-<p>这里的 Q 值就是神经网络最后输出的不同动作的概率
-<img src="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C/assets/csdn-145337075/image-003-69c0a117de.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C/assets/csdn-145337075/image-001-b5d8ee3fe1.png" alt="图片"><br>这种方法很适合网格游戏。因为网格游戏中的每个格子都是一个状态，是离散的，但现实生活中很多状态不是离散的而是连续的。所以我们可以用神经网络来处理离散状态的任务：输入是状态，输出是每个动作对应的 Q 值（也可以理解为概率）。这样，输入就可以是连续的——也就是说状态可以是连续的</p>
+<p>Q learning 和 DQN 之间没有本质区别。DQN 只是用神经网络——也就是一个函数（神经网络）——来代替原来的 Q 表。深度网络 + Q learning = DQN<br><img src="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C/assets/csdn-145337075/image-002-6713cb107d.png" alt="图片"></p>
+<p>这里的 Q 值就是神经网络最后输出的不同动作的概率<br><img src="/workspace/ai-foundations/reinforcement-learning/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%B7%B1%E5%BA%A6%20Q%20%E7%BD%91%E7%BB%9C/assets/csdn-145337075/image-003-69c0a117de.png" alt="图片"></p>
 <h1 id="zipbatch-的内部实现">zip(*batch) 的内部实现</h1>
 <p>首先，我们来看 <code>batch</code> 是如何构造的：</p>
 <pre><code class="language-python">batch = sample(history_memory, min(len(history_memory), args.batch_size))

@@ -134,19 +134,13 @@ public:
 </li>
 </ol>
 <h1 id="idabug">idabug</h1>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-001-07b7494e01.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-002-15eb5d01c2.png" alt="图片">
-然后就可以成功反汇编了</p>
-<p><a href="https://hex-rays.com/blog/igors-tip-of-the-week-151-fixing-function-frame-is-wrong/">https://hex-rays.com/blog/igors-tip-of-the-week-151-fixing-function-frame-is-wrong/</a>
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-003-b9aef77ddc.png" alt="图片">
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-004-b350064cd2.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-001-07b7494e01.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-002-15eb5d01c2.png" alt="图片"><br>然后就可以成功反汇编了</p>
+<p><a href="https://hex-rays.com/blog/igors-tip-of-the-week-151-fixing-function-frame-is-wrong/">https://hex-rays.com/blog/igors-tip-of-the-week-151-fixing-function-frame-is-wrong/</a><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-003-b9aef77ddc.png" alt="图片"><br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-004-b350064cd2.png" alt="图片"></p>
 <h1 id="保护检查">保护检查</h1>
 <p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-005-2c0550ec6c.png" alt="图片"></p>
-<p>沙箱禁用了 execve
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-006-3698255af5.png" alt="图片"></p>
+<p>沙箱禁用了 execve<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-006-3698255af5.png" alt="图片"></p>
 <h1 id="寻找虚表">寻找虚表</h1>
-<p>按 alt+t 搜索 vtable 即可
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-007-d39c2cbe5d.png" alt="图片"></p>
+<p>按 alt+t 搜索 vtable 即可<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-007-d39c2cbe5d.png" alt="图片"></p>
 <p> 两个 C++ 类 <code>Class_two</code> 和 <code>Class_one</code> 的虚函数表（vtable）和类型信息（typeinfo）。</p>
 <ul>
 <li><p><code>off_4E0C  </code> 是 <code>Class_two</code> 类的虚函数表</p>
@@ -601,23 +595,14 @@ unsigned int __cdecl show(_DWORD *chunk_c)
 <ol start="2">
 <li><p>因为堆中对象的前四个字节作为虚表的地址，而虚表在 PIE 中，既然我们知道了堆地址，就可以从中泄漏出 PIE 地址</p>
 </li>
-<li><p>修改 ret 地址后，unwind_resume 会跳到该 ret 地址对应函数的 catch 块，然后 _Unwind_RaiseException 最终会把原本存放在 ebp 上方的值赋给 esi（所以可以通过修改 ebp 上方的内容来控制 esi）。再配合覆盖 ebp，当执行到异常处理函数时，被覆盖的 rbp 会被恢复为当前的 rbp，然后跳转到 leave; ret 实现栈迁移
-覆盖后
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-010-9a20efd205.png" alt="图片">
-进入 _Unwind_RaiseException 后，ebp-8 的位置存放着原来的 rbp 值</p>
+<li><p>修改 ret 地址后，unwind_resume 会跳到该 ret 地址对应函数的 catch 块，然后 _Unwind_RaiseException 最终会把原本存放在 ebp 上方的值赋给 esi（所以可以通过修改 ebp 上方的内容来控制 esi）。再配合覆盖 ebp，当执行到异常处理函数时，被覆盖的 rbp 会被恢复为当前的 rbp，然后跳转到 leave; ret 实现栈迁移<br>覆盖后<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-010-9a20efd205.png" alt="图片"><br>进入 _Unwind_RaiseException 后，ebp-8 的位置存放着原来的 rbp 值</p>
 </li>
 </ol>
-<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-011-f64526dd85.png" alt="图片">
-进入 _cxa_begin_catch 之前，esi 被赋值给 ebx
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-012-efdb153faa.png" alt="图片">
-在 _cxa_begin_catch 中，跳转到 ebx+0x1c 处存放的地址，就是这里
-<img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-013-ab1f745f71.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-011-f64526dd85.png" alt="图片"><br>进入 _cxa_begin_catch 之前，esi 被赋值给 ebx<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-012-efdb153faa.png" alt="图片"><br>在 _cxa_begin_catch 中，跳转到 ebx+0x1c 处存放的地址，就是这里<br><img src="/workspace/endpoint-security/ctf-and-pwn/challenge-writeups/NepnepxCATCTF%20Pwn-Chao/assets/csdn-139011778/image-013-ab1f745f71.png" alt="图片"></p>
 <pre><code>但要注意，strcat 之后被覆盖的内容可能会在异常处理函数中被使用；如果粗暴地用 0xffffffff 覆盖，会发生段错误，所以尽量保持与原始数据相同
 </code></pre>
 <ol start="5">
-<li>当输入缓冲区开头有一个 \n 时，gets/fgets 等从输入缓冲区读取的函数不会再读取更多数据（它们会先检查缓冲区，再把 stdin 读入缓冲区）
-使用 <code>std::cin</code> 配合 <code>&gt;&gt;</code> 运算符进行输入时，空白字符（包括空格、制表符、换行符等）默认作为分隔符。这意味着从 <code>std::cin</code> 读取数据到变量时，例如 <code>int a; std::cin &gt;&gt; a;</code>，一旦遇到空格或换行符，<code>cin</code> 就会停止读取，空格之后剩余的输入会留在输入缓冲区中。这对于分隔以空格分隔的输入数据非常有用，例如输入一系列整数或单词时。
- 但要注意，这并不意味着 <code>cin</code> 把空格当作“终止符”并保留它们不读取；相反，它用这些空白字符来决定何时停止当前的数据读取过程。实际上，这些空格及其后面的字符（直到下一个非空白字符或 EOF）仍然留在缓冲区中，等待后续的读取操作或手动清理。</li>
+<li>当输入缓冲区开头有一个 \n 时，gets/fgets 等从输入缓冲区读取的函数不会再读取更多数据（它们会先检查缓冲区，再把 stdin 读入缓冲区）<br>使用 <code>std::cin</code> 配合 <code>&gt;&gt;</code> 运算符进行输入时，空白字符（包括空格、制表符、换行符等）默认作为分隔符。这意味着从 <code>std::cin</code> 读取数据到变量时，例如 <code>int a; std::cin &gt;&gt; a;</code>，一旦遇到空格或换行符，<code>cin</code> 就会停止读取，空格之后剩余的输入会留在输入缓冲区中。这对于分隔以空格分隔的输入数据非常有用，例如输入一系列整数或单词时。<br> 但要注意，这并不意味着 <code>cin</code> 把空格当作“终止符”并保留它们不读取；相反，它用这些空白字符来决定何时停止当前的数据读取过程。实际上，这些空格及其后面的字符（直到下一个非空白字符或 EOF）仍然留在缓冲区中，等待后续的读取操作或手动清理。</li>
 </ol>
 <h1 id="exp-与思路">exp 与思路</h1>
 <p><del>直接把思路和 exp 一起看就行，注释应该还算清楚</del> 参考文章已经写得非常详细了</p>

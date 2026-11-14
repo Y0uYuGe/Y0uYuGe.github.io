@@ -19,12 +19,10 @@
     <div class="meta"><time>2024-01-28</time><span class="tag">#源码调试</span><span class="tag">#CTF</span></div>
     <article class="post-body">
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://xuanxuanblingbling.github.io/ctf/tools/2020/03/20/gdb/">gdb 源码级调试 libc</a>
-<a href="https://blog.csdn.net/gong_xucheng/article/details/23996145">查看是否为 debug 模式编译</a></p>
+<p><a href="https://xuanxuanblingbling.github.io/ctf/tools/2020/03/20/gdb/">gdb 源码级调试 libc</a><br><a href="https://blog.csdn.net/gong_xucheng/article/details/23996145">查看是否为 debug 模式编译</a></p>
 <p><a href="https://blog.csdn.net/lzg_zone/article/details/83541906">使用 gcc 生成动态库及动态库的使用方法</a></p>
 <h1 id="查看源码是否用--g-编译">查看源码是否用 -g 编译</h1>
-<p>用 -g 编译的可执行文件会多出许多以 .debug 开头的节
-不用 -g 编译的则没有</p>
+<p>用 -g 编译的可执行文件会多出许多以 .debug 开头的节<br>不用 -g 编译的则没有</p>
 <p><img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E5%B8%A6%20glibc%20%E6%BA%90%E7%A0%81%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%EF%BC%88%E5%AF%BC%E5%85%A5%20glibc%20%E5%BA%93%EF%BC%8C%E4%BD%BF%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E6%97%B6%E8%83%BD%E7%9C%8B%E5%88%B0%E5%BA%93%E5%87%BD%E6%95%B0%E6%BA%90%E7%A0%81%EF%BC%89/assets/csdn-135890126/image-001-7b8b754f1b.png" alt="图片"></p>
 <h1 id="调试信息与符号表">调试信息与符号表</h1>
 <p>这里的调试信息指 debug_* 相关的信息；符号表指 symtab 和 dynsym。</p>
@@ -56,8 +54,7 @@ strip --strip-all my_program
 <li>查看和操作变量会变得非常困难，尤其是局部变量和静态变量，因为解析它们需要符号表中的数据。</li>
 </ul>
 <h1 id="在-gdb-中加载调试信息">在 gdb 中加载调试信息</h1>
-<p><a href="https://bbs.kanxue.com/thread-254868.htm#msg_header_h1_0">参考链接</a>
-用 GDB 调试时不太容易看到 libc 中的各种结构体，因此需要加载符号表来方便调试。</p>
+<p><a href="https://bbs.kanxue.com/thread-254868.htm#msg_header_h1_0">参考链接</a><br>用 GDB 调试时不太容易看到 libc 中的各种结构体，因此需要加载符号表来方便调试。</p>
 <p>Ubuntu 的软件包维护者在编译相应的 ELF 文件时，会把符号表从 ELF 文件中分离出来，并把符号包命名为 &quot;*-dbg.deb&quot;。这样我们就可以手动下载符号表，方便调试。</p>
 <p>如果使用的是 &quot;glibc all in one&quot; 下载的 libc，libc 的符号表存放在与 libc 库同目录的 &quot;.debug&quot; 文件夹中，gdb 可以自动加载。但遇到 &quot;glibc all in one&quot; 中没有的 libc 版本时，就需要手动下载 debug 文件并手动加载。</p>
 <h2 id="把-debug-文件放入-debug-文件夹">把 debug 文件放入 &quot;.debug&quot; 文件夹</h2>
@@ -89,9 +86,7 @@ export CXX=g++的路径
 </code></pre>
 <h1 id="apt-安装的软件在哪里">apt 安装的软件在哪里</h1>
 <p><a href="https://blog.csdn.net/u013797029/article/details/44492677">参考链接</a></p>
-<p>dpkg -L +软件包名 可以知道该软件包包含哪些文件；这个方法会列出安装后留在系统中的所有文件，可以用来查询已安装的软件包把文件放在了哪里。
-系统安装的软件一般放在 /usr/share，可执行文件放在 /usr/bin，配置文件可能放在 /etc，等等。
-<img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E5%B8%A6%20glibc%20%E6%BA%90%E7%A0%81%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%EF%BC%88%E5%AF%BC%E5%85%A5%20glibc%20%E5%BA%93%EF%BC%8C%E4%BD%BF%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E6%97%B6%E8%83%BD%E7%9C%8B%E5%88%B0%E5%BA%93%E5%87%BD%E6%95%B0%E6%BA%90%E7%A0%81%EF%BC%89/assets/csdn-135890126/image-002-c0d3523c5e.png" alt="图片"></p>
+<p>dpkg -L +软件包名 可以知道该软件包包含哪些文件；这个方法会列出安装后留在系统中的所有文件，可以用来查询已安装的软件包把文件放在了哪里。<br>系统安装的软件一般放在 /usr/share，可执行文件放在 /usr/bin，配置文件可能放在 /etc，等等。<br><img src="/workspace/endpoint-security/debugging-and-setup/gdb/gdb%20%E5%B8%A6%20glibc%20%E6%BA%90%E7%A0%81%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%EF%BC%88%E5%AF%BC%E5%85%A5%20glibc%20%E5%BA%93%EF%BC%8C%E4%BD%BF%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E6%97%B6%E8%83%BD%E7%9C%8B%E5%88%B0%E5%BA%93%E5%87%BD%E6%95%B0%E6%BA%90%E7%A0%81%EF%BC%89/assets/csdn-135890126/image-002-c0d3523c5e.png" alt="图片"></p>
 <p>文档一般放在 /usr/share</p>
 <p>可执行文件：/usr/bin</p>
 <p>配置文件：/etc</p>
@@ -114,8 +109,7 @@ Show the directories GDB searches for separate debugging information files.
 <p>前面提到过，把 debuginfo 文件直接放在 /usr/lib/debug（或用 set-debug-file-directory 命令设置的根目录）下也可以，但目录结构必须与运行时的目录结构一致。需要注意的是，尤其是 .so 文件，在 debug-root-directory 下查找对应的 debuginfo 文件时，路径不一定与文件的实际位置一致——它取决于链接器能找到的路径，即 ldd 显示的路径。gdb 会在 debug-root-directory/$LDD显示的目录 下查找对应的 debuginfo 文件。ldd 显示的路径可能是绝对路径，也可能是相对路径，这取决于操作系统中配置的 .so 搜索路径——例如 LD_LIBRARY_PATH 设置的是相对路径还是绝对路径——相应地，gdb 在 debug-root-directory 下要查找的路径也不同。gdb 会直接把 ldd 显示的路径与 debug-root-directory 拼接起来。例如，如果我当前的 LD_LIBRARY_PATH 是 ./fff，那么 gdb 会在 /usr/lib/debug/./fff 下读取 liba.so 的 debuginfo 文件，因为 ldd 显示的 liba.so 路径是 ./fff/liba.so。</p>
 </blockquote>
 <h1 id="在-gdb-中对-libc-进行源码级调试gdb-搜索源码的路径">在 gdb 中对 libc 进行源码级调试（gdb 搜索源码的路径）</h1>
-<p>用 gcc 编译时，如果加了 -g 选项，二进制文件中就会附带调试信息，gdb 可以进行源码级调试。 <code>如果二进制中存在调试信息，会去相关目录寻找源码，GDB首先在编译时目录中搜索，如果失败则在当前目录中搜索，即$cdir:$cwd，其中$cdir指的是编译时目录（compilation directory），$cwd指的是当前工作目录（current working directory）。</code> 如果找到了源文件，就可以用 gdb 的 list 命令查看源码。
-在 Ubuntu 上安装带调试信息的 libc 并下载 libc 源码后，就可以配置 gdb，单步进入 libc 库函数进行源码级调试</p>
+<p>用 gcc 编译时，如果加了 -g 选项，二进制文件中就会附带调试信息，gdb 可以进行源码级调试。 <code>如果二进制中存在调试信息，会去相关目录寻找源码，GDB首先在编译时目录中搜索，如果失败则在当前目录中搜索，即$cdir:$cwd，其中$cdir指的是编译时目录（compilation directory），$cwd指的是当前工作目录（current working directory）。</code> 如果找到了源文件，就可以用 gdb 的 list 命令查看源码。<br>在 Ubuntu 上安装带调试信息的 libc 并下载 libc 源码后，就可以配置 gdb，单步进入 libc 库函数进行源码级调试</p>
 <blockquote>
 <p>不过，如果 gdb 在默认搜索的目录中找不到源文件，就无法进行源码级调试。如果源码在其他目录，可以在 gdb 中用 directory 或 dir 命令指定，或者在启动 gdb 时用 -d 选项指定——两种方式都能看到源码。</p>
 </blockquote>

@@ -19,37 +19,25 @@
     <div class="meta"><time>2024-04-09</time><span class="tag">#risc-v</span><span class="tag">#操作系统</span></div>
     <article class="post-body">
 <h1 id="控制流">控制流</h1>
-<p>控制流：由程序控制的执行流
-Trap 分为中断（interrupt）和异常（exception）
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-001-870303523d.png" alt="图片"></p>
+<p>控制流：由程序控制的执行流<br>Trap 分为中断（interrupt）和异常（exception）<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-001-870303523d.png" alt="图片"></p>
 <h1 id="mtvec">mtvec</h1>
-<p>base：存放 trap 入口函数的基地址右移两位后的值，即四字节对齐的地址
-WARL：可以写入任意值，但读出的值必须是合法的
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-002-15a0021ef9.png" alt="图片"></p>
+<p>base：存放 trap 入口函数的基地址右移两位后的值，即四字节对齐的地址<br>WARL：可以写入任意值，但读出的值必须是合法的<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-002-15a0021ef9.png" alt="图片"></p>
 <h1 id="mepc">mepc</h1>
-<p>异常执行完毕后，恢复原来的执行流，
-MXLEN：这是 CPU 的处理长度
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-003-e8999270fa.png" alt="图片"></p>
+<p>异常执行完毕后，恢复原来的执行流，<br>MXLEN：这是 CPU 的处理长度<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-003-e8999270fa.png" alt="图片"></p>
 <h1 id="mcause">mcause</h1>
-<p>WLRL：读和写这部分都必须使用合法值
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-004-ec0d1cc97e.png" alt="图片"></p>
+<p>WLRL：读和写这部分都必须使用合法值<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-004-ec0d1cc97e.png" alt="图片"></p>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-005-d3d8082934.png" alt="图片"></p>
 <h1 id="mtval">mtval</h1>
-<p>对 mcause 的补充
-在 RISC-V 架构中，<code>mtval</code> 是 Machine Trap Value 寄存器的缩写；它是 RISC-V 架构定义的一部分，用于异常处理机制。</p>
+<p>对 mcause 的补充<br>在 RISC-V 架构中，<code>mtval</code> 是 Machine Trap Value 寄存器的缩写；它是 RISC-V 架构定义的一部分，用于异常处理机制。</p>
 <p>当发生硬件触发的异常时，例如 load 访问错误、store 访问错误、非法指令等，<code>mtval</code> 寄存器会被设置为相关的错误值。具体来说：</p>
 <ul>
 <li>对于 load 或 AMO（原子操作）访问错误，<code>mtval</code> 保存引发错误的地址。</li>
 <li>对于 store 访问错误，<code>mtval</code> 同样保存所尝试的非法存储操作的地址。</li>
 <li>对于与指令相关的异常（如非法指令），<code>mtval</code> 存放触发异常的指令的地址。</li>
 </ul>
-<p>程序员或操作系统可以通过检查 <code>mtval</code> 寄存器的内容来确定异常的具体原因，这对调试和异常处理程序非常重要。在 RISC-V 架构的特权模式中，不同的异常级别（如 Machine、Supervisor、User 等）都有对应的 trap value 寄存器；例如在 Supervisor 模式下，类似的寄存器可能是 <code>scause</code> 和 <code>sbadaddr</code>。
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-006-e7577f13e0.png" alt="图片"></p>
+<p>程序员或操作系统可以通过检查 <code>mtval</code> 寄存器的内容来确定异常的具体原因，这对调试和异常处理程序非常重要。在 RISC-V 架构的特权模式中，不同的异常级别（如 Machine、Supervisor、User 等）都有对应的 trap value 寄存器；例如在 Supervisor 模式下，类似的寄存器可能是 <code>scause</code> 和 <code>sbadaddr</code>。<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-006-e7577f13e0.png" alt="图片"></p>
 <h1 id="mstatus">mstatus</h1>
-<p>xPIE 保存 trap 执行前当前的 xIE；trap 结束后再恢复回 xIE
-xPP 保存陷入当前特权级 x 之前的特权级值。陷入 M 之前的特权级可以是 M、U 或 S，所以用两位来表示这三种状态。陷入 S 之前的特权级可以是 U 或 S，所以用一位；陷入 U 只能来自 U，所以不需要保存，因为 trap 结束后恢复的和 trap 执行时的一样。
-WPRI：读该寄存器时忽略这部分的值；写该寄存器时保留这部分原来的值（不改变它）
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-007-45515650d2.png" alt="图片"></p>
+<p>xPIE 保存 trap 执行前当前的 xIE；trap 结束后再恢复回 xIE<br>xPP 保存陷入当前特权级 x 之前的特权级值。陷入 M 之前的特权级可以是 M、U 或 S，所以用两位来表示这三种状态。陷入 S 之前的特权级可以是 U 或 S，所以用一位；陷入 U 只能来自 U，所以不需要保存，因为 trap 结束后恢复的和 trap 执行时的一样。<br>WPRI：读该寄存器时忽略这部分的值；写该寄存器时保留这部分原来的值（不改变它）<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-007-45515650d2.png" alt="图片"></p>
 <h1 id="trap-初始化">Trap 初始化</h1>
 <p>把 mtvec 的地址设置为自己的异常处理程序的入口地址</p>
 <p>在 RISC-V 架构中，<code>mtvec</code> 是 Machine Trap Vector Base Address Register（机器模式陷阱向量基地址寄存器）的缩写。该寄存器在 RISC-V 处理器中起着核心作用；它决定了发生硬件异常或中断时，处理器应跳转到哪里执行相应的处理代码。</p>
@@ -70,23 +58,20 @@ WPRI：读该寄存器时忽略这部分的值；写该寄存器时保留这部�
 <li>MIE 复制到 MPIE，MIE 清零</li>
 <li>设置 mepc，并将 pc 设置为 mtvec（异常：异常处理程序结束后需要重新执行出错的指令；中断：中断处理完后执行下一条指令）</li>
 <li>设置 mcause 和 mtval</li>
-<li>设置 MPP，特权级进入 M（无论是什么 trap，都先切换到机器模式）
-. <img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-009-4bb2fb89c9.png" alt="图片"></li>
+<li>设置 MPP，特权级进入 M（无论是什么 trap，都先切换到机器模式）<br>. <img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-009-4bb2fb89c9.png" alt="图片"></li>
 </ol>
 <h1 id="trap-下半部由软件完成">Trap 下半部（由软件完成）</h1>
 <ol>
 <li>切换上下文</li>
 <li>调用相应的处理函数</li>
 <li>恢复上下文</li>
-<li>mret
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-010-2bca62847c.png" alt="图片"></li>
+<li>mret<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-010-2bca62847c.png" alt="图片"></li>
 </ol>
 <h1 id="从-trap-返回">从 Trap 返回</h1>
 <ol>
 <li>恢复特权级</li>
 <li>中断恢复，设置 MPP</li>
-<li>pc 恢复，设置 MPIE
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-011-b3a21c02a6.png" alt="图片"></li>
+<li>pc 恢复，设置 MPIE<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-011-b3a21c02a6.png" alt="图片"></li>
 </ol>
 <h1 id="为什么-mpp-设为-umpie-设为-1">为什么 MPP 设为 U、MPIE 设为 1</h1>
 <p><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%88%E5%8D%81%EF%BC%89%E2%80%94%E2%80%94Trap%20%E4%B8%8E%20Exception%EF%BC%88%E6%8E%A7%E5%88%B6%E6%B5%81%E3%80%81mtvec%E3%80%81me/assets/csdn-137557314/image-012-2d9d95d7ed.png" alt="图片"></p>

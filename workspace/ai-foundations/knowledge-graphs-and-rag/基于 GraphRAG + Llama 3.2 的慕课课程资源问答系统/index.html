@@ -19,10 +19,7 @@
     <div class="meta"><time>2024-12-24</time><span class="tag">#AI</span><span class="tag">#大模型</span><span class="tag">#Agent</span><span class="tag">#GraphRAG</span><span class="tag">#Docker</span></div>
     <article class="post-body">
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://mp.weixin.qq.com/s?__biz=MzI3ODE5Mzc1Ng==&mid=2247491080&idx=1&sn=ba1d09b459cbf39b84e76bf6c09b88c9&chksm=ea0c3d79ef79b3303d3393df1a4fcc05589f67d42187fa36eeee63b6a3db7897fa9b220f8e37&mpshare=1&scene=23&srcid=1011obEfvrBWmGW4T5J66J9v&sharer_shareinfo=0aca140e700de48d925a9ce99d682e62&sharer_shareinfo_first=0aca140e700de48d925a9ce99d682e62#rd">为什么知识图谱 + RAG &gt; 传统 RAG？</a>
-<a href="https://mp.weixin.qq.com/s?__biz=MzI2OTE2NTQzMw==&mid=2650792016&idx=1&sn=368c2385d875eb841a02f0cbae670d8e&chksm=f3dbab9751628ea73b42c3423600848a42cfa9d06826fa6aa575bcc4a59cca273e2aa17ea555&mpshare=1&scene=23&srcid=1016HsdQM2dTRCesrM25r1eR&sharer_shareinfo=6aab980e4cf47949d2440953d7cf17d7&sharer_shareinfo_first=6aab980e4cf47949d2440953d7cf17d7#rd">如何用 LLaMA 3 构建 Agent 应用</a>
-<a href="https://space.bilibili.com/472543316/lists?sid=3378901&spm_id_from=333.788.0.0">合集：大模型科普</a>
-<a href="https://github.com/NanGePlus/GraphragTest">https://github.com/NanGePlus/GraphragTest</a></p>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzI3ODE5Mzc1Ng==&mid=2247491080&idx=1&sn=ba1d09b459cbf39b84e76bf6c09b88c9&chksm=ea0c3d79ef79b3303d3393df1a4fcc05589f67d42187fa36eeee63b6a3db7897fa9b220f8e37&mpshare=1&scene=23&srcid=1011obEfvrBWmGW4T5J66J9v&sharer_shareinfo=0aca140e700de48d925a9ce99d682e62&sharer_shareinfo_first=0aca140e700de48d925a9ce99d682e62#rd">为什么知识图谱 + RAG &gt; 传统 RAG？</a><br><a href="https://mp.weixin.qq.com/s?__biz=MzI2OTE2NTQzMw==&mid=2650792016&idx=1&sn=368c2385d875eb841a02f0cbae670d8e&chksm=f3dbab9751628ea73b42c3423600848a42cfa9d06826fa6aa575bcc4a59cca273e2aa17ea555&mpshare=1&scene=23&srcid=1016HsdQM2dTRCesrM25r1eR&sharer_shareinfo=6aab980e4cf47949d2440953d7cf17d7&sharer_shareinfo_first=6aab980e4cf47949d2440953d7cf17d7#rd">如何用 LLaMA 3 构建 Agent 应用</a><br><a href="https://space.bilibili.com/472543316/lists?sid=3378901&spm_id_from=333.788.0.0">合集：大模型科普</a><br><a href="https://github.com/NanGePlus/GraphragTest">https://github.com/NanGePlus/GraphragTest</a></p>
 <h1 id="代码仓库">代码仓库</h1>
 <p><a href="https://github.com/FULLK/Graphrag_LLama3.2-class-project">https://github.com/FULLK/Graphrag_LLama3.2-class-project</a></p>
 <h1 id="anacondapycharm">anaconda+pycharm</h1>
@@ -43,8 +40,7 @@ docker exec -it ollama   /bin/sh
 <p>用问题在知识库中检索，然后把结果整合进 prompt，交给 LLM 回答。</p>
 <p>适用于微观层面。</p>
 <h1 id="graphrag">GraphRAG</h1>
-<p><a href="https://www.bilibili.com/video/BV12i421Y7wd/?spm_id_from=333.337.search-card.all.click&vd_source=a1be939c65919194c77b8a6a36c14a6e">微软最新的 GraphRAG 和普通 RAG 有什么区别？</a>
-<a href="https://www.graphrag.club/">GraphRAG 中文网站</a></p>
+<p><a href="https://www.bilibili.com/video/BV12i421Y7wd/?spm_id_from=333.337.search-card.all.click&vd_source=a1be939c65919194c77b8a6a36c14a6e">微软最新的 GraphRAG 和普通 RAG 有什么区别？</a><br><a href="https://www.graphrag.club/">GraphRAG 中文网站</a></p>
 <p>用问题从 LLM 构建的知识图谱中检索相关子图来构建 prompt，再交给 LLM 得到答案。</p>
 <p>适用于宏观层面。</p>
 <ul>
@@ -63,15 +59,10 @@ docker exec -it ollama   /bin/sh
 <ul>
 <li>.env 包含运行 GraphRAG 流水线所需的环境变量。查看该文件，会看到只定义了一个环境变量：GRAPHRAG_API_KEY=<API_KEY>。这是 OpenAI API 或 Azure OpenAI 端点的 API 密钥，可以替换成你自己的 API 密钥。</li>
 <li>settings.yaml 包含流水线的设置。可以修改这个文件来改变流水线设置。它设定了提示词调优或生成知识图谱（索引）时使用哪个模型。</li>
-<li>prompts：
-提供初始提示词：
-初始化时，graphrag 工具可能会生成一些初始提示词，引导语言模型为特定领域生成知识图谱。这些提示词通常是通用模板，可以根据实际需要调整和优化。
-支持微调：
-生成的提示词可以作为提示词调优的起点。通过提示词调优，可以进一步优化这些提示词，以更好地提取实体和关系。</li>
+<li>prompts：<br>提供初始提示词：<br>初始化时，graphrag 工具可能会生成一些初始提示词，引导语言模型为特定领域生成知识图谱。这些提示词通常是通用模板，可以根据实际需要调整和优化。<br>支持微调：<br>生成的提示词可以作为提示词调优的起点。通过提示词调优，可以进一步优化这些提示词，以更好地提取实体和关系。</li>
 </ul>
 <h2 id="使用提示词调优创建更适合知识库的知识图谱">使用提示词调优创建更适合知识库的知识图谱</h2>
-<p>自动调优：加载输入，把输入切分成文本块，然后运行一系列 LLM 调用和提示词模板替换，生成最终的提示词模板。
-手动调优：手动调整提示词模板。</p>
+<p>自动调优：加载输入，把输入切分成文本块，然后运行一系列 LLM 调用和提示词模板替换，生成最终的提示词模板。<br>手动调优：手动调整提示词模板。</p>
 <pre><code class="language-cpp">python -m graphrag.prompt_tune --config ./settings.yaml --root ./ --no-entity-types --language Chinese --output ./prompts
 
 具体用法如下：
@@ -119,8 +110,7 @@ python -m graphrag.query \
 将知识图谱中的结构化数据与输入文档中的非结构化数据相结合，生成与特定实体相关的候选问题
 </code></pre>
 <h2 id="加载-csv">加载 CSV</h2>
-<p><a href="https://www.bilibili.com/video/BV1gDv1eFEBr/?spm_id_from=333.337.search-card.all.click&vd_source=a1be939c65919194c77b8a6a36c14a6e">GraphRAG 如何加载 CSV 数据？从源码告诉你如何修改配置文件才能成功加载你的 CSV 数据</a>
-<a href="https://microsoft.github.io/graphrag/config/yaml/">默认配置模式（使用 YAML/JSON）</a></p>
+<p><a href="https://www.bilibili.com/video/BV1gDv1eFEBr/?spm_id_from=333.337.search-card.all.click&vd_source=a1be939c65919194c77b8a6a36c14a6e">GraphRAG 如何加载 CSV 数据？从源码告诉你如何修改配置文件才能成功加载你的 CSV 数据</a><br><a href="https://microsoft.github.io/graphrag/config/yaml/">默认配置模式（使用 YAML/JSON）</a></p>
 <p>修改 <code>settings.yaml</code> 中的 input 部分</p>
 <pre><code class="language-cpp">input:
   type: file # or blob
@@ -139,13 +129,10 @@ python -m graphrag.query \
 <pre><code class="language-bash">python main.py  #启动服务器
 </code></pre>
 <h1 id="把索引导入-neo4j-生成知识图谱">把索引导入 Neo4j 生成知识图谱</h1>
-<p><a href="https://www.bilibili.com/video/BV1prHxe4E9J?vd_source=30acb5331e4f5739ebbad50f7cc6b949&spm_id_from=333.788.videopod.sections">【GraphRAG + 知识图谱可视化】用 Neo4j 可视化知识图谱——基于近两万字文本构建知识图谱，创建基于知识图谱的本地知识库，结合局部搜索与全局搜索</a>
-下载这个插件可以方便地查看 Parquet 文件。</p>
+<p><a href="https://www.bilibili.com/video/BV1prHxe4E9J?vd_source=30acb5331e4f5739ebbad50f7cc6b949&spm_id_from=333.788.videopod.sections">【GraphRAG + 知识图谱可视化】用 Neo4j 可视化知识图谱——基于近两万字文本构建知识图谱，创建基于知识图谱的本地知识库，结合局部搜索与全局搜索</a><br>下载这个插件可以方便地查看 Parquet 文件。</p>
 <p><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/%E5%9F%BA%E4%BA%8E%20GraphRAG%20%2B%20Llama%203.2%20%E7%9A%84%E6%85%95%E8%AF%BE%E8%AF%BE%E7%A8%8B%E8%B5%84%E6%BA%90%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/assets/csdn-143769252/image-004-1df7bb95d1.png" alt="图片"></p>
 <p>把 GRAPHRAG_FOLDER 改为你生成的 artifacts 文件夹。</p>
-<p>使用在线 Neo4j 创建实例。
-<a href="https://console-preview.neo4j.io/tools/query">https://console-preview.neo4j.io/tools/query</a>
-修改密码、账号和实例名。</p>
+<p>使用在线 Neo4j 创建实例。<br><a href="https://console-preview.neo4j.io/tools/query">https://console-preview.neo4j.io/tools/query</a><br>修改密码、账号和实例名。</p>
 <pre><code class="language-python">python3  neo4jTest.py
 </code></pre>
 <p><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/%E5%9F%BA%E4%BA%8E%20GraphRAG%20%2B%20Llama%203.2%20%E7%9A%84%E6%85%95%E8%AF%BE%E8%AF%BE%E7%A8%8B%E8%B5%84%E6%BA%90%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/assets/csdn-143769252/image-005-2bdfbad1c2.png" alt="图片"></p>
@@ -192,8 +179,7 @@ Traceback (most recent call last):
 KeyError: &#39;covariate_type&#39;
 22:51:58,278 graphrag.index.reporting.file_workflow_callbacks INFO Error running pipeline! details=None
 </code></pre>
-<p><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/%E5%9F%BA%E4%BA%8E%20GraphRAG%20%2B%20Llama%203.2%20%E7%9A%84%E6%85%95%E8%AF%BE%E8%AF%BE%E7%A8%8B%E8%B5%84%E6%BA%90%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/assets/csdn-143769252/image-007-9449dc7055.png" alt="图片">
-关掉就行——它默认是关闭的，注释掉即可。</p>
+<p><img src="/workspace/ai-foundations/knowledge-graphs-and-rag/%E5%9F%BA%E4%BA%8E%20GraphRAG%20%2B%20Llama%203.2%20%E7%9A%84%E6%85%95%E8%AF%BE%E8%AF%BE%E7%A8%8B%E8%B5%84%E6%BA%90%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/assets/csdn-143769252/image-007-9449dc7055.png" alt="图片"><br>关掉就行——它默认是关闭的，注释掉即可。</p>
 <p><a href="https://github.com/microsoft/graphrag/issues/455">https://github.com/microsoft/graphrag/issues/455</a></p>
 <pre><code class="language-bash">ValueError: Columns must be same length as key
 </code></pre>

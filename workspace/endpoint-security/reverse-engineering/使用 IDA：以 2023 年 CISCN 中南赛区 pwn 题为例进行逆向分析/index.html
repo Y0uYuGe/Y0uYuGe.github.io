@@ -20,14 +20,8 @@
     <article class="post-body">
 <p><a href="https://www.bilibili.com/video/BV1em4y1P7PM/?spm_id_from=333.337.search-card.all.click&vd_source=a1be939c65919194c77b8a6a36c14a6e">2023 中南赛区 pwn 题逆向参考视频教程</a></p>
 <h1 id="相关字节标识">相关字节标识</h1>
-<p>_WORD（1 word = 2 字节 = 16 位）
-_DWORD（2 word = 4 字节 = 32 位）
-_QWORD（4 word = 8 字节 = 64 位）
-_OWORD（8 word = 16 字节 = 128 位）</p>
-<p>DB（Define Byte）：用于定义单字节（8 位）数据。
-DW（Define Word）：用于定义字（word）大小的数据，通常为 2 字节（16 位）。
-DD（Define Doubleword）：用于定义双字（doubleword）大小的数据，通常为 4 字节（32 位）。
-DQ（Define Quadword）：用于定义四字（quadword）大小的数据，通常为 8 字节（64 位）。</p>
+<p>_WORD（1 word = 2 字节 = 16 位）<br>_DWORD（2 word = 4 字节 = 32 位）<br>_QWORD（4 word = 8 字节 = 64 位）<br>_OWORD（8 word = 16 字节 = 128 位）</p>
+<p>DB（Define Byte）：用于定义单字节（8 位）数据。<br>DW（Define Word）：用于定义字（word）大小的数据，通常为 2 字节（16 位）。<br>DD（Define Doubleword）：用于定义双字（doubleword）大小的数据，通常为 4 字节（32 位）。<br>DQ（Define Quadword）：用于定义四字（quadword）大小的数据，通常为 8 字节（64 位）。</p>
 <h1 id="导入函数与导出函数">导入函数与导出函数</h1>
 <p>在 C 语言中，导入函数和导出函数是实现模块化编程的关键技术；它们用于在不同模块之间共享和使用函数。下面做详细分析：</p>
 <ul>
@@ -39,8 +33,7 @@ DQ（Define Quadword）：用于定义四字（quadword）大小的数据，通�
 </ul>
 <p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-002-795b8dad71.png" alt="图片"></p>
 <h1 id="寻找程序入口函数">寻找程序入口函数</h1>
-<p>先在导出表中找到 start，再在 start 中找到 main
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-003-a3ad2075d7.png" alt="图片"></p>
+<p>先在导出表中找到 start，再在 start 中找到 main<br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-003-a3ad2075d7.png" alt="图片"></p>
 <h1 id="选项设置">选项设置</h1>
 <p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-004-c532ad2252.png" alt="图片"></p>
 <h1 id="重命名">重命名</h1>
@@ -95,16 +88,11 @@ DQ（Define Quadword）：用于定义四字（quadword）大小的数据，通�
 }
 </code></pre>
 <h2 id="打开局部变量类型视图">打开局部变量类型视图</h2>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-006-5a01f147b2.png" alt="图片">
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-007-d8979aa2c7.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-006-5a01f147b2.png" alt="图片"><br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-007-d8979aa2c7.png" alt="图片"></p>
 <h2 id="添加变量类型">添加变量类型</h2>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-008-465c6e91c2.png" alt="图片">
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-009-a438360548.png" alt="图片">
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-010-62fb133b15.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-008-465c6e91c2.png" alt="图片"><br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-009-a438360548.png" alt="图片"><br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-010-62fb133b15.png" alt="图片"></p>
 <h2 id="重新定义变量类型">重新定义变量类型</h2>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-011-ed59c93608.png" alt="图片">
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-012-2558f17db9.png" alt="图片">
-然后代码变成</p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-011-ed59c93608.png" alt="图片"><br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-012-2558f17db9.png" alt="图片"><br>然后代码变成</p>
 <pre><code class="language-c">SomeStruct *sub_141B()
 {
   SomeStruct *v1; // [rsp+8h] [rbp-8h]
@@ -134,9 +122,7 @@ DQ（Define Quadword）：用于定义四字（quadword）大小的数据，通�
 <li>size_t n：要设置的内存块的字节数。</li>
 </ul>
 <h2 id="再次设置变量类型并重新定义">再次设置变量类型并重新定义</h2>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-013-82cb848f9e.png" alt="图片">
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-014-baaa4258c0.png" alt="图片">
-得到的代码</p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-013-82cb848f9e.png" alt="图片"><br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-014-baaa4258c0.png" alt="图片"><br>得到的代码</p>
 <pre><code class="language-c">SomeStruct *sub_141B()
 {
   SomeStruct *v1; // [rsp+8h] [rbp-8h]
@@ -191,8 +177,7 @@ DQ（Define Quadword）：用于定义四字（quadword）大小的数据，通�
 <h1 id="标记分析完成">标记分析完成</h1>
 <p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-018-9169bee20a.png" alt="图片"></p>
 <h1 id="查找所有引用某个函数的位置">查找所有引用某个函数的位置</h1>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-019-0e314a297b.png" alt="图片">
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-020-9408c2effe.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-019-0e314a297b.png" alt="图片"><br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-020-9408c2effe.png" alt="图片"></p>
 <h1 id="重新定义某个变量的类型">重新定义某个变量的类型</h1>
 <p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-021-93233c911f.png" alt="图片"></p>
 <pre><code class="language-c">__int64 __fastcall main(int a1, char **a2, char **a3)
@@ -227,9 +212,7 @@ DQ（Define Quadword）：用于定义四字（quadword）大小的数据，通�
 <p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-022-1b23394130.png" alt="图片"></p>
 <h1 id="格式化字符串-x1b36mmybashs-x1b0m">格式化字符串 &quot;\x1B[36mmybash:%s$ \x1B[0m&quot;</h1>
 <p>字符串 &quot;\x1B[36mmybash:%s$ \x1B[0m&quot; 是一个包含 ANSI 转义序列的字符串，用于在终端中显示带颜色的文本。在这个字符串中：</p>
-<p>\x1B[36m 是一个 ANSI 转义序列，把后面文本的颜色设置为青色。\x1B 是 ESC 字符的十六进制表示，[ 标记转义序列的开始，36 是青色的颜色代码，m 标记这一颜色设置的结束。
-mybash:%s$ 是要显示的实际文本，其中 %s 大概是一个占位符，格式化字符串时会被替换为具体的值。
-\x1B[0m 是另一个 ANSI 转义序列，把文本颜色重置为默认设置。这里的 0 表示默认颜色，m 同样标记这一设置的结束。</p>
+<p>\x1B[36m 是一个 ANSI 转义序列，把后面文本的颜色设置为青色。\x1B 是 ESC 字符的十六进制表示，[ 标记转义序列的开始，36 是青色的颜色代码，m 标记这一颜色设置的结束。<br>mybash:%s$ 是要显示的实际文本，其中 %s 大概是一个占位符，格式化字符串时会被替换为具体的值。<br>\x1B[0m 是另一个 ANSI 转义序列，把文本颜色重置为默认设置。这里的 0 表示默认颜色，m 同样标记这一设置的结束。</p>
 <h3 id="sub_25d5">sub_25D5()</h3>
 <pre><code class="language-c">_BYTE *sub_25D5()
 {
@@ -334,8 +317,7 @@ mybash:%s$ 是要显示的实际文本，其中 %s 大概是一个占位符，�
 }
 </code></pre>
 <h1 id="整理-sub_247fchar-a1-函数">整理 sub_247F(char *a1) 函数</h1>
-<p>这里 i 是一个地址，所以 ptr 应该是一个二级指针。
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-024-29df2df041.png" alt="图片"></p>
+<p>这里 i 是一个地址，所以 ptr 应该是一个二级指针。<br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-024-29df2df041.png" alt="图片"></p>
 <pre><code class="language-c">char **__fastcall split_string(char *content_line)
 {
   int high; // [rsp+10h] [rbp-20h]
@@ -416,9 +398,7 @@ mybash:%s$ 是要显示的实际文本，其中 %s 大概是一个占位符，�
 }
 </code></pre>
 <h1 id="用-h-改变数据格式">用 h 改变数据格式</h1>
-<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-026-1cb242bff9.png" alt="图片">
-对应的字符串
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-027-440cd7181d.png" alt="图片"></p>
+<p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-026-1cb242bff9.png" alt="图片"><br>对应的字符串<br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-027-440cd7181d.png" alt="图片"></p>
 <h1 id="重命名每个函数">重命名每个函数</h1>
 <p><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-028-e73cd85747.png" alt="图片"></p>
 <h3 id="__int64-__fastcall-command_touch__int64-a1">__int64 __fastcall command_touch(__int64 a1)</h3>
@@ -559,13 +539,7 @@ mybash:%s$ 是要显示的实际文本，其中 %s 大概是一个占位符，�
 }
 </code></pre>
 <h1 id="此时发现-void-sub_13c8-函数再次跳转">此时发现 void sub_13C8() 函数再次跳转</h1>
-<p>Tab 键：反编译
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-029-9b231f67c5.png" alt="图片">
-首先
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-030-51adf8070a.png" alt="图片">
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-031-b060d56273.png" alt="图片">
-<img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-032-cb8db815f9.png" alt="图片">
-最终得到的原始 void sub_13C8() 函数</p>
+<p>Tab 键：反编译<br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-029-9b231f67c5.png" alt="图片"><br>首先<br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-030-51adf8070a.png" alt="图片"><br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-031-b060d56273.png" alt="图片"><br><img src="/workspace/endpoint-security/reverse-engineering/%E4%BD%BF%E7%94%A8%20IDA%EF%BC%9A%E4%BB%A5%202023%20%E5%B9%B4%20CISCN%20%E4%B8%AD%E5%8D%97%E8%B5%9B%E5%8C%BA%20pwn%20%E9%A2%98%E4%B8%BA%E4%BE%8B%E8%BF%9B%E8%A1%8C%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/assets/csdn-136094431/image-032-cb8db815f9.png" alt="图片"><br>最终得到的原始 void sub_13C8() 函数</p>
 <pre><code class="language-c">__int64 __fastcall sub_13C9(__int64 a1, const char *a2)
 {
   while ( a1 )

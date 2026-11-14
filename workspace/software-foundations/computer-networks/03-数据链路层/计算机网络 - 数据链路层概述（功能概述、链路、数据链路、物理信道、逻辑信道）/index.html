@@ -29,18 +29,13 @@
 </ul>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-001-75daafd99d.png" alt="图片"></p>
 <h1 id="数据链路层的研究思路">数据链路层的研究思路</h1>
-<p>即接收端先解封装，再重新封装，然后把数据发送出去。
-因此，不同结点在同一水平层上的数据内容是相同的。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-002-b891491f68.png" alt="图片"></p>
+<p>即接收端先解封装，再重新封装，然后把数据发送出去。<br>因此，不同结点在同一水平层上的数据内容是相同的。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-002-b891491f68.png" alt="图片"></p>
 <h1 id="数据链路层的基本概念">数据链路层的基本概念</h1>
 <p>物理信道通过传输介质进行传输，可以是无线的，也可以是有线的。</p>
-<p>数据链路则是在通过传输介质传输的基础上，还规定了一些规则。
-<img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-003-bde705ae61.png" alt="图片"></p>
+<p>数据链路则是在通过传输介质传输的基础上，还规定了一些规则。<br><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-003-bde705ae61.png" alt="图片"></p>
 <h1 id="数据链路层的功能概述">数据链路层的功能概述</h1>
 <p>最基本的服务是让物理层传输得更准确，使到达网络层的内容没有差错。</p>
-<p>无确认的无连接服务：通常用于实时通信或误码率较低的信道。
-有确认的无连接服务：不建立连接，但收到后必须回复确认，否则数据会被重传。
-有确认的面向连接服务：建立连接，收到后必须回复确认，否则数据会被重传。</p>
+<p>无确认的无连接服务：通常用于实时通信或误码率较低的信道。<br>有确认的无连接服务：不建立连接，但收到后必须回复确认，否则数据会被重传。<br>有确认的面向连接服务：建立连接，收到后必须回复确认，否则数据会被重传。</p>
 <p><img src="/workspace/software-foundations/computer-networks/03-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%E6%A6%82%E8%BF%B0%EF%BC%88%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0%E3%80%81%E9%93%BE%E8%B7%AF%E3%80%81%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E3%80%81%E7%89%A9%E7%90%86%E4%BF%A1%E9%81%93%E3%80%81%E9%80%BB%E8%BE%91%E4%BF%A1%E9%81%93%EF%BC%89/assets/csdn-135964677/image-004-20dfe98e03.png" alt="图片"></p>
 
     </article>

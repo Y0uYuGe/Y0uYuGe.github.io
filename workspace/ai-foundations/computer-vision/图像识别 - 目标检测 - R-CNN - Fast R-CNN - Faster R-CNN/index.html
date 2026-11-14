@@ -19,8 +19,7 @@
     <div class="meta"><time>2025-01-13</time><span class="tag">#目标检测</span><span class="tag">#R语言</span><span class="tag">#cnn</span><span class="tag">#YOLO</span></div>
     <article class="post-body">
 <h1 id="目标检测">目标检测</h1>
-<p>找出图像中的物体，用矩形框标出，并给出类别和相应的概率。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-001-d9475b216f.png" alt="图片"></p>
+<p>找出图像中的物体，用矩形框标出，并给出类别和相应的概率。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-001-d9475b216f.png" alt="图片"></p>
 <h2 id="早期目标检测流程">早期目标检测流程</h2>
 <p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-002-4bd1493e6e.png" alt="图片"></p>
 <hr>
@@ -147,54 +146,28 @@
 </ol>
 <hr>
 <h1 id="fast-r-cnn">Fast R-CNN</h1>
-<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-004-114e3437a7.png" alt="图片">
-在最后端，用 Softmax 分类器取代了 SVM。
-它采用了 SPP-net 的做法：把整张图像送入 ConvNet，然后从特征图中映射出 proposals 对应的位置。
-它借鉴了 SPP-net，只不过 RoI Pooling 层是 SPP 层的一个特例。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-005-5441a8ab7e.png" alt="图片">
-虽然它仍然是两阶段框架，
-但在反向传播时整个网络可以一个阶段完成训练。
-但要注意，提出候选框的算法仍然是 Selective Search，它基于原图提取 proposals，是不可训练的。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-006-27f1455d30.png" alt="图片">
-多任务损失：使用多任务损失函数，包括分类损失（Log loss）和回归损失（Smooth L1 loss）。</p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-004-114e3437a7.png" alt="图片"><br>在最后端，用 Softmax 分类器取代了 SVM。<br>它采用了 SPP-net 的做法：把整张图像送入 ConvNet，然后从特征图中映射出 proposals 对应的位置。<br>它借鉴了 SPP-net，只不过 RoI Pooling 层是 SPP 层的一个特例。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-005-5441a8ab7e.png" alt="图片"><br>虽然它仍然是两阶段框架，<br>但在反向传播时整个网络可以一个阶段完成训练。<br>但要注意，提出候选框的算法仍然是 Selective Search，它基于原图提取 proposals，是不可训练的。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-006-27f1455d30.png" alt="图片"><br>多任务损失：使用多任务损失函数，包括分类损失（Log loss）和回归损失（Smooth L1 loss）。</p>
 <ul>
 <li>Log loss（分类损失）：</li>
 </ul>
-<p>用于分类任务，衡量模型对目标类别预测的误差。
-例如，如果某个候选框的标签是“猫”，但模型预测为“狗”，就会产生分类损失。</p>
+<p>用于分类任务，衡量模型对目标类别预测的误差。<br>例如，如果某个候选框的标签是“猫”，但模型预测为“狗”，就会产生分类损失。</p>
 <ul>
 <li>Smooth L1 loss（边界框回归损失）：</li>
 </ul>
-<p>用于回归任务，衡量预测边界框与真实边界框之间的误差。
-使用 Smooth L1 函数而不是普通的 L2 损失，是为了降低对离群值的敏感度。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-007-9fe2058e9c.png" alt="图片"></p>
+<p>用于回归任务，衡量预测边界框与真实边界框之间的误差。<br>使用 Smooth L1 函数而不是普通的 L2 损失，是为了降低对离群值的敏感度。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-007-9fe2058e9c.png" alt="图片"></p>
 <h2 id="spp-net空间金字塔池化网络">SPP-net（空间金字塔池化网络）</h2>
 <p>SPP-net 是一种用于图像分类和目标检测的深度学习网络，由何恺明等人于 2014 年提出。它的核心是引入了 SPP 层（Spatial Pyramid Pooling Layer，空间金字塔池化层），解决了传统 CNN 模型对输入图像尺寸固定的要求。</p>
 <p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-008-23ee4a8e89.png" alt="图片"></p>
 <h1 id="faster-r-cnn">Faster R-CNN</h1>
 <p>最重要的是引入了 RPN 网络，取代 SS 来提取候选框！！！（SS 即 Selective Search）</p>
 <p>原来是一开始就用原图来寻找候选框；现在是图像先经过 CNN 得到特征图，再经过 RPN 得到候选框（proposals）。</p>
-<p>共有四个损失函数。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-009-d09488f6d5.png" alt="图片">
-选择性搜索方法速度很慢；取代 SS 之后，速度提高到 1/0.2 = 5 FPS（每秒帧数）。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-010-3c4507d6ee.png" alt="图片"></p>
+<p>共有四个损失函数。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-009-d09488f6d5.png" alt="图片"><br>选择性搜索方法速度很慢；取代 SS 之后，速度提高到 1/0.2 = 5 FPS（每秒帧数）。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-010-3c4507d6ee.png" alt="图片"></p>
 <h1 id="yoloyou-only-look-once">YOLO（You Only Look Once）</h1>
-<p>把目标检测任务当作一个简单的回归问题。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-011-c6b349be96.png" alt="图片">
-分类器输出类别概率，回归器输出候选框。</p>
-<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-012-b7713d8376.png" alt="图片">
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-013-d6ae20f8d3.png" alt="图片">
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-014-9dcc5a7027.png" alt="图片"></p>
+<p>把目标检测任务当作一个简单的回归问题。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-011-c6b349be96.png" alt="图片"><br>分类器输出类别概率，回归器输出候选框。</p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-012-b7713d8376.png" alt="图片"><br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-013-d6ae20f8d3.png" alt="图片"><br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-014-9dcc5a7027.png" alt="图片"></p>
 <h1 id="yolo-的统一模型">YOLO 的统一模型</h1>
-<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-015-b3cb5bb9b8.png" alt="图片">
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-016-fb020ca247.png" alt="图片">
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-017-03920843ac.png" alt="图片">
-YOLO 把输入图像看作由网格单元组成。例如在上图中，人（蓝色框）的中心落在黄色网格单元内，因此由黄色网格单元负责预测这个人。
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-018-d21cf6cca3.png" alt="图片">
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-019-46c05e6c92.png" alt="图片"></p>
-<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-020-31c5f574b2.png" alt="图片">
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-021-25431ee2d5.png" alt="图片">
-<img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-022-ebb2b80c99.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-015-b3cb5bb9b8.png" alt="图片"><br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-016-fb020ca247.png" alt="图片"><br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-017-03920843ac.png" alt="图片"><br>YOLO 把输入图像看作由网格单元组成。例如在上图中，人（蓝色框）的中心落在黄色网格单元内，因此由黄色网格单元负责预测这个人。<br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-018-d21cf6cca3.png" alt="图片"><br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-019-46c05e6c92.png" alt="图片"></p>
+<p><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-020-31c5f574b2.png" alt="图片"><br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-021-25431ee2d5.png" alt="图片"><br><img src="/workspace/ai-foundations/computer-vision/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB%20-%20%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%20-%20R-CNN%20-%20Fast%20R-CNN%20-%20Faster%20R-CNN/assets/csdn-145077740/image-022-ebb2b80c99.png" alt="图片"></p>
 
     </article>
     

@@ -20,11 +20,7 @@
     <article class="post-body">
 <h1 id="参考资料">参考资料</h1>
 <p><a href="https://a1ex.online/2021/05/28/2018-RealWorld-Station-Escape/">2018-RealWorld-Station-Escape</a></p>
-<p><a href="https://www.anquanke.com/post/id/86483">技术分享：亲手实践 VMware 虚拟机逃逸漏洞</a>
-<a href="https://blog.csdn.net/qq_45323960/article/details/131275005">VMware 逃逸基础</a>
-<a href="https://xz.aliyun.com/t/7345?time__1311=n4%2bxnD0GDtYmwwDUx05%2btoLPAKpe7Ko5DOeD&alichlgref=https://www.google.com.hk/">从零到一的虚拟机逃逸三部曲</a>
-<a href="https://forum.butian.net/share/1666">虚拟机逃逸入门（上）</a>
-<a href="https://zhuanlan.zhihu.com/p/52140921">RealWorldCTF2018 Station Escape</a></p>
+<p><a href="https://www.anquanke.com/post/id/86483">技术分享：亲手实践 VMware 虚拟机逃逸漏洞</a><br><a href="https://blog.csdn.net/qq_45323960/article/details/131275005">VMware 逃逸基础</a><br><a href="https://xz.aliyun.com/t/7345?time__1311=n4%2bxnD0GDtYmwwDUx05%2btoLPAKpe7Ko5DOeD&alichlgref=https://www.google.com.hk/">从零到一的虚拟机逃逸三部曲</a><br><a href="https://forum.butian.net/share/1666">虚拟机逃逸入门（上）</a><br><a href="https://zhuanlan.zhihu.com/p/52140921">RealWorldCTF2018 Station Escape</a></p>
 <p><a href="https://blog.csdn.net/qq_45323960/article/details/131275005?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522172126252116800180693225%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=172126252116800180693225&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-1-131275005-null-null.nonecase&utm_term=VMM&spm=1018.2226.3001.4450">VMware 逃逸基础</a></p>
 <h1 id="vmware-逃逸简介">VMware 逃逸简介</h1>
 <ol>
@@ -33,8 +29,7 @@
 <li>利用 Hypervisor 的漏洞，使其执行特权指令后不返回指令状态，从而在指令执行完后仍停留在内核态</li>
 <li>提权成功后，就可以穿透 Hypervisor 及虚拟机的其他区域，打破虚拟化隔离机制，完成逃逸。</li>
 </ol>
-<p>（也就是说，虚拟机执行某些操作时，会向宿主机的 vmx 发送请求，由 vmx 处理这些请求；利用 vmx 中的漏洞实现提权。）
-<img src="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139836466/image-001-4f38aa1a6e.png" alt="图片"></p>
+<p>（也就是说，虚拟机执行某些操作时，会向宿主机的 vmx 发送请求，由 vmx 处理这些请求；利用 vmx 中的漏洞实现提权。）<br><img src="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139836466/image-001-4f38aa1a6e.png" alt="图片"></p>
 <p>例如，假设发现 Hypervisor 中存在漏洞，可以利用它阻止特权指令执行后的正常状态切换。</p>
 <ol>
 <li>正常情况：</li>
@@ -200,14 +195,11 @@ Backdoor_InOut(Backdoor_proto *myBp) // IN/OUT
 </code></pre>
 <p>工作原理：</p>
 <ol>
-<li><p>使用特殊的 I/O 指令：
-VMware 会拦截特定的 I/O 指令（本例中是 &#39;in&#39; 指令），并将其解释为 backdoor 调用。</p>
+<li><p>使用特殊的 I/O 指令：<br>VMware 会拦截特定的 I/O 指令（本例中是 &#39;in&#39; 指令），并将其解释为 backdoor 调用。</p>
 </li>
-<li><p>魔数和命令：
-使用预定义魔数（BDOOR_MAGIC）及命令码，指定操作类型。</p>
+<li><p>魔数和命令：<br>使用预定义魔数（BDOOR_MAGIC）及命令码，指定操作类型。</p>
 </li>
-<li><p>通过寄存器传递参数：
-通过特定寄存器传入参数并接收结果。</p>
+<li><p>通过寄存器传递参数：<br>通过特定寄存器传入参数并接收结果。</p>
 </li>
 </ol>
 <pre><code class="language-c">unsigned __declspec(naked) GetMousePos()
@@ -496,10 +488,8 @@ VMware 会拦截特定的 I/O 指令（本例中是 &#39;in&#39; 指令），并
 </ul>
 <h2 id="guestrpc">GuestRPC</h2>
 <p>在 backdoor 和 Message_Send/Receive 之上实现的一种更灵活的通信方式。</p>
-<p>Backdoor -&gt; Message_Send/Receive -&gt; GuestRPC
-每一层都建立在其下层之上，提供更高层的抽象与功能。</p>
-<p>执行 GuestRPC 调用时，数据流通常为：
-GuestRPC 命令 -&gt; Message_Send 处理 -&gt; Backdoor，例如 RpcOut_start-&gt;Message_OpenAllocated-&gt;Backdoor。</p>
+<p>Backdoor -&gt; Message_Send/Receive -&gt; GuestRPC<br>每一层都建立在其下层之上，提供更高层的抽象与功能。</p>
+<p>执行 GuestRPC 调用时，数据流通常为：<br>GuestRPC 命令 -&gt; Message_Send 处理 -&gt; Backdoor，例如 RpcOut_start-&gt;Message_OpenAllocated-&gt;Backdoor。</p>
 <p>执行一次 GuestRPC 调用包含一系列请求：</p>
 <ul>
 <li>打开 GuestRPC 通道</li>
@@ -510,8 +500,7 @@ GuestRPC 命令 -&gt; Message_Send 处理 -&gt; Backdoor，例如 RpcOut_start-&
 <li>发送接收结束信号</li>
 <li>关闭 GuestRPC 通道</li>
 </ul>
-<p>每个请求的处理流程如下：
-<img src="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139836466/image-002-e91472cdb9.png" alt="图片"></p>
+<p>每个请求的处理流程如下：<br><img src="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139836466/image-002-e91472cdb9.png" alt="图片"></p>
 <pre><code class="language-c">/open-vm-tools/lib/rpcOut/rpcout.c
 
 /open-vm-tools/lib/include/rpcout.h
@@ -552,17 +541,13 @@ Bool RpcOut_SendOneRawPreallocated(void *request, size_t reqLen, char *reply,
 </code></pre>
 <p>这段代码定义了 RpcOut 模块的接口，用于从虚拟机内部向 VMware 虚拟化层发送 RPC（远程过程调用）请求。</p>
 <ol>
-<li><p>通信机制：
-RpcOut 提供一种机制，让虚拟机内部的程序能够与 VMware 虚拟化层通信。</p>
+<li><p>通信机制：<br>RpcOut 提供一种机制，让虚拟机内部的程序能够与 VMware 虚拟化层通信。</p>
 </li>
-<li><p>发送请求：
-虚拟机可通过该接口向 VMware 发送各种请求，例如获取信息、执行操作等。</p>
+<li><p>发送请求：<br>虚拟机可通过该接口向 VMware 发送各种请求，例如获取信息、执行操作等。</p>
 </li>
-<li><p>接收响应：
-RpcOut 不仅能发送请求，还能接收 VMware 的响应。</p>
+<li><p>接收响应：<br>RpcOut 不仅能发送请求，还能接收 VMware 的响应。</p>
 </li>
-<li><p>灵活性：
-提供多种构造和发送 RPC 请求的方法，适应不同的使用场景。</p>
+<li><p>灵活性：<br>提供多种构造和发送 RPC 请求的方法，适应不同的使用场景。</p>
 </li>
 <li><p>主要函数：</p>
 <ul>
@@ -571,11 +556,9 @@ RpcOut 不仅能发送请求，还能接收 VMware 的响应。</p>
 <li>RpcOut_SendOneRawPreallocated：允许调用者提供接收缓冲区，避免在内部调用 malloc。</li>
 </ul>
 </li>
-<li><p>生命周期管理：
-提供构造函数（RpcOut_Construct）和析构函数（RpcOut_Destruct），管理 RpcOut 对象的生命周期。</p>
+<li><p>生命周期管理：<br>提供构造函数（RpcOut_Construct）和析构函数（RpcOut_Destruct），管理 RpcOut 对象的生命周期。</p>
 </li>
-<li><p>会话控制：
-包含 RpcOut_start 和 RpcOut_stop 方法，用于开始和结束 RPC 会话。</p>
+<li><p>会话控制：<br>包含 RpcOut_start 和 RpcOut_stop 方法，用于开始和结束 RPC 会话。</p>
 </li>
 </ol>
 <pre><code class="language-c">/open-vm-tools/lib/include/rpin.h
@@ -633,41 +616,29 @@ void RpcIn_stop(RpcIn *in);
 </code></pre>
 <p>RpcIn 模块的主要用途，是处理从 VMware 虚拟化层发往虚拟机内部的 RPC（远程过程调用）请求。RpcIn 为虚拟机内部程序提供框架，使其能够接收并处理 VMware 虚拟化层发来的 RPC 请求。</p>
 <ol>
-<li><p>接收请求：
-RpcIn 允许虚拟机内部的程序接收来自 VMware 虚拟化层的 RPC 请求。</p>
+<li><p>接收请求：<br>RpcIn 允许虚拟机内部的程序接收来自 VMware 虚拟化层的 RPC 请求。</p>
 </li>
-<li><p>回调机制：
-提供注册回调函数（RpcIn_RegisterCallback）的机制，处理特定类型的 RPC 请求。</p>
+<li><p>回调机制：<br>提供注册回调函数（RpcIn_RegisterCallback）的机制，处理特定类型的 RPC 请求。</p>
 </li>
-<li><p>事件驱动：
-使用事件队列（DblLnkLst_Links *eventQueue）处理异步 RPC 请求。</p>
+<li><p>事件驱动：<br>使用事件队列（DblLnkLst_Links *eventQueue）处理异步 RPC 请求。</p>
 </li>
-<li><p>生命周期管理：
-提供构造函数（RpcIn_Construct）和析构函数（RpcIn_Destruct），管理 RpcIn 对象的生命周期。</p>
+<li><p>生命周期管理：<br>提供构造函数（RpcIn_Construct）和析构函数（RpcIn_Destruct），管理 RpcIn 对象的生命周期。</p>
 </li>
-<li><p>启动和停止：
-包含 RpcIn_start 和 RpcIn_stop 方法，用于启动和停止 RPC 监听。</p>
+<li><p>启动和停止：<br>包含 RpcIn_start 和 RpcIn_stop 方法，用于启动和停止 RPC 监听。</p>
 </li>
-<li><p>错误处理：
-支持错误处理函数（RpcIn_ErrorFunc）和清除错误函数（RpcIn_ClearErrorFunc）。</p>
+<li><p>错误处理：<br>支持错误处理函数（RpcIn_ErrorFunc）和清除错误函数（RpcIn_ClearErrorFunc）。</p>
 </li>
-<li><p>灵活性：
-允许设置延迟（delay）和重置回调（resetCallback），适应不同使用场景。</p>
+<li><p>灵活性：<br>允许设置延迟（delay）和重置回调（resetCallback），适应不同使用场景。</p>
 </li>
-<li><p>设置响应：
-提供 RpcIn_SetRetVals 函数，用于设置 RPC 调用的返回值。</p>
+<li><p>设置响应：<br>提供 RpcIn_SetRetVals 函数，用于设置 RPC 调用的返回值。</p>
 </li>
-<li><p>向后兼容：
-保留部分旧接口（如旧版 RpcIn_RegisterCallback），以维持向后兼容性。</p>
+<li><p>向后兼容：<br>保留部分旧接口（如旧版 RpcIn_RegisterCallback），以维持向后兼容性。</p>
 </li>
-<li><p>多平台支持：
-通过条件编译（#ifdef __cplusplus），同时支持 C 和 C++ 环境。</p>
+<li><p>多平台支持：<br>通过条件编译（#ifdef __cplusplus），同时支持 C 和 C++ 环境。</p>
 </li>
-<li><p>自定义处理：
-允许注册自定义回调函数，处理特定名称的 RPC 请求。</p>
+<li><p>自定义处理：<br>允许注册自定义回调函数，处理特定名称的 RPC 请求。</p>
 </li>
-<li><p>动态注册和注销：
-提供注册（RpcIn_RegisterCallback）和注销（RpcIn_UnregisterCallback）回调的方法，允许动态添加或删除 RPC 处理函数。</p>
+<li><p>动态注册和注销：<br>提供注册（RpcIn_RegisterCallback）和注销（RpcIn_UnregisterCallback）回调的方法，允许动态添加或删除 RPC 处理函数。</p>
 </li>
 </ol>
 <h3 id="示例rpcoutsendonerawwork">示例：<code>RpcOutSendOneRawWork</code></h3>
@@ -781,16 +752,13 @@ RpcOutSendOneRawWork(void *request,         // IN: RPCI command
 <p>这一过程体现在 RpcOutSendOneRawWork 函数中。该函数将一段原始数据打包为消息，再通过 VMware 的 RPC 协议发送给另一个虚拟机或宿主机。它主要调用三个函数：</p>
 <ul>
 <li>RpcOut_startWithReceiveBuffer：最终调用 Message_OpenAllocated，执行 MESSAGE_TYPE_OPEN 流程。</li>
-<li>RpcOut_send：最终调用 Message_Send 和 Message_Receive 两个函数。
-Message_Send：先执行 MESSAGE_TYPE_SENDSIZE 流程，发送消息长度，再循环执行 MESSAGE_TYPE_SENDPAYLOAD 流程，直到整条消息发送完毕。
-Message_Receive：先执行 MESSAGE_TYPE_RECVSIZE 流程，取得待接收消息的长度，再循环执行 MESSAGE_TYPE_RECVPAYLOAD 流程，直到整条消息接收完毕。</li>
+<li>RpcOut_send：最终调用 Message_Send 和 Message_Receive 两个函数。<br>Message_Send：先执行 MESSAGE_TYPE_SENDSIZE 流程，发送消息长度，再循环执行 MESSAGE_TYPE_SENDPAYLOAD 流程，直到整条消息发送完毕。<br>Message_Receive：先执行 MESSAGE_TYPE_RECVSIZE 流程，取得待接收消息的长度，再循环执行 MESSAGE_TYPE_RECVPAYLOAD 流程，直到整条消息接收完毕。</li>
 <li>RpcOut_stop：最终调用 Message_CloseAllocated，执行 MESSAGE_TYPE_CLOSE 流程。</li>
 </ul>
 <h3 id="示例-vmware-rpctool-info-get-guestinfoip">示例：  <code>vmware-rpctool &#39;info-get guestinfo.ip&#39;</code></h3>
 <p><img src="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139836466/image-003-0257118fc1.png" alt="图片"></p>
 <ol>
-<li><p>用户输入：
-用户在虚拟机中执行 <code>vmware-rpctool &#39;info-get guestinfo.ip&#39;</code>。</p>
+<li><p>用户输入：<br>用户在虚拟机中执行 <code>vmware-rpctool &#39;info-get guestinfo.ip&#39;</code>。</p>
 </li>
 <li><p>vmware-rpctool 处理：</p>
 <ul>
@@ -941,8 +909,7 @@ EDX(LO) = 5658h - port number
 }
 </code></pre>
 <h4 id="发送-rpc-命令数据">发送 RPC 命令数据</h4>
-<p>RPC 子命令：02h
-调用：</p>
+<p>RPC 子命令：02h<br>调用：</p>
 <pre><code class="language-bash">EAX = 564D5868h - magic number
 EBX = 4 bytes from the command data (the first byte in LSB)
 ECX(HI) = 0002h - subcommand number
@@ -1078,8 +1045,7 @@ EDX(LO) = 5658h - port number
 }
 </code></pre>
 <h4 id="关闭-rpc-通道">关闭 RPC 通道</h4>
-<p>RPC 子命令：06h
-调用：</p>
+<p>RPC 子命令：06h<br>调用：</p>
 <pre><code class="language-bash">
 EAX = 564D5868h - magic number
 ECX(HI) = 0006h - subcommand number
@@ -1110,8 +1076,7 @@ EDX(LO) = 5658h - port number
 <p>VMWareRPCChannel 和 BufferedRPCChannel 是 VMware 用来实现虚拟机与宿主机通信的类，用于管理和优化远程过程调用（RPC）的数据传输，是对前面一系列机制的封装。</p>
 <p>BufferedRPCChannel 是在 VMWareRPCChannel 基础上实现的增强类，主要增加缓冲机制，以优化数据传输。</p>
 <h1 id="环境搭建">环境搭建</h1>
-<p><a href="https://github.com/201853910/VMwareWorkstation/releases">VMware 安装脚本</a>
-题目通常会提供 VMware 版本和打过补丁的 vmware-vmx 二进制文件，需要找到对应 VMware 版本的安装脚本。找到相应的 Linux 安装脚本即可，只要能让 vmware-vmx 运行起来就行。如果无法安装，也可以下载下面的驱动项目，再手动编译安装。</p>
+<p><a href="https://github.com/201853910/VMwareWorkstation/releases">VMware 安装脚本</a><br>题目通常会提供 VMware 版本和打过补丁的 vmware-vmx 二进制文件，需要找到对应 VMware 版本的安装脚本。找到相应的 Linux 安装脚本即可，只要能让 vmware-vmx 运行起来就行。如果无法安装，也可以下载下面的驱动项目，再手动编译安装。</p>
 <pre><code class="language-bash">git clone https://github.com/mkubecek/vmware-host-modules.git
 
 cd vmware-host-modules
@@ -1156,12 +1121,7 @@ sudo insmod vmnet.o
 <blockquote>
 <p>另外，最好点击应用程序列表中的 VMware 图标启动虚拟机，而不要运行下面的命令启动。因为直接执行命令会启动 VMware 用户进程，跳过驱动安装步骤；点击 VMware 图标则会执行完整的 VMware 启动脚本。</p>
 </blockquote>
-<p>安装虚拟机
-在新安装的 VMware 中安装 Ubuntu 18.04.1。
-<img src="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139836466/image-004-3120751c0d.png" alt="图片">
-<del>启动慢得离谱，电脑实在太差了</del> 
-<img src="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139836466/image-005-3fa2a7c0cc.png" alt="图片">
-成功了，终于松了口气。</p>
+<p>安装虚拟机<br>在新安装的 VMware 中安装 Ubuntu 18.04.1。<br><img src="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139836466/image-004-3120751c0d.png" alt="图片"><br><del>启动慢得离谱，电脑实在太差了</del><br><img src="/workspace/endpoint-security/virtualization-security/VMware/CTF%20Pwn%20%E8%99%9A%E6%8B%9F%E5%8C%96%EF%BC%9AVMware%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/csdn-139836466/image-005-3fa2a7c0cc.png" alt="图片"><br>成功了，终于松了口气。</p>
 <h1 id="调试">调试</h1>
 <ul>
 <li>在宿主机上使用 sudo gdb ./vmware-vmx_patched -q 启动 gdb。</li>

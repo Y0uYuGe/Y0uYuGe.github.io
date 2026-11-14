@@ -19,12 +19,10 @@
     <div class="meta"><time>2024-08-26</time><span class="tag">#python</span><span class="tag">#pycharm</span><span class="tag">#Programming Languages</span><span class="tag">#Pwn</span><span class="tag">#CTF</span><span class="tag">#Heap</span></div>
     <article class="post-body">
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://blog.wingszeng.top/kernel-pwn-syscall-userfaultfd-and-syscall-setxattr/">https://blog.wingszeng.top/kernel-pwn-syscall-userfaultfd-and-syscall-setxattr/</a>
-<a href="https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=171982506416800211525431&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&utm_term=kernel&spm=1018.2226.3001.4450">https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&amp;request_id=171982506416800211525431&amp;biz_id=0&amp;utm_medium=distribute.pc_search_result.none-task-blog-2<del>blog</del>first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&amp;utm_term=kernel&amp;spm=1018.2226.3001.4450</a></p>
+<p><a href="https://blog.wingszeng.top/kernel-pwn-syscall-userfaultfd-and-syscall-setxattr/">https://blog.wingszeng.top/kernel-pwn-syscall-userfaultfd-and-syscall-setxattr/</a><br><a href="https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=171982506416800211525431&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&utm_term=kernel&spm=1018.2226.3001.4450">https://blog.csdn.net/qq_45323960/article/details/130660417?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171982506416800211525431%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&amp;request_id=171982506416800211525431&amp;biz_id=0&amp;utm_medium=distribute.pc_search_result.none-task-blog-2<del>blog</del>first_rank_ecpm_v1~rank_v31_ecpm-2-130660417-null-null.nonecase&amp;utm_term=kernel&amp;spm=1018.2226.3001.4450</a></p>
 <p>本文首发于奇安信攻防社区 <a href="https://forum.butian.net/share/3738">https://forum.butian.net/share/3738</a></p>
 <h1 id="释放后使用use-after-free">释放后使用（Use After Free）</h1>
-<p>例题：<code>heap bof</code> 
-开启了 kaslr、smep 和 smap。</p>
+<p>例题：<code>heap bof</code><br>开启了 kaslr、smep 和 smap。</p>
 <p>cred 结构体大小为 0xa8。根据 slub 的分配机制，如果先分配并释放一个大小为 0xa8（实际为 0xe0）的内存块，再创建新线程，那么该线程的 cred 结构体恰好就是刚刚释放的内存块。利用 UAF 漏洞修改 cred，即可实现提权。</p>
 <p>不过，在较新版本中，cred_jar 不再与其他相同大小的 slab 合并；释放的 cred 结构体只会归还 cred_jar，不会合并到其他 slab 中。</p>
 <p>这是因为创建 cred_jar 时设置了 SLAB_ACCOUNT 标志。当 CONFIG_MEMCG_KMEM=y（默认开启）时，cred_jar 不再与同样大小的 kmalloc-192 合并（可以理解为 cred_jar 需要单独统计内存使用量，因此不允许与其他 slab 合并）。</p>
@@ -316,26 +314,15 @@ mount -t devpts none /dev/pts
 chmod 777 /dev/ptmx
 </code></pre>
 <ul>
-<li><p>泄露内核基址
-需要读原语。可以利用偏移 0x18 处的 ops = ptm_unix98_ops：关闭 kaslr 时，从 kallsyms 中读出 ptm_unix98_ops；泄露的地址减去它，即可得到内核基址。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-002-0d574034b1.png" alt="图片"></p>
+<li><p>泄露内核基址<br>需要读原语。可以利用偏移 0x18 处的 ops = ptm_unix98_ops：关闭 kaslr 时，从 kallsyms 中读出 ptm_unix98_ops；泄露的地址减去它，即可得到内核基址。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-002-0d574034b1.png" alt="图片"></p>
 </li>
-<li><p>泄露 kmalloc-1k 堆地址
-需要读原语。可以利用偏移 0x38 处的链表指针，该指针初始时指向自身。读出后减去 0x38，即为当前 tty_struct 的地址，也就是某个 kmalloc-1k 堆地址。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-003-38b16eec63.png" alt="图片"></p>
+<li><p>泄露 kmalloc-1k 堆地址<br>需要读原语。可以利用偏移 0x38 处的链表指针，该指针初始时指向自身。读出后减去 0x38，即为当前 tty_struct 的地址，也就是某个 kmalloc-1k 堆地址。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-003-38b16eec63.png" alt="图片"></p>
 </li>
-<li><p>劫持程序流程
-需要写原语，将 ops 覆盖为伪造的 tty_operations。由于 tty_operations 结构体中的某个函数指针只能写入一个 gadget，除了使用 pt_regs + ret2dir，还可以利用 tty_struct 调用 tty_operations 中函数指针的特点。</p>
+<li><p>劫持程序流程<br>需要写原语，将 ops 覆盖为伪造的 tty_operations。由于 tty_operations 结构体中的某个函数指针只能写入一个 gadget，除了使用 pt_regs + ret2dir，还可以利用 tty_struct 调用 tty_operations 中函数指针的特点。</p>
 </li>
-<li><p>write (tty_write-&gt;do_tty_write-&gt;n_tty_write-&gt;pty_write)
-例如使用 write：跳转到 write 时（断点下在 pty_write），观察寄存器会发现 rax 为 tty_struct.ops。可以寻找 mov rsp, rax 一类的 gadget 进行栈迁移，这样就能将 tty_struct.ops 之前的数据覆盖为 ROP。不过，这里的空间有些小，放不下 ROP，因此还需要再次进行栈迁移。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-004-514f4e212e.png" alt="图片">
-但需要注意，劫持 write 会触发 tty 魔数检查。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-005-01c5fc8b17.png" alt="图片"></p>
+<li><p>write (tty_write-&gt;do_tty_write-&gt;n_tty_write-&gt;pty_write)<br>例如使用 write：跳转到 write 时（断点下在 pty_write），观察寄存器会发现 rax 为 tty_struct.ops。可以寻找 mov rsp, rax 一类的 gadget 进行栈迁移，这样就能将 tty_struct.ops 之前的数据覆盖为 ROP。不过，这里的空间有些小，放不下 ROP，因此还需要再次进行栈迁移。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-004-514f4e212e.png" alt="图片"><br>但需要注意，劫持 write 会触发 tty 魔数检查。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-005-01c5fc8b17.png" alt="图片"></p>
 </li>
-<li><p>ioctl （tty_ioctl-&gt;pty_unix98_ioctl）
-也可以使用 ioctl，通过传入参数控制某些寄存器的值。注意，使用 ioctl 时魔数必须正确，driver 必须是内核堆地址。
-执行到这里时，rbp = &amp;tty_struct（有时 rbp 并不是 &amp;tty_struct）。如果将 tty-&gt;op-&gt;ioctl 设为 <code>leave; ret</code>，就会先将栈迁移到 &amp;tty_struct + 0x8。将这里设为 <code>pop rsp; ret</code>，再将 &amp;tty_struct + 0x10（.driver）设为已布置 ROP 链的内核堆地址，就能完成第二次栈迁移。</p>
+<li><p>ioctl （tty_ioctl-&gt;pty_unix98_ioctl）<br>也可以使用 ioctl，通过传入参数控制某些寄存器的值。注意，使用 ioctl 时魔数必须正确，driver 必须是内核堆地址。<br>执行到这里时，rbp = &amp;tty_struct（有时 rbp 并不是 &amp;tty_struct）。如果将 tty-&gt;op-&gt;ioctl 设为 <code>leave; ret</code>，就会先将栈迁移到 &amp;tty_struct + 0x8。将这里设为 <code>pop rsp; ret</code>，再将 &amp;tty_struct + 0x10（.driver）设为已布置 ROP 链的内核堆地址，就能完成第二次栈迁移。</p>
 <p>此外，此时 rax 是 pty_unix98_ioctl 函数的地址。如果使用 <code>xchg eax, esp; ret</code>，栈会迁移到 rax &amp; 0xffffffff，落在用户空间。此时可以在用户空间 mmap 一条 ROP 链，但要求关闭 smap。</p>
 </li>
 </ul>
@@ -570,8 +557,7 @@ int main() {
 <p><a href="https://www.cnblogs.com/arnoldlu/p/10769376.html">查看 slab 缓存使用情况</a>——也可以使用 sudo slabtop 动态查看。</p>
 <h2 id="通过堆布局溢出修改-cred">通过堆布局溢出修改 cred</h2>
 <p>通过溢出覆盖 cred，与前面 UAF 修改 cred 一样，在较新版本中已不可行，因为它们不在同一个 cache 中，内存不一定相邻。</p>
-<p>kalloc 会自动调整大小，可以查看 /proc/slabinfo；通常会向上取整。
-这里一般利用分配大小与 cred 大小落入同一个 kmem-cache 的特点。大量分配，使 slub freelist 中的对象地址保持连续，接下来的两个对象也就相邻，从而实现溢出。或者从 kmem-cache 中分配大量相同大小的对象，再释放其中一个；随后 fork 就可能分配到刚刚释放的那个，而释放对象之前的 chunk 就与它相邻。</p>
+<p>kalloc 会自动调整大小，可以查看 /proc/slabinfo；通常会向上取整。<br>这里一般利用分配大小与 cred 大小落入同一个 kmem-cache 的特点。大量分配，使 slub freelist 中的对象地址保持连续，接下来的两个对象也就相邻，从而实现溢出。或者从 kmem-cache 中分配大量相同大小的对象，再释放其中一个；随后 fork 就可能分配到刚刚释放的那个，而释放对象之前的 chunk 就与它相邻。</p>
 <h3 id="exp-2">exp</h3>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 #include &lt;fcntl.h&gt;
@@ -631,9 +617,7 @@ int main(void) {
 </code></pre>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-008-cc4e9070c0.png" alt="图片"></p>
 <h2 id="堆溢出-堆喷覆盖-seq_operations-以控制内核执行流">堆溢出 + 堆喷，覆盖 seq_operations 以控制内核执行流</h2>
-<p><a href="https://blog.csdn.net/qq_54218833/article/details/124521291?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522172258946616800184152959%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=172258946616800184152959&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-3-124521291-null-null.nonecase&utm_term=%E5%86%85%E6%A0%B8&spm=1018.2226.3001.4450">InCTF-Kqueue</a>
-只开启了 kaslr，没有开启 KPTI 和 smap&amp;smep。
-所给源码的大致逻辑如下：</p>
+<p><a href="https://blog.csdn.net/qq_54218833/article/details/124521291?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522172258946616800184152959%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=172258946616800184152959&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-3-124521291-null-null.nonecase&utm_term=%E5%86%85%E6%A0%B8&spm=1018.2226.3001.4450">InCTF-Kqueue</a><br>只开启了 kaslr，没有开启 KPTI 和 smap&amp;smep。<br>所给源码的大致逻辑如下：</p>
 <ul>
 <li>ioctl 根据命令分派到相应函数：添加、删除、编辑或保存。</li>
 <li>create_kqueue 创建一个队列，大致布局如下；这块内存的起始地址保存在 kququs 数组中。</li>
@@ -678,11 +662,8 @@ int main(void) {
 }
 </code></pre>
 <p>该结构体是序列文件的关键，作用类似迭代器，可以循环输出某些内容，通常用于导出数据和记录，以管理大型数据文件。打开定义了该结构体的 LKM 时（例如使用 cat 命令或 read），内核会创建这样的数据结构，并首先调用 start 函数指针。由于该结构体大小为 0x20，很可能被分配在上面的 queue 附近。如果能控制这里的 start 指针，就能控制内核执行流。本题打开的序列文件为 /proc/self/stat。</p>
-<p>这里通过 <code>open(&quot;/proc/self/stat&quot;, O_RDONLY);</code> 堆喷一批大小为 0x20 的 chunk，再释放中间的一个。此时某个已分配 chunk 可能恰好位于释放对象之后（但并没有），因此对所有已打开的描述符尝试 read。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-010-8907268c2c.png" alt="图片">
-调用 start 前，内核会将下一条指令的地址压栈。正是利用这个地址得到内核加载基址，再通过偏移调用 commit_cred(prepare_kernel_cred(NULL))。</p>
-<p>不过，由于劫持的是函数指针，函数开头仍有一个 <code>push rbp</code>，所以泄露的地址位于 rsp+8。然后给泄露地址加上相关偏移，再通过 <code>call reg</code> 调用函数。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-011-9ccc31f4dd.png" alt="图片"></p>
+<p>这里通过 <code>open(&quot;/proc/self/stat&quot;, O_RDONLY);</code> 堆喷一批大小为 0x20 的 chunk，再释放中间的一个。此时某个已分配 chunk 可能恰好位于释放对象之后（但并没有），因此对所有已打开的描述符尝试 read。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-010-8907268c2c.png" alt="图片"><br>调用 start 前，内核会将下一条指令的地址压栈。正是利用这个地址得到内核加载基址，再通过偏移调用 commit_cred(prepare_kernel_cred(NULL))。</p>
+<p>不过，由于劫持的是函数指针，函数开头仍有一个 <code>push rbp</code>，所以泄露的地址位于 rsp+8。然后给泄露地址加上相关偏移，再通过 <code>call reg</code> 调用函数。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-011-9ccc31f4dd.png" alt="图片"></p>
 <h3 id="exp-3">exp</h3>
 <pre><code class="language-c">#define _GNU_SOURCE
 #include &lt;fcntl.h&gt;
@@ -807,8 +788,7 @@ int main()
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-012-e85b129945.png" alt="图片"></p>
 <h1 id="任意地址分配freelist-劫持">任意地址分配（freelist 劫持）</h1>
 <h2 id="通过-modprobe_path-提权">通过 modprobe_path 提权</h2>
-<p><a href="https://h0pe-ay.github.io/%E5%88%A9%E7%94%A8modprobe_path%E6%8F%90%E6%9D%83/">https://h0pe-ay.github.io/%E5%88%A9%E7%94%A8modprobe_path%E6%8F%90%E6%9D%83/</a>
-modprobe_path 保存名为 modprobe 的程序路径，该程序用于向 Linux 内核添加可加载内核模块，或从内核中移除模块。</p>
+<p><a href="https://h0pe-ay.github.io/%E5%88%A9%E7%94%A8modprobe_path%E6%8F%90%E6%9D%83/">https://h0pe-ay.github.io/%E5%88%A9%E7%94%A8modprobe_path%E6%8F%90%E6%9D%83/</a><br>modprobe_path 保存名为 modprobe 的程序路径，该程序用于向 Linux 内核添加可加载内核模块，或从内核中移除模块。</p>
 <p>执行文件头无效的文件时，会调用 modprobe_path 指向的程序。调用路径如下：</p>
 <pre><code class="language-bash">entry_SYSCALL_64()
     sys_execve()
@@ -850,9 +830,7 @@ search /sbin/modprobe
 </ul>
 <h2 id="利用">利用</h2>
 <blockquote>
-<p>先按 Ctrl+A，再按 C：切换到 QEMU Monitor 模式。
-应使用 -monitor none 参数禁用 Monitor。
-也可以使用 -monitor /dev/null，将 Monitor 重定向到 /dev/null。</p>
+<p>先按 Ctrl+A，再按 C：切换到 QEMU Monitor 模式。<br>应使用 -monitor none 参数禁用 Monitor。<br>也可以使用 -monitor /dev/null，将 Monitor 重定向到 /dev/null。</p>
 </blockquote>
 <pre><code class="language-bash">cat /sys/devices/system/cpu/vulnerabilities/*查看开了KPTI
 kaslr smep smap都开了
@@ -919,8 +897,7 @@ int __fastcall xkmod_release(inode *inode, file *file)
 </li>
 <li><p>使用第二个描述符执行添加，然后关闭。</p>
 </li>
-<li><p>使用第三个描述符写入，将 freelist 设为 modprobe_path - 0x10（同样为了保证 freelist 为 NULL）。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-015-c3f743cf9b.png" alt="图片"></p>
+<li><p>使用第三个描述符写入，将 freelist 设为 modprobe_path - 0x10（同样为了保证 freelist 为 NULL）。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-015-c3f743cf9b.png" alt="图片"></p>
 </li>
 <li><p>使用第三个描述符添加两次；此时 buf 为 modprobe_path - 0x10，然后向其中写入恶意脚本的路径。</p>
 </li>
@@ -1076,9 +1053,7 @@ int main() {
 </code></pre>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-016-0e1194b3b6.png" alt="图片"></p>
 <h1 id="空字节越界off-by-null">空字节越界（Off By Null）</h1>
-<p>题目：corCTF2022 corjail（kmalloc-4k）
-<a href="https://blog.csdn.net/panhewu9919/article/details/127804902">https://blog.csdn.net/panhewu9919/article/details/127804902</a>
-<a href="https://xz.aliyun.com/t/12488?time__1311=GqGxRQqiqmw4lrzG7Dy7QDkDcmoOI6fQ3x">https://xz.aliyun.com/t/12488?time__1311=GqGxRQqiqmw4lrzG7Dy7QDkDcmoOI6fQ3x</a></p>
+<p>题目：corCTF2022 corjail（kmalloc-4k）<br><a href="https://blog.csdn.net/panhewu9919/article/details/127804902">https://blog.csdn.net/panhewu9919/article/details/127804902</a><br><a href="https://xz.aliyun.com/t/12488?time__1311=GqGxRQqiqmw4lrzG7Dy7QDkDcmoOI6fQ3x">https://xz.aliyun.com/t/12488?time__1311=GqGxRQqiqmw4lrzG7Dy7QDkDcmoOI6fQ3x</a></p>
 <h2 id="调试">调试</h2>
 <blockquote>
 <p>感谢 tplus 和 Nightu 两位师傅的帮助！！！</p>
@@ -1088,16 +1063,11 @@ int main() {
 <li>修改 qcow 镜像中的 root 权限</li>
 </ul>
 <ol>
-<li><p>内核命令行（cmdline）：
-这是启动时传给内核的参数列表，可以在引导加载器（如 GRUB）的配置中设置。</p>
+<li><p>内核命令行（cmdline）：<br>这是启动时传给内核的参数列表，可以在引导加载器（如 GRUB）的配置中设置。</p>
 </li>
 <li><p>init 系统的选择：</p>
 <ul>
-<li>如果 cmdline 中没有指定 init 系统，内核会按以下顺序尝试查找并执行 init 程序：
-a) /sbin/init
-b) /etc/init
-c) /bin/init
-d) /bin/sh</li>
+<li>如果 cmdline 中没有指定 init 系统，内核会按以下顺序尝试查找并执行 init 程序：<br>a) /sbin/init<br>b) /etc/init<br>c) /bin/init<br>d) /bin/sh</li>
 </ul>
 </li>
 <li><p>systemd:</p>
@@ -1234,8 +1204,7 @@ int main() {
 <h3 id="堆喷-poll_list-和-user_key_payload">堆喷 poll_list 和 user_key_payload</h3>
 <ul>
 <li>选择包含 30+510+1 个文件描述符的 poll_list，这样会同时喷射 kmalloc-4096 和 kmalloc-32 对象。之前没有喷 kmalloc-4096 的原因，可能是一个 slab 只能容纳 8 个 kmalloc-4096 对象，并且由于保护机制，freelist 中的条目并不相邻。因此，喷射一段时间 kmalloc-4096 后，分配基本都会落在新 slab 上；于是 cormon_proc_write 分配一个 kmalloc-4096，随后 poll_list 填满该 slab 时，两者就很可能相邻。</li>
-<li>随后，kmalloc-32 的 poll_list 可能与之前堆喷的 kmalloc-32 user_key_payload 落在同一页。图中黄色为 user_key_payload，绿色为 poll_list，蓝色为 cormon_proc_write 分配的一个 kmalloc-4096，红色为被溢出的 poll_list。溢出将 poll_list 的低字节改为 \x00，使原本指向 kmalloc-32 中某个 poll_list 的 next，转而指向同一页上之前堆喷产生的另一个 user_key_payload。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-017-9636b48a9d.png" alt="图片"></li>
+<li>随后，kmalloc-32 的 poll_list 可能与之前堆喷的 kmalloc-32 user_key_payload 落在同一页。图中黄色为 user_key_payload，绿色为 poll_list，蓝色为 cormon_proc_write 分配的一个 kmalloc-4096，红色为被溢出的 poll_list。溢出将 poll_list 的低字节改为 \x00，使原本指向 kmalloc-32 中某个 poll_list 的 next，转而指向同一页上之前堆喷产生的另一个 user_key_payload。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-017-9636b48a9d.png" alt="图片"></li>
 <li>poll 函数结束时，会沿 next 释放所有已分配的 poll_list。此时被溢出对象的 next 指向 user_key_payload，因此该 user_key_payload 会被释放，但仍然可用，从而造成 UAF。<blockquote>
 <p>注意：堆喷时，user_key_payload 的第一个 QWORD 必须为 NULL（poll 的遍历只在 next 为 NULL 时终止）。可以通过 setxattr 函数进行布置：具体来说，kmalloc 分配的 chunk 不一定为 NULL，但 chunk 的分配和释放遵循后进先出原则，因此可以先用 setxattr 函数（分配后立即释放 chunk）将 chunk 清零，再将该 chunk 分配给 user_key_payload 结构体。</p>
 </blockquote>
@@ -1282,11 +1251,9 @@ int main() {
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-020-134ce4fd63.png" alt="图片"></p>
 <h3 id="rop">rop</h3>
 <ol>
-<li><p>Docker 的安全限制：
-Docker 通过 seccomp 禁用 setns() 系统调用，这种安全机制会阻止容器内进程切换到其他命名空间。</p>
+<li><p>Docker 的安全限制：<br>Docker 通过 seccomp 禁用 setns() 系统调用，这种安全机制会阻止容器内进程切换到其他命名空间。</p>
 </li>
-<li><p>分析 setns() 源码：
-可以发现，setns() 实际调用 commit_nsset() 执行命名空间切换。</p>
+<li><p>分析 setns() 源码：<br>可以发现，setns() 实际调用 commit_nsset() 执行命名空间切换。</p>
 </li>
 <li><p>模仿 setns() 的行为：</p>
 <ul>
@@ -1301,22 +1268,17 @@ Docker 通过 seccomp 禁用 setns() 系统调用，这种安全机制会阻止�
 </blockquote>
 <p>仅修改 nsproxy 结构体不足以完全逃逸容器的原因：</p>
 <ol>
-<li><p>部分逃逸：
-使用 switch_task_namespaces() 将容器任务的 nsproxy 结构体改为 init_nsproxy，确实是逃逸过程的一部分。这一步让容器进程在某些方面（如网络、PID 等）看到宿主系统的视图。</p>
+<li><p>部分逃逸：<br>使用 switch_task_namespaces() 将容器任务的 nsproxy 结构体改为 init_nsproxy，确实是逃逸过程的一部分。这一步让容器进程在某些方面（如网络、PID 等）看到宿主系统的视图。</p>
 </li>
-<li><p>逃逸不完整：
-不过，这项修改只影响部分命名空间，并未影响所有隔离机制。尤其是文件系统隔离仍然存在。</p>
+<li><p>逃逸不完整：<br>不过，这项修改只影响部分命名空间，并未影响所有隔离机制。尤其是文件系统隔离仍然存在。</p>
 </li>
-<li><p>seccomp 限制：
-Docker 使用 seccomp 过滤器限制容器内可用的系统调用。setns() 被拦截意味着，即使修改了 nsproxy 结构体，进程也无法通过正常系统调用完全切换到新的命名空间。</p>
+<li><p>seccomp 限制：<br>Docker 使用 seccomp 过滤器限制容器内可用的系统调用。setns() 被拦截意味着，即使修改了 nsproxy 结构体，进程也无法通过正常系统调用完全切换到新的命名空间。</p>
 </li>
-<li><p>文件系统隔离：
-容器的文件系统视图仍然隔离。要完全逃逸，还必须改变进程的文件系统视图，使其能够访问宿主机的完整文件系统。</p>
+<li><p>文件系统隔离：<br>容器的文件系统视图仍然隔离。要完全逃逸，还必须改变进程的文件系统视图，使其能够访问宿主机的完整文件系统。</p>
 </li>
 </ol>
 <blockquote>
-<p>Docker 容器与 Google 的 kCTF 不同，默认通过 seccomp 拦截 setns()，因此返回用户空间后，无法使用它进入其他命名空间。需要找到替代方法，而且必须在 ROP 链中实现。
-阅读 setns() 源码可知，它通过调用 commit_nsset()，实际将任务移入不同的命名空间。可以照着它的做法，使用 copy_fs_struct() 克隆 init_fs 结构体，再用 find_task_by_vpid() 定位当前任务，并使用 gadget 手动安装新的 fs_struct。</p>
+<p>Docker 容器与 Google 的 kCTF 不同，默认通过 seccomp 拦截 setns()，因此返回用户空间后，无法使用它进入其他命名空间。需要找到替代方法，而且必须在 ROP 链中实现。<br>阅读 setns() 源码可知，它通过调用 commit_nsset()，实际将任务移入不同的命名空间。可以照着它的做法，使用 copy_fs_struct() 克隆 init_fs 结构体，再用 find_task_by_vpid() 定位当前任务，并使用 gadget 手动安装新的 fs_struct。</p>
 </blockquote>
 <h1 id="任意地址释放仅限堆地址">任意地址释放（仅限堆地址）</h1>
 <p>内核利用中，有时希望将结构体 A 中的某个指针修改为指向结构体 B，再释放结构体 A，从而释放结构体 B，造成结构体 B 的 UAF（例如 pollfd 的 next 指针：所有对象都通过 next 依次释放，因此可以将 next 改为指向目标结构体）。</p>
@@ -1327,8 +1289,7 @@ Docker 使用 seccomp 过滤器限制容器内可用的系统调用。setns() �
 <blockquote>
 <p>不过，有时与结构体 B 重叠的结构体 C 无法触及结构体 B 的关键字段。这时可以考虑将 A 的指针改为 B 的地址减去某个偏移，使结构体 C 的可控部分覆盖到结构体 B 中需要修改的区域。</p>
 </blockquote>
-<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-021-dbd899f341.png" alt="图片">
-分析 kfree 源码可知，会通过对象所在的 page 获取 kmem_cache。</p>
+<p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-021-dbd899f341.png" alt="图片"><br>分析 kfree 源码可知，会通过对象所在的 page 获取 kmem_cache。</p>
 <pre><code class="language-c">void kfree(const void *x)
 {
 	struct page *page;
@@ -1470,8 +1431,7 @@ struct list_head {
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-023-2f0ed3ec82.png" alt="图片"></p>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-024-db6794eaf6.png" alt="图片"></p>
 <h1 id="跨缓存溢出与页级堆风水">跨缓存溢出与页级堆风水</h1>
-<p><a href="https://blog.xmcve.com/2023/10/12/Kernel-Heap---Cross-Cache-Overflow/">https://blog.xmcve.com/2023/10/12/Kernel-Heap---Cross-Cache-Overflow/</a>
-<a href="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/heap/buddy/cross-cache/#stepii-page-level-heap-fengshui">https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/heap/buddy/cross-cache/#stepii-page-level-heap-fengshui</a></p>
+<p><a href="https://blog.xmcve.com/2023/10/12/Kernel-Heap---Cross-Cache-Overflow/">https://blog.xmcve.com/2023/10/12/Kernel-Heap---Cross-Cache-Overflow/</a><br><a href="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/heap/buddy/cross-cache/#stepii-page-level-heap-fengshui">https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/heap/buddy/cross-cache/#stepii-page-level-heap-fengshui</a></p>
 <h2 id="使用-setsocket-分配页面">使用 setsocket 分配页面</h2>
 <p>分配页面：创建一个协议为 PF_PACKET 的 socket 后，先调用 setsockopt()，将 PACKET_VERSION 设为 TPACKET_V1/TPACKET_V2；再调用 setsockopt() 申请 PACKET_TX_RING，创建环形缓冲区。调用链如下：</p>
 <pre><code class="language-bash">__sys_setsockopt()
@@ -1576,8 +1536,7 @@ cred_jar
 signal_cache
 pid
 </code></pre>
-<p>注意，这里仍有 vmalloc 产生的 4 个 order_0 页面。
-还有一个问题：子进程实际上不能写入任何进程内存，因为它与父进程共享同一虚拟内存。因此，必须使用仅依赖寄存器、不写内存的 shellcode，检查是否提权成功。</p>
+<p>注意，这里仍有 vmalloc 产生的 4 个 order_0 页面。<br>还有一个问题：子进程实际上不能写入任何进程内存，因为它与父进程共享同一虚拟内存。因此，必须使用仅依赖寄存器、不写内存的 shellcode，检查是否提权成功。</p>
 <h2 id="进程间管道通信">进程间管道通信</h2>
 <p>由于进程需要在另一个命名空间中执行 setsocket 操作，因此通过管道与主进程通信。</p>
 <p>至于 clone 出来的进程如何知道当前 cred 是否已提权，可以设置管道与主进程通信。主进程完成全部堆喷和溢出写入后，通过管道通知 clone 进程。因为 clone 进程从一开始就在读取管道，所以会阻塞，直到主进程向它发送数据。随后 clone 检查当前 uid，并执行 <code>execve(&quot;/bin/sh&quot;, args, 0)</code>。</p>
@@ -1868,10 +1827,7 @@ sudo umount rootfs
 </code></pre>
 <p>题目说明 flag 位于 /root/flag，文件系统为 ext4，对应的 init 文件在 <code>./etc/init.d/rcS</code>。</p>
 <p><code>d3kcache_ioctl</code> 根据 ioctl 命令执行不同操作：</p>
-<p>   a. 命令 276（创建新 cache）：
-   b. 命令 1300（向现有 cache 追加数据）：
-   c. 命令 2064（释放 cache）：
-   d. 命令 6425（从 cache 读取数据）：</p>
+<p>   a. 命令 276（创建新 cache）：<br>   b. 命令 1300（向现有 cache 追加数据）：<br>   c. 命令 2064（释放 cache）：<br>   d. 命令 6425（从 cache 读取数据）：</p>
 <p>全局数组 <code>qword_17D8</code> 用于保存 cache 指针，<code>kcache_list</code> 用于保存 cache 大小。</p>
 <pre><code class="language-c">__int64 __fastcall d3kcache_ioctl(__int64 a1, int cmd, __int64 value)
 {
@@ -2089,8 +2045,7 @@ struct page *page = pfn_to_page(pfn);
 <h3 id="pipebuffer">pipebuffer</h3>
 <p><a href="https://www.51cto.com/article/684282.html">https://www.51cto.com/article/684282.html</a></p>
 <p>fcntl 重新分配大小时，先执行 kcalloc，再将原 pipebuffer 中的内容（已有数据的页面）复制到 kcalloc 分配的 pipebuffer。</p>
-<p>读：pipebuffer 通过 pipebuffer-&gt;offset、pipebuffer-&gt;len 和 page 读取；读取后，<code>pipebuffer-&gt;offset = pipebuffer-&gt;offset + pipebuffer-&gt;len</code>
-写：pipebuffer 从 <code>pipebuffer-&gt;offset + pipebuffer-&gt;len</code> 开始写入，并且 <code>pipebuffer-&gt;len = pipebuffer-&gt;len + number of bytes written</code></p>
+<p>读：pipebuffer 通过 pipebuffer-&gt;offset、pipebuffer-&gt;len 和 page 读取；读取后，<code>pipebuffer-&gt;offset = pipebuffer-&gt;offset + pipebuffer-&gt;len</code><br>写：pipebuffer 从 <code>pipebuffer-&gt;offset + pipebuffer-&gt;len</code> 开始写入，并且 <code>pipebuffer-&gt;len = pipebuffer-&gt;len + number of bytes written</code></p>
 <p>另外，只有向管道写入时，才会为 page 分配物理页。</p>
 <h3 id="利用-3">利用</h3>
 <p>漏洞位于命令 1300（向现有 cache 追加数据）：存在 off-by-null 漏洞。</p>
@@ -2102,8 +2057,7 @@ struct page *page = pfn_to_page(pfn);
 </ul>
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-026-aa41599107.png" alt="图片"></p>
 <ul>
-<li>然后，获得页级 UAF 后，关闭其中一个。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-027-4da213dab6.png" alt="图片"></li>
+<li>然后，获得页级 UAF 后，关闭其中一个。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-027-4da213dab6.png" alt="图片"></li>
 </ul>
 <h3 id="第二级页-uaf">第二级页 UAF</h3>
 <p>通过 fcntl 改变 pipebuffer 数量，重新分配一个 kmalloc-96 大小的对象，用于存放 pipebuffer 数组。再用 pipebuffer 填充已释放页面，这样就可以通过页 UAF 读出其中一条管道的 pipebuffer，再通过写入修改相邻管道的 pipebuffer，使两条管道包含相同的 pipebuffer。随后关闭包含已读出 pipebuffer 的管道，此时被写入的那条管道的 pipebuffer 就形成了 UAF。</p>
@@ -2113,8 +2067,7 @@ struct page *page = pfn_to_page(pfn);
 <p><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-029-d017cc04f1.png" alt="图片"></p>
 <ul>
 <li>扫描并读取每条管道；若 page 为第二级 UAF 页面，就能读出该页面。如果内容与之前读出的一致，就可以确定当前管道是三条管道之一，进而识别出全部三条管道。</li>
-<li>随后构建任意读写：先通过第 3 个 pipebuffer 写入，将第 2 个 pipebuffer 的 offset 设为第 3 个 pipebuffer 的偏移。然后按如下方式循环：首先，第 2 个 pipebuffer 可以将第 3 个 pipebuffer 的 offset 写成第 1 个 pipebuffer 的偏移；此时第 3 个 pipebuffer 就能写入第 1 和第 2 个 pipebuffer——将第 1 个 pipebuffer 的 page 写为待读取的 page，再将第 2 个 pipebuffer 的 offset 写为第 3 个 pipebuffer 的偏移。
-<img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-030-70bbcc39cc.png" alt="图片"></li>
+<li>随后构建任意读写：先通过第 3 个 pipebuffer 写入，将第 2 个 pipebuffer 的 offset 设为第 3 个 pipebuffer 的偏移。然后按如下方式循环：首先，第 2 个 pipebuffer 可以将第 3 个 pipebuffer 的 offset 写成第 1 个 pipebuffer 的偏移；此时第 3 个 pipebuffer 就能写入第 1 和第 2 个 pipebuffer——将第 1 个 pipebuffer 的 page 写为待读取的 page，再将第 2 个 pipebuffer 的 offset 写为第 3 个 pipebuffer 的偏移。<br><img src="/workspace/endpoint-security/kernel-security/study-notes/CTF-PWN%20%E5%86%85%E6%A0%B8%E5%A0%86%E5%88%A9%E7%94%A8%EF%BC%88UAF%E3%80%81heap_overflow%E3%80%81freelist%20%E5%8A%AB%E6%8C%81%E3%80%81offbyn/assets/csdn-141576311/image-030-70bbcc39cc.png" alt="图片"></li>
 </ul>
 <h3 id="泄露-task_struct-和-kernel_base">泄露 task_struct 和 kernel_base</h3>
 <ul>

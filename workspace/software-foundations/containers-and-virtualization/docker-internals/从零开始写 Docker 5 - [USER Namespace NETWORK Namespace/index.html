@@ -20,8 +20,7 @@
     <article class="post-body">
 <h1 id="user-namespace">USER Namespace</h1>
 <p>即进程运行在新的 namespace 中，该 namespace 中的 User ID 和 Group ID 在 namespace 内外可以不同，因此用户可以在 namespace 中是 root，而在宿主机上不是 root</p>
-<p>只需在 Cloneflags 中加上 syscall.CLONE_NEWUSER 即可
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%205%20-%20%5BUSER%20Namespace%20NETWORK%20Namespace/assets/csdn-137033230/image-001-46fb32ea4b.png" alt="图片"></p>
+<p>只需在 Cloneflags 中加上 syscall.CLONE_NEWUSER 即可<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%205%20-%20%5BUSER%20Namespace%20NETWORK%20Namespace/assets/csdn-137033230/image-001-46fb32ea4b.png" alt="图片"></p>
 <h1 id="代码">代码</h1>
 <pre><code class="language-go">package main
 
@@ -49,8 +48,7 @@ func main(){
 <p>Network Namespace 是用来隔离网络设备、IP 地址、端口等网络资源的 namespace</p>
 <p>即进程在 namespace 中拥有独立的（虚拟）网络设备。而且在宿主机上搭建网桥后，就能很方便地实现容器之间的通信，不同容器上的应用也可以使用相同的端口</p>
 <p>只需在 Cloneflags 中加上 syscall.CLONE_ NEWNET 即可</p>
-<p>我发现 network namespace 中的进程没有网络设备（可能默认就没有，需要进行相关初始化），而宿主机仍然有网络设备
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%205%20-%20%5BUSER%20Namespace%20NETWORK%20Namespace/assets/csdn-137033230/image-002-ae7822873e.png" alt="图片"></p>
+<p>我发现 network namespace 中的进程没有网络设备（可能默认就没有，需要进行相关初始化），而宿主机仍然有网络设备<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99%20Docker%205%20-%20%5BUSER%20Namespace%20NETWORK%20Namespace/assets/csdn-137033230/image-002-ae7822873e.png" alt="图片"></p>
 <h1 id="代码块">代码块</h1>
 <pre><code class="language-go">package main
 

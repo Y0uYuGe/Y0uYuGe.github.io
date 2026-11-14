@@ -71,17 +71,13 @@ struct AddressSpace {
 };
 </code></pre>
 <h2 id="ramblock">RAMBlock</h2>
-<p>MR 所对应的 Host 虚拟内存；每个 RAMBlock 代表单个具体 MemoryRegion 所占用的 Host 虚拟内存信息，多个 RAMBlock 组成一个 RAMList
-每个 RAMBlock 都唯一对应一个 MemoryRegion</p>
+<p>MR 所对应的 Host 虚拟内存；每个 RAMBlock 代表单个具体 MemoryRegion 所占用的 Host 虚拟内存信息，多个 RAMBlock 组成一个 RAMList<br>每个 RAMBlock 都唯一对应一个 MemoryRegion</p>
 <h2 id="整体简化示意图">整体简化示意图</h2>
-<p>大佬们轻喷，后面深入学习了会再完善
-<img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-%E8%99%9A%E6%8B%9F%E6%9C%BA-QEMU-%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8E%20IO%20%E5%A4%84%E7%90%86/assets/csdn-134528138/image-001-3237e2bc67.png" alt="图片"></p>
+<p>大佬们轻喷，后面深入学习了会再完善<br><img src="/workspace/endpoint-security/virtualization-security/QEMU%20%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/CTF-%E8%99%9A%E6%8B%9F%E6%9C%BA-QEMU-%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8E%20IO%20%E5%A4%84%E7%90%86/assets/csdn-134528138/image-001-3237e2bc67.png" alt="图片"></p>
 <h1 id="qemu-设备模拟qemu-模拟的-io-设备如何与-vm-交互">QEMU 设备模拟（QEMU 模拟的 IO 设备如何与 VM 交互）</h1>
 <p>QEMU 在用户空间独立完成设备模拟；虚拟设备通过 VMM 提供的接口被其他 VM 调用。并且设备模拟独立于 VMM</p>
 <h2 id="qemu-设备-io-处理">QEMU 设备 IO 处理</h2>
-<p>当虚拟机访问虚拟设备的物理内存/端口时，控制权会从 VM 转移到 VMM；此时 QEMU 会根据触发 VM-exit 的事件类型，即 MMIO 或 PMIO，做出不同的处理。
-MMIO：读写 address_space_memory 类型的地址空间
-PMIO：读写 address_space_io 类型的地址空间</p>
+<p>当虚拟机访问虚拟设备的物理内存/端口时，控制权会从 VM 转移到 VMM；此时 QEMU 会根据触发 VM-exit 的事件类型，即 MMIO 或 PMIO，做出不同的处理。<br>MMIO：读写 address_space_memory 类型的地址空间<br>PMIO：读写 address_space_io 类型的地址空间</p>
 
     </article>
     

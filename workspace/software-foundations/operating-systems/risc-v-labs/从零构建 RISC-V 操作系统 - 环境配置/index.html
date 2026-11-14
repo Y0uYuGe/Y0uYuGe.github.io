@@ -25,13 +25,8 @@
 <pre><code class="language-bash">$ sudo apt update
 $ sudo apt install build-essential gcc make perl dkms git gcc-riscv64-unknown-elf gdb-multiarch qemu-system-misc
 </code></pre>
-<p>创建目录 risc-v-os 并进入
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/assets/csdn-134755937/image-001-80fd054a70.png" alt="图片">将压缩包复制到该目录下
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/assets/csdn-134755937/image-002-5d78a088d2.png" alt="图片">
-在此处解压</p>
-<p>将 export PATH=&quot;$PATH:/home/llk/risc-v-os/tools/gcc/bin:/home/llk/risc-v-os/tools/qemu/bin&quot; 写入主目录
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/assets/csdn-134755937/image-003-d2ad9d5258.png" alt="图片">
-然后激活</p>
+<p>创建目录 risc-v-os 并进入<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/assets/csdn-134755937/image-001-80fd054a70.png" alt="图片">将压缩包复制到该目录下<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/assets/csdn-134755937/image-002-5d78a088d2.png" alt="图片"><br>在此处解压</p>
+<p>将 export PATH=&quot;$PATH:/home/llk/risc-v-os/tools/gcc/bin:/home/llk/risc-v-os/tools/qemu/bin&quot; 写入主目录<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/assets/csdn-134755937/image-003-d2ad9d5258.png" alt="图片"><br>然后激活</p>
 <pre><code class="language-bash">source $HOME/.bashrc
 Linux source命令：
 
@@ -39,10 +34,7 @@ Linux source命令：
 
 功能：使当前shell读入路径为filepath的shell文件并依次执行文件中的所有语句，通常用于重新执行刚修改的初始化文件，使之立即生效，而不必注销并重新登录。
 </code></pre>
-<p>然后导入项目文件
-试一下 make 能否编译成功
-<img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/assets/csdn-134755937/image-004-ddb5049625.png" alt="图片">
-说明成功了</p>
+<p>然后导入项目文件<br>试一下 make 能否编译成功<br><img src="/workspace/software-foundations/operating-systems/risc-v-labs/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20RISC-V%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20-%20%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/assets/csdn-134755937/image-004-ddb5049625.png" alt="图片"><br>说明成功了</p>
 
     </article>
     

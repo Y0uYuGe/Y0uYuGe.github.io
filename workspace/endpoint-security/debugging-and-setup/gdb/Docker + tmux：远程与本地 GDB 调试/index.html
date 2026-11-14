@@ -42,8 +42,7 @@
 </ol>
 <h3 id="调试步骤">调试步骤</h3>
 <ol>
-<li><strong>启动容器并映射端口</strong>：   直接选用 roderick 的容器来调试
-<a href="https://hub.docker.com/r/roderickchan/debug_pwn_env/tags">https://hub.docker.com/r/roderickchan/debug_pwn_env/tags</a></li>
+<li><strong>启动容器并映射端口</strong>：   直接选用 roderick 的容器来调试<br><a href="https://hub.docker.com/r/roderickchan/debug_pwn_env/tags">https://hub.docker.com/r/roderickchan/debug_pwn_env/tags</a></li>
 </ol>
 <pre><code class="language-bash">docker run -it --rm -v host_path:container_path -p host_port:container_port --cap-add=SYS_PTRACE IMAGE_ID /bin/bash
 </code></pre>
@@ -62,14 +61,12 @@
 </li>
 </ol>
 <h1 id="本地调试">本地调试</h1>
-<p><strong>启动容器并映射端口</strong>：   直接选用 roderick 的容器来调试
-<a href="https://hub.docker.com/r/roderickchan/debug_pwn_env/tags">https://hub.docker.com/r/roderickchan/debug_pwn_env/tags</a></p>
+<p><strong>启动容器并映射端口</strong>：   直接选用 roderick 的容器来调试<br><a href="https://hub.docker.com/r/roderickchan/debug_pwn_env/tags">https://hub.docker.com/r/roderickchan/debug_pwn_env/tags</a></p>
 <pre><code class="language-bash">docker run -it --rm -v host_path:container_path -p host_port:container_port --cap-add=SYS_PTRACE --privileged IMAGE_ID /bin/bash
 </code></pre>
 <p>通过卷挂载 <code>-v host_path:container_path</code>，让在宿主机上对文件所做的修改也能在 docker 中生效；然后在 docker 中调试和运行，同时在宿主机上修改这个文件夹或文件</p>
 <h1 id="bug">bug</h1>
-<p><a href="https://blog.csdn.net/weixin_43483799/article/details/118757637">Could not find a terminal binary to use. Set context.terminal to your terminal</a>
-然后在容器里直接运行 ./exp.py 就行</p>
+<p><a href="https://blog.csdn.net/weixin_43483799/article/details/118757637">Could not find a terminal binary to use. Set context.terminal to your terminal</a><br>然后在容器里直接运行 ./exp.py 就行</p>
 <h1 id="pwngdbtmux">pwngdb+tmux</h1>
 <pre><code class="language-python"># 绑定Ctrl+a为新的指令前缀
 set -g prefix C-a
@@ -108,8 +105,7 @@ bind a last-window
 <li>粘贴：Ctrl+a +]</li>
 </ul>
 <h1 id="从-tmux-复制粘贴到其他地方">从 Tmux 复制粘贴到其他地方</h1>
-<p><a href="https://cn.linux-console.net/?p=15192">https://cn.linux-console.net/?p=15192</a>
-<img src="/workspace/endpoint-security/debugging-and-setup/gdb/Docker%20%2B%20tmux%EF%BC%9A%E8%BF%9C%E7%A8%8B%E4%B8%8E%E6%9C%AC%E5%9C%B0%20GDB%20%E8%B0%83%E8%AF%95/assets/csdn-139858050/image-001-8f3bcf7f05.png" alt="图片"></p>
+<p><a href="https://cn.linux-console.net/?p=15192">https://cn.linux-console.net/?p=15192</a><br><img src="/workspace/endpoint-security/debugging-and-setup/gdb/Docker%20%2B%20tmux%EF%BC%9A%E8%BF%9C%E7%A8%8B%E4%B8%8E%E6%9C%AC%E5%9C%B0%20GDB%20%E8%B0%83%E8%AF%95/assets/csdn-139858050/image-001-8f3bcf7f05.png" alt="图片"></p>
 <h1 id="pwngdb-与-tmux-的优化">pwngdb 与 tmux 的优化</h1>
 <p><a href="https://bbs.kanxue.com/thread-276203.htm">https://bbs.kanxue.com/thread-276203.htm</a></p>
 <h1 id="用了大佬的镜像之后感觉在宿主机上做-pwn-题已经没什么吸引力了"><del>用了大佬的镜像之后，感觉在宿主机上做 pwn 题已经没什么吸引力了</del></h1>

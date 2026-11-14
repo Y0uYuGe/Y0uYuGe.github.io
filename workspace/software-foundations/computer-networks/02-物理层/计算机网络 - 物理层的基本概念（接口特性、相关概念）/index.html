@@ -19,18 +19,9 @@
     <div class="meta"><time>2024-01-22</time><span class="tag">#计算机网络</span><span class="tag">#网络</span></div>
     <article class="post-body">
 <h1 id="概述">概述</h1>
-<p>寻找最终的传输速率：奈奎斯特准则、香农定理（不同的背景环境）
-编码：数据变成数字信号
-调制：数字信号变成模拟信号
-不同的信道传输不同的数据形式
-数据交换方式：核心（打电话就是电路交换）
-导向传输介质：看得见
-非导向传输介质：看不见
-<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%89%A9%E7%90%86%E5%B1%82%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E6%8E%A5%E5%8F%A3%E7%89%B9%E6%80%A7%E3%80%81%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%EF%BC%89/assets/csdn-135755412/image-001-8d18c91266.png" alt="图片"></p>
+<p>寻找最终的传输速率：奈奎斯特准则、香农定理（不同的背景环境）<br>编码：数据变成数字信号<br>调制：数字信号变成模拟信号<br>不同的信道传输不同的数据形式<br>数据交换方式：核心（打电话就是电路交换）<br>导向传输介质：看得见<br>非导向传输介质：看不见<br><img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%89%A9%E7%90%86%E5%B1%82%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E6%8E%A5%E5%8F%A3%E7%89%B9%E6%80%A7%E3%80%81%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%EF%BC%89/assets/csdn-135755412/image-001-8d18c91266.png" alt="图片"></p>
 <h1 id="物理层接口特性">物理层接口特性</h1>
-<p>传输介质不属于物理层，它在物理层之下，可以看作是 TCP/IP 体系结构的第 0 层
-物理层解决的是如何把拿到的数据比特流通过传输介质进行传输（要转换成什么信号，再如何传输）
-接口标准：比如是两孔还是三孔，以及孔的形状</p>
+<p>传输介质不属于物理层，它在物理层之下，可以看作是 TCP/IP 体系结构的第 0 层<br>物理层解决的是如何把拿到的数据比特流通过传输介质进行传输（要转换成什么信号，再如何传输）<br>接口标准：比如是两孔还是三孔，以及孔的形状</p>
 <p> 注意过程特性<img src="/workspace/software-foundations/computer-networks/02-%E7%89%A9%E7%90%86%E5%B1%82/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E7%89%A9%E7%90%86%E5%B1%82%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5%EF%BC%88%E6%8E%A5%E5%8F%A3%E7%89%B9%E6%80%A7%E3%80%81%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%EF%BC%89/assets/csdn-135755412/image-002-737b61d7e4.png" alt="图片"></p>
 <h1 id="spark-模型给出的相关概念说明仅供参考">Spark 模型给出的相关概念说明（仅供参考）</h1>
 <p> 物理层是计算机网络 OSI 模型中最底层的一层，负责数据的实际传输</p>

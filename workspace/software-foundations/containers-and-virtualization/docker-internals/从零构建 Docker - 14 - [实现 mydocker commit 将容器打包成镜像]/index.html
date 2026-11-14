@@ -19,8 +19,7 @@
     <div class="meta"><time>2024-05-25</time><span class="tag">#docker</span><span class="tag">#java</span><span class="tag">#容器</span></div>
     <article class="post-body">
 <h1 id="目标">目标</h1>
-<p>pivot_root 将工作目录切换到 /merged 之后，通过 docker commit 保存此时工作目录的文件系统，用 tar 包把这个文件系统打包成一个 tar 文件
-命令类似 <code> ./mydocker commit myimage</code>，然后会在当前目录下得到 myimage.tar</p>
+<p>pivot_root 将工作目录切换到 /merged 之后，通过 docker commit 保存此时工作目录的文件系统，用 tar 包把这个文件系统打包成一个 tar 文件<br>命令类似 <code> ./mydocker commit myimage</code>，然后会在当前目录下得到 myimage.tar</p>
 <h1 id="注意">注意</h1>
 <ul>
 <li>commit 操作是在另一个终端中执行的，也就是说容器已经启动并正在运行。此时在另一个终端执行 commit 操作，不需要再挂载或再启动子进程——直接设定一个存放东西的位置即可，而不是像之前那样在联合挂载之后获取具体的工作目录地址</li>
@@ -61,8 +60,7 @@
 </ul>
 <p>所以，当你运行 <code>tar -tf somefile.tar</code> 命令时，它会列出 <code>somefile.tar</code> 归档中的所有文件和目录结构，每行一项，但不会展开或解压该归档文件的实际内容。这对于在不真正解压的情况下快速查看 tar 文件包含哪些内容非常有用。</p>
 <h1 id="代码">代码</h1>
-<p><a href="https://github.com/FULLK/llkdocker/tree/main/commit_docker">https://github.com/FULLK/llkdocker/tree/main/commit_docker</a>
-添加一个命令</p>
+<p><a href="https://github.com/FULLK/llkdocker/tree/main/commit_docker">https://github.com/FULLK/llkdocker/tree/main/commit_docker</a><br>添加一个命令</p>
 <pre><code class="language-go">func main(){
 	//定义相关命令
 	app:=cli.NewApp()
@@ -130,10 +128,7 @@
 }
 </code></pre>
 <h1 id="结果">结果</h1>
-<p>先在一个终端中启动
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2014%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20commit%20%E5%B0%86%E5%AE%B9%E5%99%A8%E6%89%93%E5%8C%85%E6%88%90%E9%95%9C%E5%83%8F%5D/assets/csdn-139076758/image-001-51e57b0a81.png" alt="图片">
-然后再开一个终端执行 commit
-<img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2014%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20commit%20%E5%B0%86%E5%AE%B9%E5%99%A8%E6%89%93%E5%8C%85%E6%88%90%E9%95%9C%E5%83%8F%5D/assets/csdn-139076758/image-002-8d8246e9c9.png" alt="图片"></p>
+<p>先在一个终端中启动<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2014%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20commit%20%E5%B0%86%E5%AE%B9%E5%99%A8%E6%89%93%E5%8C%85%E6%88%90%E9%95%9C%E5%83%8F%5D/assets/csdn-139076758/image-001-51e57b0a81.png" alt="图片"><br>然后再开一个终端执行 commit<br><img src="/workspace/software-foundations/containers-and-virtualization/docker-internals/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%20Docker%20-%2014%20-%20%5B%E5%AE%9E%E7%8E%B0%20mydocker%20commit%20%E5%B0%86%E5%AE%B9%E5%99%A8%E6%89%93%E5%8C%85%E6%88%90%E9%95%9C%E5%83%8F%5D/assets/csdn-139076758/image-002-8d8246e9c9.png" alt="图片"></p>
 
     </article>
     

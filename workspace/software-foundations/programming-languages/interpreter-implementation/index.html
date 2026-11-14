@@ -19,9 +19,7 @@
     <div class="meta"><time>2024-10-30</time><span class="tag">#C语言</span><span class="tag">#编程语言</span></div>
     <article class="post-body">
 <h1 id="参考资料">参考资料</h1>
-<p><a href="https://lotabout.me/2015/write-a-C-interpreter-1/">https://lotabout.me/2015/write-a-C-interpreter-1/</a>
-<a href="https://github.com/archeryue/cpc">https://github.com/archeryue/cpc</a>
-<a href="https://www.bilibili.com/video/BV1Kf4y1V783/?vd_source=a1be939c65919194c77b8a6a36c14a6e">https://www.bilibili.com/video/BV1Kf4y1V783/?vd_source=a1be939c65919194c77b8a6a36c14a6e</a></p>
+<p><a href="https://lotabout.me/2015/write-a-C-interpreter-1/">https://lotabout.me/2015/write-a-C-interpreter-1/</a><br><a href="https://github.com/archeryue/cpc">https://github.com/archeryue/cpc</a><br><a href="https://www.bilibili.com/video/BV1Kf4y1V783/?vd_source=a1be939c65919194c77b8a6a36c14a6e">https://www.bilibili.com/video/BV1Kf4y1V783/?vd_source=a1be939c65919194c77b8a6a36c14a6e</a></p>
 <h1 id="整体框架">整体框架</h1>
 <p>工业级编译器分为前端和后端</p>
 <p>前端（parser）：源代码 -&gt; 中间代码（IR 或虚拟机指令）</p>
@@ -45,10 +43,7 @@
 <li>memory：code/data（静态变量/字面量）/stack</li>
 <li>指令集：save&amp;load（内存&lt;-&gt;寄存器）/ 算术指令（算术、位运算、逻辑运算）/ 跳转（无条件、有条件、比较）/ native call（IO：printf、orw / 动态内存分配：malloc/free/memset）</li>
 </ul>
-<p>PC 是程序计数器。它保存着一个内存地址，该地址中存放着下一条要执行的计算机指令
-SP 是指针寄存器，始终指向当前栈顶。注意由于栈位于高地址并向低地址方向增长，所以压栈时 SP 的值会减小
-BP 是基址指针。它同样用来指向栈上的某些位置，在调用函数时会用到
-AX 是通用寄存器。在我们的虚拟机中，它用于存放一条指令执行完后的结果</p>
+<p>PC 是程序计数器。它保存着一个内存地址，该地址中存放着下一条要执行的计算机指令<br>SP 是指针寄存器，始终指向当前栈顶。注意由于栈位于高地址并向低地址方向增长，所以压栈时 SP 的值会减小<br>BP 是基址指针。它同样用来指向栈上的某些位置，在调用函数时会用到<br>AX 是通用寄存器。在我们的虚拟机中，它用于存放一条指令执行完后的结果</p>
 <h1 id="虚拟机指令集">虚拟机指令集</h1>
 <ul>
 <li>save/load：imm / lea / lc / li /sc / si /push</li>
@@ -299,8 +294,7 @@ AX 是通用寄存器。在我们的虚拟机中，它用于存放一条指令�
 }
 </code></pre>
 <ul>
-<li>首先，一些关键字会被放入符号表；这些符号的 Token 被设置为对应关键字枚举值的值，也就是对应的关键字类型
-从 OPEN 开始的关键字放入符号表后，Class（类别）、type（返回值）、value（对应关键字枚举值）也会被设置；这里的 Token 是 ID 类型的枚举值</li>
+<li>首先，一些关键字会被放入符号表；这些符号的 Token 被设置为对应关键字枚举值的值，也就是对应的关键字类型<br>从 OPEN 开始的关键字放入符号表后，Class（类别）、type（返回值）、value（对应关键字枚举值）也会被设置；这里的 Token 是 ID 类型的枚举值</li>
 </ul>
 <pre><code class="language-c">void keyword() {
     int i;
@@ -326,9 +320,7 @@ AX 是通用寄存器。在我们的虚拟机中，它用于存放一条指令�
         }
 </code></pre>
 <h1 id="语法分析">语法分析</h1>
-<p>语法（Syntax）：单词 -&gt; 句子
-语义（Semantics）：所表达的含义
-语法规则（Grammar）：语法的集合</p>
+<p>语法（Syntax）：单词 -&gt; 句子<br>语义（Semantics）：所表达的含义<br>语法规则（Grammar）：语法的集合</p>
 <pre><code class="language-bash">
 - program=var_define | fun_define
 - var_define=enum_define | vari_define
@@ -562,10 +554,8 @@ if (（a=3）!=0) {  }
 <p>分别压入操作数和运算符，但当出现优先级低于当前栈顶运算符的运算符时，就用对应的操作数对当前栈顶运算符求值</p>
 <pre><code class="language-bash">3+3*4-5
 </code></pre>
-<p><img src="/workspace/software-foundations/programming-languages/interpreter-implementation/assets/csdn-136308052/image-001-71cb313ee0.png" alt="图片">
-此时压入运算符栈的是 - 号，但它的优先级低于 <em>，所以先计算 3</em>4 的结果并压入数据栈，然后再把 - 号压入运算符栈</p>
-<p>优先级爬升是指入栈的运算符需要不断往上爬，每当遇到比当前栈顶优先级更低的运算符时，就不断对相关运算符进行求值，直到栈顶运算符的优先级小于或等于待入栈的运算符为止
-优先级</p>
+<p><img src="/workspace/software-foundations/programming-languages/interpreter-implementation/assets/csdn-136308052/image-001-71cb313ee0.png" alt="图片"><br>此时压入运算符栈的是 - 号，但它的优先级低于 <em>，所以先计算 3</em>4 的结果并压入数据栈，然后再把 - 号压入运算符栈</p>
+<p>优先级爬升是指入栈的运算符需要不断往上爬，每当遇到比当前栈顶优先级更低的运算符时，就不断对相关运算符进行求值，直到栈顶运算符的优先级小于或等于待入栈的运算符为止<br>优先级</p>
 <pre><code class="language-bash">*++a++=i == 0？2+3：4*5
 </code></pre>
 <p>这里先解析 ++a，然后解析 *++a，再解析 a++……我就不详细演示了，按照对应的优先级往上爬就行了</p>

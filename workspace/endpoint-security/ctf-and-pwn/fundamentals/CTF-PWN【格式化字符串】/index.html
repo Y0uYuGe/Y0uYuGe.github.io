@@ -19,13 +19,9 @@
     <div class="meta"><time>2023-10-15</time><span class="tag">#学习</span><span class="tag">#网络安全</span><span class="tag">#安全</span><span class="tag">#系统安全</span><span class="tag">#CTF</span></div>
     <article class="post-body">
 <h1 id="格式化字符串">格式化字符串</h1>
-<p>CPU 通过 ebp 来访问栈上的东西
-参数从右往左依次入栈
-printf 函数的参数从右往左依次入栈</p>
+<p>CPU 通过 ebp 来访问栈上的东西<br>参数从右往左依次入栈<br>printf 函数的参数从右往左依次入栈</p>
 <p>%[flags][width][.precision][length]specifier</p>
-<p>说明符（specifier）用于规定输出数据的类型
-标志（flags）用于规定输出样式
-最小宽度（width）用于控制显示字段的宽度</p>
+<p>说明符（specifier）用于规定输出数据的类型<br>标志（flags）用于规定输出样式<br>最小宽度（width）用于控制显示字段的宽度</p>
 <pre><code class="language-c">
 #include &lt;stdio.h&gt;
 #define PAGES 931
@@ -41,9 +37,7 @@ int main() {
 *       931*
 *931*
 </code></pre>
-<p>精度（.precision）用于指定输出精度
-对于整数说明符（d、i、o、u、x、X）：precision 指定了要打印的数字的最小位数。如果写入的值短于该数，结果会用前导零来填充。如果写入的值长于该数，结果不会被截断。精度为 0 意味着不写入任何字符；
-对于 e、E 和 f 说明符：要在小数点后输出的小数位数；</p>
+<p>精度（.precision）用于指定输出精度<br>对于整数说明符（d、i、o、u、x、X）：precision 指定了要打印的数字的最小位数。如果写入的值短于该数，结果会用前导零来填充。如果写入的值长于该数，结果不会被截断。精度为 0 意味着不写入任何字符；<br>对于 e、E 和 f 说明符：要在小数点后输出的小数位数；</p>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 int main() {
     const double RENT = 3852.99;  // const-style constant
@@ -61,8 +55,7 @@ int main() {
 </code></pre>
 <p>类型长度（length）用于控制待输出数据的数据类型长度</p>
 <h2 id="查看内存内容">查看内存内容</h2>
-<p>在格式化参数之上，参数依次往上压入
-%x 以十六进制输出</p>
+<p>在格式化参数之上，参数依次往上压入<br>%x 以十六进制输出</p>
 <h2 id="写入内存">写入内存</h2>
 <p>%n 将已经打印的长度写入某个内存地址</p>
 <pre><code class="language-c">print(&quot;%d %n&quot;,a,&amp;a)
@@ -80,25 +73,18 @@ print(&quot;%.5d%n&quot;,a,&amp;a)
 <h2 id="某个明显的字符串pppp">[某个明显的字符串]%p%p%p%p……</h2>
 <p>观察 printf(s) 的结果，找到 s 是第几个参数，然后可以将其替换为某个函数的 GOT 地址，输入 got地址值%n$s 即可打印出真实地址</p>
 <h2 id="覆盖内存">覆盖内存</h2>
-<p>某个地址 + %Nd + %A$n
-将总长度（某个地址或其他东西 + N）写入第 A 个参数</p>
+<p>某个地址 + %Nd + %A$n<br>将总长度（某个地址或其他东西 + N）写入第 A 个参数</p>
 <h3 id="覆盖为小数字">覆盖为小数字</h3>
 <p>调换顺序：[一定长度的东西] + %A$n</p>
 <h3 id="覆盖为大数字">覆盖为大数字</h3>
-<p>小端存储：低地址存放低字节
-逐字节覆盖
-%A$hhn：取目前已打印的总长度的最低一个字节，写入第 A 个参数</p>
+<p>小端存储：低地址存放低字节<br>逐字节覆盖<br>%A$hhn：取目前已打印的总长度的最低一个字节，写入第 A 个参数</p>
 <h1 id="与-malloc-和-free-相关的格式化字符串漏洞">与 malloc 和 free 相关的格式化字符串漏洞</h1>
-<p>malloc()、calloc()、realloc() 在堆中分配空间
-alloca() 在栈上分配空间</p>
-<p>当 scanf 输入或 printf 输出的字符过多时，会调用 malloc 来处理，结束后再调用 free。
-所以当输入或输出很多时，可以将 _free_hook 或 _malloc_hook 覆盖为其他函数的地址，从而调用该函数</p>
+<p>malloc()、calloc()、realloc() 在堆中分配空间<br>alloca() 在栈上分配空间</p>
+<p>当 scanf 输入或 printf 输出的字符过多时，会调用 malloc 来处理，结束后再调用 free。<br>所以当输入或输出很多时，可以将 _free_hook 或 _malloc_hook 覆盖为其他函数的地址，从而调用该函数</p>
 <h2 id="格式化字符串漏洞工具">格式化字符串漏洞工具</h2>
-<p>这是一个专门为 32 位程序格式化字符串漏洞输出 payload 的函数
-fmtstr_payload(offset（格式化字符串在函数参数中的偏移）, {addr: value1, addr2: value2}) 用于将 value 写入 addr（常用：{printf_got}）</p>
+<p>这是一个专门为 32 位程序格式化字符串漏洞输出 payload 的函数<br>fmtstr_payload(offset（格式化字符串在函数参数中的偏移）, {addr: value1, addr2: value2}) 用于将 value 写入 addr（常用：{printf_got}）</p>
 <h1 id="64-位">64 位</h1>
-<p>参数放在寄存器中，超过六个时放在栈上
-此时 %np 中的参数序号仍然从格式化字符串之后的参数开始数</p>
+<p>参数放在寄存器中，超过六个时放在栈上<br>此时 %np 中的参数序号仍然从格式化字符串之后的参数开始数</p>
 
     </article>
     
