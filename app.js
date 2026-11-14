@@ -77,7 +77,7 @@ function accept(text) {
   updateWorkCount();
   renderBanner();
   if (S.sel === null || (S.wantPath && index.has(S.wantPath))) route();
-  else { if (mapChanged) renderMap(); renderPanel(); if (S.view === 'work' && mapChanged) renderWork(); }
+  else { if (mapChanged) renderMap(); renderPanel(); }
 }
 
 async function getNote(p) {
@@ -108,10 +108,10 @@ const map = new MindMap($('#map'), {
   minimap: false,
   render: workspaceNode,
   nodeClass: nodeClassOf,
-  onSelect: (v) => (v.a ? openAgent(v.a.id) : openNode(v.id)),
+  onSelect: (v) => (v.a ? openAgent(v.a.id) : v.id === PINS ? null : openNode(v.id)),
   onToggle: (v) => { if (!v.a) toggle(v.id); },
   onActivate: (v) => {
-    if (v.a) return;
+    if (v.a || v.id === PINS) return;
     if (S.mode === 'blog' && v.n.url) { location.hash = '#/' + v.id + '?read'; return; } // 博客：双击文章直接整页阅读
     if (v.n.children.length && v.id !== S.focus) setFocus(v.id);
   },
@@ -122,7 +122,7 @@ const map = new MindMap($('#map'), {
   onKey: (e, v) => {
     const ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && e.key.toLowerCase() === 'f') { $('#search').focus(); return true; }
-    if (v.a) return ['Tab', 'Enter', 'F2'].includes(e.key); // AI 节点不能新建子文件夹、改名
+    if (v.a || v.id === PINS) return ['Tab', 'Enter', 'F2'].includes(e.key); // AI 节点、「正在做」的根不能新建子文件夹、改名
     if (S.mode !== 'local') return e.key === 'F2'; // 只读模式不能改名
     if (e.key === 'F2' && !v.id) return true; // 根目录不能改名
     if (e.key === 'Tab') { newFolder(v.id); return true; }
@@ -187,7 +187,8 @@ function workspaceNode(v) {
   const n = v.n;
   const short = shortName(n);
   const t = short.length > 34 ? short.slice(0, 33) + '…' : short;
-  let h = `${isPinned(n.path) && n.path ? '<span class="pin" title="已固定到「正在做」">📌</span>' : ''}<span class="mm-label" title="${esc(n.name)}">${esc(t)}</span>`;
+  const from = v.pinTop ? crumbOf(n) : '';
+  let h = `${from ? `<span class="pin-from">${esc(from)} ›</span>` : ''}${isPinned(n.path) && n.path && !v.pinTop ? '<span class="pin" title="已固定到「正在做」">📌</span>' : ''}<span class="mm-label" title="${esc(n.name)}">${esc(t)}</span>`;
   if (n.note?.status) h += `<span class="status">${esc(n.note.status)}</span>`;
   if (S.mode === 'local') {
     if (n.blog?.on) h += `<span class="pub${n.blog.how === 'self' ? '' : ' faint'}" title="${BLOG_HOW[n.blog.how]}">🌐</span>`;
@@ -231,6 +232,11 @@ function mapTree() {
     const kids = n.children.map((c) => conv(c, false)).filter(Boolean);
     return match(n) || kids.length || isRoot ? { id: n.path, n, hit: match(n), collapsed: false, children: kids } : null;
   };
+  if (S.view === 'work' && S.mode === 'local') {
+    const pins = S.pins.filter((p) => index.has(p));
+    const root = { name: pins.length ? '📌 正在做' : '📌 正在做（在导图上点文件夹，面板里点 📌 固定到这里）', dir: '', path: PINS, note: null, children: pins.map((p) => index.get(p)) };
+    return { id: PINS, n: root, collapsed: false, children: pins.map((p) => conv(index.get(p), false)).filter(Boolean).map((v) => ({ ...v, pinTop: true })) };
+  }
   return conv(index.get(S.focus) || S.data.tree, true);
 }
 
@@ -240,7 +246,7 @@ function renderMap() {
   map.render();
   if (S.sel !== null && index.has(S.sel)) map.select(S.sel, false);
   const chain = [];
-  for (let c = index.get(S.focus); c && c.path; c = c.parent) chain.unshift(c);
+  if (S.view !== 'work') for (let c = index.get(S.focus); c && c.path; c = c.parent) chain.unshift(c);
   $('#focus-crumbs').innerHTML = chain.length
     ? `<a data-focus="">${esc(S.data.tree.name)}</a>` + chain.map((c) => ` / <a data-focus="${esc(c.path)}">${esc(c.name)}</a>`).join('')
     : '';
@@ -262,12 +268,12 @@ function setFocus(p) {
 }
 // 展开到第 L 层（相对当前聚焦的分支）
 function expandTo(level) {
-  const base = index.get(S.focus) || S.data.tree;
   const walk = (n, d) => {
     if (d < level) S.open.add(n.path); else S.open.delete(n.path);
     n.children.forEach((c) => walk(c, d + 1));
   };
-  walk(base, 0);
+  if (S.view === 'work') S.pins.filter((p) => index.has(p)).forEach((p) => walk(index.get(p), 1));
+  else walk(index.get(S.focus) || S.data.tree, 0);
   S.level = level;
   saveOpen();
   renderMap();
@@ -425,21 +431,12 @@ function setView(v) {
   S.view = v;
   store.set('view', v);
   document.querySelectorAll('#views button').forEach((b) => b.classList.toggle('on', b.dataset.view === v));
-  $('#map-view').hidden = v !== 'map';
-  $('#work-view').hidden = v !== 'work';
   applyWidths();
-  $('#search').hidden = v !== 'map';
   if (!S.data) return;
-  // sextant 的同一个会话只能连一个终端：两个视图不同时连
-  if (v === 'work') {
-    // 工作台需要宽度：先收起右侧面板，点子导图里的节点会再打开
-    closePanel();
-    renderWork();
-  } else {
-    panes.forEach((pane) => pane.el.remove());
-    panes.clear();
-    map.render();
-  }
+  // 两个视图是同一张导图，只是根不同：「全部笔记」是整个工作区，「📌 正在做」是固定的几个分支
+  map.placed = false;
+  renderMap();
+  requestAnimationFrame(() => map.fit());
 }
 $('#views').addEventListener('click', (e) => { const b = e.target.closest('[data-view]'); if (b) setView(b.dataset.view); });
 
@@ -480,10 +477,9 @@ document.addEventListener('click', async (e) => {
   for (let i = 0; i < 20 && !sx().up; i++) { await new Promise((r) => setTimeout(r, 1500)); await refresh(); }
 });
 
-// ---------- 工作台：正在做的几个文件夹 ----------
-// 在导图里把文件夹"加入工作台"。每个文件夹一个区域：它那一块子导图，AI 也挂在上面，点了在右边看终端 / 蜂群图。
+// ---------- 📌 正在做：从大图里把固定的几个分支拎出来，放在同一张导图里 ----------
 S.pins = store.get('pins', []);
-const panes = new Map(); // 文件夹 -> { el, mm, open, sxKey }
+const PINS = '@pins'; // 「正在做」那张图的根（不是真实文件夹）
 
 const isPinned = (p) => S.pins.includes(p);
 function togglePin(p) {
@@ -493,82 +489,12 @@ function togglePin(p) {
   renderMap();
   S.panelKey = '';
   renderPanel();
-  if (S.view === 'work') renderWork();
 }
 function updateWorkCount() {
   const live = S.pins.some((p) => agentsUnder(p).some((a) => a.status === 'running'));
   $('#work-count').textContent = S.pins.length ? ` ${S.pins.length}` : '';
   $('#work-count').className = live ? 'live' : '';
 }
-
-function renderWork() {
-  S.pins = S.pins.filter((p) => index.has(p));
-  $('#work-filter').innerHTML = `<b>正在做 ${S.pins.length} 个文件夹</b>
-    <span class="hint">在「全部笔记」里选中文件夹，点「📌 正在做」把它固定到这里</span>
-    ${S.mode === 'local' && !sx().up && sx().canStart ? '<span class="sxhint">sextant 未运行 <button data-sx-start>启动 sextant</button></span>' : ''}`;
-  const grid = $('#work-grid');
-  grid.className = 'cols-' + Math.min(3, Math.max(1, S.pins.length));
-  for (const [p, pane] of panes) if (!isPinned(p)) { pane.el.remove(); panes.delete(p); }
-  for (const p of S.pins) {
-    const pane = panes.get(p) || createPane(p);
-    updatePane(pane);
-    if (!pane.el.isConnected) grid.appendChild(pane.el);
-  }
-  grid.querySelector(':scope > .empty')?.remove();
-  if (!S.pins.length) grid.insertAdjacentHTML('beforeend', '<div class="empty pad">还没有固定的文件夹。在「全部笔记」里点一个文件夹，在右侧面板点「📌 正在做」，它就会出现在这里。</div>');
-}
-
-function createPane(p) {
-  const el = document.createElement('section');
-  el.className = 'pane';
-  el.dataset.path = p;
-  el.innerHTML = '<div class="phead"></div><div class="psub"></div>';
-  const pane = { p, el, open: new Set(store.get('paneOpen', {})[p] || [p]), first: true };
-  pane.mm = new MindMap(el.querySelector('.psub'), {
-    minimap: false,
-    render: workspaceNode,
-    nodeClass: nodeClassOf,
-    onSelect: (v) => (v.a ? openAgent(v.a.id) : openNode(v.id)),
-    onToggle: (v) => {
-      if (v.a) return;
-      pane.open.has(v.id) ? pane.open.delete(v.id) : pane.open.add(v.id);
-      store.set('paneOpen', { ...store.get('paneOpen', {}), [p]: [...pane.open] });
-      renderSub(pane);
-    },
-  });
-  panes.set(p, pane);
-  return pane;
-}
-
-function renderSub(pane) {
-  const conv = (n) => { const closed = !pane.open.has(n.path); return withAgents({ id: n.path, n, closed, collapsed: closed, children: n.children.map(conv) }); };
-  pane.mm.setData(conv(index.get(pane.p)));
-  pane.mm.render();
-  if (pane.first) { pane.first = false; requestAnimationFrame(() => pane.mm.fit()); }
-}
-
-function updatePane(pane) {
-  const { p, el } = pane, n = index.get(p);
-  const local = S.mode === 'local';
-  el.querySelector('.phead').innerHTML = `<span class="pname">📌 ${esc(n.name)}</span><span class="ppath">${esc(p)}</span>
-    ${badges(agentsUnder(p))}
-    <span class="pacts"><button data-pane-act="locate" title="在导图中定位">定位</button>
-    ${local ? `<button data-open="${esc(p)}" title="在资源管理器中打开">资源管理器</button><a href="${vscodeUrl(absPath(p))}"><button>VS Code</button></a>` : ''}
-    <button class="icon" data-pane-act="max" title="放大">⤢</button><button class="icon" data-pane-act="unpin" title="不再固定">✕</button></span>`;
-  renderSub(pane);
-}
-
-$('#work-grid').addEventListener('click', (e) => {
-  const paneEl = e.target.closest('.pane');
-  if (!paneEl) return;
-  const p = paneEl.dataset.path;
-  const act = e.target.closest('[data-pane-act]')?.dataset.paneAct;
-  if (act === 'unpin') return togglePin(p);
-  if (act === 'max') return paneEl.classList.toggle('max');
-  if (act === 'sub') return paneEl.classList.toggle('nosub');
-  if (act === 'locate') { setView('map'); location.hash = '#/' + p; return; }
-  if (e.target.dataset.open !== undefined) return post('api/open', { path: e.target.dataset.open }).catch((err) => alert(err.message));
-});
 
 // ---------- 详情面板 ----------
 function resolveRel(base, href) {
@@ -853,7 +779,6 @@ function openAgent(id) {
   S.panelClosed = false;
   S.panelKey = '';
   renderMap();
-  if (S.view === 'work') renderWork();
   renderPanel(true);
 }
 function closeAgent() { S.agent = null; S.panelKey = ''; renderMap(); renderPanel(true); }
@@ -1410,6 +1335,8 @@ function route() {
   // 地址里的节点暂时不在树上（比如刚新建的文件夹还没扫描到）：先显示根节点，扫描到后再跳过去
   S.wantPath = index.has(p) ? null : p;
   if (!index.has(p)) p = '';
+  // 在「📌 正在做」里打开不属于固定分支的节点（比如搜索结果）：回到「全部笔记」，不然图上找不到它
+  if (S.view === 'work' && p && !S.pins.some((x) => p === x || p.startsWith(x + '/'))) setView('map');
   if (S.sel !== p) S.tab = 'note';
   if (S.sel !== null) S.panelClosed = false; // 用户选了节点：打开面板
   S.agent = null; // 选了文件夹：右边回到文件夹

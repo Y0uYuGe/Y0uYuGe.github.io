@@ -25,7 +25,7 @@ a { color: var(--accent); }
 .seg button { border-radius: 0; margin-left: -1px; }
 .seg button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
 .seg button:last-child { border-radius: 0 6px 6px 0; }
-.seg button.on, #work-filter button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.seg button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .empty { color: var(--muted); }
 .pad { padding: 16px; }
 .hint { color: var(--muted); font-size: 12px; }
@@ -43,7 +43,7 @@ a { color: var(--accent); }
 #banner .move.done { color: var(--fg); }
 
 main { flex: 1; display: flex; min-height: 0; }
-#map-view, #work-view { flex: 1; min-width: 0; position: relative; }
+#map-view { flex: 1; min-width: 0; position: relative; }
 .floating { position: absolute; z-index: 3; display: flex; gap: 8px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; box-shadow: var(--shadow); font-size: 13px; }
 #map-tools { left: 12px; top: 12px; }
 #map-tools #focus-crumbs:empty { display: none; }
@@ -96,12 +96,7 @@ main { flex: 1; display: flex; min-height: 0; }
 .st-todo, .st-done { color: var(--muted); background: var(--soft); }
 
 /* 工作台 */
-#work-view { display: flex; flex-direction: column; overflow: hidden; }
-#work-filter { display: flex; gap: 8px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-#work-filter .dot { margin-right: 6px; }
-#work-filter button.on .dot { box-shadow: 0 0 0 1.5px #fff; }
 .sxhint { margin-left: auto; color: var(--muted); font-size: 13px; }
-#work-grid { flex: 1; overflow: auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); grid-auto-rows: 460px; gap: 14px; align-content: start; }
 .tile { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); min-width: 0; }
 .tile.max { grid-column: 1 / -1; grid-row: span 2; }
 .thead { padding: 8px 10px; border-bottom: 1px solid var(--line); }
@@ -216,24 +211,8 @@ select[data-blog] { font-size: 12px; }
   #search, #map-help, .mm-mini, #map-tools, #resizer { display: none !important; }
   #bar { gap: 8px; }
   #panel { position: fixed; inset: 49px 0 0 0; width: auto !important; z-index: 5; }
-  #work-grid { grid-template-columns: 1fr; }
 }
 
-/* 工作台：正在做的文件夹 */
-#work-filter b { font-weight: 600; }
-#work-grid.cols-1 { grid-template-columns: 1fr; }
-#work-grid.cols-2 { grid-template-columns: 1fr 1fr; }
-#work-grid.cols-3 { grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); }
-#work-grid { grid-auto-rows: auto; }
-.pane { display: flex; flex-direction: column; height: calc(100vh - 140px); min-height: 640px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; min-width: 0; }
-.pane.max { grid-column: 1 / -1; }
-.phead { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); min-width: 0; }
-.pname { font-weight: 600; white-space: nowrap; }
-.ppath { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.pacts { margin-left: auto; display: flex; gap: 4px; align-items: center; white-space: nowrap; }
-.pacts button, .pacts a button { font-size: 12px; padding: 0 8px; }
-.pacts a { color: inherit; text-decoration: none; }
-.psub { position: relative; height: 200px; flex: none; border-bottom: 1px solid var(--line); background: var(--bg); }
 .pagents { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; flex: none; border-bottom: 1px solid var(--line); align-items: center; min-height: 44px; }
 .achip { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; padding: 3px 8px; }
 .achip.on { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
@@ -254,7 +233,6 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 .pagents { scrollbar-width: thin; }
 
 /* 文件夹里的 sextant（工作台区域和面板的 AI 助手标签） */
-.pane.nosub .psub { display: none; }
 #panel-body.has-sx { display: flex; padding: 0; overflow: hidden; }
 
 /* 快捷键列表 */
@@ -447,3 +425,6 @@ button.pinned { border-color: var(--accent); color: var(--accent); }
 .blog-body pre > code, .blog-body pre code.hljs { background: none; padding: 0; }
 .blog-body table { border-collapse: collapse; display: block; overflow: auto; margin: 0 0 .7em; }
 .blog-body th, .blog-body td { border: 1px solid var(--line); padding: 4px 10px; }
+
+/* 「📌 正在做」里每个固定分支前面：它原来在哪 */
+.pin-from { color: var(--muted); font-size: 11px; font-weight: normal; margin-right: 4px; white-space: nowrap; }
