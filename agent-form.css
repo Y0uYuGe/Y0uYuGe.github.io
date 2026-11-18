@@ -1,0 +1,84 @@
+/* 新任务：工作目录、任务、助手、上下文和启动反馈按阅读顺序排布。 */
+.ag-new.ag-compose {
+  display: flex; flex-direction: column; align-self: stretch; gap: 0;
+  width: 100%; max-width: 600px; height: 100%; min-height: 0; max-height: 100%; margin: 0 auto;
+  padding: 0; overflow: hidden; box-sizing: border-box; container-type: inline-size;
+}
+#dock-body > .ag-new.ag-compose, #panel-body > .ag-new.ag-compose { overflow: hidden; }
+.ag-compose .ag-form-content { display: flex; flex: 1; flex-direction: column; gap: 24px; min-height: 0; padding: 30px 36px 22px; overflow: auto; overscroll-behavior: contain; scroll-padding-block: 16px; }
+.ag-compose .ag-form-content > * { flex: none; }
+.ag-compose .ag-form-head { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.ag-form-symbol { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 11px; background: var(--soft); color: var(--muted); }
+.ag-compose .ag-form-head h2 { margin: 15px 0 5px; color: var(--fg); font-size: 21px; line-height: 1.4; font-weight: 600; letter-spacing: -.5px; }
+.ag-compose .ag-form-head p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.ag-compose .ag-workdir { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; margin-top: 13px; color: var(--muted); font-size: 12px; }
+.ag-compose .ag-workdir > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-compose .ag-field-label { display: block; margin-bottom: 8px; color: var(--fg); font-size: 12px; font-weight: 600; }
+.ag-new.ag-compose .ag-task-field { display: flex; flex-direction: column; gap: 0; }
+.ag-new.ag-compose :is(textarea, input)[name="title"] { display: block; box-sizing: border-box; width: 100%; height: 40px; resize: none; padding: 0 13px; border: 1px solid var(--line-strong, var(--line)); border-radius: 9px; background: var(--card); color: var(--fg); font: inherit; font-size: 13px; line-height: 1.75; outline: none; transition: border-color .15s, box-shadow .15s; }
+.ag-compose input[name="title"]::placeholder { color: var(--faint, var(--muted)); }
+.ag-compose input[name="title"]:focus { border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent); }
+.ag-compose .ag-field-help { margin-top: 7px; color: var(--muted); font-size: 11.5px; }
+.ag-compose .ag-assistants { min-width: 0; margin: 0; padding: 0; border: 0; }
+.ag-compose .ag-assistants legend { padding: 0; }
+.ag-compose .ag-choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(164px, 1fr)); gap: 8px; }
+.ag-new.ag-compose label.ag-choice { position: relative; display: flex; flex-direction: row; align-items: center; gap: 10px; min-width: 0; min-height: 62px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); color: var(--fg); cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s; }
+.ag-compose label.ag-choice:hover { border-color: var(--line-strong, var(--line)); background: var(--soft); }
+.ag-new.ag-compose label.ag-choice:has(input:checked) { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, var(--card)); color: var(--fg); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent); }
+.ag-compose label.ag-choice:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ag-new.ag-compose label.ag-choice input[type="radio"] { position: absolute; display: block; opacity: 0; width: 1px; height: 1px; margin: 0; padding: 0; }
+.ag-new.ag-compose label.ag-choice.off { border-style: solid; }
+.ag-new.ag-compose label.ag-choice.off::after { content: none; }
+.ag-compose .ag-choice-mark { display: flex; flex: 0 0 29px; align-items: center; justify-content: center; width: 29px; height: 29px; border: 1px solid var(--line); border-radius: 7px; background: var(--soft); color: var(--fg); font-size: 10px; font-weight: 650; letter-spacing: -.4px; }
+.ag-compose .ag-choice-copy { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.ag-compose .ag-choice-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 500; }
+.ag-compose .ag-choice-state { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 10.5px; line-height: 1.5; }
+.ag-compose .ag-choice-state.ready::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--running, #24845c); }
+.ag-compose .ag-choice-check { display: inline-flex; flex: none; color: var(--accent); opacity: 0; }
+.ag-compose .ag-choice:has(input:checked) .ag-choice-check { opacity: 1; }
+.ag-compose .ag-more { margin-top: 9px; }
+.ag-compose .ag-more summary { display: flex; align-items: center; gap: 7px; width: fit-content; padding: 6px 0; color: var(--muted); font-size: 11.5px; cursor: pointer; list-style: none; user-select: none; }
+.ag-compose .ag-more summary::-webkit-details-marker { display: none; }
+.ag-compose .ag-more summary::after { content: ''; width: 5px; height: 5px; margin: -3px 3px 0; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: rotate(45deg); transition: transform .15s; }
+.ag-compose .ag-more[open] summary::after { margin-top: 3px; transform: rotate(225deg); }
+.ag-compose .ag-more summary:hover { color: var(--fg); }
+.ag-compose .ag-more summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+.ag-compose .ag-more-count { color: var(--faint, var(--muted)); font-size: 10.5px; }
+.ag-compose .ag-more .ag-choice-grid { margin-top: 7px; }
+.ag-compose .ag-install-hint { margin: -3px 0 10px; color: var(--muted); font-size: 11.5px; }
+.ag-new.ag-compose label.ag-context { display: flex; flex-direction: row; align-items: flex-start; gap: 9px; padding: 13px 0 0; border-top: 1px solid var(--line); cursor: pointer; }
+.ag-compose .ag-context input[type="checkbox"] { flex: none; width: 14px; height: 14px; margin: 2px 0 0; accent-color: var(--accent); }
+.ag-compose .ag-context > span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ag-compose .ag-context b { color: var(--fg); font-size: 12px; font-weight: 500; }
+.ag-compose .ag-context-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 11px; }
+.ag-compose .ag-form-footer { position: sticky; bottom: 0; z-index: 2; flex: none; margin: 0; padding: 14px 36px 16px; border-top: 1px solid var(--line); background: var(--card); box-shadow: 0 -5px 16px -12px color-mix(in srgb, var(--fg) 30%, transparent); }
+.ag-compose .ag-form-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.ag-compose .ag-form-actions button { min-height: 33px; height: 33px; padding: 0 13px; border-radius: 7px; font-size: 12px; }
+.ag-compose .ag-form-actions button.primary { gap: 10px; min-width: 111px; }
+.ag-compose .ag-submit-shortcut { display: block; margin-top: 9px; color: var(--faint, var(--muted)); text-align: right; font-size: 10.5px; }
+.ag-compose .msg { min-height: 0; margin: 12px 0 0; padding: 9px 11px; border-radius: 7px; background: var(--soft); color: var(--muted); font-size: 12px; line-height: 1.6; }
+.ag-compose .msg:empty { display: none; }
+.ag-compose .msg[data-state="error"] { background: color-mix(in srgb, #dc2626 6%, var(--card)); color: var(--error, #c73b3b); }
+.ag-compose[aria-busy="true"] .ag-choice { cursor: wait; }
+.ag-unavailable { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 28px; color: var(--muted); text-align: center; }
+.ag-unavailable h3 { margin: 0; color: var(--fg); font-size: 15px; font-weight: 600; }
+.ag-unavailable p { max-width: 320px; margin: 0; font-size: 13px; line-height: 1.7; }
+@media (max-height: 720px) {
+  .ag-compose .ag-form-content { gap: 19px; padding-top: 24px; }
+  .ag-compose .ag-form-head h2 { margin-top: 11px; font-size: 19px; }
+}
+@container (max-width: 390px) {
+  .ag-compose .ag-form-content { gap: 19px; padding: 22px 20px 18px; }
+  .ag-compose .ag-form-head { display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: center; column-gap: 10px; }
+  .ag-compose .ag-form-head .ag-form-symbol { grid-row: 1 / 3; width: 32px; height: 32px; border-radius: 9px; }
+  .ag-compose .ag-form-head h2 { margin: 0 0 2px; font-size: 18px; }
+  .ag-compose .ag-form-head p { font-size: 11.5px; }
+  .ag-compose .ag-form-head .ag-workdir { grid-column: 1 / -1; margin-top: 12px; }
+  .ag-new.ag-compose input[name="title"] { height: 38px; }
+  .ag-compose .ag-choice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ag-new.ag-compose label.ag-choice { gap: 7px; min-height: 58px; padding: 10px 9px; }
+  .ag-compose .ag-choice-mark { flex-basis: 24px; width: 24px; height: 26px; font-size: 9px; }
+  .ag-compose .ag-choice-name { font-size: 11.5px; }
+  .ag-compose .ag-choice-check { display: none; }
+  .ag-compose .ag-form-footer { padding: 12px 20px 13px; }
+}

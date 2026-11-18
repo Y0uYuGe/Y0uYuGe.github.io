@@ -4,7 +4,7 @@
 
 const HEADING = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
 const FENCE = /^\s*(```|~~~)/;
-const NEW = '新主题';
+const NEW = '新标题';
 
 // 节点上显示纯文字：去掉强调、行内代码、链接语法
 export const plain = (t) => t.replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/(\*\*|\*|~~|`)(.+?)\1/g, '$2').replace(/(^|\W)(__?)(\S(?:.*?\S)?)\2(?=\W|$)/g, '$1$3').trim(); // 只去成对的强调符号，AI_Study_Note 里的下划线保留
@@ -88,7 +88,7 @@ export function rename(doc, n, text) {
 export function addChild(doc, n) {
   const lines = [...doc.lines];
   if (n.kind === 'root') return pack(lines, put(lines, docEnd(lines), ['#'.repeat(minLevel(n)) + ' ' + NEW]));
-  if (n.level >= 6) return { error: '已经是最深一级标题（######），不能再加子主题' };
+  if (n.level >= 6) return { error: '已经是最深一级标题（######），不能再加子标题' };
   return pack(lines, put(lines, n.end, ['#'.repeat(n.level + 1) + ' ' + NEW]));
 }
 
@@ -147,17 +147,34 @@ export function sectionOf(doc, n) {
   return { md: doc.lines.slice(from, to).join('\n').trim(), from };
 }
 
-// 改主题笔记：只替换这一段，子主题不动。笔记里写的 # 标题会变成新的主题
-export function setSection(doc, n, md) {
+// 改主题笔记：只替换这一段，子主题不动。笔记里写的 # 标题会变成新的主题。
+// own = 这个编辑框上次写进去的那几行：框里打了 ## 标题、存过一次后它已经是子主题了，
+// 再存时要把上次写的整块换掉（只换到第一个子主题会把新标题重复一份）
+export function setSection(doc, n, md, own) {
   const lines = [...doc.lines];
   const from = n.kind === 'root' ? 0 : n.line + 1;
-  const to = n.children.length ? n.children[0].line : n.kind === 'root' ? lines.length : n.end;
+  let to = n.children.length ? n.children[0].line : n.kind === 'root' ? lines.length : n.end;
+  if (own && from + own.length <= lines.length && own.every((l, i) => lines[from + i] === l)) to = from + own.length;
   const block = md.replace(/\r\n/g, '\n').split('\n');
   while (block.length && !block[0].trim()) block.shift();
   while (block.length && !block[block.length - 1].trim()) block.pop();
   if (block.length && lines[to]?.trim()) block.push(''); // 和后面的子主题之间空一行
+  if (block.length && n.kind !== 'root') block.unshift(''); // 标题和正文之间空一行（Markdown 的常见写法）
+  if (!block.length && n.kind !== 'root' && lines[to]?.trim()) block.push(''); // 整节清空了：标题和下一个标题之间也空一行
   lines.splice(from, to - from, ...block);
-  return pack(lines, n.line);
+  return { ...pack(lines, n.line), own: block };
+}
+
+// 找回一个标题：编辑框开着时，别处的改动（上面一节多写了几行、AI 改了笔记）会让行号变，
+// 只按行号找会写进别的标题。先看原来那一行还是不是它，不是就找同级同名、离原来最近的那个
+export function locate(doc, at) {
+  if (at.root) return doc.root;
+  const all = [];
+  const walk = (x) => x.children.forEach((c) => { all.push(c); walk(c); });
+  walk(doc.root);
+  const same = all.filter((x) => x.level === at.level && x.text === at.text);
+  return same.find((x) => x.line === at.line) || same.sort((a, b) => Math.abs(a.line - at.line) - Math.abs(b.line - at.line))[0]
+    || all.find((x) => x.line === at.line && x.level === at.level) || null; // 刚在导图上改了名：还在原来那一行
 }
 
 // 编辑后按行号找回主题

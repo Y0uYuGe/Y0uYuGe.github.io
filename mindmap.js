@@ -4,8 +4,8 @@
 //
 // 数据：{ id, children: [], collapsed?: bool } 组成的树；节点长什么样由 opts.render(node) 决定。
 
-const PALETTE = ['#e8590c', '#1c7ed6', '#2f9e44', '#ae3ec9', '#f08c00', '#0c8599', '#d6336c', '#5c940d', '#4263eb', '#c2255c'];
-const GAP_X = 44, GAP_Y = 10, PAD = 40;
+const PALETTE = ['#b68b68', '#7787b2', '#7b9b85', '#9a88b0', '#b09b69', '#6c9a9b', '#ac8192', '#8b9b72', '#8b8bc2', '#ac8a86'];
+const GAP_X = 44, GAP_Y = 12, PAD = 40;
 
 export class MindMap {
   constructor(el, opts = {}) {
@@ -34,6 +34,9 @@ export class MindMap {
   // ---------- 渲染 ----------
   render() {
     if (!this.root) return;
+    const activeAction = document.activeElement?.closest?.('.mm-note, .mm-kids');
+    const actionFocus = activeAction && this.el.contains(activeAction)
+      ? { id: activeAction.closest('.mm-node')?.dataset.id, selector: activeAction.classList.contains('mm-note') ? '.mm-note' : '.mm-kids' } : null;
     const flat = [];
     const walk = (n, depth, parent, color) => {
       n._depth = depth; n._parent = parent;
@@ -92,19 +95,22 @@ export class MindMap {
     stack(right, r, 1);
     stack(left, r, -1);
 
-    // 3. 放置（CSS 过渡负责动画）；新节点先放在父节点上，下一帧再移到目标位置
+    // 3. 放置（CSS 过渡负责动画）；新节点先放在父节点上，下一帧再移到目标位置。
+    //    目标位置记在元素上（_target），下一帧取「那时最新的」目标：一帧里连着重排好几次（连点展开、刚好赶上定时刷新）时，
+    //    不会被前一次排版的旧位置盖回去（以前会这样：节点叠在一起、连线连到空处）
     const place = (n) => `translate(${n._x - n._w / 2}px, ${n._y - n._h / 2}px)`;
     const fresh = [];
     for (const n of flat) {
       const el = this.els.get(n.id);
+      el._target = place(n);
       if (el.classList.contains('mm-new') && n._parent) {
         const p = this.pos.get(n._parent.id) || n._parent;
         el.style.transform = `translate(${p._x - n._w / 2}px, ${p._y - n._h / 2}px)`;
-        fresh.push([el, n]);
-      } else { el.classList.remove('mm-new'); el.style.transform = place(n); }
+        fresh.push(el);
+      } else { el.classList.remove('mm-new'); el.style.transform = el._target; }
       this.pos.set(n.id, { _x: n._x, _y: n._y });
     }
-    requestAnimationFrame(() => fresh.forEach(([el, n]) => { el.classList.remove('mm-new'); el.style.transform = place(n); }));
+    if (fresh.length) requestAnimationFrame(() => fresh.forEach((el) => { if (!el.isConnected) return; el.classList.remove('mm-new'); el.style.transform = el._target; }));
 
     // 4. 连线：从父节点边缘到子节点边缘的曲线
     for (const n of flat) {
@@ -120,6 +126,7 @@ export class MindMap {
       path.style.d = `path("M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}")`;
       path.style.stroke = n._color || 'var(--line)';
       path.style.strokeWidth = n._depth === 1 ? 2.5 : 1.5;
+      path.classList.toggle('mm-dash', !!this.opts.dashed?.(n)); // 比如笔记的标题：虚线，和文件夹之间的连线区分开
     }
     for (const [id, path] of this.paths) if (!seen.has(id) || id === this.root.id) { path.remove(); this.paths.delete(id); }
 
@@ -129,6 +136,7 @@ export class MindMap {
     }), { x1: Infinity, x2: -Infinity, y1: Infinity, y2: -Infinity });
     if (!this.placed) { this.placed = true; this.home(); }
     this.apply();
+    if (actionFocus) this.els.get(actionFocus.id)?.querySelector(actionFocus.selector)?.focus({ preventScroll: true });
   }
 
   // ---------- 视图 ----------
@@ -149,7 +157,7 @@ export class MindMap {
   fit(minK = 0) {
     const b = this.bounds, w = this.el.clientWidth, h = this.el.clientHeight;
     if (!b || !w) return;
-    const k = Math.min(1.2, (w - PAD * 2) / (b.x2 - b.x1), (h - PAD * 2) / (b.y2 - b.y1));
+    const k = Math.min(1, (w - PAD * 2) / (b.x2 - b.x1), (h - PAD * 2) / (b.y2 - b.y1));
     if (k < minK) {
       const r = this.root;
       this.view = { k: minK, x: this.opts.layout === 'both' ? w / 2 : PAD + (r._w / 2) * minK, y: h / 2 - r._y * minK };
@@ -217,22 +225,24 @@ export class MindMap {
     label.focus();
     document.getSelection().selectAllChildren(label);
     this.editing = true;
-    const done = (ok) => {
+    const done = (ok, how) => {
       label.removeEventListener('keydown', key);
       label.removeEventListener('blur', blur);
       label.contentEditable = 'false';
       this.editing = false;
       this.el.focus();
       const text = label.textContent.replace(/\s+/g, ' ').trim();
-      if (ok && text && text !== old) this.opts.onRename?.(this.node(id), text);
+      const changed = !!(ok && text && text !== old);
+      if (changed) this.opts.onRename?.(this.node(id), text);
       else label.textContent = shown;
+      this.opts.onEditEnd?.(this.node(id), { how, changed }); // how：enter / escape / blur
     };
     const key = (e) => {
       e.stopPropagation();
-      if (e.key === 'Enter') { e.preventDefault(); done(true); }
-      if (e.key === 'Escape') { e.preventDefault(); done(false); }
+      if (e.key === 'Enter') { e.preventDefault(); done(true, 'enter'); }
+      if (e.key === 'Escape') { e.preventDefault(); done(false, 'escape'); }
     };
-    const blur = () => done(true);
+    const blur = () => done(true, 'blur');
     label.addEventListener('keydown', key);
     label.addEventListener('blur', blur);
   }
@@ -242,6 +252,9 @@ export class MindMap {
     const el = this.el;
     let drag = null;
     el.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.mm-toggle, .mm-note, .ai-dot')) {
+        this.actionClick = { id: e.target.closest('.mm-node')?.dataset.id, at: performance.now() };
+      }
       if (e.target.closest('.mm-node, .mm-mini, .mm-pop') || this.editing) return;
       drag = { x: e.clientX - this.view.x, y: e.clientY - this.view.y };
       el.classList.add('mm-drag');
@@ -284,12 +297,22 @@ export class MindMap {
       const nodeEl = e.target.closest('.mm-node');
       if (!nodeEl) return;
       const n = this.node(nodeEl.dataset.id);
+      if (!n) return;
+      if (e.detail > 1 && this.actionClick && performance.now() - this.actionClick.at < 600) return;
+      const action = e.target.closest('.mm-toggle, .mm-note, .ai-dot');
+      if (action) this.actionClick = { id: n.id, at: performance.now() };
+      else this.actionClick = null;
       if (e.target.closest('.mm-toggle')) { this.opts.onToggle?.(n); return; }
+      if (e.target.closest('.mm-note')) { this.select(n.id, false); this.opts.onNote?.(n); return; }
       this.select(n.id, false);
+      if (!this.editing) this.el.focus({ preventScroll: true });
       this.opts.onSelect?.(n, 'click');
     });
     el.addEventListener('dblclick', (e) => {
+      if (e.target.closest('button, .mm-toggle, .mm-note, .ai-dot, [contenteditable="plaintext-only"]')) return;
       const nodeEl = e.target.closest('.mm-node');
+      // Re-layout can place a heading or parent under the second click. A control double-click is one action.
+      if (this.actionClick && performance.now() - this.actionClick.at < 600) return;
       if (nodeEl) this.opts.onActivate?.(this.node(nodeEl.dataset.id), e);
     });
     el.addEventListener('keydown', (e) => this.key(e));
@@ -307,7 +330,9 @@ export class MindMap {
 
   // XMind 式快捷键。使用方的 opts.onKey 先处理（返回 true 表示已处理），剩下的是通用的导航和视图操作
   key(e) {
+    // Node action buttons keep native Enter/Space/Tab behaviour; map shortcuts only run on the canvas/name area.
     if (this.editing || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.closest?.('.mm-pop')) return;
+    if (e.key !== 'Escape' && e.target.closest?.('button, [role="button"]')) return;
     const n = this.node(this.sel) || this.root;
     if (this.opts.onKey?.(e, n)) { e.preventDefault(); return; }
     const ctrl = e.ctrlKey || e.metaKey;

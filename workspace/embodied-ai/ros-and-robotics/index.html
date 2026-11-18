@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN" data-base="/">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ROS 与机器人 · Y0uYuGe</title>
+
+<link rel="stylesheet" href="/blog/article.css">
+</head>
+<body data-page="article">
+<header class="bar">
+  <a class="brand" href="/">Y0uYuGe</a>
+  <a class="tomap" href="/#/embodied-ai/ros-and-robotics" title="在导图上看这篇文章的位置">◎ 在导图中查看</a>
+</header>
+<div class="wrap">
+  <main class="post">
+    <nav class="crumbs"><a href="/#/">Y0uYuGe</a><span class="sep">›</span><a href="/#/embodied-ai">具身智能</a></nav>
+    <h1>ROS 与机器人</h1>
+    <div class="meta"><time>2026-11-17</time></div>
+    <article class="post-body">
+
+    </article>
+    <section class="kids"><h2>本节文章</h2><a href="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E5%AE%89%E8%A3%85%20ros1%20-%20ros2%20-%20%E4%B8%8B%E8%BD%BD%20ROS%20%E8%BD%AF%E4%BB%B6%E5%8C%85%20-%20%E4%BB%8E%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%20Gazebo%20%E8%BD%AF/"><span class="t">ROS - 安装 ros1/ros2 - 下载 ROS 软件包 - 从源码编译 Gazebo 软件包 - 终端配置 - 节点 + 软件包 - 话题 + 消息 + 发布者 - 订阅者 - 各自的缓冲队列 + 整体流程 - 机器人运动控制</span><span class="d">2025-02-03</span><span class="e">在 ROS（Robot Operating System）中，节点之间通过话题（topic）进行通信。发布者负责向某个话题发送消息，而订阅者负责从该话题接收消息。10 是队列大小，用于控制发布者和订阅者之间消息的缓冲行为。rosdep 是 ROS（Robot Operating System）中用于安装系统依赖的工具。初始化终端，否则环境会出大问题；直接使用原生环境即可。如果已经配置过，那么……当按下 Alt+Shift+D 时，面板会自动分割，并在新面板中复制当前会话。</span></a><a href="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%20-%20%E6%B6%88%E6%81%AF%E5%8C%85%E6%A0%BC%E5%BC%8F%20-%20%E8%8E%B7%E5%8F%96%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E6%95%B0%E6%8D%AE%20-%20%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE%E9%81%BF%E9%9A%9C/"><span class="t">ROS - 激光雷达 - 消息包格式 - 获取激光雷达数据 - 激光雷达避障</span><span class="d">2025-02-04</span><span class="e">它通过发射激光束并接收反射光来测量物体的距离，生成点云数据，用于构建环境的三维模型。这是一条 ROS（机器人操作系统）命令，用于订阅并显示 /scan 话题上的消息内容。--noarr 参数用于简化输出：不显示数组的完整内容，而是显示数组的类型和长度。RViz 是 ROS（机器人操作系统）中的可视化工具，用于显示和调试机器人数据。它支持多种数据类型，包括机器人模型、传感器数据、点云、图像等。Gazebo 支持多种机器人模型和传感器，并提供物理仿真能力。</span></a><a href="/workspace/embodied-ai/ros-and-robotics/ROS%20-%20IMU%EF%BC%88%E6%83%AF%E6%80%A7%E6%B5%8B%E9%87%8F%E5%8D%95%E5%85%83%EF%BC%89%E6%B6%88%E6%81%AF%E5%8C%85%20-%20%E8%8E%B7%E5%8F%96%20IMU%20%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%20-%20IMU%20%E8%88%AA%E5%90%91%E9%94%81%E5%AE%9A%20-%20%E6%A0%87%E5%87%86/"><span class="t">ROS - IMU（惯性测量单元）消息包 - 获取 IMU 设备数据 - IMU 航向锁定 - 标准消息包与常用消息包 - 自定义消息包 - 栅格地图格式 - 发布地图</span><span class="d">2025-02-10</span><span class="e">消息包也是一个软件包。消息定义文件位置：msg 文件通常存放在 ROS 包的 msg 目录下。文件格式：msg 文件是纯文本文件，每行定义一个字段，字段由类型和名称组成。消息内容语法：字段定义——每行定义一个字段，格式为 `type name`。支持的类型：基本类型：int8、int16、int32、int64（以及对应的无符号类型 uint8、uint16、uint32、uint64）、string；其他消息类型：可以引用其他已定义的消息类型。</span></a><a href="/workspace/embodied-ai/ros-and-robotics/ROS%20%E5%AF%BC%E8%88%AA%E7%B3%BB%E7%BB%9F%EF%BC%9Amove_base%E3%80%81%E5%85%A8%E5%B1%80%E8%A7%84%E5%88%92%E5%99%A8%E3%80%81AMCL%E3%80%81%E4%BB%A3%E4%BB%B7%E5%9C%B0%E5%9B%BE%E5%8F%82%E6%95%B0%E3%80%81%E6%81%A2%E5%A4%8D%E8%A1%8C%E4%B8%BA%E5%8F%82%E6%95%B0%E3%80%81%E5%B1%80%E9%83%A8%E8%A7%84%E5%88%92%E5%99%A8/"><span class="t">ROS 导航系统：move_base、全局规划器、AMCL、代价地图参数、恢复行为参数、局部规划器 DWA/TEB、导航 Action 编程接口、坐标导航实现、导航插件、导航插件集成</span><span class="d">2025-02-17</span><span class="e">算法：使用了多种算法，包括 sample_motion_model_odometry、beam_range_finder_model、likelihood_field_range_finder_model、Augmented_MCL 和 KLD_Sampling_MCL。clear_costmap_recovery 包提供了一种在机器人导航过程中使用的恢复行为，用于清除代价地图中的障碍物信息，帮助机器人脱困并继续导航。</span></a><a href="/workspace/embodied-ai/ros-and-robotics/ROS%20%E7%9B%B8%E6%9C%BA%E8%AF%9D%E9%A2%98%E3%80%81%E8%8E%B7%E5%8F%96%E5%9B%BE%E5%83%8F%E3%80%81%E9%A2%9C%E8%89%B2%E7%9B%AE%E6%A0%87%E8%AF%86%E5%88%AB%E4%B8%8E%E5%AE%9A%E4%BD%8D%E3%80%81%E7%9B%AE%E6%A0%87%E8%B7%9F%E9%9A%8F%E3%80%81%E4%BA%BA%E8%84%B8%E6%A3%80%E6%B5%8B/"><span class="t">ROS 相机话题、获取图像、颜色目标识别与定位、目标跟随、人脸检测</span><span class="d">2025-02-18</span><span class="e">RGB（红、绿、蓝）颜色空间是一种基于光的加色模型，通过不同强度的红、绿、蓝光组合来表示颜色。/camera/camera_info：相机的内参，如焦距、主点坐标和畸变系数。image_rect_color 话题的消息格式是 sensor_msgs/Image。/camera/image_rect_color：经过畸变校正的彩色图像数据。/camera/image_raw：未经处理的原始图像数据。/camera/image_rect：经过畸变校正的图像数据。</span></a><a href="/workspace/embodied-ai/ros-and-robotics/ROS%20SLAM%EF%BC%9Ahector_mapping%E3%80%81launch%20%E5%90%AF%E5%8A%A8%20Hector%E3%80%81Hector%20%E5%8F%82%E6%95%B0/"><span class="t">ROS SLAM：hector_mapping、launch 启动 Hector、Hector 参数、TF、里程计、Gmapping、launch 启动 Gmapping、Gmapping 参数、地图的保存与加载</span><span class="d">2025-02-12</span><span class="e">电机里程计在激光雷达 SLAM（同步定位与地图构建）中起着重要作用。它通过记录电机转动数据计算机器人的位移，从而估计机器人当前的位置。这些位移信息以 TF 消息的形式发布到 /tf 话题。电机里程计输出的是 odom 到 base_footprint 的 TF，而激光雷达 SLAM 输出的是 map 到 base_footprint 的 TF。</span></a></section>
+    <nav class="pn"><a href="/workspace/embodied-ai/reinforcement-learning/"><span class="l">上一篇</span>强化学习</a><span></span></nav>
+  </main>
+  
+</div>
+<script type="module" src="/blog/article.js"></script>
+</body>
+</html>
