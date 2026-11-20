@@ -1,9 +1,9 @@
 // 同一份页面：有 api/state 就是本地工作台（可管理），否则读 data.json 当博客（只读）。
-import { MindMap } from './mindmap.js';
-import * as NM from './notemap.js';
-import { enhance } from './blog/article.js';
-import * as AG from './agents.js';
-import { ic } from './icons.js';
+import { MindMap } from './mindmap.js?v=4edcbab53d';
+import * as NM from './notemap.js?v=4edcbab53d';
+import * as AG from './agents.js?v=4edcbab53d';
+import { ic } from './icons.js?v=4edcbab53d';
+import { tidyTerminal, looksLikeTerminal } from './termpaste.js?v=4edcbab53d';
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -48,18 +48,8 @@ async function load() {
     S.mode = 'blog';
     document.body.classList.add('studio', 'blog');
     accept(await (await fetch('data.json')).text());
-    // 手机上博客首页是目录：把搜索框搬到目录最上面
-    const mt = $('#m-tree');
-    if (mt) {
-      const slot = document.createElement('div');
-      slot.className = 'm-search';
-      mt.prepend(slot);
-      const sb = searchBox.closest('.search-box') || searchBox;
-      // 电脑上和工作台一样，搜索框挨着左上角的名字；手机上在目录最上面
-      const place = () => { if (matchMedia('(max-width: 760px)').matches) slot.prepend(sb); else $('#canvas-toolbar').prepend(sb); };
-      addEventListener('resize', place);
-      place();
-    }
+    // 博客和工作台一样：搜索框在导图左上角（手机上也是导图，不再换成目录）
+    $('#canvas-toolbar').prepend(searchBox.closest('.search-box') || searchBox);
   }
 }
 
@@ -156,23 +146,27 @@ const map = new MindMap($('#map'), {
   onSelect: (v, how) => {
     if (v.h) {
       gotoHeading(v);
-      if (v.h.intro) { if (how === 'click' || hpop) openFolderPop(S.sel); } else if (how === 'click' || hpop) openHeadPop(v);
-      // 用鼠标点的：光标直接进框里，接着打字就是写这一节（不然回车会在导图上新建标题、打的字成了标题名）。
-      // 用方向键选的：光标留在导图上，Enter / Tab 还是加标题
-      const p = hpop;
-      if (how === 'click' && p && S.mode === 'local') p.live.ready.then(() => {
-        if (hpop !== p) return;
-        const body = p.el.querySelector('.pop-body');
-        p.live.focusEnd(body.scrollHeight > body.clientHeight + 4);
-      });
+      // 工作台里点一下只选中（像 XMind：选中后 F2 / Enter / Tab / Delete / 拖动都对它）；再点一下或 ⌘Enter 才弹出这一节来写。
+      // 框开着（正在写）时点别的标题、用方向键走：框跟过去，接着写下一节（点的光标进框里；双击还是改名）。博客里点一下就弹（只读）
+      const show = how === 'click' ? S.mode !== 'local' || !!hpop : !!hpop;
+      if (show) { if (v.h.intro) openIntroPop(S.sel); else openHeadPop(v); }
+      if (show && how === 'click') focusPop(hpop);
       return;
     }
+    const writing = how === 'click' && S.mode === 'local' && !!hpop; // 框开着时点别的文件夹：框跟过去，弹它的笔记
     closeHeadPop(true);
     S.headSel = null;
     if (v.a) return openAgent(v.a.id);
     if (S.sel !== v.id) { S.headsShown = null; S.wantPop = null; }
-    // 点文件夹本身只是选中它（工作台里 AI 栏跟着换到这个文件夹）；笔记、子文件夹各点各的按钮（onNote / onToggle）
-    S.dockFilter = null; // 点文件夹本身（不是圆点）：AI 栏回到默认，放开着的会话
+    if (writing) return writeNote(v.id);
+    // 点文件夹本身：选中它，在旁边弹出整篇笔记（空的就是空框，直接写）（右边的 AI 会话不跟着换，点圆点才换）；
+    // 标题、子文件夹各点各的按钮（onNote / onToggle）
+    // 工作台里点一下只选中，再点一下 / ⌘Enter 才弹出笔记（onOpen）；博客里点有文章的文件夹直接弹（只读）
+    const hasNote = S.mode !== 'local' && !!v.n.url;
+    if (how === 'click' && hasNote) {
+      if (S.sel === v.id && headEd()) { focusPop(openNotePop(v.id)); return; }
+      S.wantPop = v.id;
+    }
     openNode(v.id);
   },
   // 文件夹上的笔记按钮：笔记的标题作为分支长出来（和子文件夹二选一：长出标题时子文件夹收起）；再点收回。
@@ -182,7 +176,15 @@ const map = new MindMap($('#map'), {
     closeHeadPop(true);
     S.headSel = null;
     if (S.headsShown === v.id) { S.headsShown = null; return renderMap(); }
-    if (S.mode === 'local' && (!v.n.note || v.n.note.empty)) { map.select(v.id, false); if (S.sel !== v.id) openNode(v.id); return flash('「' + v.n.name + '」的笔记还是空的：右键它「新建标题」'); }
+    if (S.mode === 'local' && (!v.n.note || v.n.note.empty)) { map.select(v.id, false); if (S.sel !== v.id) openNode(v.id); return flash('「' + v.n.name + '」的笔记还是空的：点 ✎ 直接写，或右键「新建标题」'); }
+    // 有字但没有标题：没有分支可长（以前会长出一个孤零零的「概述」，看着像笔记里有这个标题），直接弹出整篇
+    if (v.n.note && !v.n.note.heads) {
+      map.select(v.id, false);
+      if (S.mode === 'local') return writeNote(v.id);
+      if (S.sel === v.id && headEd()) return openNotePop(v.id);
+      S.wantPop = v.id;
+      return openNode(v.id);
+    }
     S.headsShown = v.id;
     if (S.open.has(v.id)) { S.open.delete(v.id); saveOpen(); }
     if (S.sel !== v.id) return openNode(v.id);
@@ -197,9 +199,64 @@ const map = new MindMap($('#map'), {
     if (!v.n.children.length) return renderMap();
     toggle(v.id);
   },
-  onActivate: (v) => {
+  // 节点上的 ✎（选中或鼠标停在节点上时出现）/ ⌘Enter：写笔记。文件夹弹出整篇（空的也弹，直接写），标题弹出这一节，光标直接进框里
+  onWrite: (v) => {
+    if (v.a) return;
+    if (S.mode !== 'local') { // 博客：看笔记 / 看这一节，和点一下一样
+      if (v.h) { if (v.h.intro) openIntroPop(S.sel); else openHeadPop(v); return; }
+      if (!v.n.url) return;
+      closeHeadPop(true);
+      if (S.sel === v.id && headEd()) return openNotePop(v.id);
+      S.wantPop = v.id;
+      return openNode(v.id);
+    }
+    if (v.h) { if (v.h.intro) openIntroPop(S.sel); else openHeadPop(v); return focusPop(hpop); }
+    writeNote(v.id);
+  },
+  // 双击：工作台里改名（像 XMind）；博客里只看这个分支
+  onActivate: (v, e) => {
+    if (e?.type === 'dblclick' && S.mode === 'local') {
+      if (v.a || (v.h && (v.h.intro || !headOf(v))) || !v.id) return;
+      closeHeadPop(true);
+      return map.edit(v.id);
+    }
     if (v.a || v.h) return;
     if (v.n.children.length && v.id !== S.focus) setFocus(v.id);
+  },
+  // 拖动：文件夹拖到另一个文件夹上 = 挪进去；标题拖到同一篇笔记的标题前 / 后 / 上（成为下级），拖到自己的文件夹上 = 放到最后。只在工作台里
+  canPick: () => S.mode === 'local',
+  canDrag: (v) => S.mode === 'local' && !v.a && (v.h ? !v.h.intro && !!headOf(v) : !!v.id),
+  dropZones: (src, t) => {
+    if (t.a) return null;
+    if (!src.h) return !t.h && t.id !== src.id && !t.id.startsWith(src.id + '/') && t.id !== (src.n.parent?.path ?? '') ? ['child'] : null;
+    const from = headOf(src);
+    if (!from) return null;
+    if (!t.h) return t.id === from.path ? ['child'] : null;
+    const to = headOf(t);
+    if (!to || to.path !== from.path || t.h.intro) return null;
+    for (let x = to.x; x; x = x.parent) if (x.id === from.x.id) return null;
+    return isCenter(from.ed, to.x) ? ['child'] : ['before', 'after', 'child'];
+  },
+  onDrop: (src, t, where) => {
+    // 拖的是选中的一组里的一个：同类的一起挪（文件夹和文件夹、同一篇笔记里的标题和标题）
+    const group = map.picked().some((v) => v.id === src.id) ? map.picked().filter((v) => (src.h ? !!v.h && !v.h.intro && !!headOf(v) : !v.h && !v.a && !!v.id)) : [src];
+    if (!src.h) {
+      const ids = group.map((v) => v.id), top = ids.filter((id) => !ids.some((o) => o !== id && id.startsWith(o + '/')));
+      return moveFolders(top.filter((id) => (index.get(id)?.parent?.path ?? '') !== t.id).map((id) => [id, t.id]));
+    }
+    const ed = headEd(), x = headOf(src);
+    if (!ed || !x) return;
+    closeHeadPop(true);
+    const tid = t.h ? headOf(t)?.x.id : null;
+    const xs = group.map((v) => headOf(v).x.id);
+    ed.run((d) => {
+      const res = NM.dropMany(d, xs.map((id) => ed.find(id)), tid ? ed.find(tid) : mapRoot(d), where);
+      if (res && !res.error) setTimeout(() => {
+        const tt = toast(`已把${xs.length > 1 ? ` ${xs.length} 个标题` : `「${esc(NM.plain(x.x.text))}」`}挪过去 <button data-undo>撤销</button><button data-x>关闭</button>`, 6000);
+        tt.querySelector('[data-undo]').onclick = () => { tt.hidden = true; headEd()?.undo(); };
+      });
+      return res;
+    });
   },
   editText: (v) => (v.h ? v.h.text : v.n?.dir),
   onRename: (v, name) => {
@@ -217,15 +274,16 @@ const map = new MindMap($('#map'), {
     headEd()?.undo();
   },
   onHelp: () => showHelp(),
-  onEscape: () => { if (closeHeadPop()) return true; if (S.mode === 'blog' && S.sheet && !$('#panel').hidden) { closePanel(); return true; } if (S.focus) { setFocus(''); return true; } return false; },
+  onEscape: () => { if (closeHeadPop()) return true; if (S.focus) { setFocus(''); return true; } return false; },
   onView: () => { placeHeadPop(); paintCanvasZoom(); },
   onKey: (e, v) => {
     const ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && e.key.toLowerCase() === 'f') { $('#search').focus(); return true; }
+    if (map.picked().length && (e.key === 'Delete' || e.key === 'Backspace')) { if (S.mode === 'local') deleteMany(map.picked()); return true; }
     if (v.h) {
       if (v.h.intro) {
         if (e.key === 'Enter' || e.key === ' ') {
-          openFolderPop(S.sel);
+          openIntroPop(S.sel);
           const editor = hpop?.live;
           editor?.ready.then(() => editor.focus());
           return true;
@@ -239,6 +297,7 @@ const map = new MindMap($('#map'), {
     if (v.a) return ['Tab', 'Enter', 'F2'].includes(e.key); // AI 节点不能新建子文件夹、改名
     if (S.mode !== 'local') return e.key === 'F2'; // 只读模式不能改名
     if (e.key === 'F2' && !v.id) return true; // 根目录不能改名
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { writeNote(v.id); return true; }
     if (e.key === 'Tab') { newFolder(v.id); return true; }
     if (e.key === 'Enter' && !e.shiftKey) { newFolder(v.id ? v.n.parent.path : ''); return true; }
     if ((e.key === 'Delete' || e.key === 'Backspace') && v.id) { deleteFolder(v.id); return true; }
@@ -279,9 +338,11 @@ function folderMenu(n) {
   return [
     { icon: 'folderPlus', label: '新建子文件夹', key: 'Tab', run: () => newFolder(p) },
     p && { icon: 'pencil', label: '重命名', key: 'F2', run: () => { map.select(p); map.edit(p); } },
+    { icon: 'file', label: '写笔记', key: '⌘↵', run: () => writeNote(p) },
     { icon: 'plus', label: '新建标题', run: () => newSection(p) },
     '-',
     { icon: 'sparkles', label: '在这里开 AI', run: () => openAgent('new:' + p) },
+    n.children.length && p && (S.focus === p ? { icon: 'collapse', label: '退出只看这个分支', key: 'Esc', run: () => setFocus('') } : { icon: 'expand', label: '只看这个分支', run: () => setFocus(p) }),
     p && { icon: isPinned(p) ? 'pinOff' : 'pin', label: isPinned(p) ? '移出聚焦' : '加入聚焦', run: () => togglePin(p) },
     '-',
     n.children.length && { icon: 'expand', label: '展开全部', run: () => expandAll(p) },
@@ -317,6 +378,7 @@ $('#map').addEventListener('click', (e) => {
   e.stopPropagation(); e.preventDefault();
   const path = dot.closest('.mm-node').dataset.id, cat = dot.dataset.cat, deep = !!dot.dataset.deep;
   S.dockFilter = { path, cat, deep };
+  S.dockPath = path;
   const first = (deep ? agentsUnder : agentsAt)(path).filter((a) => catOf(a) === cat && !isHidden(a)).sort((x, y) => y.mtime - x.mtime)[0];
   S.panelClosed = false;
   S.panelRequested = true;
@@ -331,10 +393,21 @@ $('#map').addEventListener('contextmenu', (e) => {
   const v = el && map.node(el.dataset.id);
   if (!v) return;
   e.preventDefault();
+  // 在选中的一组上点右键：对这一组的操作
+  const group = map.picked();
+  if (group.some((x) => x.id === v.id)) {
+    return showCtx([
+      { head: `已选 ${group.length} 个` },
+      '-',
+      { icon: 'trash', label: '删除选中的', key: 'Delete', danger: true, run: () => deleteMany(map.picked()) },
+      { icon: 'collapse', label: '取消选择', key: 'Esc', run: () => map.unpick() },
+    ], e.clientX, e.clientY);
+  }
+  map.unpick();
   if (v.h) {
     gotoHeading(v);
     if (v.h.intro) return showCtx([
-      { icon: 'file', label: '编辑概述', run: () => openFolderPop(S.sel) },
+      { icon: 'file', label: '编辑开头这段', run: () => openIntroPop(S.sel) },
     ], e.clientX, e.clientY);
     return showCtx([
       { icon: 'file', label: '编辑这一节', run: () => openHeadPop(v) },
@@ -382,6 +455,8 @@ ctx.addEventListener('click', (e) => {
   const it = ctx.items?.[+e.target.closest('[data-i]')?.dataset.i];
   if (!it) return;
   closeCtx();
+  // 菜单关掉后键盘回到导图（Esc、方向键接着能用）；菜单项自己把光标放到别处的（改名、写笔记、开 AI）不抢
+  if (ctx.contains(document.activeElement) || document.activeElement === document.body) map.el.focus({ preventScroll: true });
   it.run();
 });
 ctx.addEventListener('keydown', (e) => {
@@ -403,6 +478,8 @@ ctx.addEventListener('keydown', (e) => {
 async function newFolder(parent) {
   try {
     const r = await post('api/folder/create', { parent });
+    // 在「聚焦」里新建、但新文件夹不在聚焦的任何分支里（比如在顶层的文件夹上按 Enter 建同级）：加入聚焦，不跳回全景
+    if (S.view === 'work' && !onPinPath(r.path)) { S.pins = [...S.pins, r.path]; store.set('pins', S.pins); }
     S.noteView = 'doc'; // 新建的笔记是空的：直接打开文档，可以马上写
     S.open.add(parent);
     saveOpen();
@@ -427,17 +504,81 @@ async function renameFolder(p, name) {
   } catch (err) { alert(err.message); renderMap(); }
 }
 
+// 导图上的标题节点 -> 它在当前笔记编辑器里的节点（只有选中的那个文件夹的笔记能拖）
+function headOf(v) {
+  const ed = headEd();
+  if (!ed || !v.h || v.h.intro) return null;
+  const pre = 'h:' + S.sel + '\n';
+  if (!v.id.startsWith(pre)) return null;
+  const x = ed.find(v.h.id);
+  return x ? { ed, x, path: S.sel } : null;
+}
+
+// 文件夹拖到另一个文件夹上：挪进去。展开状态、📌、聚焦跟着改路径；提示里可以撤销（挪回原来的上级）
+function moveFolder(p, parent, undo) { return moveFolders([[p, parent]], undo); }
+// moves = [[文件夹, 挪进哪个文件夹], …]；挪完一起刷新，提示里一次撤销全部
+async function moveFolders(moves, undo) {
+  if (!moves.length) return;
+  closeHeadPop(true);
+  const done = [];
+  let fail = null;
+  for (const [p, parent] of moves) {
+    const from = index.get(p)?.parent?.path ?? '';
+    try {
+      const r = await post('api/folder/move', { path: p, parent, undo: !!undo });
+      if (r.path === p) continue;
+      done.push({ to: r.path, from, parent, unpublished: r.unpublished });
+      const fix = (x) => (x === p ? r.path : x.startsWith(p + '/') ? r.path + x.slice(p.length) : x);
+      S.open = new Set([...S.open].map(fix));
+      if (parent) S.open.add(parent);
+      S.pins = S.pins.map(fix);
+      if (S.focus) setFocus(fix(S.focus));
+      if (S.view === 'work' && !onPinPath(r.path)) S.pins = [...S.pins, r.path];
+    } catch (err) { fail = err; break; }
+  }
+  saveOpen();
+  store.set('pins', S.pins);
+  if (!done.length) { if (fail) flash(fail.message); renderMap(); return; }
+  await refresh();
+  if (done.length > 1) map.setPicks(done.map((d) => d.to)); // 挪完还选着这一组，可以接着挪
+  location.hash = '#/' + done[0].to;
+  if (fail) return flash(`挪了 ${done.length} 个，「${moves[done.length]?.[0].split('/').pop()}」没挪：${fail.message}`);
+  if (undo) return flash('已挪回去');
+  const parent = done[0].parent;
+  const name = done.length > 1 ? ` ${done.length} 个文件夹` : `「${esc(index.get(done[0].to)?.name || done[0].to.split('/').pop())}」`;
+  const where = esc(parent ? index.get(parent)?.name || parent : '工作区');
+  const t = toast(`已把${name}挪进「${where}」${done.some((d) => d.unpublished) ? '（新位置不公开，博客里不再显示）' : ''} <button data-undo>撤销</button><button data-x>关闭</button>`, 8000);
+  t.querySelector('[data-undo]').onclick = () => { t.hidden = true; moveFolders(done.map((d) => [d.to, d.from]), true); };
+}
+
+// 多选后按 Delete：文件夹一起移到回收站（问一次）；标题一起删（可撤销）
+function deleteMany(vs) {
+  const folders = vs.filter((v) => !v.h && !v.a && v.id).map((v) => v.id);
+  const heads = vs.filter((v) => v.h && !v.h.intro && headOf(v));
+  if (folders.length && heads.length) return flash('选中的既有文件夹又有标题，请分开删');
+  if (folders.length) return deleteFolder(folders.filter((p) => !folders.some((o) => o !== p && p.startsWith(o + '/'))));
+  if (!heads.length) return flash('选中的这些不能删');
+  const ed = headEd(), xs = heads.map((v) => headOf(v).x);
+  closeHeadPop(true);
+  map.unpick();
+  ed.run((d) => NM.removeMany(d, xs.map((x) => ed.find(x.id))));
+  const t = toast(`已删除 ${xs.length} 个标题 <button data-undo>撤销</button><button data-x>关闭</button>`, 6000);
+  t.querySelector('[data-undo]').onclick = () => { t.hidden = true; headEd()?.undo(); };
+}
+
 // 文件夹就是用户的数据：删除前保存编辑内容，整棵移到工作台回收站，不直接抹掉文件。
-function deleteFolder(p) {
-  const n = index.get(p);
+function deleteFolder(arg) {
+  const ps = [].concat(arg).filter((x) => x && index.get(x)), p = ps[0], n = index.get(p);
   if (S.mode !== 'local' || !p || !n || $('#pub-dlg')) return;
+  const names = ps.map((x) => '「' + esc(index.get(x).name) + '」');
   const dlg = document.createElement('div');
   dlg.id = 'pub-dlg';
   dlg.setAttribute('role', 'dialog');
   dlg.setAttribute('aria-modal', 'true');
   dlg.setAttribute('aria-labelledby', 'folder-delete-title');
-  dlg.innerHTML = `<div class="box"><h3 id="folder-delete-title">删除「${esc(n.name)}」？</h3>
-    <p>这个文件夹、里面的笔记和全部子文件夹会一起移到<b>工作台回收站</b>，可以从中找回。</p>
+  dlg.innerHTML = `<div class="box"><h3 id="folder-delete-title">${ps.length > 1 ? `删除这 ${ps.length} 个文件夹？` : `删除「${esc(n.name)}」？`}</h3>
+    ${ps.length > 1 ? `<p>${names.slice(0, 8).join('、')}${ps.length > 8 ? ` 等 ${ps.length} 个` : ''}</p>` : ''}
+    <p>${ps.length > 1 ? '这些文件夹' : '这个文件夹'}、里面的笔记和全部子文件夹会一起移到<b>工作台回收站</b>，可以从中找回。</p>
     <p class="hint">AI 对话记录会保留。如果里面还有开着的 AI 会话，请先关掉终端再删除。</p>
     <div class="row"><button class="primary danger" data-delete-folder>移到回收站</button><button data-cancel>取消</button></div>
     <p class="msg" role="status"></p></div>`;
@@ -468,8 +609,11 @@ function deleteFolder(p) {
       [...editors].forEach((ed) => ed.flush());
       if ((await S.pendingSave) === false) throw new Error('笔记没有保存成功，请先保留刚才的改动，再删除文件夹。');
       msg.textContent = '正在移到回收站…';
-      const r = await post('api/folder/delete', { path: p });
-      const under = (x) => typeof x === 'string' && (x === p || x.startsWith(p + '/'));
+      let r;
+      const gone = [];
+      try { for (const x of ps) { r = await post('api/folder/delete', { path: x }); gone.push(x); } }
+      catch (err) { if (!gone.length) throw err; flash(`删了 ${gone.length} 个，「${index.get(ps[gone.length])?.name}」没删：${err.message}`); }
+      const under = (x) => typeof x === 'string' && gone.some((g) => x === g || x.startsWith(g + '/'));
       const selected = under(S.sel);
       if (selected) {
         [...editors].forEach((ed) => ed.destroy());
@@ -488,7 +632,8 @@ function deleteFolder(p) {
       if (S.query) { ++SR.seq; clearTimeout(SR.timer); clearSearch(); }
       await refresh();
       if (selected) {
-        const next = '#/' + r.parent;
+        const hit = gone.find((g) => S.sel === g || S.sel.startsWith(g + '/')) || gone[0];
+        const next = '#/' + (hit.includes('/') ? hit.slice(0, hit.lastIndexOf('/')) : r.parent);
         if (decodeURIComponent(location.hash) === next) route(); else location.hash = next;
       }
       else { renderMap(); renderPanel(true); }
@@ -556,12 +701,16 @@ function shortName(n) {
   return s;
 }
 
+// 写笔记的小按钮：浮在节点右上角（不占节点宽度，出现 / 消失时导图不跳），选中或鼠标停在节点上才显示
+// 节点右上角的小按钮：工作台里 ✎ 弹出来写；博客里是「看笔记」（有文章的文件夹、标题），弹出来读
+const writeBtn = (what, read = false) => (S.mode === 'local' ? `<button type="button" class="mm-write" tabindex="-1" title="${what}（⌘Enter）" aria-label="${what}">${ic('pencil', 11)}</button>`
+  : read ? `<button type="button" class="mm-write" tabindex="-1" title="${read}" aria-label="${read}">${ic('bookOpen', 11)}</button>` : '');
 function workspaceNode(v) {
   if (v.h) {
     const t = NM.plain(v.h.text) || '（未命名）';
-    if (v.h.intro) return `<span class="node-icon">${ic('file', 12)}</span><span class="mm-label">${esc(t)}</span>`;
+    if (v.h.intro) return `<span class="node-icon">${ic('file', 12)}</span><span class="mm-label" title="笔记开头（第一个标题前面）的那段话">${esc(t)}</span>` + writeBtn('写开头这段', '看开头这段');
     return `<span class="mm-label"${t.length > 30 ? ` title="${esc(t)}"` : ''}>${esc(t.length > 30 ? t.slice(0, 29) + '…' : t)}</span>`
-      + (v.h.children.length ? `<span class="mm-toggle">${v.collapsed ? '+' + v.h.children.length : '−'}</span>` : '');
+      + (v.h.children.length ? `<span class="mm-toggle">${v.collapsed ? '+' + v.h.children.length : '−'}</span>` : '') + writeBtn('写这一节', '看这一节');
   }
   const n = v.n;
   const short = shortName(n);
@@ -576,12 +725,13 @@ function workspaceNode(v) {
     // 收起的文件夹：下面的 AI 有几个在跑、几个等你、几个待办（展开时 AI 就挂在下面）
     h += aiDot(v.closed ? agentsUnder(n.path) : agentsAt(n.path), v.closed);
   }
+  h += writeBtn('写笔记', !!n.url && '看笔记');
   if (S.qOn) return h;
   // 两个按钮，长得一样、各管各的：📄N = 笔记分成 N 节（点开长出笔记导图），📁N = N 个子文件夹（点开长出子文件夹）。
   // 开着的那个高亮；没写笔记的 📄 淡一些、不带数字。「+N」只留给笔记里标题的展开收起，不和这两个混
   if (S.mode === 'local' || n.url) { // 博客：只有文章（公开、有笔记的）才有 📄
     const on = S.headsShown === n.path && headsReady(n), k = n.note?.heads || 0, empty = !n.note || n.note.empty;
-    h += `<button type="button" class="mm-chip mm-note${on ? ' on' : ''}${empty ? ' empty' : ''}" aria-expanded="${on}" title="${on ? '收起笔记导图' : empty ? '笔记是空的（右键文件夹「新建标题」）' : `笔记导图${k ? `：${k} 个标题` : ''}`}">${ic('file', 12)}${k ? `<b>${k}</b>` : ''}</button>`;
+    h += `<button type="button" class="mm-chip mm-note${on ? ' on' : ''}${empty ? ' empty' : ''}" aria-expanded="${on}" title="${on ? '收起笔记导图' : empty ? '笔记是空的（点 ✎ 直接写）' : k ? `笔记导图：${k} 个标题` : '笔记里没有标题：点开看整篇（用 ## 分节，每节会长成一个分支）'}">${ic('file', 12)}${k ? `<b>${k}</b>` : ''}</button>`;
   }
   if (n.children.length && n.path) h += `<button type="button" class="mm-chip mm-toggle mm-kids${v.closed ? '' : ' on'}" aria-expanded="${!v.closed}" title="${v.closed ? `展开 ${n.children.length} 个子文件夹` : '收起子文件夹'}">${ic('folder', 12)}<b>${n.children.length}</b></button>`;
   return h;
@@ -599,7 +749,7 @@ const withAgents = (v) => v;
 const HEAD_MAX = 40;
 // 点了文件夹上的笔记按钮才长出标题，再点收起（S.headsShown 置空）
 const headsReady = (n) => !!S.heads && S.heads.path === n.path;
-// 分支 = 笔记里 md 的各级标题；标题前面还有一段话，最前面多一个「概述」。📄 只管显示；新建标题走右键
+// 分支 = 笔记里 md 的各级标题；标题前面还有一段话，最前面多一个节点（显示这段话的开头几个字）。没有标题就不长分支，📄 直接弹整篇。📄 只管显示；新建标题走右键
 function headsOf(n) {
   if (!headsReady(n) || S.headsShown !== n.path) return [];
   const conv = (x) => {
@@ -609,7 +759,12 @@ function headsOf(n) {
   const out = S.heads.kids.slice(0, HEAD_MAX).map(conv);
   const doc = S.heads.doc;
   {
-    if (doc && NM.sectionOf(doc, mapRoot(doc)).md.trim()) out.unshift({ id: 'h:' + n.path + '\n@intro', h: { id: '@intro', text: '概述', children: [], intro: true }, collapsed: true, children: [] });
+    // 第一个标题前面还有一段话：最前面多一个节点，名字就用这段话的开头几个字（叫「概述」会让人以为笔记里有个叫概述的标题）
+    const lead = doc && out.length ? NM.sectionOf(doc, mapRoot(doc)).md.trim() : '';
+    if (lead) {
+      const first = NM.plain(lead.split('\n').find((l) => l.trim() && !/^(```|~~~|\||<)/.test(l.trim())) || '开头').replace(/^[-*+>#\d.\s]+/, '').trim() || '开头';
+      out.unshift({ id: 'h:' + n.path + '\n@intro', h: { id: '@intro', text: first.length > 14 ? first.slice(0, 13) + '…' : first, children: [], intro: true }, collapsed: true, children: [] });
+    }
   }
   return out;
 }
@@ -647,28 +802,51 @@ let hpop = null; // { id: 导图上的 id, hid: 笔记里的标题 id, el, live,
 const headEd = () => (S.noteEd && S.noteEd.path === S.sel ? S.noteEd.ed : null);
 const headMapId = (hid) => 'h:' + S.sel + '\n' + hid;
 const openHeadPop = (v) => openPop(v.id, v.h.id);
-// 文件夹自己：弹出笔记开头那段（第一个标题之前；笔记里没有标题就是整篇）
-function openFolderPop(path) {
+// 笔记开头那段（第一个标题之前）
+function openIntroPop(path) {
   const ed = headEd();
   if (!ed || S.sel !== path || !map.node(path)) return;
   const n = index.get(path);
-  openPop(path, mapRoot(ed.doc).id, ed.doc.root.children.length ? '写「' + (n?.name || '') + '」的概述…' : `写「${n?.name || ''}」的笔记，自动保存。用 ## 标题 分节，每节长成一个分支`);
+  openPop(path, mapRoot(ed.doc).id, '写「' + (n?.name || '') + '」开头的话…');
 }
-function openPop(mapId, hid, empty = '写这一节的内容…') {
+// 点文件夹本身：弹出整篇笔记（和点标题弹出那一节一样，只是范围是全文）
+function openNotePop(path) {
+  const ed = headEd();
+  if (!ed || S.sel !== path || !map.node(path)) return;
+  const n = index.get(path);
+  return openPop(path, 'root', `写「${n?.name || ''}」的笔记，自动保存。用 ## 标题分节，每节会长成导图上的一个分支`, true);
+}
+// 框里显示的内容：整篇，或者某个标题的这一节（找不到这个标题了 = null）
+function popText(doc, at) {
+  if (at.whole) return doc.lines.join('\n').trim();
+  const x = NM.locate(doc, at);
+  // 标题：整节，连同子标题（点哪一级就看、写哪一级的全部）；开头那段（root）：只是第一个标题前面的话
+  return x ? (x === mapRoot(doc) ? NM.sectionOf(doc, x).md : NM.bodyOf(doc, x)) : null;
+}
+// 用鼠标点开的框：光标直接放进去（内容短放末尾；长的放开头、不滚走，先看）
+function focusPop(p) {
+  if (!p || S.mode !== 'local') return;
+  p.live.ready.then(() => {
+    if (hpop !== p) return;
+    const body = p.el.querySelector('.pop-body');
+    p.live.focusEnd(body.scrollHeight > body.clientHeight + 4);
+  });
+}
+function openPop(mapId, hid, empty = '写这一节的内容…', whole = false) {
   const ed = headEd();
   if (!ed) return;
-  if (hpop && hpop.id === mapId) return placeHeadPop();
+  if (hpop && hpop.id === mapId && !!hpop.at.whole === whole) { placeHeadPop(); return hpop; }
   closeHeadPop(true);
-  const v = { id: mapId, h: ed.find(hid) || mapRoot(ed.doc) };
+  const v = { id: mapId, h: whole ? ed.doc.root : ed.find(hid) || mapRoot(ed.doc) };
   // 按标题文字认这一节（行号会被别处的改动带着变）；own = 这个框上次写进去的那几行
-  const at = v.h.kind === 'root' ? { root: true } : { line: v.h.line, level: v.h.level, text: v.h.text };
+  const at = whole ? { root: true, whole: true } : v.h.kind === 'root' ? { root: true } : { line: v.h.line, level: v.h.level, text: v.h.text };
   let own = null;
   const el = document.createElement('div');
   el.className = 'mm-pop';
   el.innerHTML = '<div class="pop-head"><span class="pop-note-icon">' + ic('file', 15) + '</span><span class="pop-title"></span><span class="pop-save" role="status">自动保存</span><button class="icon" data-pop="close" title="关闭笔记（Esc）" aria-label="关闭笔记">' + ic('x') + '</button></div><div class="pop-body"></div>';
   map.el.appendChild(el);
   const live = mdEditor({
-    md: NM.sectionOf(ed.doc, v.h).md,
+    md: popText(ed.doc, at),
     base: S.sel,
     editable: S.mode === 'local',
     empty,
@@ -678,19 +856,20 @@ function openPop(mapId, hid, empty = '写这一节的内容…') {
       if (!e2) return false;
       let gone = false, wrote = null, theirs = null;
       return e2.run((d, how) => {
-        const x = NM.locate(d, at);
-        if (!x) { gone = true; return null; }
+        const now = popText(d, at);
+        if (now === null) { gone = true; return null; }
         // 别处（AI）也改了正在写的这一节：用框里的，把它那版留着可以复制
-        const now = NM.sectionOf(d, x).md;
         if (how?.stale && hpop?.live === live && now !== hpop.base && now !== md.trim()) theirs = now;
+        if (whole) return { body: md.trim() + '\n', line: 0 };
+        const x = NM.locate(d, at);
         at.line = x.line;
-        const r = NM.setSection(d, x, md, own);
+        const r = x === mapRoot(d) ? NM.setSection(d, x, md, own) : NM.setBody(d, x, md, own);
         wrote = r.own;
         return r;
       }, { keepPop: true }).then((ok) => {
         if (gone) { lostWriting(md, '这一节的标题已经不在了（被删掉或改了），框里的内容没有存进去。'); return false; }
         if (theirs !== null && ok) lostWriting(theirs, '这一节刚被别处（比如 AI）改过，留的是你框里写的。', '复制别处改的那版');
-        if (ok) { own = wrote; const x = NM.locate(headEd()?.doc || e2.doc, at); if (x && hpop?.live === live) hpop.base = NM.sectionOf(headEd()?.doc || e2.doc, x).md; }
+        if (ok) { own = wrote; const t = popText(headEd()?.doc || e2.doc, at); if (t !== null && hpop?.live === live) hpop.base = t; }
         return ok;
       });
     },
@@ -701,8 +880,7 @@ function openPop(mapId, hid, empty = '写这一节的内容…') {
   el.querySelector('[data-pop="close"]').onclick = () => closeHeadPop();
   const art = S.mode === 'blog' && index.get(S.sel)?.url;
   if (art) el.querySelector('[data-pop="close"]').insertAdjacentHTML('beforebegin', `<a class="icon pop-full" href="${esc(art)}" target="_blank" rel="noopener" title="打开全文（单独的文章页）" aria-label="打开全文">${ic('external')}</a>`);
-  hpop = { id: v.id, hid, at, el, live, base: NM.sectionOf(ed.doc, v.h).md, folder: !index.has(mapId) ? null : mapId };
-  makeRoomForPop();
+  hpop = { id: v.id, hid, at, el, live, base: popText(ed.doc, at), folder: !index.has(mapId) ? null : mapId };
   placeHeadPop();
   return hpop;
 }
@@ -737,7 +915,7 @@ function placeHeadPop() {
   }
   if (x) hpop.at.line = x.line;
   const t = ed?.find(hpop.hid);
-  hpop.el.querySelector('.pop-title').textContent = hpop.folder !== null ? (index.get(hpop.folder)?.name || '') + ' · 笔记' : NM.plain(t?.text || '') || '（空）';
+  hpop.el.querySelector('.pop-title').textContent = hpop.folder !== null ? (index.get(hpop.folder)?.name || '') + (hpop.at.whole ? ' · 笔记' : ' · 开头') : NM.plain(t?.text || '') || '（空）';
   const r = branchRect(hpop.id);
   if (!r) { hpop.el.hidden = true; return; }
   hpop.el.hidden = false;
@@ -756,18 +934,28 @@ function placeHeadPop() {
     st.top = Math.max(POP_M, Math.min(H - hpop.el.offsetHeight - POP_M, r.nodeTop - 6)) + 'px';
     return;
   }
-  const below = H - r.bottom - POP_G - POP_M, above = r.top - POP_G - POP_M, down = below >= Math.min(above, 160);
+  // 整个分支两边都放不下：导图不动（不挪图），框紧挨着这个节点的右边放（会盖住它展开的子节点，关了框就看到）
+  const beside = W - r.nodeRight - POP_G - POP_M;
+  if (beside >= POP_MIN) {
+    const w = Math.min(560, beside);
+    st.width = w + 'px'; st.maxHeight = H - 2 * POP_M + 'px';
+    st.left = r.nodeRight + POP_G + 'px';
+    st.top = Math.max(POP_M, Math.min(H - hpop.el.offsetHeight - POP_M, r.nodeTop - 6)) + 'px';
+    return;
+  }
+  // 节点在最右边：放在节点下面（下面不够就上面）
+  const below = H - r.nodeBottom - POP_G - POP_M, above = r.nodeTop - POP_G - POP_M, down = below >= Math.min(above, 160);
   const w = Math.min(560, W - 2 * POP_M);
   st.width = w + 'px'; st.left = Math.max(POP_M, Math.min(W - w - POP_M, r.nodeLeft)) + 'px';
   st.maxHeight = Math.max(100, down ? below : above) + 'px';
-  st.top = (down ? r.bottom + POP_G : r.top - POP_G - hpop.el.offsetHeight) + 'px';
+  st.top = (down ? r.nodeBottom + POP_G : r.nodeTop - POP_G - hpop.el.offsetHeight) + 'px';
 }
 // 节点连同它下面展开的分支占的范围（屏幕坐标）：框放在整个分支旁边，不挡住它下面的标题、子文件夹
 function branchRect(id) {
   const v = map.node(id);
   if (!v) return null;
   const r = { ...map.nodeRect(id), nodeTop: 0 };
-  r.nodeTop = r.top; r.nodeLeft = r.left;
+  r.nodeTop = r.top; r.nodeLeft = r.left; r.nodeRight = r.right; r.nodeBottom = r.bottom;
   const walk = (x) => (x._kids || []).forEach((k) => {
     const q = map.nodeRect(k.id);
     if (q) { r.left = Math.min(r.left, q.left); r.right = Math.max(r.right, q.right); r.top = Math.min(r.top, q.top); r.bottom = Math.max(r.bottom, q.bottom); }
@@ -776,29 +964,10 @@ function branchRect(id) {
   walk(v);
   return r;
 }
-// 刚打开时：两边放不下、下面又不够，就把导图挪一下，让标题到导图上方，下面整块给框
-// 程序挪导图时滑过去（拖动、滚轮不滑，跟手）
-const glide = () => { map.canvas.classList.add('mm-glide'); clearTimeout(glide.t); glide.t = setTimeout(() => map.canvas.classList.remove('mm-glide'), 320); };
 // 框放左边：只有这个分支本身就在图的最左边时才行（不然会盖住它的上级、根节点和别的分支）
 function popLeftRoom(r) {
   const treeLeft = map.view.x + map.bounds.x1 * map.view.k;
   return treeLeft < r.left - 2 ? 0 : r.left - POP_G - POP_M;
-}
-function makeRoomForPop() {
-  const r = branchRect(hpop.id);
-  if (!r) return;
-  const W = map.el.clientWidth, H = map.el.clientHeight;
-  if (W - r.right - POP_G - POP_M >= POP_MIN || popLeftRoom(r) >= POP_MIN) return; // 旁边放得下就不动图
-  // 分支不太宽：把导图往左挪，右边让出一个框的位置（像 XMind，框总在主题旁边，不盖住图）
-  // 把导图往左挪，右边让出框的位置（像 XMind，框总在主题旁边、不盖住图）；但整张图最左边（根节点）不挪出画面
-  const treeLeft = map.view.x + map.bounds.x1 * map.view.k;
-  const shift = Math.min(r.right - (W - POP_MIN - POP_G - POP_M), Math.max(0, treeLeft - 16));
-  if (shift > 0 && W - (r.right - shift) - POP_G - POP_M >= POP_MIN) { glide(); map.view.x -= shift; map.apply(); return; }
-  if (H - r.bottom >= H * 0.6) return;
-  glide();
-  map.view.y += 70 - r.top;
-  if (r.left < 0 || r.right > W) map.view.x += W / 2 - (r.left + r.right) / 2;
-  map.apply();
 }
 // 打开搜索结果：笔记导图展开，找到那个标题（at.n = 笔记里第几个标题，-1 = 第一个标题之前那段），
 // 选中它、弹出它这一节，并高亮这个词；没给 at（博客的结果）就找第一个含这个词的那一节
@@ -817,7 +986,7 @@ function openFindPop(path, q, at) {
   S.headsShown = path;
   if (S.open.has(path)) { S.open.delete(path); saveOpen(); }
   let p;
-  if (hit === center || hit.kind !== 'h') { S.headSel = null; renderMap(); openFolderPop(path); p = hpop; } else {
+  if (hit === center || hit.kind !== 'h') { S.headSel = null; renderMap(); openIntroPop(path); p = hpop; } else {
     for (let a = hit.parent; a && a.kind === 'h' && a !== center; a = a.parent) S.headOpen.add(headMapId(a.id));
     S.headSel = headMapId(hit.id);
     renderMap();
@@ -861,6 +1030,11 @@ function newSection(p) {
   if (S.sel !== p || !headEd()) { S.autoHead = p; return openNode(p); }
   renderMap();
   addHeading(!S.heads?.doc);
+}
+// 右键「写笔记」：弹出整篇笔记来写（空笔记也行）
+function writeNote(p) {
+  if (S.sel !== p || !headEd()) { S.wantPop = p; return openNode(p); }
+  focusPop(openNotePop(p));
 }
 // 在笔记最后加一节，马上改名。first = 空笔记的第一节（没起名就 Esc / 点走：撤回，不留空标题，笔记导图收起）
 function addHeading(first) {
@@ -923,9 +1097,7 @@ function mapTree() {
   // 聚焦：只显示你固定的文件夹 + 有 AI 在跑 / 等你的文件夹，平铺挂在根下，不再带出一路上级。
   // 固定文件夹里面的照常展开收起；已经在某个固定文件夹里的，不再单独列一遍
   if (S.view === 'work' && S.mode === 'local') {
-    const pins = S.pins.filter((p) => index.has(p));
-    const ais = mapAgents().map((a) => owner(a.path)).filter((p) => p && index.has(p));
-    const all = [...new Set([...pins, ...ais])].filter((p) => !pins.some((x) => x !== p && p.startsWith(x + '/')));
+    const all = workRoots();
     const root = withAgents({ id: '', n: S.data.tree, collapsed: false, children: all.map((p) => {
       const v = conv(index.get(p), false), up = p.split('/').slice(0, -1);
       if (up.length) v.where = up.length > 2 ? '…/' + up.slice(-2).join('/') : up.join('/');
@@ -1094,11 +1266,6 @@ function clearSearch() {
 function openHit(it) {
   if (!it) return;
   clearSearch();
-  // 手机上的博客首页没有导图和侧栏：直接去文章页（找不到对应的文章链接，就去目录里那一项）
-  if (S.mode === 'blog' && matchMedia('(max-width: 760px)').matches) {
-    const a = [...document.querySelectorAll('#m-tree a')].find((x) => decodeURIComponent(x.pathname).replace(/\/$/, '').endsWith('/' + it.path));
-    if (a) { location.href = a.href; return; }
-  }
   if (it.find) { S.find = it.find; S.findAt = it.at || null; S.tab = 'note'; S.noteView = 'doc'; }
   // 已经选中的文件夹：面板不会重画，直接在导图上弹出
   if (it.find && S.sel === it.path && headEd()) { const q = S.find, at = S.findAt; S.find = S.findAt = null; return openFindPop(it.path, q, at); }
@@ -1174,8 +1341,14 @@ $('#banner').addEventListener('click', (e) => { if (e.target.hasAttribute('data-
 S.pins = store.get('pins', []);
 
 const isPinned = (p) => S.pins.includes(p);
-const inPins = (p) => S.pins.some((x) => p === x || p.startsWith(x + '/'));
-const onPinPath = (p) => p === '' || inPins(p) || mapAgents().some((a) => owner(a.path) === p);
+// 「聚焦」顶层平铺的文件夹：固定的 + 有 AI 会话的（已经在某个固定文件夹里的不再单独列）
+function workRoots() {
+  const pins = S.pins.filter((p) => index.has(p));
+  const ais = mapAgents().map((a) => owner(a.path)).filter((p) => p && index.has(p));
+  return [...new Set([...pins, ...ais])].filter((p) => !pins.some((x) => x !== p && p.startsWith(x + '/')));
+}
+// 在「聚焦」里看得到的：这些文件夹和它们里面的（展开就能看到），以及根
+const onPinPath = (p) => p === '' || workRoots().some((r) => p === r || p.startsWith(r + '/'));
 function togglePin(p) {
   S.pins = isPinned(p) ? S.pins.filter((x) => x !== p) : [...S.pins, p];
   store.set('pins', S.pins);
@@ -1287,11 +1460,15 @@ async function renderPanel(force) {
   body.hidden = true;
   // 框开着、笔记在别处被改了（AI 改的、另一个编辑器）：没在框里打字就换成最新内容；这一节没了就关掉
   if (hpop && S.noteEd && !S.liveEditing) {
-    const x = NM.locate(S.noteEd.ed.doc, hpop.at);
-    if (!x) closeHeadPop(true);
-    else if (NM.sectionOf(S.noteEd.ed.doc, x).md !== hpop.base) { const id = hpop.folder ?? headMapId(x.id); closeHeadPop(true); requestAnimationFrame(() => map.node(id) && openPop(id, x.id)); }
+    const doc = S.noteEd.ed.doc, t = popText(doc, hpop.at);
+    if (t === null) closeHeadPop(true);
+    else if (t !== hpop.base) {
+      const { at } = hpop, x = at.whole ? doc.root : NM.locate(doc, at), id = hpop.folder ?? headMapId(x.id);
+      closeHeadPop(true);
+      requestAnimationFrame(() => map.node(id) && openPop(id, x.id, undefined, !!at.whole));
+    }
   }
-  if (S.wantPop === n.path) { S.wantPop = null; requestAnimationFrame(() => openFolderPop(n.path)); }
+  if (S.wantPop === n.path) { S.wantPop = null; requestAnimationFrame(() => focusPop(openNotePop(n.path))); }
   if (S.autoHead === n.path) { S.autoHead = null; requestAnimationFrame(() => addHeading(!note?.body?.trim())); }
   if (S.find) { const q = S.find, at = S.findAt; S.find = S.findAt = null; requestAnimationFrame(() => openFindPop(n.path, q, at)); }
   body.scrollTop = scroll;
@@ -1389,50 +1566,7 @@ function setReading(on) {
   requestAnimationFrame(() => { map.drawMini(); if (S.sel !== null) map.reveal(S.sel); });
 }
 
-// 博客模式的右侧面板：文章正文取自文章页（构建时已渲染好），只读；右上角 ⤢ 放大 / ⤡ 还原
-// 博客（电脑上）：导图占满整个窗口，文章不常驻右边——点文章（或它在导图上的标题）才从右边滑出一张阅读卡片，× / Esc 收起
-const sheetMode = () => S.mode === 'blog' && !S.reading && !matchMedia('(max-width: 760px)').matches;
-const blogHeadCache = new Map();
-function blogHeadsFrom(root) {
-  const kids = [];
-  let cur = null;
-  for (const h of root.querySelectorAll('h2[id], h3[id]')) {
-    const x = { id: h.id, text: h.textContent.trim(), children: [] };
-    if (h.tagName === 'H2' || !cur) { kids.push(x); if (h.tagName === 'H2') cur = x; } else cur.children.push(x);
-  }
-  return kids;
-}
-function setBlogHeads(path, kids) {
-  const sig = 'b|' + path + '|' + JSON.stringify(kids);
-  if (S.heads?.sig === sig) return;
-  S.heads = { path, kids, doc: null, sig };
-  if (S.data) renderMap();
-}
-async function articleHtml(n) {
-  if (!blogHeadCache.has(n.url)) blogHeadCache.set(n.url, fetch(n.url).then((r) => r.text()).then((t) => new DOMParser().parseFromString(t, 'text/html').querySelector('.post-body')?.innerHTML || '').catch(() => ''));
-  return blogHeadCache.get(n.url);
-}
-async function loadBlogHeads(n) {
-  const html = await articleHtml(n);
-  const d = document.createElement('div');
-  d.innerHTML = html;
-  if (S.sel === n.path) setBlogHeads(n.path, blogHeadsFrom(d));
-}
-// 在导图上点了文章的某个标题：打开阅读卡片，滚到这一节
-function readAt(id) {
-  S.readAnchor = id;
-  if (!S.sheet || $('#panel').hidden) { S.sheet = true; S.panelClosed = false; S.panelKey = ''; return renderPanel(true); }
-  scrollToAnchor();
-}
-function scrollToAnchor() {
-  const id = S.readAnchor;
-  if (!id) return;
-  const el = $('#panel-body').querySelector('#' + CSS.escape(id));
-  if (!el) return;
-  S.readAnchor = null;
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-// 博客（电脑上）和工作台一样只有导图：取文章的 md 原文，做成只读的笔记对象，标题长在导图上、点标题弹出只读的框
+// 博客和工作台一样只有导图（手机上也是）：取文章的 md 原文，做成只读的笔记对象，标题长在导图上、点标题弹出只读的框
 const blogMd = new Map();
 async function loadBlogNote(n) {
   if (!n.url || !n.file) { if (S.heads?.path !== n.path) setHeads(n.path, null); return; }
@@ -1446,71 +1580,16 @@ async function loadBlogNote(n) {
   ed.find = (id) => { let r = null; const w = (x) => { if (x.id === id) r = x; x.children.forEach(w); }; w(ed.doc.root); return r; };
   S.noteEd = { path: n.path, ed };
   setHeads(n.path, note);
+  if (S.wantPop === n.path) { S.wantPop = null; requestAnimationFrame(() => openNotePop(n.path)); }
   if (S.find) { const q = S.find, at = S.findAt; S.find = S.findAt = null; requestAnimationFrame(() => openFindPop(n.path, q, at)); }
 }
-async function renderBlogPanel(n, force) {
-  if (!matchMedia('(max-width: 760px)').matches) {
-    document.body.classList.remove('blog-sheet');
-    $('#panel').hidden = true;
-    $('#resizer').hidden = true;
-    S.panelNode = n.path;
-    return loadBlogNote(n);
-  }
-  const sheet = sheetMode();
-  document.body.classList.toggle('blog-sheet', sheet);
-  const key = 'b:' + n.path + (S.reading ? ':read' : '') + (sheet && !S.sheet ? ':shut' : '');
-  if (!force && S.panelKey === key) return;
-  S.panelKey = key;
+async function renderBlogPanel(n) {
+  // 博客只有导图（手机上也是）：文章的标题长在导图上，点标题弹出那一节，不再有右边 / 下面的文章栏
+  document.body.classList.remove('blog-sheet');
+  $('#panel').hidden = true;
+  $('#resizer').hidden = true;
   S.panelNode = n.path;
-  if (n.url) loadBlogHeads(n); else if (S.heads?.path !== n.path) setBlogHeads(n.path, []);
-  if (sheet && (!n.url || !S.sheet)) { $('#panel').hidden = true; $('#resizer').hidden = true; return; }
-  const chain = [];
-  for (let c = n; c; c = c.parent) chain.unshift(c);
-  $('#crumbs').innerHTML = chain.slice(0, -1).map((c) => `<a href="#/${esc(c.path)}">${esc(c.name)}</a>`).join(' / ');
-  const m = n.note || {};
-  // 一行放下：标题、标签、日期，右边是「文档 / 导图」和 ⤢ 放大
-  const meta = (m.tags || []).map((t) => `<span class="chip">#${esc(t)}</span>`).join('') + (m.date ? `<span>${esc(m.date)}</span>` : '');
-  S.noteView = 'doc'; // 文章的标题直接长在左边导图上，不再单独切「导图」
-  const acts = n.path ? `<span class="bacts">${S.reading ? '<button data-wide title="还原宽度（Esc）">⤡</button>' : '<button data-wide title="放大：右边拉宽，导图留在左边（也可以在导图上双击）">⤢</button>'}</span>` : '';
-  let top = `<div class="titlerow"><h1 class="title" title="${esc(n.path ? m.title || n.name : S.data.site.title)}">${esc(n.path ? m.title || n.name : S.data.site.title)}</h1><div class="meta">${meta}</div>${acts}</div>`;
-  if (!n.path && S.data.site.subtitle) top += `<div class="hint">${esc(S.data.site.subtitle)}</div>`;
-  $('#panel-top').innerHTML = top;
-  inlineCrumbs();
-  $('#tabs').hidden = true;
-  $('#panel').hidden = !!S.panelClosed;
-  $('#resizer').hidden = !!S.panelClosed;
-  const body = $('#panel-body');
-  body.className = '';
-  body.scrollTop = 0;
-  const list = childList(n);
-  if (!n.url) { body.innerHTML = list + (n.path ? '' : recentList()); return; }
-  body.innerHTML = '<p class="empty">加载中…</p>';
-  if (S.noteView === 'map' && n.file) {
-    // 文章导图：取笔记原文，标题就是主题（和工作台里的「导图」同一套，只读）
-    let md = '';
-    try { md = await (await fetch(n.url + encodeURIComponent(n.file))).text(); } catch {}
-    if (S.panelNode !== n.path) return;
-    const m = /^\uFEFF?---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(md);
-    body.innerHTML = '';
-    return renderNoteMap(n, { body: m ? md.slice(m[0].length) : md, meta: {}, offset: 0 });
-  }
-  const html = await articleHtml(n);
-  if (S.panelNode !== n.path) return;
-  {
-    // 正文 + 右边的本文目录（够宽才显示）+ 底部同一节的上一篇 / 下一篇
-    const sibs = (n.parent?.children || []).filter((c) => c.url);
-    const i = sibs.indexOf(n), prev = sibs[i - 1], next = sibs[i + 1];
-    const pn = (x, label) => x ? `<a href="#/${esc(x.path)}"><span class="l">${label}</span>${esc(x.name)}</a>` : '<span></span>';
-    body.innerHTML = `<div class="read-wrap"><div class="read-main"><div class="post-body blog-body">${html || '<p class="empty">加载失败</p>'}</div>${list}
-      <nav class="read-pn">${pn(prev, '上一篇')}${pn(next, '下一篇')}</nav></div><aside class="read-toc"></aside></div>`;
-    const heads = [...body.querySelectorAll('.blog-body h2[id], .blog-body h3[id]')];
-    if (heads.length > 2) body.querySelector('.read-toc').innerHTML = '<div class="toc-h">目录</div>' + heads.map((h) => `<a data-anchor="${esc(h.id)}" class="d${h.tagName[1]}">${esc(h.textContent)}</a>`).join('');
-  }
-  enhance(body.querySelector('.blog-body'));
-  hideDupTitle(body.querySelector('.blog-body'), m.title || n.name);
-  if (S.find) { const q = S.find; S.find = null; highlightFind(body.querySelector('.blog-body'), q); }
-  if (sheet) $('#resizer').hidden = true;
-  requestAnimationFrame(scrollToAnchor);
+  return loadBlogNote(n);
 }
 // 面板正文里点到别的文章：在导图上跳过去，不离开首页
 $('#panel-body').addEventListener('click', (e) => {
@@ -1642,6 +1721,7 @@ function openAgent(id) {
     const a = S.data.agents.find((x) => x.id === id);
     const folder = id.startsWith('new:') ? id.slice(4) : a ? owner(a.path) : S.sel || '';
     S.dockAgent = id;
+    if (!id.startsWith('new:')) S.dockPath = folder; // 新建的由 renderDock 换过去（记下原来的，取消时回去）
     if (S.sel !== folder) { location.hash = '#/' + folder; return; }
     renderMap();
     return renderDock(index.get(folder), true);
@@ -1670,11 +1750,13 @@ function renderDock(n, force) {
     S.dockLive?.destroy(); S.dockLive = null; S.dockKey = '';
     return;
   }
-  // 选中的文件夹里没有会话：AI 栏留在刚才那个文件夹的会话上（不能点个文件夹看笔记，终端就没了）；「+」还是在选中的文件夹里新建
+  // AI 栏放的是哪个文件夹的会话（S.dockPath）和导图上选中哪个文件夹无关：点文件夹看笔记，终端不跟着换。
+  // 只有点导图上的圆点、打开某个会话、新建会话时才换（dockTo）；「+」在选中的文件夹里新建
   const sel = n;
-  const keep = S.dockPath !== undefined && S.dockPath !== n.path && index.get(S.dockPath);
-  if (keep && !S.dockFilter && S.dockAgent !== 'new:' + n.path && !dockList(n).list.length && dockList(keep).list.length) n = keep;
-  else S.dockPath = n.path;
+  const nf = S.dockAgent?.startsWith('new:') && S.dockAgent.slice(4);
+  if (nf !== false && nf !== undefined && index.has(nf) && nf !== S.dockPath) { S.dockPrev = S.dockPath; S.dockPath = nf; } // 取消新建就回到原来的
+  if (S.dockPath === undefined || !index.has(S.dockPath)) S.dockPath = n.path;
+  n = index.get(S.dockPath);
   if (S.dockFilter && S.dockFilter.path !== n.path) S.dockFilter = null;
   // 只看的那一类已经一个都不剩了（比如刚把唯一一个开着的关掉）：回到默认，不然 AI 栏空着，像是会话没了
   if (S.dockFilter && !dockList(n).list.length) S.dockFilter = null;
@@ -1707,11 +1789,11 @@ function renderDock(n, force) {
   const body = $('#dock-body');
   body.innerHTML = '';
   if (!cur) {
-    body.innerHTML = `<div class="dock-empty"><p class="de-s">${n.path ? `在「${esc(where)}」里还没有 AI 会话` : '选一个文件夹，在那里开 AI 会话'}</p><button class="primary" data-dock-act="new">${ic('plus')}新建会话</button></div>`;
+    body.innerHTML = `<div class="dock-empty"><p class="de-s">${n.path ? `在「${esc(n.name)}」里还没有 AI 会话` : '选一个文件夹，在那里开 AI 会话'}</p><button class="primary" data-dock-act="new">${ic('plus')}新建会话</button></div>`;
     return;
   }
   if (cur.startsWith('new:')) {
-    S.dockLive = AG.newForm(body, termInfo(), n.path, n.path ? n.name : S.data.tree.name, { note: n.note ? n.dir + '.md' : '', onDone: async (id) => { S.dockAgent = id; S.dockFilter = null; await refresh(); renderDock(index.get(S.sel), true); }, onCancel: () => { S.dockAgent = null; renderDock(n, true); } });
+    S.dockLive = AG.newForm(body, termInfo(), n.path, n.path ? n.name : S.data.tree.name, { note: n.note ? n.dir + '.md' : '', onDone: async (id) => { S.dockAgent = id; S.dockFilter = null; await refresh(); renderDock(index.get(S.sel), true); }, onCancel: () => { S.dockAgent = null; if (S.dockPrev !== undefined && index.has(S.dockPrev)) S.dockPath = S.dockPrev; renderDock(n, true); } });
   } else if (a?.term) S.dockLive = AG.terminalView(body, a.term, { newline: agentDef(a.tool)?.newline });
   else if (a) {
     // 自己在终端里开的 Claude / Codex：这里没有它的终端，显示最后的提问和回复；可以在这里接着聊
@@ -1740,7 +1822,7 @@ const onDockClick = async (e) => {
   if (act === 'note') return agentToNote(id);
   if (act === 'resume') {
     const a = S.data.agents.find((y) => y.id === id);
-    try { const nid = await resumeSession(a); if (!nid) return; S.dockAgent = nid; S.dockFilter = null; renderDock(index.get(S.sel), true); }
+    try { const nid = await resumeSession(a); if (!nid) return; S.dockAgent = nid; S.dockFilter = null; S.dockPath = owner(a.path); renderDock(index.get(S.sel), true); }
     catch (err) { alert(err.message); }
   }
 };
@@ -1916,16 +1998,17 @@ const HELP_BLOG = ['导航', '视图', '层级', '分支', '搜索'];
 const HELP = {
   map: [
     ['导航', '方向键 移动　Home 回到中心主题　空格 展开/收起　Ctrl+/ 展开/收起'],
-    ['视图', 'Ctrl+= 放大　Ctrl+- 缩小　Ctrl+0 适应窗口　滚轮平移　Ctrl+滚轮缩放　Ctrl+F 搜索'],
+    ['视图', 'Ctrl+= 放大　Ctrl+- 缩小　Ctrl+0 适应窗口　滚轮 / 两指滑动平移（或按住空格拖、中键拖）　Ctrl+滚轮缩放　Ctrl+F 搜索'],
+    ['多选', '空白处按住拖出一个框：碰到的节点都选中　Shift / ⌘ 点：加选、取消　⌘A 全选　选中一组后：Delete 一起删、拖其中一个一起挪（文件夹和文件夹、同一篇笔记的标题和标题）　Esc 取消选择'],
     ['层级', '数字键 1 / 2 / 3 展开到第几层　0 全部展开'],
-    ['分支', '双击 只看这个分支　Esc 退出'],
-    ['右键', '节点上右键：在访达中显示、复制路径、新建、重命名、删除到回收站、开 AI、📌 加入聚焦、展开全部 / 全部收起、🌐 公开设置'],
+    ['分支', '右键「只看这个分支」　Esc 退出'],
+    ['右键', '节点上右键：在访达中显示、复制路径、新建、重命名、删除到回收站、开 AI、只看这个分支、📌 加入聚焦、展开全部 / 全部收起、🌐 公开设置'],
     ['搜索', 'Ctrl+F 到导图左上角的搜索框　结果分三层：文件夹、标题、正文　↑↓ 选　Enter 打开（展开到那个标题、弹出这一节，词高亮）　Esc 清空'],
-    ['文件夹', 'Tab 新建子文件夹　Enter 新建同级文件夹　F2 重命名（同时改同名笔记）　Delete 删除到回收站'],
-    ['标题', '右键文件夹「新建标题」　标题上：Tab 新建下级　Enter 新建同级　F2 改名　Delete 删除（可撤销）　Alt+↑↓ 移动　Ctrl+Z 撤销'],
+    ['文件夹', '点一下选中，点右上角 ✎ 或 ⌘Enter 旁边弹出整篇笔记来写（空的也弹）　双击 / F2 改名（同名笔记跟着改）　Tab 新建子文件夹　Enter 新建同级文件夹　Delete 删除到回收站　拖到另一个文件夹上：挪进去（AI 会话、🌐、📌 跟着走，可撤销）'],
+    ['标题', '右键文件夹「新建标题」　点一下选中，点 ✎ 或 ⌘Enter 弹出这一节来写　双击 / F2 改名　标题上：Tab 新建下级　Enter 新建同级　F2 改名　Delete 删除（可撤销）　Alt+↑↓ 移动　Ctrl+Z 撤销　拖动：放到别的标题上面 / 下面 = 挪到它前 / 后，放到它右半边 = 成为它的下级，放到文件夹上 = 挪到最后；Esc 取消'],
   ],
   note: [
-    ['写笔记', '像飞书 / Notion：点哪儿就在哪儿打字，停下 0.8 秒自动保存　# 标题、- 列表、> 引用、``` 代码块　Tab / Shift+Tab 列表缩进、退回　Ctrl+B 加粗　Ctrl+I 斜体　Ctrl+K 链接　Ctrl+Z / Ctrl+Y 撤销 / 重做'],
+    ['写笔记', '像飞书 / Notion：点哪儿就在哪儿打字，停下 0.8 秒自动保存　# 标题、- 列表、> 引用、``` 代码块　Enter 另起一段　Shift+Enter 段内换行　Tab / Shift+Tab 列表缩进、退回　Ctrl+B 加粗　Ctrl+I 斜体　Ctrl+K 链接（粘一个网址直接变链接，先选中字再粘就是给字加链接）　删表格：在表格下面一段的开头按 Backspace（或上面一段末尾按 Delete）先框出表格，再按一次删掉；也可以连着前后的字一起选中删除　Ctrl+Z / Ctrl+Y 撤销 / 重做'],
   ],
 };
 // 图例：导图上每种图标、颜色是什么意思（画成和导图上一样的样子）；博客只列看得到的那几种
@@ -1936,11 +2019,11 @@ function legend() {
   const local = S.mode === 'local';
   return `<h4>图例</h4><div class="lg">`
     + row(chip('file', 3), '笔记有 3 个标题（md 的 # 标题），点它长出笔记导图')
-    + (local ? row(chip('file', 0, 'faint'), '淡色：笔记是空的（右键文件夹「新建标题」）') : '')
+    + (local ? row(chip('file', 0, 'faint'), '淡色：笔记是空的（点 ✎ 直接写）') : '')
     + row(chip('folder', 2), '有 2 个子文件夹，点它展开')
     + row(chip('file', 3, 'on'), '高亮：这一种分支正开着（笔记导图和子文件夹二选一）')
     + row('<span class="lg-head">标题</span><span class="lg-plus">+2</span>', '笔记里的标题（虚线连着）；+2 = 下面还有 2 个下级标题，点开')
-    + row(`<span class="lg-head">${ic('file', 11)} 概述</span>`, '第一个标题前面的那段话')
+    + row(`<span class="lg-head">${ic('file', 11)} 开头几个字…</span>`, '笔记开头（第一个标题前面）的那段话，节点上显示它的开头几个字')
     + (local ? row('<span class="ai-dot cat-run">1</span><span class="ai-dot cat-idle">1</span><span class="ai-dot cat-off">1</span>', 'AI 会话：绿 = 正在干活，橙 = 开着、等你，灰 = 历史会话（可以接着聊）；数字是几个，点它在右边打开')
       + row(`<span class="lg-ic">${ic('pin', 12)}</span>`, '加入了「聚焦」')
       + row(bar('pub') + bar('pub inherit'), '在博客公开：深绿 = 这个文件夹自己设的，浅绿 = 跟着上级')
@@ -2098,6 +2181,9 @@ function tidyMd(md) {
     return fence ? l : l.replace(/^(\s*(?:[-*+]|\d+[.)])\s+)\[X\]/, '$1[x]');
   }).join('\n');
 }
+// 代码块配色跟着浅 / 深色走（主题随系统变时，已经打开的框也跟着换）
+new MutationObserver(() => { const l = document.getElementById('vditorHljsStyle'); if (l) l.href = l.href.replace(/[^/]+\.min\.css$/, (document.documentElement.dataset.scheme === 'dark' ? 'github-dark' : 'github') + '.min.css'); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-scheme'] });
 function mdEditor({ md, base, editable, onSave, onLayout = () => {}, onEscape = () => {}, empty = '写笔记…' }) {
   const el = document.createElement('div');
   el.className = 'mde';
@@ -2160,7 +2246,7 @@ function mdEditor({ md, base, editable, onSave, onLayout = () => {}, onEscape = 
       toolbarConfig: { pin: true },
       preview: {
         theme: { current: dark ? 'dark' : 'light' },
-        hljs: { style: dark ? 'native' : 'github' },
+        hljs: { style: dark ? 'github-dark' : 'github' },
         math: { engine: 'KaTeX' },
         markdown: { linkBase, autoSpace: false, fixTermTypo: false, toc: false, mark: true },
         actions: [],
@@ -2235,6 +2321,119 @@ function mdEditor({ md, base, editable, onSave, onLayout = () => {}, onEscape = 
     if (e.shiftKey) return;
     if (getSelection().anchorNode?.parentElement?.closest('.vditor-wysiwyg__pre')) document.execCommand('insertText', false, '  ');
   });
+  // Shift+Enter：同一段里换行（Enter 是另起一段），和飞书、Notion 一样。编辑器自己不管这个键
+  el.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || !e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.isComposing || !editable) return;
+    const sel = getSelection(), r = sel.rangeCount && sel.getRangeAt(0);
+    if (!r || r.startContainer.parentElement?.closest('.vditor-wysiwyg__pre')) return; // 代码块里 Enter 本来就是换行
+    e.preventDefault();
+    e.stopPropagation();
+    // 段落里的换行就是 md 里的一个换行（博客按换行显示）；放在段尾时后面补个零宽字符，不然光标落不到新的一行上
+    r.deleteContents();
+    const block = r.startContainer.parentElement?.closest('.vditor-reset > *, li');
+    const tail = block ? (() => { const x = document.createRange(); x.selectNodeContents(block); x.setStart(r.endContainer, r.endOffset); return x.toString().replace(/​/g, ''); })() : '';
+    const t = document.createTextNode(tail ? '\n' : '\n​');
+    r.insertNode(t);
+    r.setStart(t, 1); r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+    el.querySelector('.vditor-reset')?.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertLineBreak' }));
+  }, true);
+  // 删表格：编辑器碰到「跨过表格的选区」「表格前后的退格」都不处理（删不掉，连旁边的字也删不掉），这里自己来。
+  // 选中一段连着表格一起删；表格后面一段的开头按 Backspace（或前面一段的末尾按 Delete）：先把表格框出来，再按一次删掉，按别的键 / 点别处取消
+  let pick = null;
+  const unpick = () => { pick?.classList.remove('mde-pick'); pick = null; };
+  // 改完 DOM：记进编辑器的撤销记录（Cmd+Z 能找回），按平常打字一样 0.8 秒后保存
+  const changed = () => {
+    try { vd?.vditor?.undo?.addToUndoStack?.(vd.vditor); } catch {}
+    ++saveSequence; reportSave('unsaved'); clearTimeout(timer); timer = setTimeout(() => { flush(); hideGhosts(); }, 800);
+  };
+  const caretInto = (node, atEnd) => {
+    const r = document.createRange();
+    r.selectNodeContents(node);
+    r.collapse(!atEnd);
+    getSelection().removeAllRanges(); getSelection().addRange(r);
+  };
+  const emptyBlock = (root) => { const p = document.createElement('p'); p.dataset.block = '0'; p.textContent = '\u200b'; root.appendChild(p); return p; };
+  el.addEventListener('mousedown', unpick, true);
+  el.addEventListener('keydown', (e) => {
+    if (!editable || e.isComposing) return;
+    const root = el.querySelector('.vditor-reset');
+    const del = (e.key === 'Backspace' || e.key === 'Delete') && !e.ctrlKey && !e.metaKey && !e.altKey;
+    if (!del) { if (pick && !['Shift', 'Meta', 'Control', 'Alt'].includes(e.key)) unpick(); return; }
+    if (!root) return;
+    const stop = () => { e.preventDefault(); e.stopPropagation(); };
+    if (pick) {
+      stop();
+      const next = pick.nextElementSibling, prev = pick.previousElementSibling;
+      pick.remove(); pick = null;
+      if (next) caretInto(next, false); else if (prev) caretInto(prev, true); else caretInto(emptyBlock(root), true);
+      return changed();
+    }
+    const sel = getSelection(), r = sel.rangeCount && sel.getRangeAt(0);
+    if (!r || !root.contains(r.commonAncestorContainer)) return;
+    const elOf = (n) => (n.nodeType === 3 ? n.parentElement : n);
+    if (!r.collapsed) {
+      const hit = [...root.querySelectorAll('table')].filter((t) => r.intersectsNode(t));
+      if (!hit.length || elOf(r.commonAncestorContainer).closest('table')) return; // 只在一个表格里选：编辑器自己处理
+      stop();
+      for (const t of hit) { if (t.contains(r.startContainer)) r.setStartBefore(t); if (t.contains(r.endContainer)) r.setEndAfter(t); }
+      const b1 = elOf(r.startContainer).closest('.vditor-reset > *'), b2 = elOf(r.endContainer).closest('.vditor-reset > *');
+      r.deleteContents();
+      // 从一段中间选到另一段中间：剩下的两半接成一段（和平常删字一样）
+      if (b1 && b2 && b1 !== b2 && b1.isConnected && b2.isConnected && b1.tagName === 'P' && b2.tagName === 'P') { while (b2.firstChild) b1.appendChild(b2.firstChild); b2.remove(); }
+      [...root.children].forEach((c) => { if (c.tagName !== 'TABLE' && c.tagName !== 'HR' && !c.querySelector('img, table') && !c.textContent.replace(/\u200b/g, '').trim() && root.children.length > 1) c.remove(); });
+      if (!root.firstElementChild) caretInto(emptyBlock(root), true);
+      else { const at = elOf(r.startContainer).closest('.vditor-reset > *'); if (at && root.contains(at)) { sel.removeAllRanges(); sel.addRange(r); } else caretInto(root.lastElementChild, true); }
+      return changed();
+    }
+    const block = elOf(r.startContainer).closest('.vditor-reset > *');
+    if (!block || block.tagName === 'TABLE' || block.closest('table')) return;
+    const side = document.createRange();
+    side.selectNodeContents(block);
+    if (e.key === 'Backspace') side.setEnd(r.startContainer, r.startOffset); else side.setStart(r.endContainer, r.endOffset);
+    if (side.toString().replace(/\u200b/g, '')) return;
+    const t = e.key === 'Backspace' ? block.previousElementSibling : block.nextElementSibling;
+    if (t?.tagName !== 'TABLE') return;
+    stop();
+    pick = t;
+    t.classList.add('mde-pick');
+  }, true);
+  // 从右边 AI 终端里复制来的：整理成正常的 md 再放进来（去掉界面符号、接回被折的行、表格、代码块、粗体）
+  el.addEventListener('paste', (e) => {
+    if (!editable || !vd) return;
+    const text = e.clipboardData?.getData('text/plain') || '';
+    // 粘一个网址：变成链接。选中了一段字再粘，就是给这段字加上链接（像飞书 / Notion）
+    const url = text.trim();
+    if (/^(https?:\/\/|file:\/\/\/|mailto:)\S+$/i.test(url) && !getSelection().anchorNode?.parentElement?.closest('.vditor-wysiwyg__pre, code')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const s = getSelection(), sel = s.toString().trim(), href = url.replace(/[()\s]/g, encodeURIComponent);
+      const label = sel && !/\n/.test(sel) ? sel : url;
+      if (!s.isCollapsed) s.deleteFromDocument();
+      vd.insertValue(`[${label.replace(/([[\]\\])/g, '\\$1')}](${href})`);
+      return;
+    }
+    const t = window.studioTermCopy, norm = (x) => x.replace(/\s+/g, '');
+    const fromTerm = t && norm(t.plain) === norm(text);
+    if (!fromTerm && !looksLikeTerminal(text)) return;
+    if (getSelection().anchorNode?.parentElement?.closest('.vditor-wysiwyg__pre, code')) return; // 粘进代码块里就原样
+    e.preventDefault();
+    e.stopPropagation();
+    const md = tidyTerminal(fromTerm ? t.rich || t.plain : text, fromTerm ? t.cols : 0);
+    // 好几段的内容：光标所在这一段已经有字，就另起一段再放，不接在这段的后面
+    const an = getSelection().anchorNode, block = (an?.nodeType === 3 ? an.parentElement : an)?.closest?.('.vditor-reset > *');
+    if (/\n/.test(md) && block?.textContent.trim()) {
+      const p = document.createElement('p');
+      p.dataset.block = '0';
+      p.textContent = '​';
+      block.after(p);
+      const r = document.createRange();
+      r.setStart(p.firstChild, 1);
+      getSelection().removeAllRanges();
+      getSelection().addRange(r);
+    }
+    vd.insertValue(md);
+  }, true);
   // 内容变高变矮时（输入、图片加载完）通知外面重新定位
   const ro = new ResizeObserver(() => onLayout());
   ro.observe(el);
@@ -2249,8 +2448,17 @@ function mdEditor({ md, base, editable, onSave, onLayout = () => {}, onEscape = 
       if (!r || !el.isConnected || r.getAttribute('contenteditable') !== 'true') return;
       r.focus({ preventScroll: !!atStart });
       const range = document.createRange();
-      range.selectNodeContents((atStart ? r.firstElementChild : r.lastElementChild) || r);
-      range.collapse(!!atStart);
+      // 最后是个标题（比如只有「# 文件夹名」的空笔记）：另起一段放光标，打的字是正文，不接在标题后面
+      if (!atStart && /^H[1-6]$/.test(r.lastElementChild?.tagName)) {
+        const p = document.createElement('p');
+        p.dataset.block = '0';
+        p.textContent = '\u200b';
+        r.appendChild(p);
+        range.setStart(p.firstChild, 1);
+      } else {
+        range.selectNodeContents((atStart ? r.firstElementChild : r.lastElementChild) || r);
+        range.collapse(!!atStart);
+      }
       getSelection().removeAllRanges();
       getSelection().addRange(range);
     },
@@ -2393,6 +2601,7 @@ function renderNoteMap(n, note) {
     });
   };
   mm = new MindMap(box, {
+    canPick: () => editable,
     layout: S.noteMapView?.path === n.path ? S.noteMapView.layout : 'both', // 第一次打开时 autoCollapse 会挑：左右两边展开或只往右展开
     minimap: false,
     render: (v) => `<span class="mm-label">${esc(NM.plain(v.x.text) || '（空）')}</span>${v.collapsed ? `<span class="mm-toggle">+${v.children.length}</span>` : ''}`,
@@ -2410,6 +2619,14 @@ function renderNoteMap(n, note) {
       if (!editable) return false;
       const x = v.x;
       if (commonKeys(e, ed, x)) return true;
+      const many = mm.picked().filter((m) => !isCenter(ed, m.x));
+      if (many.length && (e.key === 'Delete' || e.key === 'Backspace')) {
+        if (!confirm(`删除选中的 ${many.length} 个主题和它们的笔记？\n可以用撤销恢复。`)) return true;
+        closePop(true);
+        mm.unpick();
+        ed.run((d) => NM.removeMany(d, many.map((m) => ed.find(m.x.id))));
+        return true;
+      }
       if (e.key === 'Tab') { op(NM.addChild, true)(v); return true; }
       if (e.key === 'Enter' && e.shiftKey) { op(NM.addSiblingBefore, true)(v); return true; }
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { openPop(x); pop.live.focus(); return true; }
@@ -2517,12 +2734,7 @@ $('#panel').addEventListener('click', async (e) => {
     setTimeout(refresh, 300);
   }
 });
-// 正文第一行的标题如果和面板顶上的名字一样，就不重复显示（只是不显示，文件不改）
 const normTitle = (t) => String(t || '').replace(/[\s\p{P}\p{S}]/gu, '').toLowerCase();
-function hideDupTitle(root, title) {
-  const first = root?.querySelector(':scope > h1, :scope > h2, :scope > .vditor-reset > h1, :scope > .vditor-reset > h2');
-  if (first && !first.previousElementSibling && normTitle(first.textContent) === normTitle(title)) first.classList.add('dup-title');
-}
 
 // 面板顶部两行：第一行是路径（点哪一级就去哪）、标签、日期、按钮；第二行是标题，像博客文章一样单独一行
 function inlineCrumbs() {
@@ -2601,8 +2813,9 @@ function paintCanvasZoom() {
 // 一开始没有会话时把宽度还给导图；有会话或你打开过 AI 栏就占右栏，之后不会自己收起。
 function syncAIPanel(n = index.get(S.sel)) {
   if (S.mode !== 'local' || !n) return;
-  const composing = S.dockAgent === 'new:' + n.path;
-  const sessions = agentsUnder(n.path).some((a) => !isHidden(a) && (a.term || a.openPid || a.status === 'running' || a.status === 'waiting'));
+  const composing = S.dockAgent?.startsWith('new:');
+  const d = index.get(S.dockPath) || n;
+  const sessions = agentsUnder(d.path).some((a) => !isHidden(a) && (a.term || a.openPid || a.status === 'running' || a.status === 'waiting'));
   const visible = !S.panelClosed && (S.panelRequested || composing || sessions);
   // 打开了就一直开着，直到你自己收起：点到一个还没有会话的文件夹，终端不能突然消失
   if (visible) S.panelRequested = true;
@@ -2701,6 +2914,7 @@ function route() {
   if (S.wantTab) { S.tab = S.wantTab; S.wantTab = null; }
   if (S.sel !== null && S.mode !== 'local') S.panelClosed = false;
   if (S.mode === 'blog' && S.sel === null && index.get(p)?.url) S.headsShown = p; // 博客：从文章页「在导图中看」或分享的链接进来，直接长出它的标题
+  if (!map.picks.has(p)) map.unpick(); // 跳到别处（搜索、链接、前进后退）：之前多选的一组不再算数，免得 Delete 删了看不见的
   S.agent = null; // 选了文件夹：右边回到文件夹
   S.sel = p;
   // 选中的节点不在当前聚焦的分支里时退出聚焦；把上级都展开

@@ -24,6 +24,7 @@ export class MindMap {
     this.paths = new Map(); // id -> 连线
     this.pos = new Map();   // id -> 上次的位置（新节点从父节点位置长出来）
     this.sel = null;
+    this.picks = new Set(); // 框选 / Shift、⌘ 点出来的一组（两个以上才算）；sel 是其中最后点的那个
     this.placed = false;
     this.bind();
   }
@@ -62,10 +63,12 @@ export class MindMap {
       }
       const html = this.opts.render(n);
       if (el._html !== html) { el.innerHTML = html; el._html = html; }
-      const cls = ['mm-node', n._depth === 0 && 'mm-root', n._depth === 1 && 'mm-main', n.id === this.sel && 'mm-sel', fresh && 'mm-new', this.opts.nodeClass?.(n)].filter(Boolean).join(' ');
+      const cls = ['mm-node', n._depth === 0 && 'mm-root', n._depth === 1 && 'mm-main', n.id === this.sel && 'mm-sel', this.picks.has(n.id) && 'mm-pick', fresh && 'mm-new', this.opts.nodeClass?.(n)].filter(Boolean).join(' ');
       if (el.className !== cls) el.className = cls;
       el.style.setProperty('--c', n._color || 'var(--fg)');
     }
+    for (const id of this.picks) if (!seen.has(id)) this.picks.delete(id);
+    if (this.picks.size < 2) this.unpick();
     for (const [id, el] of this.els) if (!seen.has(id)) { el.remove(); this.els.delete(id); this.paths.get(id)?.remove(); this.paths.delete(id); }
     for (const n of flat) { const el = this.els.get(n.id); n._w = el.offsetWidth; n._h = el.offsetHeight; }
 
@@ -205,6 +208,32 @@ export class MindMap {
 
   node(id) { return this.flat?.find((n) => n.id === id); }
 
+  // ---------- 多选 ----------
+  // 使用方给 opts.canPick() 才能多选（只读的博客里不用：空白处拖还是平移）
+  canPick() { return !!this.opts.canPick?.(); }
+  // 选中的一组（按导图上的顺序）；没有多选时是空的
+  picked() { return this.picks.size > 1 ? (this.flat || []).filter((n) => this.picks.has(n.id)) : []; }
+  setPicks(ids) {
+    const next = new Set(ids);
+    if (next.size < 2) next.clear();
+    for (const id of this.picks) if (!next.has(id)) this.els.get(id)?.classList.remove('mm-pick');
+    for (const id of next) this.els.get(id)?.classList.add('mm-pick');
+    const was = this.picks.size;
+    this.picks = next;
+    this.el.classList.toggle('mm-multi', next.size > 1);
+    if (was || next.size) this.opts.onPicks?.(this.picked());
+  }
+  unpick() { if (this.picks.size) this.setPicks([]); }
+  // Shift / ⌘ 点：加进这一组或从组里拿掉
+  togglePick(id) {
+    const ids = new Set(this.picks.size ? this.picks : this.sel != null && this.sel !== id ? [this.sel] : []);
+    if (ids.has(id)) {
+      ids.delete(id);
+      if (this.sel === id) this.select([...ids].at(-1) ?? id, false);
+    } else { ids.add(id); this.select(id, false); }
+    this.setPicks(ids);
+  }
+
   // 节点相对于导图容器的位置（屏幕坐标），用于在旁边放浮层
   nodeRect(id) {
     const n = this.node(id);
@@ -250,18 +279,47 @@ export class MindMap {
   // ---------- 交互 ----------
   bind() {
     const el = this.el;
-    let drag = null;
+    let drag = null, band = null;
     el.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('.mm-toggle, .mm-note, .ai-dot')) {
+      if (e.target.closest('.mm-toggle, .mm-note, .ai-dot, .mm-write')) {
         this.actionClick = { id: e.target.closest('.mm-node')?.dataset.id, at: performance.now() };
       }
+      this.pressNode(e);
       if (e.target.closest('.mm-node, .mm-mini, .mm-pop') || this.editing) return;
-      drag = { x: e.clientX - this.view.x, y: e.clientY - this.view.y };
-      el.classList.add('mm-drag');
-      el.setPointerCapture(e.pointerId);
+      // 空白处：左键拖 = 框选（像 XMind）；按住空格拖、中键拖 = 平移画布（触控板两指滑动、滚轮也能平移）
+      if (e.button === 1 || (e.button === 0 && (this.space || !this.canPick()))) {
+        e.preventDefault();
+        if (this.space) this.space.moved = true;
+        drag = { x: e.clientX - this.view.x, y: e.clientY - this.view.y };
+        el.classList.add('mm-drag');
+        el.setPointerCapture(e.pointerId);
+      } else if (e.button === 0) {
+        const r = el.getBoundingClientRect();
+        const add = e.shiftKey || e.metaKey || e.ctrlKey;
+        band = { x: e.clientX, y: e.clientY, r, base: add ? new Set(this.picks.size ? this.picks : this.sel != null ? [this.sel] : []) : new Set(), id: e.pointerId, box: null };
+        el.setPointerCapture(e.pointerId);
+      }
     });
-    el.addEventListener('pointermove', (e) => { if (drag) { this.view.x = e.clientX - drag.x; this.view.y = e.clientY - drag.y; this.apply(); } });
-    el.addEventListener('pointerup', () => { drag = null; el.classList.remove('mm-drag'); });
+    el.addEventListener('pointermove', (e) => {
+      if (this.moveNode(e)) return;
+      if (drag) { this.view.x = e.clientX - drag.x; this.view.y = e.clientY - drag.y; this.apply(); }
+      if (band && e.pointerId === band.id) this.moveBand(band, e);
+    });
+    const up = (e, ok) => {
+      this.endNode(e, ok); drag = null; el.classList.remove('mm-drag');
+      if (band && e.pointerId === band.id) { const b = band; band = null; this.endBand(b, ok); }
+    };
+    el.addEventListener('pointerup', (e) => up(e, true));
+    el.addEventListener('pointercancel', (e) => up(e, false));
+    // 空格：按住拖是平移；按下松开没拖过 = 展开 / 收起选中的节点（见 key）
+    addEventListener('keyup', (e) => {
+      if (e.key !== ' ' || !this.space) return;
+      const s = this.space; this.space = null; el.classList.remove('mm-grab');
+      if (!s.moved && document.activeElement === el) { const n = this.node(this.sel) || this.root; if (n?.children.length) this.opts.onToggle?.(n); }
+    });
+    addEventListener('blur', () => { this.space = null; el.classList.remove('mm-grab'); });
+    addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.dragging) { e.preventDefault(); e.stopPropagation(); this.endNode(null, false); } }, true);
+    addEventListener('blur', () => this.endNode(null, false));
     // 滚轮平移，Ctrl/触控板捏合缩放
     el.addEventListener('wheel', (e) => {
       if (e.target.closest('.mm-pop') && !e.ctrlKey) return;
@@ -298,14 +356,20 @@ export class MindMap {
       if (!nodeEl) return;
       const n = this.node(nodeEl.dataset.id);
       if (!n) return;
+      if (performance.now() - (this.dropped || 0) < 400) return; // 刚拖完松手：不算点击
       if (e.detail > 1 && this.actionClick && performance.now() - this.actionClick.at < 600) return;
-      const action = e.target.closest('.mm-toggle, .mm-note, .ai-dot');
+      const action = e.target.closest('.mm-toggle, .mm-note, .ai-dot, .mm-write');
       if (action) this.actionClick = { id: n.id, at: performance.now() };
       else this.actionClick = null;
       if (e.target.closest('.mm-toggle')) { this.opts.onToggle?.(n); return; }
       if (e.target.closest('.mm-note')) { this.select(n.id, false); this.opts.onNote?.(n); return; }
+      if (e.target.closest('.mm-write')) { this.select(n.id, false); this.opts.onWrite?.(n); return; }
+      if (this.editing) return; // 正在改名：点的是正在改的字
+      if (e.detail > 1) return; // 双击的第二下：双击另有用处（改名），不再选一次
+      if ((e.shiftKey || e.metaKey || e.ctrlKey) && n !== this.root && this.canPick()) { this.el.focus({ preventScroll: true }); this.togglePick(n.id); return; }
+      this.unpick();
       this.select(n.id, false);
-      if (!this.editing) this.el.focus({ preventScroll: true });
+      this.el.focus({ preventScroll: true });
       this.opts.onSelect?.(n, 'click');
     });
     el.addEventListener('dblclick', (e) => {
@@ -316,6 +380,138 @@ export class MindMap {
       if (nodeEl) this.opts.onActivate?.(this.node(nodeEl.dataset.id), e);
     });
     el.addEventListener('keydown', (e) => this.key(e));
+  }
+
+  // ---------- 框选 ----------
+  moveBand(b, e) {
+    if (!b.box) {
+      if (Math.hypot(e.clientX - b.x, e.clientY - b.y) < 5) return;
+      b.box = document.createElement('div');
+      b.box.className = 'mm-band';
+      this.el.appendChild(b.box);
+    }
+    const x1 = Math.min(b.x, e.clientX), x2 = Math.max(b.x, e.clientX), y1 = Math.min(b.y, e.clientY), y2 = Math.max(b.y, e.clientY);
+    Object.assign(b.box.style, { left: x1 - b.r.left + 'px', top: y1 - b.r.top + 'px', width: x2 - x1 + 'px', height: y2 - y1 + 'px' });
+    // 碰到框的节点都算（不用整个框住）；中心主题不算
+    const ids = new Set(b.base);
+    for (const [id, nel] of this.els) {
+      if (id === this.root.id) continue;
+      const r = nel.getBoundingClientRect();
+      if (r.right > x1 && r.left < x2 && r.bottom > y1 && r.top < y2) ids.add(id);
+    }
+    b.ids = ids;
+    for (const [id, nel] of this.els) nel.classList.toggle('mm-banding', ids.has(id));
+  }
+  endBand(b, ok) {
+    for (const nel of this.els.values()) nel.classList.remove('mm-banding');
+    if (!b.box) { if (ok && !b.base.size) this.unpick(); return; } // 没拖动：只是点了一下空白处，取消多选
+    b.box.remove();
+    this.dropped = performance.now();
+    if (!ok) return;
+    const ids = (this.flat || []).filter((n) => b.ids?.has(n.id)).map((n) => n.id);
+    if (!ids.length) { this.unpick(); return; }
+    this.el.focus({ preventScroll: true });
+    if (ids.length === 1) { this.unpick(); this.select(ids[0], false); this.opts.onSelect?.(this.node(ids[0]), 'band'); return; }
+    if (!ids.includes(this.sel)) this.select(ids.at(-1), false);
+    this.setPicks(ids);
+  }
+
+  // ---------- 拖动节点 ----------
+  // 使用方给 opts.canDrag(n)（能不能拖）、opts.dropZones(src, target)（能放到 target 的哪些位置：
+  // 'before' / 'after' 同级前后、'child' 成为下级；返回空就是不能放）、opts.onDrop(src, target, where)。
+  // 按住移动超过几个像素才开始拖（不影响单击）；拖到收起的节点上停一会儿会展开；拖到边上导图跟着滚；Esc 取消
+  pressNode(e) {
+    this.press = null;
+    if (e.button !== 0 || this.editing || !this.opts.onDrop || e.target.closest('.mm-toggle, .mm-note, .ai-dot, button, .mm-pop, [contenteditable="plaintext-only"]')) return;
+    const n = this.node(e.target.closest('.mm-node')?.dataset.id);
+    if (n && this.opts.canDrag?.(n)) this.press = { n, x: e.clientX, y: e.clientY, id: e.pointerId };
+  }
+
+  moveNode(e) {
+    const p = this.press;
+    if (!p || e.pointerId !== p.id) return false;
+    if (!this.dragging) {
+      if (Math.hypot(e.clientX - p.x, e.clientY - p.y) < 6) return true;
+      const src = this.els.get(p.n.id);
+      if (!src) { this.press = null; return false; }
+      const r = src.getBoundingClientRect();
+      const ghost = src.cloneNode(true);
+      ghost.classList.add('mm-ghost');
+      ghost.classList.remove('mm-sel');
+      ghost.style.cssText = `position:fixed;left:0;top:0;margin:0;pointer-events:none;z-index:1000;transform-origin:0 0;--c:${src.style.getPropertyValue('--c')}`;
+      const many = this.picks.has(p.n.id) ? this.picks.size : 0;
+      if (many > 1) { const c = document.createElement('span'); c.className = 'mm-ghost-n'; c.textContent = many; ghost.appendChild(c); }
+      this.el.appendChild(ghost);
+      this.dragging = { n: p.n, src, ghost, dx: p.x - r.left, dy: p.y - r.top, k: r.width / src.offsetWidth || 1 };
+      src.classList.add('mm-dragsrc');
+      this.el.classList.add('mm-dragging');
+      try { this.el.setPointerCapture(e.pointerId); } catch {}
+    }
+    e.preventDefault();
+    const d = this.dragging;
+    d.cx = e.clientX; d.cy = e.clientY;
+    d.ghost.style.transform = `translate(${d.cx - d.dx}px, ${d.cy - d.dy}px) scale(${d.k})`;
+    this.hitDrop();
+    // 拖到导图边上：跟着滚
+    const b = this.el.getBoundingClientRect(), m = 40;
+    const vx = d.cx < b.left + m ? 1 : d.cx > b.right - m ? -1 : 0, vy = d.cy < b.top + m ? 1 : d.cy > b.bottom - m ? -1 : 0;
+    d.pan = vx || vy ? [vx, vy] : null;
+    if (d.pan && !d.raf) {
+      const step = () => {
+        if (this.dragging !== d || !d.pan) { d.raf = 0; return; }
+        this.view.x += d.pan[0] * 10; this.view.y += d.pan[1] * 10;
+        this.apply();
+        this.hitDrop();
+        d.raf = requestAnimationFrame(step);
+      };
+      d.raf = requestAnimationFrame(step);
+    }
+    return true;
+  }
+
+  hitDrop() {
+    const d = this.dragging;
+    // 正好在节点上，或者离节点边缘不到 10px（节点展开后会变窄一点，光标别一下子掉出去）
+    let hitEl = document.elementFromPoint(d.cx, d.cy)?.closest('.mm-node:not(.mm-ghost)');
+    if (!hitEl) for (const e of this.els.values()) {
+      const r = e.getBoundingClientRect();
+      if (d.cx > r.left - 10 && d.cx < r.right + 10 && d.cy > r.top - 6 && d.cy < r.bottom + 6) { hitEl = e; break; }
+    }
+    const t = hitEl && this.el.contains(hitEl) ? this.node(hitEl.dataset.id) : null;
+    const zones = t && t !== d.n && !(this.picks.has(d.n.id) && this.picks.has(t.id)) ? this.opts.dropZones?.(d.n, t) || [] : [];
+    let where = null;
+    if (zones.length) {
+      const r = hitEl.getBoundingClientRect();
+      const inner = t._side < 0 ? d.cx < r.left + r.width * 0.35 : d.cx > r.right - r.width * 0.35;
+      const half = d.cy < r.top + r.height / 2 ? 'before' : 'after';
+      where = zones.includes('child') && (inner || !zones.includes(half)) ? 'child' : zones.includes(half) ? half : zones[0];
+    }
+    const key = where ? t.id + '|' + where : '';
+    if (key === d.key) return;
+    d.key = key;
+    if (d.hl) d.hl.classList.remove('mm-drop-child', 'mm-drop-before', 'mm-drop-after');
+    d.hl = where ? hitEl : null;
+    d.drop = where ? { t, where } : null;
+    if (d.hl) d.hl.classList.add('mm-drop-' + where);
+    // 停在收起的节点上：展开它，好放进更深一层
+    clearTimeout(d.open);
+    if (where === 'child' && t.collapsed && t.children.length) d.open = setTimeout(() => { if (this.dragging === d && d.drop?.t === t) { const was = this.nodeRect(t.id); this.opts.onToggle?.(t); const now = this.nodeRect(t.id); if (was && now) { this.view.x += was.left - now.left; this.view.y += was.top - now.top; this.apply(); } d.key = null; const again = () => { if (this.dragging === d) { d.key = null; this.hitDrop(); } }; requestAnimationFrame(again); setTimeout(again, 400); } }, 700);
+  }
+
+  endNode(e, ok) {
+    const d = this.dragging;
+    if (e && this.press && e.pointerId !== this.press.id) return;
+    this.press = null;
+    if (!d) return;
+    this.dragging = null;
+    clearTimeout(d.open);
+    cancelAnimationFrame(d.raf);
+    d.ghost.remove();
+    d.src.classList.remove('mm-dragsrc');
+    d.hl?.classList.remove('mm-drop-child', 'mm-drop-before', 'mm-drop-after');
+    this.el.classList.remove('mm-dragging');
+    this.dropped = performance.now();
+    if (ok && d.drop) this.opts.onDrop(this.node(d.n.id) || d.n, this.node(d.drop.t.id) || d.drop.t, d.drop.where);
   }
 
   // 方向键在节点间移动；其它键交给使用方（opts.onKey 返回 true 表示已处理）
@@ -341,10 +537,11 @@ export class MindMap {
     if (ctrl && e.key === '0') { e.preventDefault(); return this.fit(); }
     if (ctrl && e.key === '/') { e.preventDefault(); if (n.children.length) this.opts.onToggle?.(n); return; }
     if (e.key === 'Home') { e.preventDefault(); this.select(this.root.id); this.opts.onSelect?.(this.root); return; }
-    if (e.key === 'Escape') { if (this.opts.onEscape?.()) e.preventDefault(); return; }
+    if (e.key === 'Escape') { if (this.picks.size) { e.preventDefault(); this.unpick(); return; } if (this.opts.onEscape?.()) e.preventDefault(); return; }
+    if (ctrl && e.key.toLowerCase() === 'a' && this.canPick()) { e.preventDefault(); const ids = this.flat.filter((m) => m !== this.root).map((m) => m.id); if (ids.length) { if (!ids.includes(this.sel)) this.select(ids[0], false); this.setPicks(ids); } return; }
     if (e.key === '?') { e.preventDefault(); this.opts.onHelp?.(); return; }
     if (e.key === 'F2' && this.opts.onRename) { e.preventDefault(); if (n !== this.root || this.opts.rootEditable) this.edit(n.id); return; }
-    const go = (m) => { if (m) { e.preventDefault(); this.select(m.id); this.opts.onSelect?.(m, 'key'); } };
+    const go = (m) => { if (m) { e.preventDefault(); this.unpick(); this.select(m.id); this.opts.onSelect?.(m, 'key'); } };
     const sibs = n._parent?._kids || [n];
     const i = sibs.indexOf(n);
     const out = (side) => (n === this.root ? this.root._kids.find((k) => k._side === side) : n._side === side ? n._kids[0] : n._parent);
@@ -356,7 +553,7 @@ export class MindMap {
       go(out(-1));
     } else if (e.key === 'ArrowUp') go(sibs[i - 1]);
     else if (e.key === 'ArrowDown') go(sibs[i + 1]);
-    else if (e.key === ' ' && n.children.length) { e.preventDefault(); this.opts.onToggle?.(n); }
+    else if (e.key === ' ') { e.preventDefault(); if (!e.repeat && !this.space) { this.space = { moved: false }; this.el.classList.add('mm-grab'); } }
     else if (e.key === 'Enter') { e.preventDefault(); this.opts.onActivate?.(n, e); }
   }
 }

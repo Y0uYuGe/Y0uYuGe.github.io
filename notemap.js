@@ -124,6 +124,58 @@ export function move(doc, n, dir) {
   return pack(lines, put(lines, dir < 0 ? other.line - (other.line > 0 && !lines[other.line - 1]?.trim() ? 1 : 0) : after(other.end, t), t.block));
 }
 
+// 拖动：把主题（连同子主题）放到 target 的前面 / 后面（同级），或者成为它的最后一个子主题。标题级别跟着调整
+export function drop(doc, n, target, where) {
+  if (!n || n.kind === 'root' || !target || n === target) return null;
+  for (let p = target; p; p = p.parent) if (p === n) return { error: '不能拖到它自己下面' };
+  if (target.kind === 'root' && where !== 'child') return null;
+  const level = where === 'child' ? (target.kind === 'root' ? minLevel(target) : target.level + 1) : target.level;
+  const block = doc.lines.slice(n.line, n.end);
+  const deepest = Math.max(...headings(block).map((h) => h.level));
+  if (deepest + level - n.level > 6) return { error: '挪过去会超过最深一级标题（######）' };
+  const lines = [...doc.lines];
+  const t = take(lines, n);
+  const at = where === 'before' ? after(target.line, t) : where === 'after' || target.kind !== 'root' ? after(target.end, t) : docEnd(lines);
+  const res = pack(lines, put(lines, at, shiftHeadings(block, level - n.level)));
+  return res.body === doc.lines.join('\n') ? null : res;
+}
+
+// 多选的一组：只留最上层的（选了父标题，它下面选中的子标题跟着走），按在笔记里的先后排
+const tops = (ns) => ns.filter((n) => n && n.kind !== 'root' && !ns.some((m) => m !== n && m && m.kind !== 'root' && n.line > m.line && n.line < m.end)).sort((a, b) => a.line - b.line);
+
+// 一次删掉好几个主题（连同下面的内容）
+export function removeMany(doc, ns) {
+  const list = tops(ns);
+  if (!list.length) return null;
+  const lines = [...doc.lines];
+  for (const n of [...list].reverse()) take(lines, n);
+  return pack(lines, Math.max(0, list[0].line - 1));
+}
+
+// 一次拖好几个主题：按原来的先后排成一串，放到 target 的前面 / 后面 / 下面，标题级别各自跟着调整
+export function dropMany(doc, ns, target, where) {
+  const list = tops(ns);
+  if (list.length < 2) return drop(doc, list[0], target, where);
+  if (!target || list.includes(target)) return null;
+  for (const n of list) for (let p = target; p; p = p.parent) if (p === n) return { error: '不能拖到它自己下面' };
+  if (target.kind === 'root' && where !== 'child') return null;
+  const level = where === 'child' ? (target.kind === 'root' ? minLevel(target) : target.level + 1) : target.level;
+  const blocks = [];
+  for (const n of list) {
+    const block = doc.lines.slice(n.line, n.end);
+    if (Math.max(...headings(block).map((h) => h.level)) + level - n.level > 6) return { error: '挪过去会超过最深一级标题（######）' };
+    blocks.push(...(blocks.length ? [''] : []), ...shiftHeadings(block, level - n.level));
+  }
+  const lines = [...doc.lines];
+  // 从后往前拿走，记下每段拿走了几行，用来换算目标位置
+  const cuts = [];
+  for (const n of [...list].reverse()) cuts.push(take(lines, n));
+  const adj = (pos) => cuts.reduce((x, t) => (pos >= t.from + t.removed ? x - t.removed : x), pos);
+  const at = where === 'before' ? adj(target.line) : where === 'after' || target.kind !== 'root' ? adj(target.end) : docEnd(lines);
+  const res = pack(lines, put(lines, at, blocks));
+  return res.body === doc.lines.join('\n') ? null : res;
+}
+
 // Ctrl+C：记下这个主题的整段
 export function copy(doc, n) {
   if (n.kind === 'root') return null;
@@ -161,6 +213,27 @@ export function setSection(doc, n, md, own) {
   if (block.length && lines[to]?.trim()) block.push(''); // 和后面的子主题之间空一行
   if (block.length && n.kind !== 'root') block.unshift(''); // 标题和正文之间空一行（Markdown 的常见写法）
   if (!block.length && n.kind !== 'root' && lines[to]?.trim()) block.push(''); // 整节清空了：标题和下一个标题之间也空一行
+  lines.splice(from, to - from, ...block);
+  return { ...pack(lines, n.line), own: block };
+}
+
+// 整节：标题下面的全部内容，连同子标题（点标题弹出的框写的就是它）
+export function bodyOf(doc, n) {
+  return doc.lines.slice(n.line + 1, n.end).join('\n').trim();
+}
+
+// 改整节：替换标题下面到这一节结束的全部内容。own 同 setSection：框里打了和它同级（或更高）的标题、存过一次后
+// 这一节在那个标题处就「结束」了，再存时要把上次写的整块换掉，不然那个标题会被重复写一份
+export function setBody(doc, n, md, own) {
+  const lines = [...doc.lines];
+  const from = n.line + 1;
+  let to = n.end;
+  if (own && from + own.length <= lines.length && own.every((l, i) => lines[from + i] === l)) to = Math.max(to, from + own.length);
+  const block = md.replace(/\r\n/g, '\n').split('\n');
+  while (block.length && !block[0].trim()) block.shift();
+  while (block.length && !block[block.length - 1].trim()) block.pop();
+  if (block.length) block.unshift(''); // 标题和正文之间空一行
+  if (lines[to]?.trim()) block.push(''); // 和后面的标题之间空一行
   lines.splice(from, to - from, ...block);
   return { ...pack(lines, n.line), own: block };
 }

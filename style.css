@@ -55,8 +55,10 @@ main { flex: 1; display: flex; min-height: 0; }
 #map-help { left: 12px; bottom: 12px; color: var(--muted); font-size: 12px; box-shadow: none; }
 
 /* 导图组件 */
-#map { position: absolute; inset: 0; }
+#map { position: absolute; inset: 0; touch-action: none; } /* 手指拖动是拖导图，不是滚页面 */
+#map .mm-pop { touch-action: pan-y; } /* 框里的内容照样能上下滑 */
 .mm { overflow: hidden; cursor: grab; outline: none; }
+body.local .mm { cursor: default; } /* 工作台里空白处拖是框选 */
 .mm.mm-drag { cursor: grabbing; }
 .mm-canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .mm-links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
@@ -201,22 +203,12 @@ body.blog #views, body.blog #pub-btn { display: none; }
 #pub-dlg pre { white-space: pre-wrap; font-size: 12px; background: var(--soft); padding: 8px; border-radius: 6px; }
 .pub { margin-left: 4px; font-size: 11px; }
 .pub.faint { opacity: .45; }
-/* 手机上的博客首页：导图换成可折叠目录 */
+/* 博客页里的纯文字目录（给搜索引擎、没开 JS 的人看）：屏幕上用导图，手机也一样 */
 #m-tree { display: none; }
-@media (max-width: 760px) {
-  body.blog main { display: none; }
-  body.blog #m-tree { display: block; flex: 1; overflow: auto; padding: 8px 16px 40px; font-size: 15px; }
-  #m-tree ul { list-style: none; margin: 0; padding-left: 14px; }
-  #m-tree > ul { padding-left: 0; }
-  #m-tree li { padding: 3px 0; }
-  #m-tree summary { cursor: pointer; padding: 3px 0; }
-  #m-tree summary a, #m-tree summary span { font-weight: 500; }
-  #m-tree .n { color: var(--muted); font-size: 12px; font-weight: normal; margin-left: 6px; }
-  #m-tree a { color: var(--fg); }
-}
 
 @media (max-width: 760px) {
-  #search, #map-help, .mm-mini, #map-tools, #resizer { display: none !important; }
+  .mm-mini, #resizer { display: none !important; }
+  body.studio #canvas-toolbar .search-box { width: min(280px, calc(100vw - 40px)); }
   #bar { gap: 8px; }
   #panel { position: fixed; inset: 49px 0 0 0; width: auto !important; z-index: 5; }
 }
@@ -813,3 +805,27 @@ body:is(.local,.blog) .mm-node.mm-node.heading:hover { background: var(--hover);
 body:is(.local,.blog) .mm-node.mm-node.heading.heading-on, body:is(.local,.blog) .mm-node.mm-node.heading.mm-sel { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 
 /* 本地节点操作和紧凑工作区布局集中维护在 studio.css。 */
+
+/* 拖动节点：原位置变淡，跟着鼠标走一个影子；放下的位置：成为下级 = 框起来，放在前 / 后 = 上 / 下一条线 */
+.mm.mm-dragging, .mm.mm-dragging .mm-node { cursor: grabbing; }
+.mm .mm-node.mm-node.mm-dragsrc { opacity: .35; }
+.mm .mm-node.mm-ghost { opacity: .92; box-shadow: 0 6px 18px rgba(0,0,0,.18); transition: none; }
+.mm .mm-node.mm-node.mm-drop-child { outline: 2px solid var(--accent); outline-offset: 3px; background: color-mix(in srgb, var(--accent) 12%, var(--card)); }
+.mm .mm-node.mm-drop-before::after, .mm .mm-node.mm-drop-after::after { content: ''; position: absolute; left: -4px; right: -4px; height: 3px; border-radius: 2px; background: var(--accent); pointer-events: none; }
+.mm .mm-node.mm-drop-before::after { top: -7px; }
+.mm .mm-node.mm-drop-after::after { bottom: -7px; }
+/* 表格后面一段的开头按 Backspace：先框出来，再按一次删掉 */
+.mde .vditor-reset table.mde-pick { outline: 2px solid var(--accent); outline-offset: 2px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
+/* 节点右上角的 ✎ 写笔记：选中或鼠标停在节点上才出现；浮在外面，不改变节点宽度 */
+.mm .mm-node .mm-write { position: absolute; top: -10px; right: -10px; z-index: 2; width: 20px; height: 20px; padding: 0; display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--card); color: var(--muted); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .12s; cursor: pointer; }
+.mm .mm-node:hover .mm-write, .mm .mm-node.mm-sel .mm-write, .mm .mm-node.heading-on .mm-write { opacity: 1; pointer-events: auto; }
+.mm .mm-node .mm-write:hover { color: var(--accent); border-color: var(--accent); }
+.mm.mm-dragging .mm-write, .mm .mm-ghost .mm-write { display: none; }
+
+/* 多选：框选的框、选中的一组、拖一组时幽灵上的数字 */
+.mm-band { position: absolute; z-index: 5; pointer-events: none; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 3px; }
+.mm .mm-node.mm-pick, .mm .mm-node.mm-banding { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px color-mix(in srgb, var(--accent) 70%, transparent) !important; }
+.mm.mm-grab, .mm.mm-grab * { cursor: grab !important; }
+.mm.mm-drag, .mm.mm-drag * { cursor: grabbing !important; }
+.mm-ghost-n { position: absolute; top: -8px; right: -8px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font: 600 11px/18px system-ui; text-align: center; }

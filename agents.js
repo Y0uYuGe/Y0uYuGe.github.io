@@ -1,8 +1,8 @@
 // 导图上的 AI：右侧面板下面的终端、新建会话的表单。
 // 终端由工作台自己托管（lib/terminals.mjs）：WebSocket /api/terminal/<会话名> 收发原始终端字节，文本消息 {cols, rows} 表示改窗口大小
 
-import { ic } from './icons.js';
-import { handleTerminalWheel, viewportPosition, restoreViewport } from './terminal-scroll.js';
+import { ic } from './icons.js?v=4edcbab53d';
+import { handleTerminalWheel, viewportPosition, restoreViewport } from './terminal-scroll.js?v=4edcbab53d';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 async function post(p, body) {
@@ -15,6 +15,35 @@ async function post(p, body) {
 function loadScript(src) {
   return new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = fail; document.head.appendChild(s); });
 }
+// 选中的那几行：粗体的字记成 **字**（AI 把标题、重点画成粗体，复制成纯文字就丢了）；终端自己折的行接回去
+const MARKS = /[⏺●•◦▪⎿└│┃─━┌┐├┤┬┴┼╭╮╰╯┏┓┗┛┣┫┳┻╋›❯]/;
+function richSelection(term) {
+  const r = term.getSelectionPosition?.();
+  if (!r) return null;
+  const b = term.buffer.active, rows = [];
+  for (let y = r.start.y; y <= r.end.y; y++) {
+    const line = b.getLine(y);
+    if (!line) continue;
+    const x0 = y === r.start.y ? r.start.x : 0, x1 = y === r.end.y ? r.end.x : term.cols;
+    let s = '', bold = false;
+    const close = () => { const m = s.match(/\s*$/)[0]; s = s.slice(0, s.length - m.length) + '**' + m; bold = false; };
+    for (let x = x0; x < x1 && x < line.length; x++) {
+      const c = line.getCell(x);
+      if (!c || c.getWidth() === 0) continue;
+      const ch = c.getChars() || ' ';
+      if (ch.trim() && !MARKS.test(ch)) {
+        const on = !!c.isBold();
+        if (on && !bold) { s += '**'; bold = true; } else if (!on && bold) close();
+      }
+      s += ch;
+    }
+    if (bold) close();
+    s = s.replace(/\s+$/, '');
+    if (line.isWrapped && y > r.start.y && rows.length) rows[rows.length - 1] += s; else rows.push(s);
+  }
+  return rows.join('\n');
+}
+
 let xtermReady;
 const loadXterm = () => (xtermReady ||= (async () => {
   const l = document.createElement('link');
@@ -47,6 +76,10 @@ export function terminalView(el, name, { newline } = {}) {
     if (term) term.options.theme = colors;
   };
   let term, ws, ro, gone = false;
+  // replayed：历史已经重放完、回到了上次看的位置。没放完就又切走，不能把「还在底部」当成你看的位置记下来。
+  // hold：刚切回来的两秒内，终端又改了大小、程序又整屏重画，位置会被冲掉——这段时间里按记住的那几行再找回去；
+  // 你一滚、一点、一打字就不再管
+  let replayed = false, hold = null;
   applyTheme();
   addEventListener('studio-theme', applyTheme);
   loadXterm().then(() => {
@@ -62,7 +95,10 @@ export function terminalView(el, name, { newline } = {}) {
     term.loadAddon(fit);
     term.open(box);
     const wheelState = { lines: 0 };
-    term.attachCustomWheelEventHandler((event) => handleTerminalWheel(term, event, wheelState));
+    term.attachCustomWheelEventHandler((event) => { hold = null; return handleTerminalWheel(term, event, wheelState); });
+    box.addEventListener('pointerdown', () => { hold = null; }, true);
+    box.addEventListener('keydown', () => { hold = null; }, true);
+    term.onWriteParsed(() => { if (hold && Date.now() < hold.until) restoreViewport(term, hold.pos); else hold = null; });
     // 用 WebGL 画：每个字都放进它该占的格子里。默认的 DOM 画法按字体自己的宽度排中文，一个字比两格宽一点点，
     // 一行字多了就累积起来，把行尾一两个字挤到右边看不见的地方。WebGL 用不了（显卡上下文丢了）就退回 DOM 画法
     try {
@@ -73,14 +109,13 @@ export function terminalView(el, name, { newline } = {}) {
     const fitNow = () => {
       const d = fit.proposeDimensions();
       if (!d?.cols || !d?.rows) return;
-      const position = viewportPosition(term);
+      const position = hold && Date.now() < hold.until ? hold.pos : viewportPosition(term);
       term.resize(Math.max(20, d.cols), d.rows);
       restoreViewport(term, position);
     };
     try { fitNow(); } catch {}
     const enc = new TextEncoder();
     const size = () => ws?.readyState === 1 && ws.send(JSON.stringify({ cols: term.cols, rows: term.rows }));
-    let replayed = false;
     // 连接断了（服务重启、电脑睡眠唤醒、网络抖动）不等于会话结束：会话还在就自动连回去。
     // 连回去时服务端会重发整屏和历史，所以先清空，再按原来的滚动位置恢复；真的结束了才写「会话已结束」
     const connect = (again) => {
@@ -92,7 +127,12 @@ export function terminalView(el, name, { newline } = {}) {
         if (gone) return;
         if (fresh) { fresh = false; terminalViewports.set(name, viewportPosition(term)); term.reset(); replayed = false; }
         term.write(typeof e.data === 'string' ? e.data : new Uint8Array(e.data), () => {
-          if (!replayed && !gone) { replayed = true; restoreViewport(term, terminalViewports.get(name)); }
+          if (!replayed && !gone) {
+            replayed = true;
+            const pos = terminalViewports.get(name);
+            restoreViewport(term, pos);
+            hold = pos?.offset ? { pos, until: Date.now() + 2000 } : null;
+          }
         });
       };
       ws.onclose = () => { if (!gone) reconnect(); };
@@ -110,6 +150,11 @@ export function terminalView(el, name, { newline } = {}) {
       }
     };
     connect(false);
+    // 复制时顺便记下带粗体的版本和终端宽度：粘进笔记时按这个整理成 md（见 termpaste.js）
+    box.addEventListener('copy', () => {
+      if (!term.hasSelection()) return;
+      window.studioTermCopy = { plain: term.getSelection(), rich: richSelection(term), cols: term.cols };
+    }, true);
     const send = (s) => ws?.readyState === 1 && ws.send(enc.encode(s));
     term.onData(send);
     // Shift+Enter：换行，不发送（和装过 /terminal-setup 的终端一样）
@@ -202,7 +247,7 @@ export function terminalView(el, name, { newline } = {}) {
   // 等 xterm 手上的刷新做完再销毁，不然它会报错
   return { destroy() {
     if (gone) return;
-    if (term) {
+    if (term && replayed) {
       terminalViewports.delete(name);
       terminalViewports.set(name, viewportPosition(term));
       if (terminalViewports.size > 200) terminalViewports.delete(terminalViewports.keys().next().value);
