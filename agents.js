@@ -1,8 +1,8 @@
 // 导图上的 AI：右侧面板下面的终端、新建会话的表单。
 // 终端由工作台自己托管（lib/terminals.mjs）：WebSocket /api/terminal/<会话名> 收发原始终端字节，文本消息 {cols, rows} 表示改窗口大小
 
-import { ic } from './icons.js?v=4edcbab53d';
-import { handleTerminalWheel, viewportPosition, restoreViewport } from './terminal-scroll.js?v=4edcbab53d';
+import { ic } from './icons.js?v=afd104b895';
+import { handleTerminalWheel, viewportPosition, restoreViewport } from './terminal-scroll.js?v=afd104b895';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 async function post(p, body) {

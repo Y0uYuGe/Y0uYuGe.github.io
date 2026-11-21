@@ -1,9 +1,9 @@
 // 同一份页面：有 api/state 就是本地工作台（可管理），否则读 data.json 当博客（只读）。
-import { MindMap } from './mindmap.js?v=4edcbab53d';
-import * as NM from './notemap.js?v=4edcbab53d';
-import * as AG from './agents.js?v=4edcbab53d';
-import { ic } from './icons.js?v=4edcbab53d';
-import { tidyTerminal, looksLikeTerminal } from './termpaste.js?v=4edcbab53d';
+import { MindMap } from './mindmap.js?v=afd104b895';
+import * as NM from './notemap.js?v=afd104b895';
+import * as AG from './agents.js?v=afd104b895';
+import { ic } from './icons.js?v=afd104b895';
+import { tidyTerminal, looksLikeTerminal } from './termpaste.js?v=afd104b895';
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -710,7 +710,7 @@ function workspaceNode(v) {
     const t = NM.plain(v.h.text) || '（未命名）';
     if (v.h.intro) return `<span class="node-icon">${ic('file', 12)}</span><span class="mm-label" title="笔记开头（第一个标题前面）的那段话">${esc(t)}</span>` + writeBtn('写开头这段', '看开头这段');
     return `<span class="mm-label"${t.length > 30 ? ` title="${esc(t)}"` : ''}>${esc(t.length > 30 ? t.slice(0, 29) + '…' : t)}</span>`
-      + (v.h.children.length ? `<span class="mm-toggle">${v.collapsed ? '+' + v.h.children.length : '−'}</span>` : '') + writeBtn('写这一节', '看这一节');
+      + (v.h.children.length ? `<span class="mm-toggle" title="${v.collapsed ? `下面还有 ${v.h.children.length} 个子标题，点开` : '收起子标题'}">${v.collapsed ? '+' + v.h.children.length : '−'}</span>` : '') + writeBtn('写这一节', '看这一节');
   }
   const n = v.n;
   const short = shortName(n);
@@ -1098,9 +1098,21 @@ function mapTree() {
   // 固定文件夹里面的照常展开收起；已经在某个固定文件夹里的，不再单独列一遍
   if (S.view === 'work' && S.mode === 'local') {
     const all = workRoots();
+    // 所在位置只在重名时带上（好几个「web」），带到能分清为止；不重名的只显示名字，位置在悬停提示里
+    const shown = (p) => shortName(index.get(p));
+    const whereOf = (p) => {
+      const twins = all.filter((o) => o !== p && shown(o) === shown(p));
+      if (!twins.length) return '';
+      const up = p.split('/').slice(0, -1);
+      for (let k = 1; k <= up.length; k++) {
+        const tail = up.slice(-k).join('/');
+        if (!twins.some((o) => o.split('/').slice(0, -1).slice(-k).join('/') === tail)) return (k < up.length ? '…/' : '') + tail;
+      }
+      return up.join('/') || '工作区';
+    };
     const root = withAgents({ id: '', n: S.data.tree, collapsed: false, children: all.map((p) => {
-      const v = conv(index.get(p), false), up = p.split('/').slice(0, -1);
-      if (up.length) v.where = up.length > 2 ? '…/' + up.slice(-2).join('/') : up.join('/');
+      const v = conv(index.get(p), false), w = whereOf(p);
+      if (w) v.where = w;
       return v;
     }) });
     if (!all.length) root.n = { ...S.data.tree, name: '聚焦' };
